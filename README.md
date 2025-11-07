@@ -177,101 +177,122 @@ mongod
 
 ##  Cấu trúc dự án
 
+## Cấu trúc dự án (có chú thích)
+
 ```
 Quan_ly_chi_tieu/
 ├── server/                           # Backend (Node.js + Express)
 │   ├── src/
 │   │   ├── config/
-│   │   │   └── database.js          # Cấu hình MongoDB
-│   │   ├── controllers/             # Business logic
-│   │   │   ├── auth.controller.js
-│   │   │   ├── transaction.controller.js
-│   │   │   ├── category.controller.js
-│   │   │   ├── budget.controller.js
-│   │   │   ├── goal.controller.js
-│   │   │   ├── recurring.controller.js
-│   │   │   └── stats.controller.js
-│   │   ├── models/                  # Database models
-│   │   │   ├── User.model.js
-│   │   │   ├── Transaction.model.js
-│   │   │   ├── Category.model.js
-│   │   │   ├── Budget.model.js
-│   │   │   ├── Goal.model.js
-│   │   │   └── RecurringTransaction.model.js
-│   │   ├── routes/                  # API endpoints
-│   │   │   ├── auth.routes.js
-│   │   │   ├── transaction.routes.js
-│   │   │   ├── category.routes.js
-│   │   │   ├── budget.routes.js
-│   │   │   ├── goal.routes.js
-│   │   │   ├── recurring.routes.js
-│   │   │   └── stats.routes.js
+│   │   │   └── database.js          # Kết nối và cấu hình MongoDB cho toàn bộ backend
+│   │   ├── controllers/             # Xử lý logic nghiệp vụ cho từng API (gọi model, trả về response)
+│   │   │   ├── auth.controller.js           # Đăng ký, đăng nhập, xác thực, profile
+│   │   │   ├── transaction.controller.js   # Quản lý giao dịch thu/chi
+│   │   │   ├── category.controller.js      # Quản lý danh mục giao dịch
+│   │   │   ├── budget.controller.js        # Quản lý ngân sách
+│   │   │   ├── goal.controller.js          # Quản lý mục tiêu tài chính
+│   │   │   ├── recurring.controller.js     # Quản lý giao dịch định kỳ
+│   │   │   ├── stats.controller.js         # Thống kê tổng quan, biểu đồ
+│   │   │   └── notification.controller.js  # Quản lý thông báo (nếu có)
+│   │   ├── models/                  # Định nghĩa cấu trúc dữ liệu MongoDB
+│   │   │   ├── User.model.js                # Thông tin người dùng, avatar, mật khẩu
+│   │   │   ├── Transaction.model.js         # Giao dịch thu/chi
+│   │   │   ├── Category.model.js            # Danh mục giao dịch
+│   │   │   ├── Budget.model.js              # Ngân sách
+│   │   │   ├── Goal.model.js                # Mục tiêu tài chính
+│   │   │   └── RecurringTransaction.model.js# Giao dịch định kỳ
+│   │   ├── routes/                  # Định nghĩa các endpoint API, liên kết controller
+│   │   │   ├── auth.routes.js               # Endpoint xác thực, profile
+│   │   │   ├── transaction.routes.js        # Endpoint giao dịch
+│   │   │   ├── category.routes.js           # Endpoint danh mục
+│   │   │   ├── budget.routes.js             # Endpoint ngân sách
+│   │   │   ├── goal.routes.js               # Endpoint mục tiêu
+│   │   │   ├── recurring.routes.js          # Endpoint định kỳ
+│   │   │   ├── stats.routes.js              # Endpoint thống kê
+│   │   │   └── notification.routes.js       # Endpoint thông báo (nếu có)
 │   │   ├── middleware/
-│   │   │   ├── auth.middleware.js   # JWT verification
-│   │   │   └── error.middleware.js  # Error handling
+│   │   │   ├── auth.middleware.js           # Kiểm tra JWT, bảo vệ route
+│   │   │   └── error.middleware.js          # Xử lý lỗi tập trung cho API
 │   │   ├── utils/
-│   │   │   └── sendEmail.js         # Email utility
-│   │   └── index.js                 # Entry point
+│   │   │   └── sendEmail.js                 # Gửi email (quên mật khẩu, thông báo)
+│   │   └── index.js                         # Điểm khởi động server, cấu hình Express
 │   ├── .env.example
 │   ├── .gitignore
 │   └── package.json
 │
 ├── client/                           # Frontend (React + Vite)
 │   ├── src/
-│   │   ├── components/              # Reusable components
-│   │   │   ├── Layout.jsx
-│   │   │   ├── PrivateRoute.jsx
-│   │   │   ├── DarkModeToggle.jsx
-│   │   │   ├── GlobalSearch.jsx
-│   │   │   ├── Pagination.jsx
-│   │   │   ├── TransactionModal.jsx
-│   │   │   ├── CategoryModal.jsx
-│   │   │   ├── BudgetModal.jsx
-│   │   │   ├── GoalModal.jsx
-│   │   │   └── RecurringModal.jsx
-│   │   ├── context/                 # Context API
-│   │   │   ├── AuthContext.jsx
-│   │   │   ├── ThemeContext.jsx
-│   │   │   ├── TransactionContext.jsx
-│   │   │   ├── CategoryContext.jsx
-│   │   │   ├── BudgetContext.jsx
-│   │   │   ├── GoalContext.jsx
-│   │   │   └── RecurringContext.jsx
-│   │   ├── pages/                   # Page components
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── Transactions.jsx
-│   │   │   ├── Categories.jsx
-│   │   │   ├── Budgets.jsx
-│   │   │   ├── Goals.jsx
-│   │   │   ├── RecurringTransactions.jsx
-│   │   │   ├── Statistics.jsx
-│   │   │   ├── Profile.jsx
-│   │   │   ├── Login.jsx
-│   │   │   ├── Register.jsx
-│   │   │   └── ForgotPassword.jsx
-│   │   ├── services/                # API services
-│   │   │   ├── api.js               # Axios instance
-│   │   │   ├── auth.service.js
-│   │   │   ├── transaction.service.js
-│   │   │   ├── category.service.js
-│   │   │   ├── budget.service.js
-│   │   │   ├── goal.service.js
-│   │   │   ├── recurring.service.js
-│   │   │   └── stats.service.js
+│   │   ├── components/              # Các component giao diện dùng lại nhiều nơi
+│   │   │   ├── Layout.jsx                   # Khung layout chung (header, sidebar, main)
+│   │   │   ├── PrivateRoute.jsx             # Bảo vệ route, chỉ cho user đã đăng nhập
+│   │   │   ├── DarkModeToggle.jsx           # Chuyển đổi dark/light mode
+│   │   │   ├── GlobalSearch.jsx             # Tìm kiếm tổng hợp toàn bộ dự án
+│   │   │   ├── Pagination.jsx               # Phân trang danh sách
+│   │   │   ├── TransactionModal.jsx         # Modal thêm/sửa giao dịch
+│   │   │   ├── CategoryModal.jsx            # Modal thêm/sửa danh mục
+│   │   │   ├── BudgetModal.jsx              # Modal thêm/sửa ngân sách
+│   │   │   ├── GoalModal.jsx                # Modal thêm/sửa mục tiêu
+│   │   │   └── RecurringModal.jsx           # Modal thêm/sửa giao dịch định kỳ
+│   │   ├── context/                 # Quản lý state toàn cục bằng Context API
+│   │   │   ├── AuthContext.jsx              # Quản lý trạng thái đăng nhập, user
+│   │   │   ├── ThemeContext.jsx             # Quản lý dark/light mode
+│   │   │   ├── TransactionContext.jsx       # Quản lý danh sách giao dịch
+│   │   │   ├── CategoryContext.jsx          # Quản lý danh mục
+│   │   │   ├── BudgetContext.jsx            # Quản lý ngân sách
+│   │   │   ├── GoalContext.jsx              # Quản lý mục tiêu
+│   │   │   └── RecurringContext.jsx         # Quản lý giao dịch định kỳ
+│   │   ├── pages/                   # Các trang chính của ứng dụng
+│   │   │   ├── Dashboard.jsx                # Trang tổng quan, biểu đồ, thống kê
+│   │   │   ├── Transactions.jsx             # Trang quản lý giao dịch
+│   │   │   ├── Categories.jsx               # Trang quản lý danh mục
+│   │   │   ├── Budgets.jsx                  # Trang quản lý ngân sách
+│   │   │   ├── Goals.jsx                    # Trang quản lý mục tiêu
+│   │   │   ├── RecurringTransactions.jsx    # Trang giao dịch định kỳ
+│   │   │   ├── Statistics.jsx               # Trang thống kê chi tiết
+│   │   │   ├── Profile.jsx                  # Trang cá nhân, đổi avatar
+│   │   │   ├── Login.jsx                    # Trang đăng nhập
+│   │   │   ├── Register.jsx                 # Trang đăng ký
+│   │   │   └── ForgotPassword.jsx           # Trang quên mật khẩu
+│   │   ├── services/                # Giao tiếp với API backend qua axios
+│   │   │   ├── api.js                       # Tạo instance axios, cấu hình baseURL ,khởi tạo api
+│   │   │   ├── auth.service.js              # Gọi API xác thực, profile
+│   │   │   ├── transaction.service.js       # Gọi API giao dịch
+│   │   │   ├── category.service.js          # Gọi API danh mục
+│   │   │   ├── budget.service.js            # Gọi API ngân sách
+│   │   │   ├── goal.service.js              # Gọi API mục tiêu
+│   │   │   ├── recurring.service.js         # Gọi API định kỳ
+│   │   │   ├── stats.service.js             # Gọi API thống kê
+│   │   │   └── notification.service.js      # Gọi API thông báo (nếu có)
 │   │   ├── utils/
-│   │   │   └── exportUtils.js       # PDF/Excel export
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── index.css
+│   │   │   └── exportUtils.js               # Xuất báo cáo PDF/Excel
+│   │   ├── App.jsx                          # Khởi tạo router, context provider
+│   │   ├── main.jsx                         # Điểm khởi động React app
+│   │   └── index.css                        # File CSS gốc
 │   ├── index.html
 │   ├── vite.config.js
 │   ├── tailwind.config.js
 │   ├── postcss.config.js
 │   └── package.json
 │
-├── README.md
+├── README.md                               # Tài liệu dự án, hướng dẫn sử dụng
+```
 
-##  Bảo mật
+---
+
+### Mối liên hệ giữa các file/thư mục
+
+- **server/src/controllers** gọi **models** để thao tác dữ liệu, trả về kết quả cho **routes**.
+- **routes** định nghĩa các endpoint, liên kết controller với URL API.
+- **middleware** bảo vệ route (auth), xử lý lỗi tập trung (error).
+- **utils/sendEmail.js** được controller gọi khi cần gửi email (quên mật khẩu, thông báo).
+- **client/src/components** là các khối giao diện dùng lại ở nhiều trang.
+- **context** cung cấp state cho các component và page, giúp chia sẻ dữ liệu toàn app.
+- **pages** là các màn hình chính, mỗi page thường dùng nhiều component và context.
+- **services** là nơi gọi API backend, được các context và page sử dụng để lấy/gửi dữ liệu.
+- **utils/exportUtils.js** được dùng ở các page/component để xuất báo cáo.
+- **App.jsx/main.jsx** là điểm khởi động, kết nối router, context, và render layout.
+
+Nếu cần bổ sung chi tiết hoặc giải thích thêm về từng file, hãy yêu cầu cụ thể nhé!
 
 -  Mật khẩu được mã hóa bằng **bcryptjs** (salt rounds: 10)
 -  Xác thực bằng **JWT token** (expires: 7 days)
