@@ -76,9 +76,10 @@ export const getNotifications = async (req, res) => {
   try {
     const notifications = [];
     const now = new Date();
+    const notificationIds = new Set(); // Tránh trùng lặp
 
     // 1. Check budgets that are over 80% spent
-    const budgets = await Budget.find({ userId: req.user.id });
+    const budgets = await Budget.find({ userId: req.user.id, isActive: true });
     
     for (const budget of budgets) {
       const dateRange = getDateRange(budget.period);
@@ -90,50 +91,72 @@ export const getNotifications = async (req, res) => {
 
       const percentage = (currentSpending / budget.amount) * 100;
 
+      // Lấy giao dịch gần nhất để có thời điểm chính xác
+      const latestTransaction = await Transaction.findOne({
+        userId: req.user.id,
+        type: 'expense',
+        category: budget.category || { $exists: true },
+        date: { $gte: dateRange.start, $lte: dateRange.end }
+      }).sort({ date: -1 });
+
+      const notificationTime = latestTransaction ? latestTransaction.date : budget.updatedAt;
+
       if (percentage >= 80) {
-        notifications.push({
-          id: `budget-${budget._id}`,
-          type: percentage >= 100 ? 'error' : 'warning',
-          title: percentage >= 100 ? 'Vượt ngân sách' : 'Cảnh báo ngân sách',
-          message: `${budget.category || 'Tổng'}: ${percentage.toFixed(0)}% (${currentSpending.toLocaleString('vi-VN')}/${budget.amount.toLocaleString('vi-VN')} ₫)`,
-          time: getTimeAgo(budget.updatedAt),
-          read: false,
-          createdAt: budget.updatedAt
-        });
+        const notifId = `budget-${budget._id}`;
+        if (!notificationIds.has(notifId)) {
+          notificationIds.add(notifId);
+          notifications.push({
+            id: notifId,
+            type: percentage >= 100 ? 'error' : 'warning',
+            title: percentage >= 100 ? 'Vượt ngân sách' : 'Cảnh báo ngân sách',
+            message: `${budget.category || 'Tổng ngân sách'}: ${percentage.toFixed(0)}% (${currentSpending.toLocaleString('vi-VN')}/${budget.amount.toLocaleString('vi-VN')} ₫)`,
+            time: getTimeAgo(notificationTime),
+            read: false,
+            createdAt: notificationTime
+          });
+        }
       }
     }
 
     
-    // kiểm tra các mục tiêu đã hoàn thành hoặc gần hoàn thành
+    // 2. Kiểm tra các mục tiêu đã hoàn thành hoặc gần hoàn thành
     const goals = await Goal.find({ userId: req.user.id });
 
     for (const goal of goals) {
       const percentage = (goal.currentAmount / goal.targetAmount) * 100;
 
       if (percentage >= 100 && goal.status !== 'completed') {
-        notifications.push({
-          id: `goal-${goal._id}`,
-          type: 'success',
-          title: 'Hoàn thành mục tiêu',
-          message: `Chúc mừng! Bạn đã đạt được mục tiêu "${goal.name}"`,
-          time: getTimeAgo(goal.updatedAt),
-          read: false,
-          createdAt: goal.updatedAt
-        });
+        const notifId = `goal-completed-${goal._id}`;
+        if (!notificationIds.has(notifId)) {
+          notificationIds.add(notifId);
+          notifications.push({
+            id: notifId,
+            type: 'success',
+            title: 'Hoàn thành mục tiêu',
+            message: `Chúc mừng! Bạn đã đạt được mục tiêu "${goal.name}"`,
+            time: getTimeAgo(goal.updatedAt),
+            read: false,
+            createdAt: goal.updatedAt
+          });
+        }
       } else if (percentage >= 80 && percentage < 100) {
-        notifications.push({
-          id: `goal-progress-${goal._id}`,
-          type: 'info',
-          title: 'Gần đạt mục tiêu',
-          message: `Mục tiêu "${goal.name}": ${percentage.toFixed(0)}% (${goal.currentAmount.toLocaleString('vi-VN')}/${goal.targetAmount.toLocaleString('vi-VN')} ₫)`,
-          time: getTimeAgo(goal.updatedAt),
-          read: false,
-          createdAt: goal.updatedAt
-        });
+        const notifId = `goal-progress-${goal._id}`;
+        if (!notificationIds.has(notifId)) {
+          notificationIds.add(notifId);
+          notifications.push({
+            id: notifId,
+            type: 'info',
+            title: 'Gần đạt mục tiêu',
+            message: `Mục tiêu "${goal.name}": ${percentage.toFixed(0)}% (${goal.currentAmount.toLocaleString('vi-VN')}/${goal.targetAmount.toLocaleString('vi-VN')} ₫)`,
+            time: getTimeAgo(goal.updatedAt),
+            read: false,
+            createdAt: goal.updatedAt
+          });
+        }
       }
     }
 
-    // kiếm tra các giao dịch định kỳ đến hạn hôm nay hoặc quá hạn
+    // 3. Kiểm tra các giao dịch định kỳ đến hạn hôm nay hoặc quá hạn
     const recurringTransactions = await RecurringTransaction.find({
       userId: req.user.id,
       isActive: true
@@ -144,24 +167,83 @@ export const getNotifications = async (req, res) => {
       const daysUntilDue = Math.ceil((nextDate - now) / (1000 * 60 * 60 * 24));
 
       if (daysUntilDue <= 0) {
-        notifications.push({
-          id: `recurring-overdue-${recurring._id}`,
-          type: 'warning',
-          title: 'Giao dịch định kỳ quá hạn',
-          message: `"${recurring.description}" đã quá hạn ${Math.abs(daysUntilDue)} ngày`,
-          time: getTimeAgo(recurring.nextDate),
-          read: false,
-          createdAt: recurring.nextDate
-        });
+        const notifId = `recurring-overdue-${recurring._id}`;
+        if (!notificationIds.has(notifId)) {
+          notificationIds.add(notifId);
+          notifications.push({
+            id: notifId,
+            type: 'warning',
+            title: 'Giao dịch định kỳ quá hạn',
+            message: `"${recurring.templateName || recurring.description}" đã quá hạn ${Math.abs(daysUntilDue)} ngày`,
+            time: getTimeAgo(recurring.nextDate),
+            read: false,
+            createdAt: recurring.nextDate
+          });
+        }
       } else if (daysUntilDue <= 3) {
+        const notifId = `recurring-upcoming-${recurring._id}`;
+        if (!notificationIds.has(notifId)) {
+          notificationIds.add(notifId);
+          notifications.push({
+            id: notifId,
+            type: 'info',
+            title: 'Giao dịch định kỳ sắp đến',
+            message: `"${recurring.templateName || recurring.description}" sẽ được thực hiện trong ${daysUntilDue} ngày nữa`,
+            time: getTimeAgo(recurring.updatedAt),
+            read: false,
+            createdAt: recurring.updatedAt
+          });
+        }
+      }
+    }
+
+    // 4. Kiểm tra các giao dịch chi tiêu lớn (>= 1 triệu trong 7 ngày gần đây)
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const largeTransactions = await Transaction.find({
+      userId: req.user.id,
+      type: 'expense',
+      amount: { $gte: 1000000 },
+      date: { $gte: sevenDaysAgo }
+    }).sort({ date: -1 }).limit(3);
+
+    for (const transaction of largeTransactions) {
+      const notifId = `large-expense-${transaction._id}`;
+      if (!notificationIds.has(notifId)) {
+        notificationIds.add(notifId);
         notifications.push({
-          id: `recurring-${recurring._id}`,
+          id: notifId,
           type: 'info',
-          title: 'Giao dịch định kỳ sắp đến',
-          message: `"${recurring.description}" sẽ được thực hiện trong ${daysUntilDue} ngày nữa`,
-          time: getTimeAgo(recurring.updatedAt),
+          title: 'Chi tiêu lớn',
+          message: `Bạn đã chi ${transaction.amount.toLocaleString('vi-VN')} ₫ cho "${transaction.category}" - ${transaction.note || 'Không có ghi chú'}`,
+          time: getTimeAgo(transaction.date),
           read: false,
-          createdAt: recurring.updatedAt
+          createdAt: transaction.date
+        });
+      }
+    }
+
+    // 5. Kiểm tra các giao dịch thu nhập lớn (>= 1 triệu trong 7 ngày gần đây)
+    const largeIncomes = await Transaction.find({
+      userId: req.user.id,
+      type: 'income',
+      amount: { $gte: 1000000 },
+      date: { $gte: sevenDaysAgo }
+    }).sort({ date: -1 }).limit(3);
+
+    for (const transaction of largeIncomes) {
+      const notifId = `large-income-${transaction._id}`;
+      if (!notificationIds.has(notifId)) {
+        notificationIds.add(notifId);
+        notifications.push({
+          id: notifId,
+          type: 'success',
+          title: 'Thu nhập lớn',
+          message: `Bạn đã thu ${transaction.amount.toLocaleString('vi-VN')} ₫ từ "${transaction.category}" - ${transaction.note || 'Không có ghi chú'}`,
+          time: getTimeAgo(transaction.date),
+          read: false,
+          createdAt: transaction.date
         });
       }
     }

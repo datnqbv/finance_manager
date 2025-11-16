@@ -121,61 +121,65 @@ const RecurringTransactions = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center flex-wrap gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Giao dịch định kỳ</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <FiRepeat className="text-primary-500" />
+            Giao dịch định kỳ
+          </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Tự động hóa các giao dịch lặp lại
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="btn btn-primary flex items-center gap-2"
+          className="flex items-center gap-2 bg-primary-500 text-white px-6 py-3 rounded-xl hover:bg-primary-600 transition-all hover:scale-105 shadow-lg shadow-primary-500/30"
         >
-          <FiPlus /> Thêm định kỳ
+          <FiPlus />
+          <span>Thêm Định Kỳ</span>
         </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="card">
+        <div className="bg-white dark:bg-[#111111] rounded-xl p-5 border border-gray-200 dark:border-[#2a2a2a] hover:shadow-xl dark:hover:shadow-2xl transition-all cursor-pointer group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Tổng số</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Tổng số</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 {recurringList.length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-              <FiRepeat size={24} className="text-blue-600 dark:text-blue-400" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center transition-transform group-hover:scale-110">
+              <FiRepeat className="text-2xl text-white" />
             </div>
           </div>
         </div>
 
-        <div className="card">
+        <div className="bg-white dark:bg-[#111111] rounded-xl p-5 border border-gray-200 dark:border-[#2a2a2a] hover:shadow-xl dark:hover:shadow-2xl transition-all cursor-pointer group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Đang hoạt động</p>
-              <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-1">
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Đang hoạt động</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 {recurringList.filter(r => r.isActive).length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-              <FiPlay size={24} className="text-green-600 dark:text-green-400" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center transition-transform group-hover:scale-110">
+              <FiPlay className="text-2xl text-white" />
             </div>
           </div>
         </div>
 
-        <div className="card">
+        <div className="bg-white dark:bg-[#111111] rounded-xl p-5 border border-gray-200 dark:border-[#2a2a2a] hover:shadow-xl dark:hover:shadow-2xl transition-all cursor-pointer group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Sắp tới (30 ngày)</p>
-              <p className="text-3xl font-bold text-orange-600 dark:text-orange-400 mt-1">
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Sắp tới (30 ngày)</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 {upcomingList.length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
-              <FiCalendar size={24} className="text-orange-600 dark:text-orange-400" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center transition-transform group-hover:scale-110">
+              <FiCalendar className="text-2xl text-white" />
             </div>
           </div>
         </div>
@@ -229,39 +233,37 @@ const RecurringTransactions = () => {
       )}
 
       {/* Filters */}
-      <div className="card">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setFilterActive('all')}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filterActive === 'all'
-                ? 'bg-primary-600 text-white'
-                : 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-700 dark:text-gray-300'
-            }`}
-          >
-            Tất cả ({recurringList.length})
-          </button>
-          <button
-            onClick={() => setFilterActive('active')}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filterActive === 'active'
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-700 dark:text-gray-300'
-            }`}
-          >
-            Đang hoạt động ({recurringList.filter(r => r.isActive).length})
-          </button>
-          <button
-            onClick={() => setFilterActive('inactive')}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filterActive === 'inactive'
-                ? 'bg-gray-600 text-white'
-                : 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-700 dark:text-gray-300'
-            }`}
-          >
-            Tạm dừng ({recurringList.filter(r => !r.isActive).length})
-          </button>
-        </div>
+      <div className="flex gap-2 bg-white dark:bg-[#111111] rounded-xl p-2 border border-gray-200 dark:border-[#2a2a2a]">
+        <button
+          onClick={() => setFilterActive('all')}
+          className={`flex-1 px-4 py-2.5 font-medium rounded-lg transition-all ${
+            filterActive === 'all'
+              ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1a1a1a]'
+          }`}
+        >
+          Tất cả ({recurringList.length})
+        </button>
+        <button
+          onClick={() => setFilterActive('active')}
+          className={`flex-1 px-4 py-2.5 font-medium rounded-lg transition-all ${
+            filterActive === 'active'
+              ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1a1a1a]'
+          }`}
+        >
+          Đang hoạt động ({recurringList.filter(r => r.isActive).length})
+        </button>
+        <button
+          onClick={() => setFilterActive('inactive')}
+          className={`flex-1 px-4 py-2.5 font-medium rounded-lg transition-all ${
+            filterActive === 'inactive'
+              ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1a1a1a]'
+          }`}
+        >
+          Tạm dừng ({recurringList.filter(r => !r.isActive).length})
+        </button>
       </div>
 
       {/* Recurring List */}

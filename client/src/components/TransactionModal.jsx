@@ -179,7 +179,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
               onChange={handleChange}
               required
               min="0"
-              step="1000"
+              step="1"
               className="input"
               placeholder="0"
             />

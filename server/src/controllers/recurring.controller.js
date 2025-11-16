@@ -138,7 +138,7 @@ export const updateRecurringTransaction = async (req, res) => {
       isActive,
       notifyBeforeExecution,
       notifyDays
-    } = req.body;
+    } = req.body; // Lấy các trường có thể cập nhật
 
     // Update fields
     if (templateName) recurring.templateName = templateName;

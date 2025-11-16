@@ -138,7 +138,7 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
               className={`input ${errors.amount ? 'border-red-500' : ''}`}
               placeholder="0"
               min="0"
-              step="10000"
+              step="1"
             />
             {errors.amount && (
               <p className="mt-1 text-sm text-red-500">{errors.amount}</p>

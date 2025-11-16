@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import goalService from '../services/goal.service';
 import { useAuth } from './AuthContext';
+import { toast } from 'react-toastify';
 
 const GoalContext = createContext();
 
@@ -56,7 +57,9 @@ export const GoalProvider = ({ children }) => {
       const data = await goalService.createGoal(goalData);
       setGoals([...goals, data.data]);
       await fetchGoalStats();
+      toast.success('Tạo mục tiêu thành công');
       return { success: true, data: data.data };
+
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to create goal';
       setError(errorMessage);
@@ -74,7 +77,8 @@ export const GoalProvider = ({ children }) => {
       const data = await goalService.updateGoal(id, goalData);
       setGoals(goals.map(g => g._id === id ? data.data : g));
       await fetchGoalStats();
-      return { success: true, data: data.data };
+      toast.success('Mục tiêu đã được cập nhật thành công!');
+       return { success: true, data: data.data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to update goal';
       setError(errorMessage);
@@ -92,6 +96,7 @@ export const GoalProvider = ({ children }) => {
       await goalService.deleteGoal(id);
       setGoals(goals.filter(g => g._id !== id));
       await fetchGoalStats();
+      toast.success('Mục tiêu đã được xóa thành công!');
       return { success: true };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to delete goal';

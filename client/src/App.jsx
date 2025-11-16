@@ -9,6 +9,7 @@ import { CategoryProvider } from './context/CategoryContext';
 import { BudgetProvider } from './context/BudgetContext';
 import { RecurringProvider } from './context/RecurringContext';
 import { GoalProvider } from './context/GoalContext';
+import { ThemeCustomizerProvider } from './context/ThemeCustomizerContext';
 import PrivateRoute from './components/PrivateRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -25,13 +26,14 @@ import Profile from './pages/Profile';
 // hàm App chính của ứng dụng
 function App() {
   return (
-    <AuthProvider>  
-      <CategoryProvider> 
-        <BudgetProvider> 
-          <RecurringProvider> 
-            <GoalProvider> 
-              <TransactionProvider>
-                <Router> 
+    <ThemeCustomizerProvider>
+      <AuthProvider>  
+        <CategoryProvider> 
+          <BudgetProvider> 
+            <RecurringProvider> 
+              <GoalProvider> 
+                <TransactionProvider>
+                  <Router> 
           <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] transition-colors duration-300">
             <Routes>
               <Route path="/login" element={<Login />} /> 
@@ -72,6 +74,7 @@ function App() {
         </BudgetProvider>  
       </CategoryProvider>
     </AuthProvider>
+    </ThemeCustomizerProvider>
   );
 }
 

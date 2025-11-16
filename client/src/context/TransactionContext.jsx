@@ -11,6 +11,9 @@ export const useTransactions = () => {
   }
   return context;
 };
+// Hàm cung cấp ngữ cảnh giao dịch để các thành phần con sử dụng
+// bao gồm các chức năng để lấy, tạo, cập nhật và xóa giao dịch.
+// Quản lý trạng thái giao dịch và trạng thái tải trong toàn bộ ứng dụng 
 
 export const TransactionProvider = ({ children }) => {
   const [transactions, setTransactions] = useState([]);
@@ -30,7 +33,7 @@ export const TransactionProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
+  // Create new transaction 
   const createTransaction = async (transactionData) => {
     try {
       const data = await transactionService.createTransaction(transactionData);
@@ -43,7 +46,7 @@ export const TransactionProvider = ({ children }) => {
       return { success: false, message };
     }
   };
-
+  // Update transaction by id
   const updateTransaction = async (id, transactionData) => {
     try {
       const data = await transactionService.updateTransaction(id, transactionData);
@@ -58,7 +61,7 @@ export const TransactionProvider = ({ children }) => {
       return { success: false, message };
     }
   };
-
+  // Delete transaction by id
   const deleteTransaction = async (id) => {
     try {
       const data = await transactionService.deleteTransaction(id);

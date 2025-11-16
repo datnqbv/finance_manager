@@ -76,100 +76,102 @@ const Categories = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center flex-wrap gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Quản lý danh mục</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <span className="text-4xl">📁</span>
+            Quản lý danh mục
+          </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Tùy chỉnh danh mục thu chi của bạn
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="btn btn-primary flex items-center gap-2"
+          className="flex items-center gap-2 bg-primary-500 text-white px-6 py-3 rounded-xl hover:bg-primary-600 transition-all hover:scale-105 shadow-lg shadow-primary-500/30"
         >
-          <FiPlus /> Thêm danh mục
+          <FiPlus />
+          <span>Thêm Danh Mục</span>
         </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="card">
+        <div className="bg-white dark:bg-[#111111] rounded-xl p-5 border border-gray-200 dark:border-[#2a2a2a] hover:shadow-xl dark:hover:shadow-2xl transition-all cursor-pointer group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Tổng danh mục</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Tổng danh mục</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 {categories.length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-              <span className="text-2xl">📁</span>
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-2xl transition-transform group-hover:scale-110">
+              📁
             </div>
           </div>
         </div>
 
-        <div className="card">
+        <div className="bg-white dark:bg-[#111111] rounded-xl p-5 border border-gray-200 dark:border-[#2a2a2a] hover:shadow-xl dark:hover:shadow-2xl transition-all cursor-pointer group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Thu nhập</p>
-              <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-1">
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Thu nhập</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 {incomeCategories.length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-              <span className="text-2xl">💰</span>
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-2xl transition-transform group-hover:scale-110">
+              💰
             </div>
           </div>
         </div>
 
-        <div className="card">
+        <div className="bg-white dark:bg-[#111111] rounded-xl p-5 border border-gray-200 dark:border-[#2a2a2a] hover:shadow-xl dark:hover:shadow-2xl transition-all cursor-pointer group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Chi tiêu</p>
-              <p className="text-3xl font-bold text-red-600 dark:text-red-400 mt-1">
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Chi tiêu</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 {expenseCategories.length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
-              <span className="text-2xl">💸</span>
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center text-2xl transition-transform group-hover:scale-110">
+              💸
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="card">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setFilterType('all')}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filterType === 'all'
-                ? 'bg-primary-600 text-white'
-                : 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#222222]'
-            }`}
-          >
-            Tất cả ({categories.length})
-          </button>
-          <button
-            onClick={() => setFilterType('income')}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filterType === 'income'
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#222222]'
-            }`}
-          >
-            Thu nhập ({incomeCategories.length})
-          </button>
-          <button
-            onClick={() => setFilterType('expense')}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filterType === 'expense'
-                ? 'bg-red-600 text-white'
-                : 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#222222]'
-            }`}
-          >
-            Chi tiêu ({expenseCategories.length})
-          </button>
-        </div>
+      <div className="flex gap-2 bg-white dark:bg-[#111111] rounded-xl p-2 border border-gray-200 dark:border-[#2a2a2a]">
+        <button
+          onClick={() => setFilterType('all')}
+          className={`flex-1 px-4 py-2.5 font-medium rounded-lg transition-all ${
+            filterType === 'all'
+              ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1a1a1a]'
+          }`}
+        >
+          Tất cả ({categories.length})
+        </button>
+        <button
+          onClick={() => setFilterType('income')}
+          className={`flex-1 px-4 py-2.5 font-medium rounded-lg transition-all ${
+            filterType === 'income'
+              ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1a1a1a]'
+          }`}
+        >
+          Thu nhập ({incomeCategories.length})
+        </button>
+        <button
+          onClick={() => setFilterType('expense')}
+          className={`flex-1 px-4 py-2.5 font-medium rounded-lg transition-all ${
+            filterType === 'expense'
+              ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1a1a1a]'
+          }`}
+        >
+          Chi tiêu ({expenseCategories.length})
+        </button>
       </div>
 
       {/* Categories Grid */}

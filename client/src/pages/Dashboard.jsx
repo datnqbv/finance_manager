@@ -4,23 +4,28 @@ import { transactionService } from '../services/transaction.service';
 import goalService from '../services/goal.service';
 import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiActivity, FiCalendar, FiAlertTriangle, FiTarget, FiSun, FiMoon, FiClock } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, ComposedChart, Area } from 'recharts';
+import PageTransition from '../components/PageTransition';
+import { DashboardSkeleton } from '../components/LoadingSkeleton';
+import CustomTooltip from '../components/Tooltip';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const [summary, setSummary] = useState(null);
+  const [summary, setSummary] = useState(null); // để dùng cho dashboard tổng quát , chứa các thông tin như thu nhập, chi tiêu, số dư
   const [filteredSummary, setFilteredSummary] = useState(null); // Summary theo time filter
   const [monthlyStats, setMonthlyStats] = useState([]);
   const [categoryStats, setCategoryStats] = useState([]);
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState('month'); // today, week, month, year
+  const [dailyFluctuation, setDailyFluctuation] = useState([]); // Dữ liệu dao động hàng ngày cho candlestick
 
   useEffect(() => {
     fetchData();
   }, [timeFilter]);
 
   // Tính toán startDate và endDate dựa trên timeFilter
+  // Dùng cho phần fetchData của dashboard, để lấy dữ liệu giao dịch theo khoảng thời gian
   const getDateRange = () => {
     const now = new Date();
     let startDate, endDate;
@@ -52,7 +57,9 @@ const Dashboard = () => {
       endDate: endDate.toISOString()
     };
   };
-
+  
+  // Fetch tất cả dữ liệu cần thiết cho Dashboard
+  // DÙng cho phần hiển thị tổng quan dashboard , để cho người dùng thấy được cái nhìn tổng quan về tài chính của họ
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -86,6 +93,7 @@ const Dashboard = () => {
       }
       
       // GỌI TẤT CẢ API SONG SONG (4 + 6 = 10 requests cùng lúc)
+      // để tiết kiệm thời gian chờ đợi
       const [summaryData, goalsData, transactionsData, categoryData, ...monthlyResults] = await Promise.all([
         statsService.getSummary(),
         goalService.getGoals(),
@@ -97,7 +105,7 @@ const Dashboard = () => {
         statsService.getCategoryStats(startDate, endDate),
         ...monthlyPromises
       ]);
-      
+      // Xử lý dữ liệu nhận được 
       setSummary(summaryData.data);
       setGoals(Array.isArray(goalsData.data) ? goalsData.data : []);
       setCategoryStats(Array.isArray(categoryData.data) ? categoryData.data : []);
@@ -119,6 +127,9 @@ const Dashboard = () => {
         transactionCount: transactions.length,
         recentTransactions: transactions.slice(0, 5)
       });
+
+      // Tính toán dao động hàng ngày cho Candlestick Chart (7 ngày gần nhất)
+      calculateDailyFluctuation(transactions);
       
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -127,7 +138,58 @@ const Dashboard = () => {
     }
   };
 
-  // Tính toán greeting theo thời gian
+  // Tính toán dao động thu/chi hàng ngày cho biểu đồ Candlestick (7 ngày gần nhất)
+  const calculateDailyFluctuation = (transactions) => {
+    const dailyData = {};
+    const now = new Date();
+    
+    // Tạo 7 ngày gần nhất
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dateKey = date.toISOString().split('T')[0];
+      dailyData[dateKey] = {
+        date: dateKey,
+        dateLabel: `${date.getDate()}/${date.getMonth() + 1}`,
+        income: 0,
+        expense: 0,
+        balance: 0,
+        count: 0
+      };
+    }
+
+    // Nhóm transactions theo ngày để tính tổng các giá trị cho từng ngày
+    // như là thu nhập, chi tiêu, số giao dịch
+    transactions.forEach(t => {
+      const dateKey = new Date(t.date).toISOString().split('T')[0];
+      if (dailyData[dateKey]) {
+        if (t.type === 'income') {
+          dailyData[dateKey].income += t.amount;
+        } else {
+          dailyData[dateKey].expense += t.amount;
+        }
+        dailyData[dateKey].count += 1;
+      }
+    });
+
+    // Tính balance và trung bình cho phần dao động của cái biểu đồ Candlestick (7 ngày gần nhất)
+    const dailyArray = Object.values(dailyData);
+    const avgIncome = dailyArray.reduce((sum, d) => sum + d.income, 0) / dailyArray.length;
+    const avgExpense = dailyArray.reduce((sum, d) => sum + d.expense, 0) / dailyArray.length;
+
+    dailyArray.forEach(day => {
+      day.balance = day.income - day.expense;
+      day.avgIncome = avgIncome;
+      day.avgExpense = avgExpense;
+      // Tính độ lệch so với trung bình
+      day.incomeDeviation = ((day.income - avgIncome) / (avgIncome || 1)) * 100;
+      day.expenseDeviation = ((day.expense - avgExpense) / (avgExpense || 1)) * 100;
+    });
+
+    setDailyFluctuation(dailyArray);
+  };
+
+  // Tính toán greeting (greeting là dùng để chào hỏi người dùng) theo thời gian
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return { text: 'Chào buổi sáng', icon: <FiSun className="text-yellow-500" /> };
@@ -135,7 +197,7 @@ const Dashboard = () => {
     return { text: 'Chào buổi tối', icon: <FiMoon className="text-blue-500" /> };
   };
 
-  // Lấy label cho time filter
+  // Lấy label cho time filter (time filter là bộ lọc thời gian) để có thể hiển thị đúng thời gian được chọn
   const getTimeFilterLabel = () => {
     switch (timeFilter) {
       case 'today': return 'hôm nay';
@@ -147,6 +209,9 @@ const Dashboard = () => {
   };
 
   // Tính toán AI insight - CHỈ cho filter "Tháng này"
+  // giúp người dùng hiểu rõ hơn về tình hình tài chính của họ qua các gợi ý thông minh
+  // nó bao gồm các so sánh với tháng trước để đưa ra nhận xét
+  // để báo cho người dùng biết họ đang quản lý tài chính như thế nào 
   const getAIInsight = () => {
     // Chỉ hiển thị khi filter = month và có đủ dữ liệu 2 tháng
     if (timeFilter !== 'month' || !monthlyStats || monthlyStats.length < 2) return null;
@@ -182,24 +247,25 @@ const Dashboard = () => {
   };
 
   // Kiểm tra cảnh báo chi tiêu - Sử dụng filteredSummary
+  // dùng để thông báo cho người dùng khi họ chi tiêu vượt mức so với thu nhập trong kỳ đã chọn
   const getBudgetAlert = () => {
     if (!filteredSummary) return null;
     
-    const income = filteredSummary.income || 0;
-    const expense = filteredSummary.expense || 0;
+    const income = filteredSummary.income || 0; // thu nhập trong kỳ - tháng
+    const expense = filteredSummary.expense || 0; // chi tiêu trong kỳ - tháng
     
-    if (income === 0) return null;
+    if (income === 0) return null; // Không có thu nhập thì không cảnh báo gì
     
-    const percentage = (expense / income) * 100;
+    const percentage = (expense / income) * 100; // tỷ lệ chi tiêu trên thu nhập
     
     if (percentage >= 90) {
       return {
-        message: `⚠️ NGUY HIỂM! Bạn đã chi ${percentage.toFixed(0)}% ngân sách trong kỳ này!`,
+        message: `⚠️ NGUY HIỂM! Bạn đã chi ${percentage.toFixed(0)}% sô tiền trong kỳ này!`, // tính phần trăm của thu nhập và làm tròn
         color: 'bg-red-50 dark:bg-red-500/10 border-red-500 text-red-800 dark:text-red-400'
       };
     } else if (percentage >= 80) {
       return {
-        message: `⚠️ Bạn đã chi ${percentage.toFixed(0)}% ngân sách trong kỳ này, cần kiểm soát lại!`,
+        message: `⚠️ Bạn đã chi ${percentage.toFixed(0)}% số tiền trong kỳ này, cần kiểm soát lại!`,
         color: 'bg-yellow-50 dark:bg-yellow-500/10 border-yellow-500 text-yellow-800 dark:text-yellow-400'
       };
     }
@@ -207,6 +273,7 @@ const Dashboard = () => {
   };
 
   // Tính toán mục tiêu tiết kiệm từ Goals thực tế
+  // để hiển thị trên dashboard cho người dùng biết họ đang tiến triển đến mục tiêu tiết kiệm như thế nào
   const getSavingsGoal = () => {
     // Lấy goal đang active (chưa đạt được) và ưu tiên cao nhất
     const activeGoals = goals.filter(g => !g.isAchieved);
@@ -224,6 +291,9 @@ const Dashboard = () => {
     }
     
     // Ưu tiên: high > medium > low, và gần deadline nhất
+    // mức độ ưu tiên được xác định bởi thuộc tính 'priority' của goal
+    // priorityOrder là một đối tượng ánh xạ mức độ ưu tiên thành số để dễ so sánh
+    // sau đó sắp xếp theo deadline để lấy goal cần ưu tiên nhất
     const sortedGoals = activeGoals.sort((a, b) => {
       const priorityOrder = { high: 3, medium: 2, low: 1 };
       if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
@@ -247,7 +317,7 @@ const Dashboard = () => {
     };
   };
 
-  // Format data cho biểu đồ
+  // Format data cho biểu đồ Bar Chart 
   const getChartData = () => {
     return monthlyStats.map(stat => ({
       month: `T${stat.month}/${stat.year}`,
@@ -259,7 +329,7 @@ const Dashboard = () => {
 
   // Màu cho Pie Chart
   const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
-
+  // Fetch summary chung
   const fetchSummary = async () => {
     setLoading(true);
     try {
@@ -271,14 +341,14 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
-
+  // Format currency theo locale người dùng
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: user?.currency || 'VND',
     }).format(amount);
   };
-
+  // Format date theo locale người dùng
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('vi-VN', {
       day: '2-digit',
@@ -286,7 +356,8 @@ const Dashboard = () => {
       year: 'numeric',
     });
   };
-
+  // Kết xuất giao diện Dashboard
+  // Hiển thị các thông tin tài chính quan trọng một cách trực quan và dễ hiểu
   const greeting = getGreeting();
   const budgetAlert = getBudgetAlert();
   const savingsGoal = getSavingsGoal();
@@ -294,14 +365,15 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
+      <PageTransition>
+        <DashboardSkeleton />
+      </PageTransition>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <PageTransition>
+      <div className="space-y-6">
       {/* Header với Greeting thông minh + Time Filter */}
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-blue-500/10 
@@ -330,23 +402,24 @@ const Dashboard = () => {
             {/* Time Filter */}
             <div className="flex gap-2 flex-wrap">
               {[
-                { label: 'Hôm nay', value: 'today' },
-                { label: 'Tuần này', value: 'week' },
-                { label: 'Tháng này', value: 'month' },
-                { label: 'Năm nay', value: 'year' }
+                { label: 'Hôm nay', value: 'today', tooltip: 'Xem thống kê hôm nay' },
+                { label: 'Tuần này', value: 'week', tooltip: 'Xem thống kê tuần này (Thứ 2 - CN)' },
+                { label: 'Tháng này', value: 'month', tooltip: 'Xem thống kê tháng hiện tại' },
+                { label: 'Năm nay', value: 'year', tooltip: 'Xem thống kê cả năm' }
               ].map(filter => (
-                <button
-                  key={filter.value}
-                  onClick={() => setTimeFilter(filter.value)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                    timeFilter === filter.value
-                      ? 'bg-primary-600 dark:bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-                      : 'bg-white dark:bg-[#111111] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-[#2a2a2a] hover:border-primary-500'
-                  }`}
-                >
-                  <FiCalendar className="inline mr-2" size={16} />
-                  {filter.label}
-                </button>
+                <CustomTooltip key={filter.value} content={filter.tooltip} position="bottom">
+                  <button
+                    onClick={() => setTimeFilter(filter.value)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                      timeFilter === filter.value
+                        ? 'bg-primary-600 dark:bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+                        : 'bg-white dark:bg-[#111111] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-[#2a2a2a] hover:border-primary-500'
+                    }`}
+                  >
+                    <FiCalendar className="inline mr-2" size={16} />
+                    {filter.label}
+                  </button>
+                </CustomTooltip>
               ))}
             </div>
           </div>
@@ -423,9 +496,9 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Stats Cards */}
+      {/* Stats Cards là thẻ để hiển thị các thông tin thống kê */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Income Card */}
+        {/* Income Card là thẻ để hiển thị thu nhập */}
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl 
                         blur opacity-25 group-hover:opacity-40 transition-opacity" />
@@ -448,7 +521,8 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Expense Card */}
+        {/* Expense Card là thẻ chi tiêu */}
+        
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl 
                         blur opacity-25 group-hover:opacity-40 transition-opacity" />
@@ -471,7 +545,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Balance Card */}
+        {/* Balance Card  là thẻ để hiển thị số dư */}
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl 
                         blur opacity-25 group-hover:opacity-40 transition-opacity" />
@@ -494,7 +568,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Count Card */}
+        {/* Count Card là thẻ để hiển thị số lượng giao dịch */}
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl 
                         blur opacity-25 group-hover:opacity-40 transition-opacity" />
@@ -518,57 +592,103 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Overall Stats */}
+      {/* Overall Stats - Candlestick Style Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card hover:shadow-lg transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Tổng quan toàn thời gian
-            </h3>
-            <div className="px-3 py-1 bg-primary-50 dark:bg-primary-500/10 rounded-full">
-              <span className="text-xs font-medium text-primary-600 dark:text-primary-400">
-                All Time
-              </span>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <FiActivity className="text-primary-600" />
+                Dao động Thu - Chi 7 ngày
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Biến động tài chính hàng ngày so với trung bình
+              </p>
             </div>
           </div>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 
-                          dark:from-green-500/10 dark:to-emerald-500/10 rounded-xl 
-                          border border-green-100 dark:border-green-500/20 
-                          hover:scale-[1.02] transition-transform">
-              <span className="text-gray-700 dark:text-gray-300 font-medium">
-                Tổng thu nhập
-              </span>
-              <span className="font-bold text-green-600 dark:text-green-400">
-                {formatCurrency(summary?.overall?.totalIncome || 0)}
-              </span>
+          
+          {dailyFluctuation.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={280}>
+                <ComposedChart data={dailyFluctuation}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.1} />
+                  <XAxis 
+                    dataKey="dateLabel" 
+                    stroke="#6b7280" 
+                    style={{ fontSize: '12px' }}
+                  />
+                  <YAxis 
+                    stroke="#6b7280" 
+                    style={{ fontSize: '12px' }}
+                    tickFormatter={(value) => `${(value / 1000000).toFixed(1)}tr`}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1f2937', 
+                      border: 'none', 
+                      borderRadius: '8px',
+                      color: '#fff'
+                    }}
+                    formatter={(value) => formatCurrency(value)}
+                  />
+                  <Legend />
+                  
+                  {/* Bar cho Income và Expense */}
+                  <Bar dataKey="income" fill="#10b981" name="💰 Thu nhập" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="expense" fill="#ef4444" name="💸 Chi tiêu" radius={[4, 4, 0, 0]} />
+                  
+                  {/* Line cho trung bình */}
+                  <Line 
+                    type="monotone" 
+                    dataKey="avgIncome" 
+                    stroke="#10b981" 
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                    name="📊 TB Thu"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="avgExpense" 
+                    stroke="#ef4444" 
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                    name="📊 TB Chi"
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+
+              {/* Summary Stats là dùng để hiển thị các thông tin tóm tắt */}
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                <div className="text-center p-2 bg-green-50 dark:bg-green-500/10 rounded-lg border border-green-100 dark:border-green-500/20">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">TB Thu/ngày</p>
+                  <p className="text-sm font-bold text-green-600 dark:text-green-400">
+                    {formatCurrency(dailyFluctuation.reduce((sum, d) => sum + d.income, 0) / dailyFluctuation.length)}
+                  </p>
+                </div>
+                <div className="text-center p-2 bg-red-50 dark:bg-red-500/10 rounded-lg border border-red-100 dark:border-red-500/20">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">TB Chi/ngày</p>
+                  <p className="text-sm font-bold text-red-600 dark:text-red-400">
+                    {formatCurrency(dailyFluctuation.reduce((sum, d) => sum + d.expense, 0) / dailyFluctuation.length)}
+                  </p>
+                </div>
+                <div className="text-center p-2 bg-blue-50 dark:bg-blue-500/10 rounded-lg border border-blue-100 dark:border-blue-500/20">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Biến động</p>
+                  <p className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                    {dailyFluctuation.filter(d => d.balance > 0).length}/{dailyFluctuation.length} ngày dương
+                  </p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="h-[280px] flex items-center justify-center text-gray-400">
+              Chưa có dữ liệu dao động
             </div>
-            <div className="flex justify-between items-center p-4 bg-gradient-to-r from-red-50 to-rose-50 
-                          dark:from-red-500/10 dark:to-rose-500/10 rounded-xl 
-                          border border-red-100 dark:border-red-500/20
-                          hover:scale-[1.02] transition-transform">
-              <span className="text-gray-700 dark:text-gray-300 font-medium">
-                Tổng chi tiêu
-              </span>
-              <span className="font-bold text-red-600 dark:text-red-400">
-                {formatCurrency(summary?.overall?.totalExpense || 0)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 
-                          dark:from-blue-500/10 dark:to-indigo-500/10 rounded-xl 
-                          border border-blue-100 dark:border-blue-500/20
-                          hover:scale-[1.02] transition-transform">
-              <span className="text-gray-700 dark:text-gray-300 font-medium">
-                Số dư
-              </span>
-              <span className="font-bold text-blue-600 dark:text-blue-400">
-                {formatCurrency(summary?.overall?.balance || 0)}
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Recent Transactions */}
+        {/* Recent Transactions là danh sách các giao dịch gần đây  */}
         <div className="card hover:shadow-lg transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -723,7 +843,7 @@ const Dashboard = () => {
                 </PieChart>
               </ResponsiveContainer>
               
-              {/* Category Legend */}
+              {/* Category Legend là phần chú giải màu sắc cho biểu đồ Pie Chart */}
               <div className="mt-4 space-y-2">
                 {categoryStats.slice(0, 6).map((cat, index) => {
                   const total = categoryStats.reduce((sum, c) => sum + c.expense, 0);
@@ -759,89 +879,8 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Xu hướng tài chính - Trend Table */}
-      <div className="card">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl">
-            <FiActivity className="text-white" size={24} />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-              Xu hướng tài chính
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Biến động thu chi qua các tháng
-            </p>
-          </div>
-        </div>
-
-        {monthlyStats.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-[#2a2a2a]">
-                  <th className="text-left p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Tháng</th>
-                  <th className="text-right p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Thu nhập</th>
-                  <th className="text-right p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Chi tiêu</th>
-                  <th className="text-center p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Xu hướng</th>
-                </tr>
-              </thead>
-              <tbody>
-                {monthlyStats.map((stat, index) => {
-                  const balance = (stat.totalIncome || 0) - (stat.totalExpense || 0);
-                  const prevStat = index > 0 ? monthlyStats[index - 1] : null;
-                  const prevBalance = prevStat ? (prevStat.totalIncome || 0) - (prevStat.totalExpense || 0) : 0;
-                  const trend = prevBalance !== 0 ? ((balance - prevBalance) / prevBalance * 100).toFixed(1) : 0;
-                  const isPositive = parseFloat(trend) > 0;
-                  
-                  return (
-                    <tr key={`${stat.year}-${stat.month}`} className="border-b border-gray-100 dark:border-[#1a1a1a] hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors">
-                      <td className="p-3">
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          Tháng {stat.month}/{stat.year}
-                        </span>
-                      </td>
-                      <td className="p-3 text-right">
-                        <span className="text-green-600 dark:text-green-400 font-semibold">
-                          {formatCurrency(stat.totalIncome || 0)}
-                        </span>
-                      </td>
-                      <td className="p-3 text-right">
-                        <span className="text-red-600 dark:text-red-400 font-semibold">
-                          {formatCurrency(stat.totalExpense || 0)}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <div className="flex items-center justify-center gap-2">
-                          {index === 0 ? (
-                            <span className="text-gray-400 text-sm">--</span>
-                          ) : (
-                            <>
-                              {isPositive ? (
-                                <FiTrendingUp className="text-green-500" size={20} />
-                              ) : (
-                                <FiTrendingDown className="text-red-500" size={20} />
-                              )}
-                              <span className={`font-bold ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                {isPositive ? '+' : ''}{trend}%
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-400">
-            Chưa có dữ liệu xu hướng
-          </div>
-        )}
-      </div>
     </div>
+    </PageTransition>
   );
 };
 

@@ -116,18 +116,22 @@ const Budgets = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center flex-wrap gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Ngân sách</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <span className="text-4xl">💰</span>
+            Ngân sách
+          </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Theo dõi và quản lý ngân sách của bạn
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="btn btn-primary flex items-center gap-2"
+          className="flex items-center gap-2 bg-primary-500 text-white px-6 py-3 rounded-xl hover:bg-primary-600 transition-all hover:scale-105 shadow-lg shadow-primary-500/30"
         >
-          <FiPlus /> Thêm ngân sách
+          <FiPlus />
+          <span>Thêm Ngân Sách</span>
         </button>
       </div>
 
@@ -168,70 +172,70 @@ const Budgets = () => {
       {/* Summary */}
       {budgetStatus && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="card">
+          <div className="bg-white dark:bg-[#111111] rounded-xl p-5 border border-gray-200 dark:border-[#2a2a2a] hover:shadow-xl dark:hover:shadow-2xl transition-all cursor-pointer group">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Tổng ngân sách</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Tổng ngân sách</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatCurrency(budgetStatus.summary.totalBudget)}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">💰</span>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-2xl transition-transform group-hover:scale-110">
+                💰
               </div>
             </div>
           </div>
 
-          <div className="card">
+          <div className="bg-white dark:bg-[#111111] rounded-xl p-5 border border-gray-200 dark:border-[#2a2a2a] hover:shadow-xl dark:hover:shadow-2xl transition-all cursor-pointer group">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Đã chi tiêu</p>
-                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400 mt-1">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Đã chi tiêu</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatCurrency(budgetStatus.summary.totalSpending)}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
-                <FiTrendingUp size={24} className="text-orange-600 dark:text-orange-400" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center transition-transform group-hover:scale-110">
+                <FiTrendingUp className="text-2xl text-white" />
               </div>
             </div>
           </div>
 
-          <div className="card">
+          <div className="bg-white dark:bg-[#111111] rounded-xl p-5 border border-gray-200 dark:border-[#2a2a2a] hover:shadow-xl dark:hover:shadow-2xl transition-all cursor-pointer group">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Còn lại</p>
-                <p className={`text-2xl font-bold mt-1 ${
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Còn lại</p>
+                <p className={`text-2xl font-bold ${
                   budgetStatus.summary.totalRemaining >= 0
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-red-600 dark:text-red-400'
+                    ? 'text-gray-900 dark:text-white'
+                    : 'text-gray-900 dark:text-white'
                 }`}>
                   {formatCurrency(budgetStatus.summary.totalRemaining)}
                 </p>
               </div>
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${
                 budgetStatus.summary.totalRemaining >= 0
-                  ? 'bg-green-100 dark:bg-green-900/30'
-                  : 'bg-red-100 dark:bg-red-900/30'
+                  ? 'bg-gradient-to-br from-green-400 to-emerald-600'
+                  : 'bg-gradient-to-br from-red-400 to-red-600'
               }`}>
                 {budgetStatus.summary.totalRemaining >= 0 ? (
-                  <FiCheckCircle size={24} className="text-green-600 dark:text-green-400" />
+                  <FiCheckCircle className="text-2xl text-white" />
                 ) : (
-                  <FiAlertCircle size={24} className="text-red-600 dark:text-red-400" />
+                  <FiAlertCircle className="text-2xl text-white" />
                 )}
               </div>
             </div>
           </div>
 
-          <div className="card">
+          <div className="bg-white dark:bg-[#111111] rounded-xl p-5 border border-gray-200 dark:border-[#2a2a2a] hover:shadow-xl dark:hover:shadow-2xl transition-all cursor-pointer group">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Vượt ngân sách</p>
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Vượt ngân sách</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
                   {budgetStatus.summary.overBudgetCount}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">⚠️</span>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center text-2xl transition-transform group-hover:scale-110">
+                ⚠️
               </div>
             </div>
           </div>

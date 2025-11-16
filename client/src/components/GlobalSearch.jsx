@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiX } from 'react-icons/fi';
 import { useTransactions } from '../context/TransactionContext';
@@ -13,6 +13,7 @@ const GlobalSearch = () => {
   const [searchResults, setSearchResults] = useState([]);
   const navigate = useNavigate();
   const searchRef = useRef(null);
+  const debounceTimer = useRef(null);
   const { transactions } = useTransactions();
   const { categories } = useCategories();
   const { budgets } = useBudgets();
@@ -31,19 +32,73 @@ const GlobalSearch = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Search logic
-  useEffect(() => {
-    if (searchQuery.trim() === '') {
+  // Fuzzy search helper - tìm kiếm gần đúng
+  const fuzzyMatch = (text, query) => {
+    if (!text || !query) return false;
+    text = text.toLowerCase();
+    query = query.toLowerCase();
+    
+    // Exact match
+    if (text.includes(query)) return true;
+    
+    // Remove Vietnamese accents for better matching
+    const removeAccents = (str) => {
+      return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    };
+    
+    const normalizedText = removeAccents(text);
+    const normalizedQuery = removeAccents(query);
+    
+    if (normalizedText.includes(normalizedQuery)) return true;
+    
+    // Fuzzy matching - allow 1-2 character differences
+    let queryIndex = 0;
+    let matchCount = 0;
+    
+    for (let i = 0; i < normalizedText.length && queryIndex < normalizedQuery.length; i++) {
+      if (normalizedText[i] === normalizedQuery[queryIndex]) {
+        matchCount++;
+        queryIndex++;
+      }
+    }
+    
+    // If matched at least 70% of the query characters
+    return matchCount / normalizedQuery.length >= 0.7;
+  };
+
+  // Highlight matching text
+  const highlightText = (text, query) => {
+    if (!text || !query) return text;
+    
+    const lowerText = text.toLowerCase();
+    const lowerQuery = query.toLowerCase();
+    const index = lowerText.indexOf(lowerQuery);
+    
+    if (index === -1) return text;
+    
+    return (
+      <>
+        {text.substring(0, index)}
+        <span className="bg-yellow-200 dark:bg-yellow-500/30 text-gray-900 dark:text-yellow-300 font-semibold">
+          {text.substring(index, index + query.length)}
+        </span>
+        {text.substring(index + query.length)}
+      </>
+    );
+  };
+
+  // Debounced search function
+  const performSearch = useCallback((query) => {
+    if (!query || query.trim() === '') {
       setSearchResults([]);
       return;
     }
 
-    const query = searchQuery.toLowerCase();
-    const results = [];
+    const lowerQuery = query.toLowerCase();
 
     // Debug: Log data availability
     console.log('=== GLOBAL SEARCH DEBUG ===');
-    console.log('Search Query:', query);
+    console.log('Search Query:', lowerQuery);
     console.log('Budgets:', budgets?.length || 0, budgets);
     console.log('Goals:', goals?.length || 0, goals);
     console.log('Recurring:', recurringList?.length || 0, recurringList);
@@ -65,8 +120,8 @@ const GlobalSearch = () => {
 
     const pageResults = pages
       .filter(p => 
-        p.title.toLowerCase().includes(query) ||
-        p.keywords.some(k => k.includes(query))
+        fuzzyMatch(p.title, lowerQuery) ||
+        p.keywords.some(k => fuzzyMatch(k, lowerQuery))
       )
       .slice(0, 3)
       .map(p => ({
@@ -74,17 +129,18 @@ const GlobalSearch = () => {
         title: p.title,
         subtitle: 'Trang',
         path: p.path,
-        icon: p.icon
+        icon: p.icon,
+        matchText: p.title
       }));
 
     // Search in transactions
     const transactionResults = (transactions || [])
       .filter(t => {
-        const categoryMatch = t.category?.toLowerCase().includes(query);
-        const noteMatch = t.note?.toLowerCase().includes(query);
-        const amountMatch = t.amount?.toString().includes(query);
-        const incomeMatch = t.type === 'income' && (query.includes('thu nhập') || query.includes('thu nhap') || query.includes('income'));
-        const expenseMatch = t.type === 'expense' && (query.includes('chi tiêu') || query.includes('chi tieu') || query.includes('expense'));
+        const categoryMatch = fuzzyMatch(t.category, lowerQuery);
+        const noteMatch = fuzzyMatch(t.note, lowerQuery);
+        const amountMatch = t.amount?.toString().includes(lowerQuery);
+        const incomeMatch = t.type === 'income' && (fuzzyMatch('thu nhập', lowerQuery) || fuzzyMatch('income', lowerQuery));
+        const expenseMatch = t.type === 'expense' && (fuzzyMatch('chi tiêu', lowerQuery) || fuzzyMatch('expense', lowerQuery));
         return categoryMatch || noteMatch || amountMatch || incomeMatch || expenseMatch;
       })
       .slice(0, 5)
@@ -95,15 +151,16 @@ const GlobalSearch = () => {
         subtitle: `${t.note || (t.type === 'income' ? 'Thu nhập' : 'Chi tiêu')} - ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(t.amount)}`,
         path: '/transactions',
         icon: t.type === 'income' ? '📈' : '📉',
-        date: new Date(t.date).toLocaleDateString('vi-VN')
+        date: new Date(t.date).toLocaleDateString('vi-VN'),
+        matchText: t.category || t.note
       }));
 
     // Search in categories
     const categoryResults = (categories || [])
       .filter(c => {
-        const nameMatch = c.name?.toLowerCase().includes(query);
-        const incomeMatch = c.type === 'income' && (query.includes('thu nhập') || query.includes('thu nhap'));
-        const expenseMatch = c.type === 'expense' && (query.includes('chi tiêu') || query.includes('chi tieu'));
+        const nameMatch = fuzzyMatch(c.name, lowerQuery);
+        const incomeMatch = c.type === 'income' && fuzzyMatch('thu nhập', lowerQuery);
+        const expenseMatch = c.type === 'expense' && fuzzyMatch('chi tiêu', lowerQuery);
         return nameMatch || incomeMatch || expenseMatch;
       })
       .slice(0, 3)
@@ -113,87 +170,82 @@ const GlobalSearch = () => {
         title: c.name,
         subtitle: `Danh mục ${c.type === 'income' ? 'thu nhập' : c.type === 'expense' ? 'chi tiêu' : 'cả hai'}`,
         path: '/categories',
-        icon: c.icon || '📁'
+        icon: c.icon || '📁',
+        matchText: c.name
       }));
 
     // Search in budgets
-    const isBudgetKeyword = query.includes('ngân sách') || 
-                            query.includes('ngan sach') || 
-                            query.includes('budget') ||
-                            query.includes('chi tiêu') ||
-                            query.includes('chi tieu') ||
-                            query.includes('tổng chi') ||
-                            query.includes('tong chi');
+    const isBudgetKeyword = fuzzyMatch('ngân sách', lowerQuery) || 
+                            fuzzyMatch('budget', lowerQuery) ||
+                            fuzzyMatch('chi tiêu', lowerQuery) ||
+                            fuzzyMatch('tổng chi', lowerQuery);
     
     const budgetResults = (budgets || [])
       .filter(b => {
-        if (isBudgetKeyword) return true; // Show all budgets for budget keywords
-        const categoryMatch = (b.category?.toLowerCase().includes(query) || 
-                              b.categoryName?.toLowerCase().includes(query));
-        const amountMatch = b.amount?.toString().includes(query);
-        const periodMatch = b.period?.toLowerCase().includes(query);
+        if (isBudgetKeyword) return true;
+        const categoryMatch = fuzzyMatch(b.category, lowerQuery) || fuzzyMatch(b.categoryName, lowerQuery);
+        const amountMatch = b.amount?.toString().includes(lowerQuery);
+        const periodMatch = fuzzyMatch(b.period, lowerQuery);
         return categoryMatch || amountMatch || periodMatch;
       })
-      .slice(0, isBudgetKeyword ? 5 : 3) // Show more if searching for budget keyword
+      .slice(0, isBudgetKeyword ? 5 : 3)
       .map(b => ({
         type: 'budget',
         id: b._id,
         title: b.category || b.categoryName || 'Tổng ngân sách',
         subtitle: `Ngân sách ${b.period === 'monthly' ? 'tháng' : b.period === 'weekly' ? 'tuần' : 'năm'} - ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(b.amount)}`,
         path: '/budgets',
-        icon: '💰'
+        icon: '💰',
+        matchText: b.category || b.categoryName || 'Tổng ngân sách'
       }));
 
     // Search in goals
-    const isGoalKeyword = query.includes('mục tiêu') || 
-                         query.includes('muc tieu') || 
-                         query.includes('goal');
+    const isGoalKeyword = fuzzyMatch('mục tiêu', lowerQuery) || fuzzyMatch('goal', lowerQuery);
     
     const goalResults = (goals || [])
       .filter(g => {
-        if (isGoalKeyword) return true; // Show all goals for goal keywords
-        const nameMatch = g.name?.toLowerCase().includes(query);
-        const amountMatch = g.targetAmount?.toString().includes(query) || 
-                           g.currentAmount?.toString().includes(query);
-        const statusMatch = g.status?.toLowerCase().includes(query);
+        if (isGoalKeyword) return true;
+        const nameMatch = fuzzyMatch(g.name, lowerQuery);
+        const amountMatch = g.targetAmount?.toString().includes(lowerQuery) || 
+                           g.currentAmount?.toString().includes(lowerQuery);
+        const statusMatch = fuzzyMatch(g.status, lowerQuery);
         return nameMatch || amountMatch || statusMatch;
       })
-      .slice(0, isGoalKeyword ? 5 : 3) // Show more if searching for goal keyword
+      .slice(0, isGoalKeyword ? 5 : 3)
       .map(g => ({
         type: 'goal',
         id: g._id,
         title: g.name,
         subtitle: `Mục tiêu ${g.status === 'active' ? 'đang thực hiện' : g.status === 'completed' ? 'đã hoàn thành' : 'tạm dừng'} - ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(g.currentAmount)}/${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(g.targetAmount)}`,
         path: '/goals',
-        icon: g.status === 'completed' ? '✅' : '🎯'
+        icon: g.status === 'completed' ? '✅' : '🎯',
+        matchText: g.name
       }));
 
     // Search in recurring transactions
-    const isRecurringKeyword = query.includes('định kỳ') || 
-                               query.includes('dinh ky') || 
-                               query.includes('recurring');
+    const isRecurringKeyword = fuzzyMatch('định kỳ', lowerQuery) || fuzzyMatch('recurring', lowerQuery);
     
     const recurringResults = (recurringList || [])
       .filter(r => {
-        if (isRecurringKeyword) return true; // Show all recurring for recurring keywords
-        const nameMatch = (r.templateName?.toLowerCase().includes(query) || 
-                          r.description?.toLowerCase().includes(query));
-        const categoryMatch = r.category?.toLowerCase().includes(query);
-        const amountMatch = r.amount?.toString().includes(query);
-        const frequencyMatch = r.frequency?.toLowerCase().includes(query);
+        if (isRecurringKeyword) return true;
+        const nameMatch = fuzzyMatch(r.templateName, lowerQuery) || fuzzyMatch(r.description, lowerQuery);
+        const categoryMatch = fuzzyMatch(r.category, lowerQuery);
+        const amountMatch = r.amount?.toString().includes(lowerQuery);
+        const frequencyMatch = fuzzyMatch(r.frequency, lowerQuery);
         return nameMatch || categoryMatch || amountMatch || frequencyMatch;
       })
-      .slice(0, isRecurringKeyword ? 5 : 3) // Show more if searching for recurring keyword
+      .slice(0, isRecurringKeyword ? 5 : 3)
       .map(r => ({
         type: 'recurring',
         id: r._id,
         title: r.templateName || r.description || 'Giao dịch định kỳ',
         subtitle: `${r.type === 'income' ? 'Thu' : 'Chi'} định kỳ ${r.frequency === 'daily' ? 'hàng ngày' : r.frequency === 'weekly' ? 'hàng tuần' : r.frequency === 'monthly' ? 'hàng tháng' : 'hàng năm'} - ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(r.amount)}`,
         path: '/recurring',
-        icon: r.isActive ? '🔄' : '⏸️'
+        icon: r.isActive ? '🔄' : '⏸️',
+        matchText: r.templateName || r.description
       }));
 
-    // Combine results with priority: Pages > Budgets > Goals > Recurring > Transactions > Categories
+    // Combine results with priority
     const finalResults = [
       ...pageResults,
       ...budgetResults,
@@ -214,7 +266,27 @@ const GlobalSearch = () => {
     });
     
     setSearchResults(finalResults);
-  }, [searchQuery, transactions, categories, budgets, goals, recurringList]);
+  }, [transactions, categories, budgets, goals, recurringList]);
+
+  // Debounced search with useEffect
+  useEffect(() => {
+    // Clear previous timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    // Set new timer (300ms delay)
+    debounceTimer.current = setTimeout(() => {
+      performSearch(searchQuery);
+    }, 300);
+
+    // Cleanup
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [searchQuery, performSearch]);
 
   const handleResultClick = (result) => {
     navigate(result.path);
@@ -276,7 +348,7 @@ const GlobalSearch = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                        {result.title}
+                        {result.matchText ? highlightText(result.title, searchQuery) : result.title}
                       </p>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0
                         ${result.type === 'page' ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400' : ''}
