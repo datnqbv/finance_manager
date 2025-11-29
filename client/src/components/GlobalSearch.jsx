@@ -133,16 +133,44 @@ const GlobalSearch = () => {
         matchText: p.title
       }));
 
-    // Search in transactions
+    // Search in transactions with relevance scoring
     const transactionResults = (transactions || [])
-      .filter(t => {
-        const categoryMatch = fuzzyMatch(t.category, lowerQuery);
-        const noteMatch = fuzzyMatch(t.note, lowerQuery);
-        const amountMatch = t.amount?.toString().includes(lowerQuery);
-        const incomeMatch = t.type === 'income' && (fuzzyMatch('thu nhập', lowerQuery) || fuzzyMatch('income', lowerQuery));
-        const expenseMatch = t.type === 'expense' && (fuzzyMatch('chi tiêu', lowerQuery) || fuzzyMatch('expense', lowerQuery));
-        return categoryMatch || noteMatch || amountMatch || incomeMatch || expenseMatch;
+      .map(t => {
+        const categoryLower = (t.category || '').toLowerCase();
+        const noteLower = (t.note || '').toLowerCase();
+        
+        let score = 0;
+        
+        // Exact match (highest priority)
+        if (categoryLower === lowerQuery) score += 100;
+        else if (noteLower === lowerQuery) score += 90;
+        
+        // Starts with (high priority)
+        else if (categoryLower.startsWith(lowerQuery)) score += 80;
+        else if (noteLower.startsWith(lowerQuery)) score += 70;
+        
+        // Contains (medium priority)
+        else if (categoryLower.includes(lowerQuery)) score += 50;
+        else if (noteLower.includes(lowerQuery)) score += 40;
+        
+        // Fuzzy match (lower priority)
+        else if (fuzzyMatch(t.category, lowerQuery)) score += 20;
+        else if (fuzzyMatch(t.note, lowerQuery)) score += 15;
+        
+        // Amount match
+        if (t.amount?.toString().includes(lowerQuery)) score += 10;
+        
+        // Type match
+        if (t.type === 'income' && (fuzzyMatch('thu nhập', lowerQuery) || fuzzyMatch('income', lowerQuery))) score += 5;
+        if (t.type === 'expense' && (fuzzyMatch('chi tiêu', lowerQuery) || fuzzyMatch('expense', lowerQuery))) score += 5;
+        
+        return {
+          ...t,
+          relevanceScore: score
+        };
       })
+      .filter(t => t.relevanceScore > 0)
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
       .slice(0, 5)
       .map(t => ({
         type: 'transaction',
@@ -152,17 +180,28 @@ const GlobalSearch = () => {
         path: '/transactions',
         icon: t.type === 'income' ? '📈' : '📉',
         date: new Date(t.date).toLocaleDateString('vi-VN'),
-        matchText: t.category || t.note
+        matchText: t.category || t.note,
+        relevanceScore: t.relevanceScore
       }));
 
-    // Search in categories
+    // Search in categories with relevance scoring
     const categoryResults = (categories || [])
-      .filter(c => {
-        const nameMatch = fuzzyMatch(c.name, lowerQuery);
-        const incomeMatch = c.type === 'income' && fuzzyMatch('thu nhập', lowerQuery);
-        const expenseMatch = c.type === 'expense' && fuzzyMatch('chi tiêu', lowerQuery);
-        return nameMatch || incomeMatch || expenseMatch;
+      .map(c => {
+        const nameLower = (c.name || '').toLowerCase();
+        let score = 0;
+        
+        if (nameLower === lowerQuery) score += 100;
+        else if (nameLower.startsWith(lowerQuery)) score += 80;
+        else if (nameLower.includes(lowerQuery)) score += 50;
+        else if (fuzzyMatch(c.name, lowerQuery)) score += 20;
+        
+        if (c.type === 'income' && fuzzyMatch('thu nhập', lowerQuery)) score += 5;
+        if (c.type === 'expense' && fuzzyMatch('chi tiêu', lowerQuery)) score += 5;
+        
+        return { ...c, relevanceScore: score };
       })
+      .filter(c => c.relevanceScore > 0)
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
       .slice(0, 3)
       .map(c => ({
         type: 'category',
@@ -171,7 +210,8 @@ const GlobalSearch = () => {
         subtitle: `Danh mục ${c.type === 'income' ? 'thu nhập' : c.type === 'expense' ? 'chi tiêu' : 'cả hai'}`,
         path: '/categories',
         icon: c.icon || '📁',
-        matchText: c.name
+        matchText: c.name,
+        relevanceScore: c.relevanceScore
       }));
 
     // Search in budgets
@@ -245,23 +285,31 @@ const GlobalSearch = () => {
         matchText: r.templateName || r.description
       }));
 
-    // Combine results with priority
-    const finalResults = [
-      ...pageResults,
+    // Combine results and sort by relevance score
+    const allResults = [
+      ...transactionResults,
+      ...categoryResults,
       ...budgetResults,
       ...goalResults,
-      ...recurringResults,
-      ...transactionResults,
-      ...categoryResults
+      ...recurringResults
+    ];
+    
+    // Sort all results by relevance score
+    allResults.sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
+    
+    // Pages always at top if matched
+    const finalResults = [
+      ...pageResults,
+      ...allResults.slice(0, 15) // Limit total results
     ];
     
     console.log('Search Results:', {
       pages: pageResults.length,
+      transactions: transactionResults.length,
+      categories: categoryResults.length,
       budgets: budgetResults.length,
       goals: goalResults.length,
       recurring: recurringResults.length,
-      transactions: transactionResults.length,
-      categories: categoryResults.length,
       total: finalResults.length
     });
     

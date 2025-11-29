@@ -11,6 +11,7 @@ import recurringRoutes from './routes/recurring.routes.js';
 import goalRoutes from './routes/goal.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import chatRoutes from './routes/chat.routes.js';
+import searchRoutes from './routes/search.routes.js';
 import { errorHandler } from './middleware/error.middleware.js';
 
 // Load environment variables
@@ -48,6 +49,7 @@ app.use('/api/recurring', recurringRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/search', searchRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

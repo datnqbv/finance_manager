@@ -136,7 +136,7 @@ const RecurringTransactions = () => {
           className="flex items-center gap-2 bg-primary-500 text-white px-6 py-3 rounded-xl hover:bg-primary-600 transition-all hover:scale-105 shadow-lg shadow-primary-500/30"
         >
           <FiPlus />
-          <span>Thêm Định Kỳ</span>
+          <span>Thêm Giao Dịch Định Kỳ</span>
         </button>
       </div>
 

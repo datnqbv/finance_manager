@@ -79,7 +79,7 @@ const Categories = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <span className="text-4xl">📁</span>
+            <span className="text-4xl">🗂️</span>
             Quản lý danh mục
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -106,7 +106,7 @@ const Categories = () => {
               </p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-2xl transition-transform group-hover:scale-110">
-              📁
+              🗂️
             </div>
           </div>
         </div>

@@ -27,6 +27,7 @@ import DarkModeToggle from './DarkModeToggle';
 import GlobalSearch from './GlobalSearch';
 import { useThemeCustomizer } from '../context/ThemeCustomizerContext';
 import { getNotifications } from '../services/notification.service';
+import Chatbot from './chatbot/Chatbot';
 
 
 
@@ -79,7 +80,7 @@ const Layout = ({ children }) => {
   
   // Định nghĩa các mục trong sidebar
   const menuItems = [
-    { path: '/', icon: FiHome, label: 'Tổng quan', isImg: false },
+    { path: '/dashboard', icon: FiHome, label: 'Tổng quan', isImg: false },
     { path: '/transactions', icon: FiCreditCard, label: 'Giao dịch', isImg: false },
     { path: '/categories', icon: FiFolder, label: 'Danh mục', isImg: false },
     { path: '/budgets', icon: FiDollarSign, label: 'Ngân sách', isImg: false },
@@ -126,7 +127,7 @@ const Layout = ({ children }) => {
           <div className="p-6 border-b border-gray-200 dark:border-[#2a2a2a]">
             <div className="flex items-center gap-3">
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 
-                            flex items-center justify-center text-2xl shadow-lg">
+                            flex items-center justify-center text-2xl shadow-lg animate-bounce">
                 <img
                   src="/icons/money-bag.png"
                   alt="Finance Manager Logo"
@@ -142,6 +143,26 @@ const Layout = ({ children }) => {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Back to Home Link */}
+          <div className="px-4 pt-4">
+            <Link
+              to="/home"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
+                       text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#222222] 
+                       hover:text-primary-600 dark:hover:text-primary-400 group"
+            >
+              <svg 
+                className="w-5 h-5 group-hover:scale-110 transition-transform" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span className="font-medium">Về trang chủ</span>
+            </Link>
           </div>
 
           {/* Navigation */}
@@ -504,6 +525,9 @@ const Layout = ({ children }) => {
           </div>
         </main>
       </div>
+      
+      {/* AI Chatbot - Fixed position */}
+      <Chatbot />
     </div>
   );
 };

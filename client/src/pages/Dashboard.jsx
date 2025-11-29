@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { statsService } from '../services/stats.service';
 import { transactionService } from '../services/transaction.service';
 import goalService from '../services/goal.service';
-import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiActivity, FiCalendar, FiAlertTriangle, FiTarget, FiSun, FiMoon, FiClock } from 'react-icons/fi';
+import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiActivity, FiCalendar, FiAlertTriangle, FiTarget, FiSun, FiMoon, FiClock, FiList } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, ComposedChart, Area } from 'recharts';
 import PageTransition from '../components/PageTransition';
@@ -11,6 +12,7 @@ import CustomTooltip from '../components/Tooltip';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [summary, setSummary] = useState(null); // để dùng cho dashboard tổng quát , chứa các thông tin như thu nhập, chi tiêu, số dư
   const [filteredSummary, setFilteredSummary] = useState(null); // Summary theo time filter
   const [monthlyStats, setMonthlyStats] = useState([]);
@@ -226,6 +228,7 @@ const Dashboard = () => {
     const lastMonthBalance = (lastMonthData.totalIncome || 0) - (lastMonthData.totalExpense || 0);
     
     const change = thisMonthBalance - lastMonthBalance;
+    const changeAmount = Math.abs(change);
     
     // Tránh chia cho 0, dùng lastMonthBalance làm base
     const percentChange = lastMonthBalance !== 0 
@@ -234,12 +237,12 @@ const Dashboard = () => {
     
     if (change > 0) {
       return {
-        message: `Tháng này bạn tiết kiệm tốt hơn ${Math.abs(percentChange)}% so với tháng trước 🎉`,
+        message: `Tháng này bạn tiết kiệm tốt hơn ${Math.abs(percentChange)}% (${formatCurrency(changeAmount)}) so với tháng trước 🎉`,
         type: 'success'
       };
     } else if (change < 0) {
       return {
-        message: `Tiết kiệm tháng này giảm ${Math.abs(percentChange)}% so với tháng trước ⚠️`,
+        message: `Tiết kiệm tháng này giảm ${Math.abs(percentChange)}% (${formatCurrency(changeAmount)}) so với tháng trước ⚠️`,
         type: 'warning'
       };
     }
@@ -694,10 +697,19 @@ const Dashboard = () => {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               Giao dịch gần đây
             </h3>
-            <div className="px-3 py-1 bg-primary-50 dark:bg-primary-500/10 rounded-full">
-              <span className="text-xs font-medium text-primary-600 dark:text-primary-400">
-                Latest 5
-              </span>
+            <div className="flex items-center gap-2">
+              <div className="px-3 py-1 bg-primary-50 dark:bg-primary-500/10 rounded-full">
+                <span className="text-xs font-medium text-primary-600 dark:text-primary-400">
+                  Latest 5
+                </span>
+              </div>
+              <button
+                onClick={() => navigate('/transactions')}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+              >
+                <FiList className="w-4 h-4" />
+                <span className="text-sm font-medium">Xem chi tiết</span>
+              </button>
             </div>
           </div>
           <div className="space-y-3">

@@ -11,6 +11,10 @@ import { RecurringProvider } from './context/RecurringContext';
 import { GoalProvider } from './context/GoalContext';
 import { ThemeCustomizerProvider } from './context/ThemeCustomizerContext';
 import PrivateRoute from './components/PrivateRoute';
+import PublicRoute from './components/PublicRoute';
+import Landing from './pages/Landing';
+import Pricing from './pages/Pricing';
+import Blog from './pages/Blog';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -36,19 +40,40 @@ function App() {
                   <Router> 
           <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] transition-colors duration-300">
             <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<PublicRoute />} />
+              <Route path="/home" element={<Landing />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:id" element={<Blog />} />
               <Route path="/login" element={<Login />} /> 
               <Route path="/register" element={<Register />} /> 
               <Route path="/forgot-password" element={<ForgotPassword />} /> 
               
-              <Route path="/" element={<PrivateRoute />}> 
+              {/* Protected Routes */}
+              <Route path="/dashboard" element={<PrivateRoute />}> 
                 <Route index element={<Dashboard />} /> 
-                <Route path="transactions" element={<Transactions />} /> 
-                <Route path="categories" element={<Categories />} /> 
-                <Route path="budgets" element={<Budgets />} /> 
-                <Route path="recurring" element={<RecurringTransactions />} /> 
-                <Route path="goals" element={<Goals />} /> 
-                <Route path="statistics" element={<Statistics />} /> 
-                <Route path="profile" element={<Profile />} /> 
+              </Route>
+              <Route path="/transactions" element={<PrivateRoute />}> 
+                <Route index element={<Transactions />} /> 
+              </Route>
+              <Route path="/categories" element={<PrivateRoute />}> 
+                <Route index element={<Categories />} /> 
+              </Route>
+              <Route path="/budgets" element={<PrivateRoute />}> 
+                <Route index element={<Budgets />} /> 
+              </Route>
+              <Route path="/recurring" element={<PrivateRoute />}> 
+                <Route index element={<RecurringTransactions />} /> 
+              </Route>
+              <Route path="/goals" element={<PrivateRoute />}> 
+                <Route index element={<Goals />} /> 
+              </Route>
+              <Route path="/statistics" element={<PrivateRoute />}> 
+                <Route index element={<Statistics />} /> 
+              </Route>
+              <Route path="/profile" element={<PrivateRoute />}> 
+                <Route index element={<Profile />} /> 
               </Route>
               
               <Route path="*" element={<Navigate to="/" replace />} /> 
