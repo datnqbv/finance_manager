@@ -150,8 +150,6 @@ const Landing = () => {
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-gray-600 hover:text-emerald-500 transition font-medium">Tính năng</a>
               <a href="#testimonials" className="text-gray-600 hover:text-emerald-500 transition font-medium">Đánh giá</a>
-              <button onClick={() => navigate('/pricing')} className="text-gray-600 hover:text-emerald-500 transition font-medium">Bảng giá</button>
-              <button onClick={() => navigate('/blog')} className="text-gray-600 hover:text-emerald-500 transition font-medium">Blog</button>
               <button 
                 onClick={() => navigate(user ? '/dashboard' : '/login')}
                 className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-emerald-700 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
@@ -217,12 +215,6 @@ const Landing = () => {
                 >
                   <FaRocket className="inline mr-2" />
                   {user ? 'Vào Dashboard ngay' : 'Bắt đầu miễn phí'} →
-                </button>
-                <button 
-                  onClick={() => navigate('/pricing')}
-                  className="px-8 py-4 bg-white border-2 border-emerald-500 text-emerald-600 text-lg font-bold rounded-xl hover:bg-emerald-50 transition shadow-lg"
-                >
-                  Xem bảng giá
                 </button>
               </div>
 
@@ -450,8 +442,6 @@ const Landing = () => {
               <h3 className="font-bold mb-4">Sản phẩm</h3>
               <ul className="space-y-2 text-gray-400">
                 <li><a href="#features" className="hover:text-white transition">Tính năng</a></li>
-                <li><button onClick={() => navigate('/pricing')} className="hover:text-white transition">Bảng giá</button></li>
-                <li><button onClick={() => navigate('/blog')} className="hover:text-white transition">Blog</button></li>
               </ul>
             </div>
             

@@ -13,8 +13,6 @@ import { ThemeCustomizerProvider } from './context/ThemeCustomizerContext';
 import PrivateRoute from './components/PrivateRoute';
 import PublicRoute from './components/PublicRoute';
 import Landing from './pages/Landing';
-import Pricing from './pages/Pricing';
-import Blog from './pages/Blog';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -43,9 +41,6 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<PublicRoute />} />
               <Route path="/home" element={<Landing />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:id" element={<Blog />} />
               <Route path="/login" element={<Login />} /> 
               <Route path="/register" element={<Register />} /> 
               <Route path="/forgot-password" element={<ForgotPassword />} /> 
