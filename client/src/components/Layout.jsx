@@ -26,7 +26,7 @@ import { useState, useEffect } from 'react';
 import DarkModeToggle from './DarkModeToggle';
 import GlobalSearch from './GlobalSearch';
 import { useThemeCustomizer } from '../context/ThemeCustomizerContext';
-import { getNotifications } from '../services/notification.service';
+import { getNotifications, markAsRead as markNotificationAsRead, markAllAsRead as markAllNotificationsAsRead } from '../services/notification.service';
 import Chatbot from './chatbot/Chatbot';
 
 
@@ -60,22 +60,38 @@ const Layout = ({ children }) => {
 
     fetchNotifications();
     
-    // Refresh notifications every 5 minutes
-    const interval = setInterval(fetchNotifications, 5 * 60 * 1000);
+    // Refresh notifications every 10 seconds
+    const interval = setInterval(fetchNotifications, 10 * 1000);
     
     return () => clearInterval(interval);
   }, []);
   
-  const markAsRead = (id) => { // Đánh dấu một thông báo là đã đọc
-    setNotifications(notifications.map(n => // Cập nhật trạng thái đã đọc cho thông báo cụ thể
-      n.id === id ? { ...n, read: true } : n
-    ));
-    setUnreadCount(prev => Math.max(0, prev - 1)); // Giảm số thông báo chưa đọc
+  const markAsRead = async (id) => { // Đánh dấu một thông báo là đã đọc
+    try {
+      // Gọi API để đánh dấu đã đọc
+      await markNotificationAsRead(id);
+      
+      // Cập nhật UI
+      setNotifications(notifications.map(n => 
+        n.id === id ? { ...n, read: true } : n
+      ));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true }))); // Đánh dấu tất cả là đã đọc
-    setUnreadCount(0);
+  const markAllAsRead = async () => {
+    try {
+      // Gọi API để đánh dấu tất cả đã đọc
+      await markAllNotificationsAsRead();
+      
+      // Cập nhật UI
+      setNotifications(notifications.map(n => ({ ...n, read: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
   };
   
   // Định nghĩa các mục trong sidebar

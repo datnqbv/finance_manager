@@ -2,6 +2,7 @@ import Budget from '../models/Budget.model.js';
 import Goal from '../models/Goal.model.js';
 import RecurringTransaction from '../models/RecurringTransaction.model.js';
 import Transaction from '../models/Transaction.model.js';
+import Notification from '../models/Notification.model.js';
 
 // Helper function to calculate spending for a budget
 const calculateBudgetSpending = async (userId, categoryName, dateRange) => {
@@ -74,52 +75,49 @@ const getTimeAgo = (date) => {
 // Lấy thông báo cho người dùng
 export const getNotifications = async (req, res) => {
   try {
-    const notifications = [];
-    const now = new Date();
-    const notificationIds = new Set(); // Tránh trùng lặp
-
-    // 1. Check budgets that are over 80% spent
-    const budgets = await Budget.find({ userId: req.user.id, isActive: true });
+    const { limit = 20, skip = 0, read } = req.query;
     
-    for (const budget of budgets) {
-      const dateRange = getDateRange(budget.period);
-      const currentSpending = await calculateBudgetSpending(
-        req.user.id,
-        budget.category,
-        dateRange
-      );
-
-      const percentage = (currentSpending / budget.amount) * 100;
-
-      // Lấy giao dịch gần nhất để có thời điểm chính xác
-      const latestTransaction = await Transaction.findOne({
-        userId: req.user.id,
-        type: 'expense',
-        category: budget.category || { $exists: true },
-        date: { $gte: dateRange.start, $lte: dateRange.end }
-      }).sort({ date: -1 });
-
-      const notificationTime = latestTransaction ? latestTransaction.date : budget.updatedAt;
-
-      if (percentage >= 80) {
-        const notifId = `budget-${budget._id}`;
-        if (!notificationIds.has(notifId)) {
-          notificationIds.add(notifId);
-          notifications.push({
-            id: notifId,
-            type: percentage >= 100 ? 'error' : 'warning',
-            title: percentage >= 100 ? 'Vượt ngân sách' : 'Cảnh báo ngân sách',
-            message: `${budget.category || 'Tổng ngân sách'}: ${percentage.toFixed(0)}% (${currentSpending.toLocaleString('vi-VN')}/${budget.amount.toLocaleString('vi-VN')} ₫)`,
-            time: getTimeAgo(notificationTime),
-            read: false,
-            createdAt: notificationTime
-          });
-        }
-      }
+    // Build query
+    const query = { userId: req.user.id };
+    if (read !== undefined) {
+      query.read = read === 'true';
     }
 
-    
-    // 2. Kiểm tra các mục tiêu đã hoàn thành hoặc gần hoàn thành
+    // Lấy thông báo từ database
+    const dbNotifications = await Notification.find(query)
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .skip(parseInt(skip));
+
+    // Format thông báo
+    const formattedNotifications = dbNotifications.map(notif => {
+      const timeAgo = getTimeAgo(notif.createdAt);
+      return {
+        id: notif._id.toString(),
+        type: notif.type,
+        title: notif.title,
+        message: notif.message,
+        time: timeAgo,
+        read: notif.read,
+        createdAt: notif.createdAt,
+        relatedId: notif.relatedId,
+        relatedModel: notif.relatedModel,
+        metadata: notif.metadata
+      };
+    });
+
+    // Đếm số thông báo chưa đọc
+    const unreadCount = await Notification.countDocuments({ 
+      userId: req.user.id, 
+      read: false 
+    });
+
+    // Tạo thêm các thông báo tự động (goal, recurring) - không bao gồm budget vì đã tạo trong transaction
+    const autoNotifications = [];
+    const now = new Date();
+    const notificationIds = new Set();
+
+    // 1. Kiểm tra các mục tiêu
     const goals = await Goal.find({ userId: req.user.id });
 
     for (const goal of goals) {
@@ -129,7 +127,7 @@ export const getNotifications = async (req, res) => {
         const notifId = `goal-completed-${goal._id}`;
         if (!notificationIds.has(notifId)) {
           notificationIds.add(notifId);
-          notifications.push({
+          autoNotifications.push({
             id: notifId,
             type: 'success',
             title: 'Hoàn thành mục tiêu',
@@ -143,7 +141,7 @@ export const getNotifications = async (req, res) => {
         const notifId = `goal-progress-${goal._id}`;
         if (!notificationIds.has(notifId)) {
           notificationIds.add(notifId);
-          notifications.push({
+          autoNotifications.push({
             id: notifId,
             type: 'info',
             title: 'Gần đạt mục tiêu',
@@ -156,7 +154,7 @@ export const getNotifications = async (req, res) => {
       }
     }
 
-    // 3. Kiểm tra các giao dịch định kỳ đến hạn hôm nay hoặc quá hạn
+    // 2. Kiểm tra các giao dịch định kỳ
     const recurringTransactions = await RecurringTransaction.find({
       userId: req.user.id,
       isActive: true
@@ -170,7 +168,7 @@ export const getNotifications = async (req, res) => {
         const notifId = `recurring-overdue-${recurring._id}`;
         if (!notificationIds.has(notifId)) {
           notificationIds.add(notifId);
-          notifications.push({
+          autoNotifications.push({
             id: notifId,
             type: 'warning',
             title: 'Giao dịch định kỳ quá hạn',
@@ -184,7 +182,7 @@ export const getNotifications = async (req, res) => {
         const notifId = `recurring-upcoming-${recurring._id}`;
         if (!notificationIds.has(notifId)) {
           notificationIds.add(notifId);
-          notifications.push({
+          autoNotifications.push({
             id: notifId,
             type: 'info',
             title: 'Giao dịch định kỳ sắp đến',
@@ -197,72 +195,133 @@ export const getNotifications = async (req, res) => {
       }
     }
 
-    // 4. Kiểm tra các giao dịch chi tiêu lớn (>= 1 triệu trong 7 ngày gần đây)
-    const sevenDaysAgo = new Date(now);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const largeTransactions = await Transaction.find({
-      userId: req.user.id,
-      type: 'expense',
-      amount: { $gte: 1000000 },
-      date: { $gte: sevenDaysAgo }
-    }).sort({ date: -1 }).limit(3);
-
-    for (const transaction of largeTransactions) {
-      const notifId = `large-expense-${transaction._id}`;
-      if (!notificationIds.has(notifId)) {
-        notificationIds.add(notifId);
-        notifications.push({
-          id: notifId,
-          type: 'info',
-          title: 'Chi tiêu lớn',
-          message: `Bạn đã chi ${transaction.amount.toLocaleString('vi-VN')} ₫ cho "${transaction.category}" - ${transaction.note || 'Không có ghi chú'}`,
-          time: getTimeAgo(transaction.date),
-          read: false,
-          createdAt: transaction.date
-        });
-      }
-    }
-
-    // 5. Kiểm tra các giao dịch thu nhập lớn (>= 1 triệu trong 7 ngày gần đây)
-    const largeIncomes = await Transaction.find({
-      userId: req.user.id,
-      type: 'income',
-      amount: { $gte: 1000000 },
-      date: { $gte: sevenDaysAgo }
-    }).sort({ date: -1 }).limit(3);
-
-    for (const transaction of largeIncomes) {
-      const notifId = `large-income-${transaction._id}`;
-      if (!notificationIds.has(notifId)) {
-        notificationIds.add(notifId);
-        notifications.push({
-          id: notifId,
-          type: 'success',
-          title: 'Thu nhập lớn',
-          message: `Bạn đã thu ${transaction.amount.toLocaleString('vi-VN')} ₫ từ "${transaction.category}" - ${transaction.note || 'Không có ghi chú'}`,
-          time: getTimeAgo(transaction.date),
-          read: false,
-          createdAt: transaction.date
-        });
-      }
-    }
-
-     // sắp xếp theo ngày tạo (mới nhất trước)
-    notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    // Giới hạn chỉ lấy 10 thông báo gần nhất
-    const limitedNotifications = notifications.slice(0, 10).map(n => {
-      const { createdAt, ...rest } = n;
-      return rest;
-    });
+    // Kết hợp notifications từ DB và auto notifications
+    const allNotifications = [...formattedNotifications, ...autoNotifications];
+    
+    // Sắp xếp theo thời gian
+    allNotifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     res.json({
       success: true,
       data: {
-        notifications: limitedNotifications,
-        unreadCount: limitedNotifications.length
+        notifications: allNotifications,
+        unreadCount: unreadCount
       }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Mark notification as read
+// @route   PUT /api/notifications/:id/read
+// @access  Private
+export const markAsRead = async (req, res) => {
+  try {
+    const notification = await Notification.findById(req.params.id);
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy thông báo'
+      });
+    }
+
+    // Check ownership
+    if (notification.userId.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Không có quyền truy cập'
+      });
+    }
+
+    notification.read = true;
+    await notification.save();
+
+    res.json({
+      success: true,
+      message: 'Đã đánh dấu đã đọc',
+      data: notification
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Mark all notifications as read
+// @route   PUT /api/notifications/read-all
+// @access  Private
+export const markAllAsRead = async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { userId: req.user.id, read: false },
+      { read: true }
+    );
+
+    res.json({
+      success: true,
+      message: 'Đã đánh dấu tất cả đã đọc'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Delete notification
+// @route   DELETE /api/notifications/:id
+// @access  Private
+export const deleteNotification = async (req, res) => {
+  try {
+    const notification = await Notification.findById(req.params.id);
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy thông báo'
+      });
+    }
+
+    // Check ownership
+    if (notification.userId.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Không có quyền truy cập'
+      });
+    }
+
+    await notification.deleteOne();
+
+    res.json({
+      success: true,
+      message: 'Đã xóa thông báo'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Delete all notifications
+// @route   DELETE /api/notifications/all
+// @access  Private
+export const deleteAllNotifications = async (req, res) => {
+  try {
+    await Notification.deleteMany({ userId: req.user.id });
+
+    res.json({
+      success: true,
+      message: 'Đã xóa tất cả thông báo'
     });
   } catch (error) {
     res.status(500).json({
