@@ -60,8 +60,8 @@ const Layout = ({ children }) => {
 
     fetchNotifications();
     
-    // Refresh notifications every 10 seconds
-    const interval = setInterval(fetchNotifications, 10 * 1000);
+    // Refresh notifications every 1 second
+    const interval = setInterval(fetchNotifications, 1 * 1000);
     
     return () => clearInterval(interval);
   }, []);
