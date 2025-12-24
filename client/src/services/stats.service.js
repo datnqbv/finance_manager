@@ -23,4 +23,56 @@ export const statsService = {
     const response = await api.get('/stats/categories', { params });
     return response.data;
   },
+
+  // So sánh thu chi giữa các tháng/năm
+  compareStats: async (type = 'month', periods = 6) => {
+    const response = await api.get('/stats/compare', { 
+      params: { type, periods } 
+    });
+    return response.data;
+  },
+
+  // Dự báo chi tiêu tháng tới
+  forecastSpending: async (months = 6) => {
+    const response = await api.get('/stats/forecast', { 
+      params: { months } 
+    });
+    return response.data;
+  },
+
+  // Phân tích xu hướng chi tiêu
+  analyzeTrends: async (period = 12) => {
+    const response = await api.get('/stats/trends', { 
+      params: { period } 
+    });
+    return response.data;
+  },
+
+  // Top danh mục chi tiêu
+  getTopCategories: async (limit = 10, startDate, endDate, type = 'expense') => {
+    const params = { limit, type };
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+    
+    const response = await api.get('/stats/top-categories', { params });
+    return response.data;
+  },
+
+  // Thống kê theo ngày
+  getDailyStats: async (startDate, endDate) => {
+    const params = {};
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+    
+    const response = await api.get('/stats/daily', { params });
+    return response.data;
+  },
+
+  // Thống kê theo tuần
+  getWeeklyStats: async (weeks = 12) => {
+    const response = await api.get('/stats/weekly', { 
+      params: { weeks } 
+    });
+    return response.data;
+  },
 };
