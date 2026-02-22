@@ -143,6 +143,154 @@ export const sendResetPasswordEmail = async (email, resetToken, userName) => {
   }
 };
 
+// ─── Gửi thông báo liên hệ cho admin ───────────────────────────────────────
+export const sendContactNotificationToAdmin = async ({ name, email, subject, message, createdAt }) => {
+  try {
+    if (!isEmailConfigured()) {
+      console.log('📩 [Contact - demo mode] Tin nhắn từ:', name, email, subject);
+      return { success: true, mode: 'demo' };
+    }
+
+    const transporter = createTransporter();
+    const time = new Date(createdAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+
+    const mailOptions = {
+      from: `"Finance Manager System" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
+      replyTo: email,
+      subject: `[Liên hệ mới] ${subject}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f8fafc; }
+            .header { background: #059669; color: white; padding: 18px 24px; border-radius: 10px 10px 0 0; }
+            .content { background: white; padding: 28px 24px; border-radius: 0 0 10px 10px; }
+            .badge { display:inline-block; background:#d1fae5; color:#065f46; font-size:12px; font-weight:700;
+                     padding:3px 10px; border-radius:20px; margin-bottom:16px; }
+            .field { margin-bottom:16px; }
+            .field label { display:block; font-size:11px; font-weight:700; color:#6b7280;
+                           text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+            .field p { background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px;
+                       padding:10px 14px; margin:0; font-size:14px; }
+            .message-box { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px;
+                           padding:14px; white-space:pre-wrap; font-size:14px; }
+            .footer { text-align:center; margin-top:20px; color:#9ca3af; font-size:11px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h2 style="margin:0;font-size:18px;">💬 Tin nhắn liên hệ mới</h2>
+              <p style="margin:4px 0 0;opacity:.85;font-size:13px;">${time}</p>
+            </div>
+            <div class="content">
+              <span class="badge">● Chưa đọc</span>
+              <div class="field"><label>Người gửi</label><p>${name}</p></div>
+              <div class="field"><label>Email</label><p><a href="mailto:${email}" style="color:#059669;">${email}</a></p></div>
+              <div class="field"><label>Tiêu đề</label><p>${subject}</p></div>
+              <div class="field">
+                <label>Nội dung</label>
+                <div class="message-box">${message}</div>
+              </div>
+              <p style="margin-top:20px;font-size:13px;color:#6b7280;">
+                Trả lời trực tiếp email này để phản hồi <strong>${name}</strong>.
+              </p>
+            </div>
+            <div class="footer">Finance Manager · System Notification · Không trả lời email tự động này</div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Contact notification sent to admin:', info.messageId);
+    return { success: true, mode: 'email', messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Contact admin email error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// ─── Gửi email xác nhận cho người gửi ──────────────────────────────────────
+export const sendContactConfirmationToUser = async ({ name, email, subject }) => {
+  try {
+    if (!isEmailConfigured()) {
+      console.log('📩 [Contact confirm - demo mode]', email);
+      return { success: true, mode: 'demo' };
+    }
+
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: `"Finance Manager" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Chúng tôi đã nhận được tin nhắn của bạn – Finance Manager',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f8fafc; }
+            .header { background: #059669; color: white; padding: 20px 24px; border-radius: 10px 10px 0 0; text-align:center; }
+            .content { background: white; padding: 30px 24px; border-radius: 0 0 10px 10px; }
+            .check { width:56px;height:56px;background:#d1fae5;border-radius:50%;display:flex;
+                     align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px;text-align:center; }
+            .info-box { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:14px 18px; margin:20px 0; }
+            .footer { text-align:center; margin-top:24px; color:#9ca3af; font-size:11px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="margin:0;font-size:20px;">💰 Finance Manager</h1>
+            </div>
+            <div class="content">
+              <div class="check">✅</div>
+              <h2 style="text-align:center;margin:0 0 8px;">Đã nhận tin nhắn!</h2>
+              <p style="text-align:center;color:#6b7280;margin:0 0 20px;">Cảm ơn bạn đã liên hệ với chúng tôi.</p>
+
+              <p>Xin chào <strong>${name}</strong>,</p>
+              <p>Chúng tôi đã nhận được tin nhắn của bạn về chủ đề: <strong>"${subject}"</strong>.</p>
+
+              <div class="info-box">
+                <p style="margin:0;font-size:14px;">
+                  ⏰ Đội ngũ hỗ trợ của chúng tôi sẽ phản hồi trong vòng <strong>24 giờ làm việc</strong>
+                  (Thứ 2 – Thứ 6, 8:00 – 17:30).
+                </p>
+              </div>
+
+              <p style="font-size:14px;color:#6b7280;">
+                Trong thời gian chờ, bạn có thể xem phần <strong>Câu hỏi thường gặp</strong>
+                trên trang web của chúng tôi.
+              </p>
+
+              <p>Trân trọng,<br><strong>Finance Manager Support Team</strong></p>
+            </div>
+            <div class="footer">
+              <p>Email này được gửi tự động. Vui lòng không trả lời trực tiếp email này.</p>
+              <p style="margin:4px 0;">Liên hệ: support@financemanager.vn</p>
+              <p>&copy; 2025 Finance Manager. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Confirmation email sent to user:', info.messageId);
+    return { success: true, mode: 'email', messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Contact confirm email error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 // Gửi email chào mừng (optional)
 export const sendWelcomeEmail = async (email, userName) => {
   try {

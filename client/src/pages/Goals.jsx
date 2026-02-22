@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useGoal } from '../context/GoalContext';
 import GoalModal from '../components/GoalModal';
-import { FaPlus, FaEdit, FaTrash, FaTrophy, FaFire, FaCheck } from 'react-icons/fa';
+import { FiPlus, FiEdit2, FiTrash2, FiTarget } from 'react-icons/fi';
 
 const Goals = () => {
   const { goals, goalStats, loading, createGoal, updateGoal, deleteGoal, addAmountToGoal } = useGoal();
@@ -15,7 +15,7 @@ const Goals = () => {
     const result = await createGoal(goalData);
     if (result.success) {
       setIsModalOpen(false);
-      setSelectedGoal(null);  
+      setSelectedGoal(null);
     }
   };
 
@@ -39,13 +39,10 @@ const Goals = () => {
       alert('Vui lòng nhập số tiền hợp lệ');
       return;
     }
-
     const result = await addAmountToGoal(goalId, amount);
     if (result.success) {
       setShowAddAmount(null);
       setAddAmountValue('');
-      
-      // Show celebration if goal is achieved
       if (result.message && result.message.includes('achieved')) {
         alert('🎉 ' + result.message);
       }
@@ -71,25 +68,25 @@ const Goals = () => {
 
   const getPriorityBadge = (priority) => {
     const badges = {
-      low: { color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300', icon: '⚪' },
-      medium: { color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300', icon: '🟡' },
-      high: { color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300', icon: '🔴' }
+      low:    { bg: 'bg-gray-100 dark:bg-[#2a2a2a]',   text: 'text-gray-500 dark:text-gray-400',   label: 'Thấp',      dot: '⚪' },
+      medium: { bg: 'bg-amber-50 dark:bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', label: 'Trung bình', dot: '🟡' },
+      high:   { bg: 'bg-red-50 dark:bg-red-500/10',    text: 'text-red-600 dark:text-red-400',     label: 'Cao',       dot: '🔴' },
     };
     return badges[priority] || badges.medium;
   };
 
   const getDaysRemaining = (deadline) => {
     const days = Math.ceil((new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24));
-    if (days < 0) return { text: 'Quá hạn', color: 'text-red-500' };
-    if (days === 0) return { text: 'Hôm nay', color: 'text-red-500' };
-    if (days === 1) return { text: 'Còn 1 ngày', color: 'text-orange-500' };
-    if (days <= 7) return { text: `Còn ${days} ngày`, color: 'text-orange-500' };
-    if (days <= 30) return { text: `Còn ${days} ngày`, color: 'text-yellow-600' };
-    return { text: `Còn ${days} ngày`, color: 'text-green-600' };
+    if (days < 0)  return { text: 'Quá hạn',       color: 'text-red-600 dark:text-red-400' };
+    if (days === 0) return { text: 'Hôm nay',       color: 'text-red-600 dark:text-red-400' };
+    if (days === 1) return { text: 'Còn 1 ngày',    color: 'text-amber-600 dark:text-amber-400' };
+    if (days <= 7)  return { text: `Còn ${days} ngày`, color: 'text-amber-600 dark:text-amber-400' };
+    if (days <= 30) return { text: `Còn ${days} ngày`, color: 'text-yellow-600 dark:text-yellow-400' };
+    return              { text: `Còn ${days} ngày`, color: 'text-emerald-600 dark:text-emerald-400' };
   };
 
   const filteredGoals = goals.filter(goal => {
-    if (filter === 'active') return !goal.isAchieved;
+    if (filter === 'active')   return !goal.isAchieved;
     if (filter === 'achieved') return goal.isAchieved;
     return true;
   });
@@ -97,305 +94,252 @@ const Goals = () => {
   if (loading && goals.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500 dark:text-gray-400">Đang tải mục tiêu...</div>
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-emerald-500 border-t-transparent" />
       </div>
     );
   }
 
+  const activeCount   = goals.filter(g => !g.isAchieved).length;
+  const achievedCount = goals.filter(g => g.isAchieved).length;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="space-y-5">
+
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <FaTrophy className="text-yellow-500" />
-            Mục Tiêu Tài Chính
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Theo dõi và đạt được ước mơ tài chính của bạn
-          </p>
+          <div className="flex items-center gap-2">
+            <FiTarget className="text-gray-500 dark:text-gray-400" size={20} />
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Mục tiêu tài chính</h1>
+            <span className="text-xs bg-gray-100 dark:bg-[#1a1a1a] text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full font-medium">
+              {goals.length} mục tiêu
+            </span>
+          </div>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5 ml-7">Theo dõi và đạt được ước mơ tài chính của bạn</p>
         </div>
         <button
           onClick={openCreateModal}
-          className="flex items-center gap-2 bg-primary-500 text-white px-6 py-3 rounded-xl hover:bg-primary-600 transition-all hover:scale-105 shadow-lg shadow-primary-500/30"
+          className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm self-start sm:self-auto"
         >
-          <FaPlus />
-          <span>Tạo Mục Tiêu</span>
+          <FiPlus size={16} /> Tạo mục tiêu
         </button>
       </div>
 
-      {/* Statistics Cards */}
+      {/* ── Stats ── */}
       {goalStats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-[#111111] rounded-xl p-5 border border-gray-200 dark:border-[#2a2a2a] hover:shadow-xl dark:hover:shadow-2xl transition-all cursor-pointer group">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Tổng Mục Tiêu</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {goalStats.totalGoals}
-                </p>
-              </div>
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center transition-transform group-hover:scale-110">
-                <FaTrophy className="text-2xl text-white" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-[#111111] rounded-xl p-5 border border-gray-200 dark:border-[#2a2a2a] hover:shadow-xl dark:hover:shadow-2xl transition-all cursor-pointer group">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Đang Thực Hiện</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {goalStats.activeGoals}
-                </p>
-              </div>
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center transition-transform group-hover:scale-110">
-                <FaFire className="text-2xl text-white" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { label: 'Tổng mục tiêu',    value: goalStats.totalGoals,     border: 'border-l-gray-400',    icon: '🏆', valueColor: 'text-gray-800 dark:text-gray-100' },
+            { label: 'Đang thực hiện',   value: goalStats.activeGoals,    border: 'border-l-amber-500',   icon: '🔥', valueColor: 'text-amber-600 dark:text-amber-400' },
+            { label: 'Đã hoàn thành',    value: goalStats.achievedGoals,  border: 'border-l-emerald-500', icon: '✅', valueColor: 'text-emerald-600 dark:text-emerald-400' },
+            { label: 'Tiến độ tổng',     value: `${goalStats.overallProgress}%`, border: 'border-l-blue-500', icon: '📊', valueColor: 'text-blue-600 dark:text-blue-400' },
+          ].map((s, i) => (
+            <div key={i} className={`bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] border-l-4 ${s.border} rounded-2xl px-4 py-3`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">{s.label}</p>
+                  <p className={`text-2xl font-black ${s.valueColor}`}>{s.value}</p>
+                </div>
+                <span className="text-2xl">{s.icon}</span>
               </div>
             </div>
-          </div>
-
-          <div className="bg-white dark:bg-[#111111] rounded-xl p-5 border border-gray-200 dark:border-[#2a2a2a] hover:shadow-xl dark:hover:shadow-2xl transition-all cursor-pointer group">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Đã Hoàn Thành</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {goalStats.achievedGoals}
-                </p>
-              </div>
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center transition-transform group-hover:scale-110">
-                <FaCheck className="text-2xl text-white" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-[#111111] rounded-xl p-5 border border-gray-200 dark:border-[#2a2a2a] hover:shadow-xl dark:hover:shadow-2xl transition-all cursor-pointer group">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Tiến Độ Tổng</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {goalStats.overallProgress}%
-                </p>
-              </div>
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-2xl transition-transform group-hover:scale-110">
-                📊
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       )}
 
-      {/* Filter Tabs */}
-      <div className="flex gap-2 bg-white dark:bg-[#111111] rounded-xl p-2 border border-gray-200 dark:border-[#2a2a2a]">
-        <button
-          onClick={() => setFilter('all')}
-          className={`flex-1 px-4 py-2.5 font-medium rounded-lg transition-all ${
-            filter === 'all'
-              ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1a1a1a]'
-          }`}
-        >
-          Tất Cả ({goals.length})
-        </button>
-        <button
-          onClick={() => setFilter('active')}
-          className={`flex-1 px-4 py-2.5 font-medium rounded-lg transition-all ${
-            filter === 'active'
-              ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1a1a1a]'
-          }`}
-        >
-          Đang Thực Hiện ({goals.filter(g => !g.isAchieved).length})
-        </button>
-        <button
-          onClick={() => setFilter('achieved')}
-          className={`flex-1 px-4 py-2.5 font-medium rounded-lg transition-all ${
-            filter === 'achieved'
-              ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1a1a1a]'
-          }`}
-        >
-          Đã Hoàn Thành ({goals.filter(g => g.isAchieved).length})
-        </button>
+      {/* ── Filter tabs ── */}
+      <div className="flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5 w-fit">
+        {[
+          { label: `Tất cả (${goals.length})`,           value: 'all' },
+          { label: `Đang thực hiện (${activeCount})`,    value: 'active' },
+          { label: `Hoàn thành (${achievedCount})`,      value: 'achieved' },
+        ].map(f => (
+          <button
+            key={f.value}
+            onClick={() => setFilter(f.value)}
+            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+              filter === f.value
+                ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
-      {/* Goals List */}
+      {/* ── Goal Cards ── */}
       {filteredGoals.length === 0 ? (
-        <div className="bg-white dark:bg-[#111111] rounded-xl border border-gray-200 dark:border-[#2a2a2a] p-12 text-center">
-          <FaTrophy className="text-6xl text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            Chưa có mục tiêu nào
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Bắt đầu đặt mục tiêu tài chính để theo dõi tiến độ
-          </p>
+        <div className="text-center py-16">
+          <div className="w-16 h-16 bg-gray-100 dark:bg-[#1a1a1a] rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+            🏆
+          </div>
+          <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">Chưa có mục tiêu nào</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-5">Bắt đầu đặt mục tiêu tài chính để theo dõi tiến độ</p>
           <button
             onClick={openCreateModal}
-            className="bg-primary-500 text-white px-6 py-2 rounded-xl hover:bg-primary-600 transition-all hover:scale-105"
+            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors"
           >
-            Tạo Mục Tiêu Đầu Tiên
+            <FiPlus size={15} /> Tạo mục tiêu đầu tiên
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredGoals.map((goal) => {
-            const progress = Math.min(goal.progressPercentage || 0, 100);
+            const progress      = Math.min(goal.progressPercentage || 0, 100);
             const priorityBadge = getPriorityBadge(goal.priority);
-            const daysInfo = getDaysRemaining(goal.deadline);
+            const daysInfo      = getDaysRemaining(goal.deadline);
+            const remaining     = goal.targetAmount - goal.currentAmount;
 
             return (
               <div
                 key={goal._id}
-                className={`bg-white dark:bg-[#111111] rounded-2xl border ${
-                  goal.isAchieved 
-                    ? 'border-green-500 shadow-xl shadow-green-500/20' 
-                    : 'border-gray-200 dark:border-[#2a2a2a]'
-                } hover:shadow-2xl transition-all duration-300 overflow-hidden group`}
+                className={`group bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] border-l-4 rounded-2xl p-5 hover:shadow-md transition-all duration-200 ${
+                  goal.isAchieved ? 'border-l-emerald-500' : 'border-l-blue-500'
+                }`}
               >
-                {/* Card Header with Icon */}
-                <div className="relative p-6 pb-4">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-4 flex-1">
-                      <div
-                        className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg transition-transform group-hover:scale-110"
-                        style={{ 
-                          backgroundColor: goal.color + '20',
-                          border: `2px solid ${goal.color}40`
-                        }}
-                      >
-                        {goal.icon}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                          {goal.name}
-                          {goal.isAchieved && <FaCheck className="text-green-500" />}
-                        </h3>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`text-xs px-3 py-1 rounded-full font-medium ${priorityBadge.color}`}>
-                            {goal.priority === 'low' && 'Thấp'}
-                            {goal.priority === 'medium' && 'Trung bình'}
-                            {goal.priority === 'high' && 'Cao'}
-                          </span>
-                          <span className={`text-xs font-semibold ${daysInfo.color}`}>
+                {/* Top: icon + name + badges + actions */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                      style={{ backgroundColor: (goal.color || '#3b82f6') + '20' }}
+                    >
+                      {goal.icon || '🎯'}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate flex items-center gap-1.5">
+                        {goal.name}
+                        {goal.isAchieved && <span className="text-emerald-500 text-base">✓</span>}
+                      </h3>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${priorityBadge.bg} ${priorityBadge.text}`}>
+                          {priorityBadge.label}
+                        </span>
+                        {!goal.isAchieved && (
+                          <span className={`text-xs font-medium ${daysInfo.color}`}>
                             {daysInfo.text}
                           </span>
-                        </div>
+                        )}
                       </div>
-                    </div>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => openEditModal(goal)}
-                        className="p-2 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-all"
-                      >
-                        <FaEdit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteGoal(goal._id)}
-                        className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all"
-                      >
-                        <FaTrash size={16} />
-                      </button>
                     </div>
                   </div>
 
-                  {/* Description */}
-                  {goal.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                      {goal.description}
+                  {/* Hover-reveal action buttons */}
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex-shrink-0 ml-2">
+                    <button
+                      onClick={() => openEditModal(goal)}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-500/20 dark:hover:text-blue-400 transition-colors"
+                      title="Chỉnh sửa"
+                    >
+                      <FiEdit2 size={12} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteGoal(goal._id)}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-500/20 dark:hover:text-red-400 transition-colors"
+                      title="Xóa"
+                    >
+                      <FiTrash2 size={12} />
+                    </button>
+                  </div>
+                </div>
+
+                {goal.description && (
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mb-3 line-clamp-2 leading-relaxed">
+                    {goal.description}
+                  </p>
+                )}
+
+                {/* Progress bar */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs text-gray-400 dark:text-gray-500">Tiến độ</span>
+                    <span className="text-sm font-black" style={{ color: goal.color || '#3b82f6' }}>
+                      {progress.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="h-2.5 bg-gray-100 dark:bg-[#2a2a2a] rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${progress}%`, backgroundColor: goal.color || '#3b82f6' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Amount stats */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div className="text-center bg-gray-50 dark:bg-[#1a1a1a] rounded-xl py-2.5 px-1">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Hiện tại</p>
+                    <p className="text-xs font-bold text-gray-700 dark:text-gray-200 leading-tight">
+                      {formatCurrency(goal.currentAmount)}
                     </p>
-                  )}
+                  </div>
+                  <div className="text-center bg-gray-50 dark:bg-[#1a1a1a] rounded-xl py-2.5 px-1">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Mục tiêu</p>
+                    <p className="text-xs font-bold text-gray-700 dark:text-gray-200 leading-tight">
+                      {formatCurrency(goal.targetAmount)}
+                    </p>
+                  </div>
+                  <div className="text-center bg-gray-50 dark:bg-[#1a1a1a] rounded-xl py-2.5 px-1">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Còn thiếu</p>
+                    <p className={`text-xs font-bold leading-tight ${
+                      remaining <= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                    }`}>
+                      {remaining <= 0 ? 'Đủ rồi!' : formatCurrency(remaining)}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Progress Section */}
-                <div className="px-6 pb-6">
-                  {/* Progress Bar */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Tiến độ</span>
-                      <span className="font-bold text-xl" style={{ color: goal.color }}>
-                        {progress.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="relative w-full bg-gray-200 dark:bg-[#1a1a1a] rounded-full h-4 overflow-hidden shadow-inner">
-                      <div
-                        className="h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden"
-                        style={{
-                          width: `${progress}%`,
-                          background: `linear-gradient(90deg, ${goal.color} 0%, ${goal.color}dd 100%)`
-                        }}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
-                      </div>
-                    </div>
+                {/* Achieved banner or Add amount */}
+                {goal.isAchieved ? (
+                  <div className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30">
+                    <span className="text-base">🎉</span>
+                    <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">Đã hoàn thành mục tiêu!</p>
                   </div>
-
-                  {/* Amount Info */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-xl p-3 border border-gray-200 dark:border-[#2a2a2a]">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Hiện tại</p>
-                      <p className="text-base font-bold text-gray-900 dark:text-white">
-                        {formatCurrency(goal.currentAmount)}
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-xl p-3 border border-gray-200 dark:border-[#2a2a2a]">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Mục tiêu</p>
-                      <p className="text-base font-bold text-gray-900 dark:text-white">
-                        {formatCurrency(goal.targetAmount)}
-                      </p>
-                    </div>
+                ) : showAddAmount === goal._id ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      value={addAmountValue}
+                      onChange={(e) => setAddAmountValue(e.target.value)}
+                      placeholder="Nhập số tiền"
+                      className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-[#2a2a2a] rounded-xl dark:bg-[#1a1a1a] dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                      min="0"
+                      step="1000"
+                    />
+                    <button
+                      onClick={() => handleAddAmount(goal._id)}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors"
+                    >
+                      OK
+                    </button>
+                    <button
+                      onClick={() => { setShowAddAmount(null); setAddAmountValue(''); }}
+                      className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-400 px-3 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
+                    >
+                      Hủy
+                    </button>
                   </div>
-
-                  {/* Achievement Badge or Add Amount */}
-                  {goal.isAchieved ? (
-                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 text-center shadow-lg">
-                      <p className="text-white font-bold flex items-center justify-center gap-2">
-                        <FaCheck className="text-xl" />
-                        Đã Hoàn Thành Mục Tiêu!
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      {showAddAmount === goal._id ? (
-                        <div className="flex gap-2">
-                          <input
-                            type="number"
-                            value={addAmountValue}
-                            onChange={(e) => setAddAmountValue(e.target.value)}
-                            placeholder="Nhập số tiền"
-                            className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-[#2a2a2a] rounded-xl dark:bg-[#1a1a1a] dark:text-white focus:ring-2 focus:ring-green-500 transition-all"
-                            min="0"
-                            step="1000"
-                          />
-                          <button
-                            onClick={() => handleAddAmount(goal._id)}
-                            className="bg-green-500 text-white px-4 py-2.5 rounded-xl hover:bg-green-600 transition-all hover:scale-105 font-medium"
-                          >
-                            OK
-                          </button>
-                          <button
-                            onClick={() => {
-                              setShowAddAmount(null);
-                              setAddAmountValue('');
-                            }}
-                            className="bg-gray-300 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300 px-4 py-2.5 rounded-xl hover:bg-gray-400 dark:hover:bg-[#333333] transition-all"
-                          >
-                            Hủy
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setShowAddAmount(goal._id)}
-                          className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-3 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all hover:scale-[1.02] font-medium shadow-lg shadow-green-500/30"
-                        >
-                          + Thêm Tiền
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
+                ) : (
+                  <button
+                    onClick={() => setShowAddAmount(goal._id)}
+                    className="w-full py-2 rounded-xl text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 transition-colors"
+                  >
+                    + Thêm tiền tích lũy
+                  </button>
+                )}
               </div>
             );
           })}
+
+          {/* Add new goal card */}
+          <button
+            onClick={openCreateModal}
+            className="border-2 border-dashed border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-5 flex flex-col items-center justify-center gap-2 text-gray-400 dark:text-gray-600 hover:border-emerald-400 hover:text-emerald-500 dark:hover:border-emerald-500/50 dark:hover:text-emerald-500 transition-colors group min-h-[200px]"
+          >
+            <FiPlus size={22} className="transition-transform group-hover:scale-110" />
+            <span className="text-sm font-medium">Thêm mục tiêu</span>
+          </button>
         </div>
       )}
 

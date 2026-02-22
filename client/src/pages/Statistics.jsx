@@ -1,637 +1,850 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { statsService } from '../services/stats.service';
 import { useAuth } from '../context/AuthContext';
-import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, LineElement, PointElement } from 'chart.js';
-import { Pie, Bar, Line } from 'react-chartjs-2';
-import { FiTrendingUp, FiTrendingDown, FiActivity, FiCalendar, FiTarget } from 'react-icons/fi';
-import PageTransition from '../components/PageTransition';
+import {
+  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, ReferenceLine
+} from 'recharts';
+import {
+  FiBarChart2, FiTrendingUp, FiTrendingDown, FiActivity,
+  FiCalendar, FiTarget, FiAlertCircle, FiCheckCircle,
+  FiInfo, FiMinus, FiZap
+} from 'react-icons/fi';
 
-ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend);
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+const COLORS = ['#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16'];
+
+const ChartTip = ({ active, payload, label, fmt }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-xl px-3 py-2 shadow-lg text-xs">
+      <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">{label}</p>
+      {payload.map((p, i) => (
+        <p key={i} style={{ color: p.color }} className="font-medium">
+          {p.name}: {fmt ? fmt(p.value) : p.value}
+        </p>
+      ))}
+    </div>
+  );
+};
+
+const TrendBadge = ({ trend }) => {
+  if (trend === 'increasing') return <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-red-500"><FiTrendingUp size={10}/> Tăng</span>;
+  if (trend === 'decreasing') return <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-emerald-500"><FiTrendingDown size={10}/> Giảm</span>;
+  return <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-gray-400"><FiMinus size={10}/> Ổn định</span>;
+};
+
+const ConfidenceBadge = ({ confidence }) => {
+  const map = {
+    high: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+    medium: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',
+    low: 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400',
+  };
+  const labels = { high: 'Tin cậy cao', medium: 'Trung bình', low: 'Thấp' };
+  return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${map[confidence] || map.low}`}>{labels[confidence] || confidence}</span>;
+};
+
+const KpiCard = ({ label, value, sub, border, icon, valueColor, loading }) => (
+  <div className={`bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] border-l-4 ${border} rounded-2xl px-4 py-3`}>
+    <div className="flex items-center justify-between">
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">{label}</p>
+        {loading
+          ? <div className="h-6 w-24 bg-gray-100 dark:bg-[#2a2a2a] rounded animate-pulse" />
+          : <p className={`text-lg font-black leading-tight truncate ${valueColor}`}>{value}</p>
+        }
+        {sub && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{sub}</p>}
+      </div>
+      <span className="text-2xl ml-2 flex-shrink-0">{icon}</span>
+    </div>
+  </div>
+);
+
+// ── Main Component ───────────────────────────────────────────────────────────
 
 const Statistics = () => {
   const { user } = useAuth();
-  const [monthlyStats, setMonthlyStats] = useState(null);
-  const [categoryStats, setCategoryStats] = useState([]);
-  const [compareData, setCompareData] = useState(null);
-  const [forecastData, setForecastData] = useState(null);
-  const [trendsData, setTrendsData] = useState(null);
-  const [topCategories, setTopCategories] = useState(null);
-  const [dailyStats, setDailyStats] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [activeTab, setActiveTab] = useState('overview'); // overview, compare, forecast, trends, daily
-  const [dailyPeriod, setDailyPeriod] = useState(7); // 7, 14, 30 days
+  const [selectedYear, setSelectedYear]   = useState(new Date().getFullYear());
+  const [dailyRange, setDailyRange]       = useState(30);
+  const [loading, setLoading]             = useState(true);
+
+  const [monthly,    setMonthly]    = useState(null);
+  const [summary,    setSummary]    = useState(null);
+  const [catStats,   setCatStats]   = useState([]);
+  const [compare,    setCompare]    = useState([]);
+  const [forecast,   setForecast]   = useState(null);
+  const [trends,     setTrends]     = useState(null);
+  const [daily,      setDaily]      = useState([]);
+  const [aiInsights, setAiInsights] = useState(null);
+
+  const fmt = useCallback((n) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(n || 0),
+  [user]);
+
+  const fmtShort = useCallback((n) => {
+    if (Math.abs(n) >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + 'T';
+    if (Math.abs(n) >= 1_000_000)     return (n / 1_000_000).toFixed(1) + 'M';
+    if (Math.abs(n) >= 1_000)         return (n / 1_000).toFixed(0) + 'K';
+    return n;
+  }, []);
 
   useEffect(() => {
-    fetchStats();
-  }, [selectedMonth, selectedYear]);
+    const load = async () => {
+      setLoading(true);
+      try {
+        const monthStart = new Date(selectedYear, selectedMonth - 1, 1).toISOString().split('T')[0];
+        const monthEnd   = new Date(selectedYear, selectedMonth, 0).toISOString().split('T')[0];
 
-  const fetchStats = async () => {
-    setLoading(true);
+        const [m, s, c, cmp, f, t, d, ai] = await Promise.allSettled([
+          statsService.getMonthlyStats(selectedYear, selectedMonth),
+          statsService.getSummary(),
+          statsService.getCategoryStats(monthStart, monthEnd),
+          statsService.compareStats('month', 6, selectedYear, selectedMonth),
+          statsService.forecastSpending(6, selectedYear, selectedMonth),
+          statsService.analyzeTrends(12, selectedYear, selectedMonth),
+          statsService.getDailyStats(monthStart, monthEnd),
+          statsService.getAIInsights(),
+        ]);
+
+        // Monthly: { success, data: { summary: { income, expense }, transactions } }
+        if (m.status === 'fulfilled') {
+          const md = m.value?.data;
+          setMonthly({
+            totalIncome:       md?.summary?.income      || 0,
+            totalExpense:      md?.summary?.expense     || 0,
+            totalTransactions: md?.transactions         || 0,
+          });
+        }
+
+        if (s.status === 'fulfilled') setSummary(s.value?.data);
+
+        // Category: { success, data: [{ category, income, expense, count }] }
+        if (c.status === 'fulfilled') {
+          const raw = c.value?.data || [];
+          setCatStats(raw.map(item => ({
+            _id:          item.category,
+            totalIncome:  item.income  || 0,
+            totalExpense: item.expense || 0,
+            count:        item.count   || 0,
+          })));
+        }
+
+        // Compare: { success, data: { periods: [{ period:"1/2025", income, expense }] } }
+        if (cmp.status === 'fulfilled') {
+          const periods = cmp.value?.data?.periods || [];
+          setCompare(periods.map(p => {
+            const [mon, yr] = (p.period || '').split('/');
+            return {
+              month:        parseInt(mon) || 0,
+              year:         parseInt(yr)  || 0,
+              totalIncome:  p.income  || 0,
+              totalExpense: p.expense || 0,
+            };
+          }));
+        }
+
+        // Forecast: { success, data: { forecast: { nextMonthExpense,... }, byCategory } }
+        if (f.status === 'fulfilled') {
+          const fd = f.value?.data;
+          setForecast(fd ? { ...fd.forecast, byCategory: fd.byCategory } : null);
+        }
+
+        // Trends: { success, data: { trends:[{ month:"1/2025", income, expense }], analysis:{...} } }
+        if (t.status === 'fulfilled') {
+          const td = t.value?.data;
+          const monthlyData = (td?.trends || []).map(item => {
+            const [mon, yr] = (item.month || '').split('/');
+            return {
+              month:       parseInt(mon) || 0,
+              year:        parseInt(yr)  || 0,
+              income:      item.income      || 0,
+              expense:     item.expense     || 0,
+              savings:     item.savings     || 0,
+              savingsRate: item.savingsRate || 0,
+            };
+          });
+          setTrends({
+            monthlyData,
+            averageIncome:  td?.analysis?.averageIncome  || 0,
+            averageExpense: td?.analysis?.averageExpense || 0,
+            averageSavings: td?.analysis?.averageSavings || 0,
+            overallTrend:   td?.analysis?.spendingTrend || '—',
+          });
+        }
+
+        // Daily: { success, data: [{ date, income, expense, transactions }] }
+        if (d.status === 'fulfilled') {
+          const raw = d.value?.data || [];
+          setDaily(raw.map(item => ({ ...item, count: item.transactions || 0 })));
+        }
+
+        // AI: { success, data: { healthScore, anomalies, categoryTrends, bestMonth, worstMonth, ... } }
+        if (ai.status === 'fulfilled') {
+          const aid = ai.value?.data;
+          if (aid) {
+            setAiInsights({
+              ...aid,
+              savingsRate:     aid.avgSavingsRate || 0,
+              categoryTrends:  (aid.categoryTrends || []).map(c => ({
+                category: c.category,
+                recent:   c.recentAvg     || 0,
+                prior:    c.priorAvg      || 0,
+                change:   c.changePercent || 0,
+              })),
+              bestMonth:  aid.bestMonth  ? { name: aid.bestMonth.label  } : null,
+              worstMonth: aid.worstMonth ? { name: aid.worstMonth.label } : null,
+            });
+          }
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [selectedYear, selectedMonth]);
+
+  const reloadDaily = useCallback(async (days) => {
+    const end   = new Date().toISOString().split('T')[0];
+    const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
     try {
-      const [
-        monthlyData, 
-        categoryData,
-        compareResult,
-        forecastResult,
-        trendsResult,
-        topCategoriesResult,
-        dailyResult
-      ] = await Promise.all([
-        statsService.getMonthlyStats(selectedYear, selectedMonth),
-        statsService.getCategoryStats(),
-        statsService.compareStats('month', 6),
-        statsService.forecastSpending(6),
-        statsService.analyzeTrends(12),
-        statsService.getTopCategories(10),
-        statsService.getDailyStats()
-      ]);
-      
-      setMonthlyStats(monthlyData.data);
-      setCategoryStats(categoryData.data);
-      setCompareData(compareResult.data);
-      setForecastData(forecastResult.data);
-      setTrendsData(trendsResult.data);
-      setTopCategories(topCategoriesResult.data);
-      setDailyStats(dailyResult.data);
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    } finally {
-      setLoading(false);
-    }
+      const r = await statsService.getDailyStats(start, end);
+      const raw = r?.data || [];
+      setDaily(raw.map(item => ({ ...item, count: item.transactions || 0 })));
+    } catch {}
+  }, []);
+
+  const handleDailyRange = (days) => {
+    setDailyRange(days);
+    reloadDaily(days);
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: user?.currency || 'VND',
-    }).format(amount);
-  };
+  const TABS = [
+    { key: 'overview',  label: 'Tổng quan',   icon: <FiBarChart2 size={13}/> },
+    { key: 'compare',   label: 'So sánh',     icon: <FiActivity size={13}/> },
+    { key: 'forecast',  label: 'Dự báo AI',   icon: <FiTarget size={13}/> },
+    { key: 'trends',    label: 'Xu hướng',    icon: <FiTrendingUp size={13}/> },
+    { key: 'daily',     label: 'Theo ngày',   icon: <FiCalendar size={13}/> },
+    { key: 'ai',        label: 'Nhận xét AI', icon: <FiZap size={13}/> },
+  ];
 
-  // Pie chart data for monthly income vs expense
-  const pieChartData = {
-    labels: ['Thu nhập', 'Chi tiêu'],
-    datasets: [
-      {
-        data: [
-          monthlyStats?.summary?.income || 0,
-          monthlyStats?.summary?.expense || 0,
-        ],
-        backgroundColor: ['#10b981', '#ef4444'],
-        borderColor: ['#059669', '#dc2626'],
-        borderWidth: 2,
-      },
-    ],
-  };
+  const TAB_ACTIVE = 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-sm';
 
-  // Bar chart data for categories
-  const barChartData = {
-    labels: categoryStats.map((cat) => cat.category),
-    datasets: [
-      {
-        label: 'Thu nhập',
-        data: categoryStats.map((cat) => cat.income),
-        backgroundColor: '#10b981',
-      },
-      {
-        label: 'Chi tiêu',
-        data: categoryStats.map((cat) => cat.expense),
-        backgroundColor: '#ef4444',
-      },
-    ],
-  };
+  // ── Overview tab ─────────────────────────────────────────────────────────
+  const OverviewTab = () => {
+    const pieData = catStats.filter(c => c.totalExpense > 0).slice(0, 8).map((c, i) => ({
+      name: c._id, value: c.totalExpense, fill: COLORS[i % COLORS.length]
+    }));
+    const topExpCats = [...catStats].sort((a, b) => b.totalExpense - a.totalExpense).slice(0, 6);
+    const maxExp = topExpCats[0]?.totalExpense || 1;
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: true,
-    plugins: {
-      legend: {
-        position: 'bottom',
-      },
-    },
-  };
-
-  // Compare chart data
-  const compareChartData = compareData ? {
-    labels: compareData.periods.map(p => p.period),
-    datasets: [
-      {
-        label: 'Thu nhập',
-        data: compareData.periods.map(p => p.income),
-        backgroundColor: '#10b981',
-        borderColor: '#059669',
-        borderWidth: 2,
-      },
-      {
-        label: 'Chi tiêu',
-        data: compareData.periods.map(p => p.expense),
-        backgroundColor: '#ef4444',
-        borderColor: '#dc2626',
-        borderWidth: 2,
-      },
-    ],
-  } : null;
-
-  // Trends chart data
-  const trendsChartData = trendsData ? {
-    labels: trendsData.trends.map(t => t.month),
-    datasets: [
-      {
-        label: 'Thu nhập',
-        data: trendsData.trends.map(t => t.income),
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        tension: 0.4,
-        fill: true,
-      },
-      {
-        label: 'Chi tiêu',
-        data: trendsData.trends.map(t => t.expense),
-        borderColor: '#ef4444',
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-        tension: 0.4,
-        fill: true,
-      },
-      {
-        label: 'Tiết kiệm',
-        data: trendsData.trends.map(t => t.savings),
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        tension: 0.4,
-        fill: true,
-      },
-    ],
-  } : null;
-
-  // Daily stats chart - chỉ lấy số ngày theo lựa chọn
-  const filteredDailyStats = dailyStats.slice(-dailyPeriod);
-  const dailyChartData = filteredDailyStats.length > 0 ? {
-    labels: filteredDailyStats.map(d => new Date(d.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })),
-    datasets: [
-      {
-        label: 'Thu nhập',
-        data: filteredDailyStats.map(d => d.income),
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.5)',
-      },
-      {
-        label: 'Chi tiêu',
-        data: filteredDailyStats.map(d => d.expense),
-        borderColor: '#ef4444',
-        backgroundColor: 'rgba(239, 68, 68, 0.5)',
-      },
-    ],
-  } : null;
-
-  if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    );
-  }
-
-  return (
-    <PageTransition>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Thống kê nâng cao</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Phân tích chi tiết và dự báo tài chính của bạn</p>
-        </div>
-
-        {/* Tabs */}
-        <div className="card p-0 overflow-hidden">
-          <div className="flex overflow-x-auto border-b border-gray-200 dark:border-gray-700">
-            {[
-              { id: 'overview', label: 'Tổng quan', icon: FiActivity },
-              { id: 'compare', label: 'So sánh', icon: FiTrendingUp },
-              { id: 'forecast', label: 'Dự báo', icon: FiTarget },
-              { id: 'trends', label: 'Xu hướng', icon: FiTrendingDown },
-              { id: 'daily', label: 'Theo ngày', icon: FiCalendar },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-3 font-medium whitespace-nowrap transition-colors ${
-                  activeTab === tab.id
-                    ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50 dark:bg-primary-900/20'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800'
+      <div className="space-y-5">
+        {/* Month/Year selector */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5 flex-wrap">
+            {Array.from({length: 12}, (_, i) => i + 1).map(m => (
+              <button key={m}
+                onClick={() => setSelectedMonth(m)}
+                className={`w-9 h-7 rounded-lg text-xs font-semibold transition-all ${
+                  selectedMonth === m
+                    ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
-              >
-                <tab.icon className="w-5 h-5" />
-                {tab.label}
-              </button>
+              >T{m}</button>
+            ))}
+          </div>
+          <div className="flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5">
+            {[selectedYear - 1, selectedYear, selectedYear + 1].map(y => (
+              <button key={y}
+                onClick={() => setSelectedYear(y)}
+                className={`px-3 h-7 rounded-lg text-xs font-semibold transition-all ${
+                  selectedYear === y
+                    ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >{y}</button>
             ))}
           </div>
         </div>
 
-        {/* Overview Tab */}
-        {activeTab === 'overview' && (
-          <>
-            {/* Month/Year Selector */}
-            <div className="card">
-              <div className="flex gap-4">
-                <select
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                  className="input"
-                >
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                    <option key={month} value={month}>
-                      Tháng {month}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                  className="input"
-                >
-                  {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-                    <option key={year} value={year}>
-                      Năm {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
+        {/* KPI cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard label="Thu nhập" value={fmt(monthly?.totalIncome)} border="border-l-emerald-500" icon="📈" valueColor="text-emerald-600 dark:text-emerald-400" loading={loading}/>
+          <KpiCard label="Chi tiêu" value={fmt(monthly?.totalExpense)} border="border-l-red-500" icon="📉" valueColor="text-red-600 dark:text-red-400" loading={loading}/>
+          <KpiCard label="Tiết kiệm" value={fmt((monthly?.totalIncome || 0) - (monthly?.totalExpense || 0))}
+            border={(monthly?.totalIncome||0) >= (monthly?.totalExpense||0) ? 'border-l-blue-500' : 'border-l-orange-500'}
+            icon="💰" valueColor="text-blue-600 dark:text-blue-400" loading={loading}/>
+          <KpiCard label="Giao dịch" value={`${monthly?.totalTransactions ?? '—'}`} sub="tháng này"
+            border="border-l-purple-500" icon="🔢" valueColor="text-purple-600 dark:text-purple-400" loading={loading}/>
+        </div>
+
+        {/* Pie + Top categories */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1 h-4 rounded-full bg-blue-500"/>
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Tỷ lệ chi tiêu theo danh mục</h3>
             </div>
-
-            {/* Monthly Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="card bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-                <p className="text-gray-700 dark:text-gray-300 text-sm mb-1">Thu nhập</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {formatCurrency(monthlyStats?.summary?.income || 0)}
-                </p>
-              </div>
-              <div className="card bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
-                <p className="text-gray-700 dark:text-gray-300 text-sm mb-1">Chi tiêu</p>
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                  {formatCurrency(monthlyStats?.summary?.expense || 0)}
-                </p>
-              </div>
-              <div className="card bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-                <p className="text-gray-700 dark:text-gray-300 text-sm mb-1">Số dư</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {formatCurrency(monthlyStats?.summary?.balance || 0)}
-                </p>
-              </div>
-            </div>
-
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="card">
-                <h3 className="text-lg font-semibold mb-4 dark:text-white">Thu Chi Tháng {selectedMonth}/{selectedYear}</h3>
-                <div className="flex justify-center">
-                  <div className="w-64 h-64">
-                    <Pie data={pieChartData} options={chartOptions} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="card">
-                <h3 className="text-lg font-semibold mb-4 dark:text-white">Theo Danh Mục</h3>
-                {categoryStats.length > 0 ? (
-                  <Bar data={barChartData} options={chartOptions} />
-                ) : (
-                  <p className="text-gray-500 dark:text-gray-400 text-center py-8">Chưa có dữ liệu</p>
-                )}
-              </div>
-            </div>
-
-            {/* Top Categories */}
-            {topCategories && (
-              <div className="card">
-                <h3 className="text-lg font-semibold mb-4 dark:text-white">Top 10 Danh Mục Chi Tiêu Nhiều Nhất</h3>
-                <div className="space-y-3">
-                  {topCategories.categories.map((cat, index) => (
-                    <div key={cat.category} className="flex items-center gap-4">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between mb-1">
-                          <span className="font-medium dark:text-white">{cat.category}</span>
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {cat.count} giao dịch
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                            <div
-                              className="bg-red-500 h-2 rounded-full transition-all"
-                              style={{ width: `${cat.percentage}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            {cat.percentage}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-red-600 dark:text-red-400">
-                          {formatCurrency(cat.total)}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          TB: {formatCurrency(cat.average)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {pieData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({name, percent}) => `${name} ${(percent*100).toFixed(0)}%`} labelLine={false} fontSize={10}>
+                    {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]}/>)}
+                  </Pie>
+                  <Tooltip content={<ChartTip fmt={fmt}/>}/>
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[220px] flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">Chưa có dữ liệu</div>
             )}
-          </>
-        )}
-
-        {/* Compare Tab */}
-        {activeTab === 'compare' && compareData && (
-          <div className="space-y-6">
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4 dark:text-white">So sánh 6 tháng gần đây</h3>
-              <Bar data={compareChartData} options={chartOptions} />
-            </div>
-
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4 dark:text-white">Chi tiết tăng trưởng</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Tháng</th>
-                      <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Thu nhập</th>
-                      <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Tăng trưởng</th>
-                      <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Chi tiêu</th>
-                      <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Tăng trưởng</th>
-                      <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Số dư</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {compareData.periods.map((period) => (
-                      <tr key={period.period} className="border-b border-gray-100 dark:border-gray-800">
-                        <td className="py-3 px-4 font-medium dark:text-white">{period.period}</td>
-                        <td className="py-3 px-4 text-right text-green-600 dark:text-green-400">
-                          {formatCurrency(period.income)}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <span className={`flex items-center justify-end gap-1 ${
-                            period.incomeGrowth > 0 ? 'text-green-600 dark:text-green-400' : 
-                            period.incomeGrowth < 0 ? 'text-red-600 dark:text-red-400' : 
-                            'text-gray-600 dark:text-gray-400'
-                          }`}>
-                            {period.incomeGrowth > 0 ? <FiTrendingUp /> : period.incomeGrowth < 0 ? <FiTrendingDown /> : null}
-                            {period.incomeGrowth}%
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right text-red-600 dark:text-red-400">
-                          {formatCurrency(period.expense)}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <span className={`flex items-center justify-end gap-1 ${
-                            period.expenseGrowth > 0 ? 'text-red-600 dark:text-red-400' : 
-                            period.expenseGrowth < 0 ? 'text-green-600 dark:text-green-400' : 
-                            'text-gray-600 dark:text-gray-400'
-                          }`}>
-                            {period.expenseGrowth > 0 ? <FiTrendingUp /> : period.expenseGrowth < 0 ? <FiTrendingDown /> : null}
-                            {period.expenseGrowth}%
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right font-medium dark:text-white">
-                          {formatCurrency(period.balance)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
           </div>
-        )}
 
-        {/* Forecast Tab */}
-        {activeTab === 'forecast' && forecastData && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="card bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-                <p className="text-gray-700 dark:text-gray-300 text-sm mb-1">Dự báo tháng tới</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {formatCurrency(forecastData.forecast.nextMonth)}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                  Xu hướng: <span className={`font-medium ${
-                    forecastData.forecast.trend === 'increasing' ? 'text-red-600 dark:text-red-400' :
-                    forecastData.forecast.trend === 'decreasing' ? 'text-green-600 dark:text-green-400' :
-                    'text-gray-600 dark:text-gray-400'
-                  }`}>
-                    {forecastData.forecast.trend === 'increasing' ? '📈 Tăng' :
-                     forecastData.forecast.trend === 'decreasing' ? '📉 Giảm' : '➡️ Ổn định'}
-                  </span>
-                </p>
-              </div>
-              <div className="card bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                <p className="text-gray-700 dark:text-gray-300 text-sm mb-1">Trung bình {forecastData.basedOnMonths} tháng</p>
-                <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">
-                  {formatCurrency(forecastData.forecast.average)}
-                </p>
-              </div>
-              <div className="card bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
-                <p className="text-gray-700 dark:text-gray-300 text-sm mb-1">Độ tin cậy</p>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 capitalize">
-                  {forecastData.forecast.confidence === 'high' ? 'Cao' :
-                   forecastData.forecast.confidence === 'medium' ? 'Trung bình' : 'Thấp'}
-                </p>
-              </div>
+          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1 h-4 rounded-full bg-red-500"/>
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Top danh mục chi tiêu</h3>
             </div>
-
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4 dark:text-white">Dự báo theo danh mục</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Object.entries(forecastData.byCategory).map(([category, amount]) => (
-                  <div key={category} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{category}</p>
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">
-                      {formatCurrency(amount)}
-                    </p>
+            <div className="space-y-2.5">
+              {topExpCats.map((c, i) => (
+                <div key={c._id}>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="font-medium text-gray-700 dark:text-gray-300 truncate max-w-[60%]">{c._id}</span>
+                    <span className="font-bold text-red-600 dark:text-red-400 flex-shrink-0 ml-2">{fmt(c.totalExpense)}</span>
                   </div>
-                ))}
+                  <div className="h-1.5 bg-gray-100 dark:bg-[#2a2a2a] rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${(c.totalExpense / maxExp) * 100}%`, backgroundColor: COLORS[i % COLORS.length] }}/>
+                  </div>
+                </div>
+              ))}
+              {topExpCats.length === 0 && <p className="text-sm text-gray-400 dark:text-gray-500 py-8 text-center">Chưa có dữ liệu</p>}
+            </div>
+          </div>
+        </div>
+
+        {/* Category bar chart */}
+        {catStats.length > 0 && (
+          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1 h-4 rounded-full bg-purple-500"/>
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Thu/Chi theo danh mục</h3>
+            </div>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={catStats.slice(0,8).map(c => ({ name: c._id, 'Thu nhập': c.totalIncome||0, 'Chi tiêu': c.totalExpense||0 }))} margin={{left: 0, right: 0}}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" className="dark:stroke-[#222]"/>
+                <XAxis dataKey="name" tick={{fontSize:10}} interval={0} angle={-30} textAnchor="end" height={50}/>
+                <YAxis tickFormatter={fmtShort} tick={{fontSize:10}} width={45}/>
+                <Tooltip content={<ChartTip fmt={fmt}/>}/>
+                <Legend wrapperStyle={{fontSize:11}}/>
+                <Bar dataKey="Thu nhập" fill="#10b981" radius={[3,3,0,0]}/>
+                <Bar dataKey="Chi tiêu" fill="#ef4444" radius={[3,3,0,0]}/>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ── Compare tab ──────────────────────────────────────────────────────────
+  const CompareTab = () => (
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <KpiCard label="Tổng thu (6 tháng)"  value={fmt(compare.reduce((s,m)=>s+(m.totalIncome||0),0))}  border="border-l-emerald-500" icon="📈" valueColor="text-emerald-600 dark:text-emerald-400" loading={loading}/>
+        <KpiCard label="Tổng chi (6 tháng)"  value={fmt(compare.reduce((s,m)=>s+(m.totalExpense||0),0))} border="border-l-red-500"     icon="📉" valueColor="text-red-600 dark:text-red-400"     loading={loading}/>
+        <KpiCard label="TB thu/tháng" value={fmt(compare.length ? compare.reduce((s,m)=>s+(m.totalIncome||0),0)/compare.length : 0)} border="border-l-blue-500" icon="💵" valueColor="text-blue-600 dark:text-blue-400" loading={loading}/>
+        <KpiCard label="TB chi/tháng" value={fmt(compare.length ? compare.reduce((s,m)=>s+(m.totalExpense||0),0)/compare.length : 0)} border="border-l-orange-500" icon="💸" valueColor="text-orange-600 dark:text-orange-400" loading={loading}/>
+      </div>
+
+      <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-1 h-4 rounded-full bg-blue-500"/>
+          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">So sánh thu/chi 6 tháng gần nhất</h3>
+        </div>
+        {compare.length > 0 ? (
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={compare.map(m=>({ name:`T${m.month}/${String(m.year).slice(2)}`, 'Thu nhập': m.totalIncome||0, 'Chi tiêu': m.totalExpense||0 }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" className="dark:stroke-[#222]"/>
+              <XAxis dataKey="name" tick={{fontSize:11}}/>
+              <YAxis tickFormatter={fmtShort} tick={{fontSize:10}} width={48}/>
+              <Tooltip content={<ChartTip fmt={fmt}/>}/>
+              <Legend wrapperStyle={{fontSize:11}}/>
+              <Bar dataKey="Thu nhập" fill="#10b981" radius={[4,4,0,0]}/>
+              <Bar dataKey="Chi tiêu" fill="#ef4444" radius={[4,4,0,0]}/>
+            </BarChart>
+          </ResponsiveContainer>
+        ) : <div className="h-[260px] flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">Chưa có dữ liệu</div>}
+      </div>
+
+      {compare.length > 0 && (
+        <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 dark:border-[#222222]">
+            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Chi tiết theo tháng</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead className="bg-gray-50 dark:bg-[#1a1a1a]">
+                <tr>
+                  {['Tháng','Thu nhập','Chi tiêu','Tiết kiệm','Tỷ lệ tiết kiệm','Tăng trưởng chi'].map(h => (
+                    <th key={h} className="px-4 py-2.5 text-left font-semibold text-gray-500 dark:text-gray-400">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {compare.map((m, i) => {
+                  const savings = (m.totalIncome||0) - (m.totalExpense||0);
+                  const rate    = m.totalIncome ? ((savings/m.totalIncome)*100).toFixed(1) : '—';
+                  const prev    = compare[i-1];
+                  const growth  = prev?.totalExpense ? (((m.totalExpense - prev.totalExpense)/prev.totalExpense)*100).toFixed(1) : '—';
+                  return (
+                    <tr key={i} className="border-t border-gray-50 dark:border-[#222222] hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors">
+                      <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">T{m.month}/{m.year}</td>
+                      <td className="px-4 py-2.5 text-emerald-600 dark:text-emerald-400 font-medium">{fmt(m.totalIncome)}</td>
+                      <td className="px-4 py-2.5 text-red-600 dark:text-red-400 font-medium">{fmt(m.totalExpense)}</td>
+                      <td className={`px-4 py-2.5 font-bold ${savings >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-orange-600 dark:text-orange-400'}`}>{fmt(savings)}</td>
+                      <td className="px-4 py-2.5 text-gray-600 dark:text-gray-300">{rate !== '—' ? `${rate}%` : '—'}</td>
+                      <td className={`px-4 py-2.5 font-semibold ${growth !== '—' ? (parseFloat(growth) > 0 ? 'text-red-500' : 'text-emerald-500') : 'text-gray-400'}`}>
+                        {growth !== '—' ? `${parseFloat(growth) > 0 ? '+' : ''}${growth}%` : '—'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // ── Forecast tab ─────────────────────────────────────────────────────────
+  const ForecastTab = () => {
+    const f = forecast;
+    const histData = compare.map(m => ({
+      name: `T${m.month}/${String(m.year).slice(2)}`,
+      'Chi tiêu thực': m.totalExpense || 0,
+      'Thu nhập thực': m.totalIncome  || 0,
+    }));
+    const nextLabel = (() => {
+      const d = new Date(); d.setMonth(d.getMonth() + 1);
+      return `T${d.getMonth()+1}/${String(d.getFullYear()).slice(2)}`;
+    })();
+    const chartData = [
+      ...histData,
+      { name: nextLabel, 'Dự báo chi': f?.nextMonthExpense||0, 'Dự báo thu': f?.nextMonthIncome||0, isDashed: true },
+    ];
+
+    const catForecastList = f?.byCategory ? Object.entries(f.byCategory).slice(0,8) : [];
+
+    return (
+      <div className="space-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <KpiCard label="Dự báo chi tiêu" value={fmt(f?.nextMonthExpense)} sub={<TrendBadge trend={f?.expenseTrend}/>} border="border-l-red-500" icon="🔮" valueColor="text-red-600 dark:text-red-400" loading={loading}/>
+          <KpiCard label="Dự báo thu nhập" value={fmt(f?.nextMonthIncome)} sub={<TrendBadge trend={f?.incomeTrend}/>} border="border-l-emerald-500" icon="💡" valueColor="text-emerald-600 dark:text-emerald-400" loading={loading}/>
+          <KpiCard label="Dự báo tiết kiệm" value={fmt(f?.nextMonthSavings)} border="border-l-blue-500" icon="🏦" valueColor="text-blue-600 dark:text-blue-400" loading={loading}/>
+        </div>
+
+        {f && (
+          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-4 rounded-full bg-purple-500"/>
+                <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Mô hình dự báo ML</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <ConfidenceBadge confidence={f.confidence}/>
+                <span className="text-xs text-gray-400 dark:text-gray-500">R²: {((f.r2Expense||0)*100).toFixed(0)}%</span>
               </div>
             </div>
+            <div className="flex gap-4 text-xs text-gray-500 dark:text-gray-400 mb-3 flex-wrap">
+              <span>Dự báo chi: <span className="font-semibold text-red-500">{fmt(f.nextMonthExpense)}</span></span>
+              <span>Khoảng tin cậy: <span className="font-semibold text-gray-700 dark:text-gray-300">{fmt(f.marginLow)} – {fmt(f.marginHigh)}</span></span>
+            </div>
+            <ResponsiveContainer width="100%" height={230}>
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="gInc" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="gExp" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.15}/>
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" className="dark:stroke-[#222]"/>
+                <XAxis dataKey="name" tick={{fontSize:11}}/>
+                <YAxis tickFormatter={fmtShort} tick={{fontSize:10}} width={48}/>
+                <Tooltip content={<ChartTip fmt={fmt}/>}/>
+                <Legend wrapperStyle={{fontSize:11}}/>
+                <ReferenceLine x={nextLabel} stroke="#8b5cf6" strokeDasharray="4 2" label={{value:'Dự báo', fontSize:10, fill:'#8b5cf6'}}/>
+                <Area type="monotone" dataKey="Thu nhập thực" stroke="#10b981" fill="url(#gInc)" strokeWidth={2}/>
+                <Area type="monotone" dataKey="Chi tiêu thực" stroke="#ef4444" fill="url(#gExp)" strokeWidth={2}/>
+                <Bar dataKey="Dự báo chi" fill="#ef444466" radius={[4,4,0,0]}/>
+                <Bar dataKey="Dự báo thu" fill="#10b98166" radius={[4,4,0,0]}/>
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         )}
 
-        {/* Trends Tab */}
-        {activeTab === 'trends' && trendsData && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="card bg-green-50 dark:bg-green-900/20">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Thu nhập TB</p>
-                <p className="text-xl font-bold text-green-600 dark:text-green-400">
-                  {formatCurrency(trendsData.analysis.averageIncome)}
-                </p>
-              </div>
-              <div className="card bg-red-50 dark:bg-red-900/20">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Chi tiêu TB</p>
-                <p className="text-xl font-bold text-red-600 dark:text-red-400">
-                  {formatCurrency(trendsData.analysis.averageExpense)}
-                </p>
-              </div>
-              <div className="card bg-blue-50 dark:bg-blue-900/20">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Tiết kiệm TB</p>
-                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                  {formatCurrency(trendsData.analysis.averageSavings)}
-                </p>
-              </div>
-              <div className="card bg-purple-50 dark:bg-purple-900/20">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Xu hướng chi tiêu</p>
-                <p className={`text-xl font-bold flex items-center gap-2 ${
-                  trendsData.analysis.spendingTrend === 'increasing' ? 'text-red-600 dark:text-red-400' :
-                  trendsData.analysis.spendingTrend === 'decreasing' ? 'text-green-600 dark:text-green-400' :
-                  'text-gray-600 dark:text-gray-400'
-                }`}>
-                  {trendsData.analysis.spendingTrend === 'increasing' && <FiTrendingUp />}
-                  {trendsData.analysis.spendingTrend === 'decreasing' && <FiTrendingDown />}
-                  {trendsData.analysis.recentExpenseChange > 0 ? '+' : ''}
-                  {trendsData.analysis.recentExpenseChange}%
-                </p>
-              </div>
+        {catForecastList.length > 0 && (
+          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-[#222222]">
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Dự báo chi tiêu theo danh mục</h3>
             </div>
-
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4 dark:text-white">Xu hướng 12 tháng</h3>
-              <Line data={trendsChartData} options={chartOptions} />
-            </div>
-
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4 dark:text-white">Chi tiết từng tháng</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Tháng</th>
-                      <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Thu nhập</th>
-                      <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Chi tiêu</th>
-                      <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Tiết kiệm</th>
-                      <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Tỷ lệ tiết kiệm</th>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead className="bg-gray-50 dark:bg-[#1a1a1a]">
+                  <tr>
+                    {['Danh mục','Trung bình/tháng','Dự báo tháng tới','Xu hướng','Độ tin cậy'].map(h => (
+                      <th key={h} className="px-4 py-2.5 text-left font-semibold text-gray-500 dark:text-gray-400">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {catForecastList.map(([cat, d]) => (
+                    <tr key={cat} className="border-t border-gray-50 dark:border-[#222222] hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors">
+                      <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">{cat}</td>
+                      <td className="px-4 py-2.5 text-gray-600 dark:text-gray-300">{fmt(d.average)}</td>
+                      <td className="px-4 py-2.5 font-bold text-red-600 dark:text-red-400">{fmt(d.forecast)}</td>
+                      <td className="px-4 py-2.5"><TrendBadge trend={d.trend}/></td>
+                      <td className="px-4 py-2.5"><ConfidenceBadge confidence={d.r2 > 0.7 ? 'high' : d.r2 > 0.4 ? 'medium' : 'low'}/></td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {trendsData.trends.map((trend) => (
-                      <tr key={trend.month} className="border-b border-gray-100 dark:border-gray-800">
-                        <td className="py-3 px-4 font-medium dark:text-white">{trend.month}</td>
-                        <td className="py-3 px-4 text-right text-green-600 dark:text-green-400">
-                          {formatCurrency(trend.income)}
-                        </td>
-                        <td className="py-3 px-4 text-right text-red-600 dark:text-red-400">
-                          {formatCurrency(trend.expense)}
-                        </td>
-                        <td className="py-3 px-4 text-right text-blue-600 dark:text-blue-400">
-                          {formatCurrency(trend.savings)}
-                        </td>
-                        <td className="py-3 px-4 text-right font-medium dark:text-white">
-                          {trend.savingsRate}%
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ── Trends tab ───────────────────────────────────────────────────────────
+  const TrendsTab = () => {
+    const t = trends;
+    const trendData = t?.monthlyData || [];
+    const maxRate = Math.max(...trendData.map(r => Math.abs(r.savingsRate || 0)), 1);
+
+    return (
+      <div className="space-y-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard label="TB Thu/tháng"  value={fmt(t?.averageIncome)} border="border-l-emerald-500" icon="📈" valueColor="text-emerald-600 dark:text-emerald-400" loading={loading}/>
+          <KpiCard label="TB Chi/tháng"  value={fmt(t?.averageExpense)} border="border-l-red-500" icon="📉" valueColor="text-red-600 dark:text-red-400" loading={loading}/>
+          <KpiCard label="TB Tiết kiệm"  value={fmt(t?.averageSavings)} border="border-l-blue-500" icon="💰" valueColor="text-blue-600 dark:text-blue-400" loading={loading}/>
+          <KpiCard label="Xu hướng chi"  value={t?.overallTrend || '—'} border="border-l-purple-500" icon="📊" valueColor="text-purple-600 dark:text-purple-400" loading={loading}/>
+        </div>
+
+        {trendData.length > 0 && (
+          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1 h-4 rounded-full bg-blue-500"/>
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Xu hướng thu/chi/tiết kiệm 12 tháng</h3>
+            </div>
+            <ResponsiveContainer width="100%" height={250}>
+              <AreaChart data={trendData.map(d => ({
+                name: `T${d.month}/${String(d.year).slice(2)}`,
+                'Thu nhập': d.income||0, 'Chi tiêu': d.expense||0, 'Tiết kiệm': d.savings||0
+              }))}>
+                <defs>
+                  <linearGradient id="gI" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/><stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="gE" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2}/><stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="gS" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" className="dark:stroke-[#222]"/>
+                <XAxis dataKey="name" tick={{fontSize:10}} interval={1}/>
+                <YAxis tickFormatter={fmtShort} tick={{fontSize:9}} width={45}/>
+                <Tooltip content={<ChartTip fmt={fmt}/>}/>
+                <Legend wrapperStyle={{fontSize:11}}/>
+                <Area type="monotone" dataKey="Thu nhập" stroke="#10b981" fill="url(#gI)" strokeWidth={2} dot={false}/>
+                <Area type="monotone" dataKey="Chi tiêu"  stroke="#ef4444" fill="url(#gE)" strokeWidth={2} dot={false}/>
+                <Area type="monotone" dataKey="Tiết kiệm" stroke="#3b82f6" fill="url(#gS)" strokeWidth={2} dot={false}/>
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {trendData.length > 0 && (
+          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-[#222222]">
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Chi tiết theo tháng</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead className="bg-gray-50 dark:bg-[#1a1a1a]">
+                  <tr>
+                    {['Tháng','Thu nhập','Chi tiêu','Tiết kiệm','Tỷ lệ tiết kiệm'].map(h => (
+                      <th key={h} className="px-4 py-2.5 text-left font-semibold text-gray-500 dark:text-gray-400">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {trendData.map((d, i) => {
+                    const rate = d.income ? ((d.savings/d.income)*100) : 0;
+                    return (
+                      <tr key={i} className="border-t border-gray-50 dark:border-[#222222] hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors">
+                        <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">T{d.month}/{d.year}</td>
+                        <td className="px-4 py-2.5 text-emerald-600 dark:text-emerald-400 font-medium">{fmt(d.income)}</td>
+                        <td className="px-4 py-2.5 text-red-600 dark:text-red-400 font-medium">{fmt(d.expense)}</td>
+                        <td className={`px-4 py-2.5 font-bold ${d.savings >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-orange-600 dark:text-orange-400'}`}>{fmt(d.savings)}</td>
+                        <td className="px-4 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <div className="h-1.5 w-16 bg-gray-100 dark:bg-[#2a2a2a] rounded-full overflow-hidden">
+                              <div className="h-full rounded-full bg-blue-500 transition-all" style={{width:`${Math.max(0,Math.min(100,rate))}%`}}/>
+                            </div>
+                            <span className="text-gray-500 dark:text-gray-400">{rate.toFixed(1)}%</span>
+                          </div>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
+      </div>
+    );
+  };
 
-        {/* Daily Tab */}
-        {activeTab === 'daily' && dailyChartData && (
-          <div className="space-y-6">
-            {/* Period Selector */}
-            <div className="card">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold dark:text-white">Chọn khoảng thời gian</h3>
-                <div className="flex gap-2">
-                  {[7, 14, 30].map((days) => (
-                    <button
-                      key={days}
-                      onClick={() => setDailyPeriod(days)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        dailyPeriod === days
-                          ? 'bg-primary-600 text-white'
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                      }`}
-                    >
-                      {days} ngày
-                    </button>
+  // ── Daily tab ─────────────────────────────────────────────────────────────
+  const DailyTab = () => (
+    <div className="space-y-5">
+      <div className="flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5 w-fit">
+        {[7, 14, 30].map(d => (
+          <button key={d}
+            onClick={() => handleDailyRange(d)}
+            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              dailyRange === d
+                ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200'
+            }`}
+          >{d} ngày</button>
+        ))}
+      </div>
+
+      {daily.length > 0 ? (
+        <>
+          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1 h-4 rounded-full bg-emerald-500"/>
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Thu/chi theo ngày</h3>
+            </div>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={daily.map(d => ({
+                name: new Date(d.date).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'}),
+                'Thu nhập': d.income||0, 'Chi tiêu': d.expense||0
+              }))}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" className="dark:stroke-[#222]"/>
+                <XAxis dataKey="name" tick={{fontSize:9}} interval={Math.floor(daily.length/7)}/>
+                <YAxis tickFormatter={fmtShort} tick={{fontSize:9}} width={45}/>
+                <Tooltip content={<ChartTip fmt={fmt}/>}/>
+                <Legend wrapperStyle={{fontSize:11}}/>
+                <Bar dataKey="Thu nhập" fill="#10b981" radius={[3,3,0,0]}/>
+                <Bar dataKey="Chi tiêu" fill="#ef4444" radius={[3,3,0,0]}/>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-[#222222]">
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Chi tiết theo ngày</h3>
+            </div>
+            <div className="overflow-x-auto max-h-80 overflow-y-auto">
+              <table className="w-full text-xs">
+                <thead className="bg-gray-50 dark:bg-[#1a1a1a] sticky top-0">
+                  <tr>
+                    {['Ngày','Thu nhập','Chi tiêu','Số giao dịch'].map(h => (
+                      <th key={h} className="px-4 py-2.5 text-left font-semibold text-gray-500 dark:text-gray-400">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...daily].reverse().map((d, i) => (
+                    <tr key={i} className="border-t border-gray-50 dark:border-[#222222] hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors">
+                      <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">
+                        {new Date(d.date).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'})}
+                      </td>
+                      <td className="px-4 py-2.5 text-emerald-600 dark:text-emerald-400 font-medium">{fmt(d.income)}</td>
+                      <td className="px-4 py-2.5 text-red-600 dark:text-red-400 font-medium">{fmt(d.expense)}</td>
+                      <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">{d.count || 0}</td>
+                    </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-16 text-sm text-gray-400 dark:text-gray-500">Chưa có dữ liệu trong khoảng thời gian này</div>
+      )}
+    </div>
+  );
+
+  // ── AI Insights tab ──────────────────────────────────────────────────────
+  const AITab = () => {
+    const ai = aiInsights;
+    if (!ai) return <div className="text-center py-16 text-sm text-gray-400 dark:text-gray-500">Đang tải nhận xét AI...</div>;
+
+    const score = ai.healthScore || 0;
+    const scoreColor = score >= 70 ? 'text-emerald-600 dark:text-emerald-400' : score >= 40 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
+    const scoreBarColor = score >= 70 ? 'bg-emerald-500' : score >= 40 ? 'bg-amber-500' : 'bg-red-500';
+    const recIcons = { success: <FiCheckCircle size={14}/>, warning: <FiAlertCircle size={14}/>, error: <FiAlertCircle size={14}/>, info: <FiInfo size={14}/> };
+    const recColors = {
+      success: 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-400',
+      warning: 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-400',
+      error:   'bg-red-50 border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-400',
+      info:    'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-400',
+    };
+
+    return (
+      <div className="space-y-5">
+        {/* Health score */}
+        <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-1 h-4 rounded-full bg-purple-500"/>
+            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Điểm sức khỏe tài chính</h3>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <p className={`text-6xl font-black ${scoreColor}`}>{score}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">/ 100</p>
+            </div>
+            <div className="flex-1">
+              <div className="h-4 bg-gray-100 dark:bg-[#2a2a2a] rounded-full overflow-hidden mb-2">
+                <div className={`h-full rounded-full transition-all duration-1000 ${scoreBarColor}`} style={{width:`${score}%`}}/>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {score >= 70 ? 'Tài chính của bạn đang rất tốt! Tiếp tục duy trì nhé.'
+                 : score >= 40 ? 'Tài chính ở mức trung bình. Hãy xem các gợi ý bên dưới.'
+                 : 'Tài chính cần được cải thiện. Hãy chú ý đến các cảnh báo.'}
+              </p>
+              <div className="grid grid-cols-3 gap-2 mt-3 text-xs text-center">
+                <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-lg py-2">
+                  <p className="text-gray-400 dark:text-gray-500 mb-0.5">Tỷ lệ TK</p>
+                  <p className="font-bold text-gray-700 dark:text-gray-200">{ai.savingsRate?.toFixed(1) || 0}%</p>
+                </div>
+                <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-lg py-2">
+                  <p className="text-gray-400 dark:text-gray-500 mb-0.5">Tháng tốt nhất</p>
+                  <p className="font-bold text-emerald-600 dark:text-emerald-400">{ai.bestMonth?.name || '—'}</p>
+                </div>
+                <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-lg py-2">
+                  <p className="text-gray-400 dark:text-gray-500 mb-0.5">Tháng khó nhất</p>
+                  <p className="font-bold text-red-600 dark:text-red-400">{ai.worstMonth?.name || '—'}</p>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4 dark:text-white">Thu chi {dailyPeriod} ngày gần đây</h3>
-              <div style={{ height: '400px', position: 'relative' }}>
-                <Bar 
-                  data={dailyChartData} 
-                  options={{
-                    ...chartOptions, 
-                    maintainAspectRatio: false,
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        ticks: {
-                          callback: function(value) {
-                            return value.toLocaleString('vi-VN');
-                          }
-                        }
-                      }
-                    }
-                  }} 
-                />
+        {/* Recommendations */}
+        {ai.recommendations?.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 px-1">Gợi ý từ AI</h3>
+            {ai.recommendations.map((r, i) => (
+              <div key={i} className={`flex items-start gap-3 px-4 py-3 rounded-xl border text-sm ${recColors[r.type] || recColors.info}`}>
+                <span className="flex-shrink-0 mt-0.5">{recIcons[r.type] || recIcons.info}</span>
+                <span>{r.message}</span>
               </div>
+            ))}
+          </div>
+        )}
+
+        {/* Anomalies */}
+        {ai.anomalies?.length > 0 && (
+          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1 h-4 rounded-full bg-red-500"/>
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Giao dịch bất thường phát hiện</h3>
             </div>
-
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4 dark:text-white">Chi tiết theo ngày</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Ngày</th>
-                      <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Thu nhập</th>
-                      <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Chi tiêu</th>
-                      <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Số dư</th>
-                      <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Giao dịch</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredDailyStats.slice().reverse().map((day) => (
-                      <tr key={day.date} className="border-b border-gray-100 dark:border-gray-800">
-                        <td className="py-3 px-4 font-medium dark:text-white">
-                          {new Date(day.date).toLocaleDateString('vi-VN')}
-                        </td>
-                        <td className="py-3 px-4 text-right text-green-600 dark:text-green-400">
-                          {formatCurrency(day.income)}
-                        </td>
-                        <td className="py-3 px-4 text-right text-red-600 dark:text-red-400">
-                          {formatCurrency(day.expense)}
-                        </td>
-                        <td className={`py-3 px-4 text-right font-medium ${
-                          day.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                        }`}>
-                          {formatCurrency(day.balance)}
-                        </td>
-                        <td className="py-3 px-4 text-right text-gray-700 dark:text-gray-300">
-                          {day.transactions}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div className="space-y-2">
+              {ai.anomalies.map((a, i) => (
+                <div key={i} className="flex items-center justify-between px-3 py-2.5 bg-red-50 dark:bg-red-500/10 rounded-xl border border-red-100 dark:border-red-500/20">
+                  <div>
+                    <p className="text-xs font-semibold text-red-700 dark:text-red-400">{a.month || a.period}</p>
+                    <p className="text-xs text-red-600 dark:text-red-400">Chi vượt TB: +{a.deviation?.toFixed(1) || 0}%</p>
+                  </div>
+                  <span className="text-sm font-black text-red-600 dark:text-red-400">{fmt(a.expense || a.amount)}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
+        {/* Category trends */}
+        {ai.categoryTrends?.length > 0 && (
+          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-[#222222]">
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Xu hướng danh mục đáng chú ý</h3>
+            </div>
+            <div className="divide-y divide-gray-50 dark:divide-[#222222]">
+              {ai.categoryTrends.map((c, i) => (
+                <div key={i} className="flex items-center justify-between px-4 py-3">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">{c.category}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">3 tháng gần: {fmt(c.recent)} vs trước: {fmt(c.prior)}</p>
+                  </div>
+                  <span className={`text-sm font-black ${c.change > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                    {c.change > 0 ? '+' : ''}{c.change?.toFixed(1)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
-    </PageTransition>
+    );
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <FiBarChart2 className="text-gray-500 dark:text-gray-400" size={20}/>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Thống kê</h1>
+        <span className="text-xs bg-gray-100 dark:bg-[#1a1a1a] text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full font-medium">
+          ML-powered
+        </span>
+      </div>
+
+      {/* Tabs */}
+      <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-1.5">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+          {TABS.map(t => (
+            <button key={t.key}
+              onClick={() => setActiveTab(t.key)}
+              className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
+                activeTab === t.key
+                  ? TAB_ACTIVE
+                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
+              }`}
+            >
+              {t.icon}
+              <span>{t.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tab content */}
+      {activeTab === 'overview'  && <OverviewTab/>}
+      {activeTab === 'compare'   && <CompareTab/>}
+      {activeTab === 'forecast'  && <ForecastTab/>}
+      {activeTab === 'trends'    && <TrendsTab/>}
+      {activeTab === 'daily'     && <DailyTab/>}
+      {activeTab === 'ai'        && <AITab/>}
+    </div>
   );
 };
 

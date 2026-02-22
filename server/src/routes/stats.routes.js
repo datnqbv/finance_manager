@@ -8,7 +8,8 @@ import {
   analyzeTrends,
   getTopCategories,
   getDailyStats,
-  getWeeklyStats
+  getWeeklyStats,
+  getAIInsights
 } from '../controllers/stats.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 
@@ -26,5 +27,6 @@ router.get('/trends', analyzeTrends);
 router.get('/top-categories', getTopCategories);
 router.get('/daily', getDailyStats);
 router.get('/weekly', getWeeklyStats);
+router.get('/ai-insights', getAIInsights);
 
 export default router;

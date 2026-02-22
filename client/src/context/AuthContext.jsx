@@ -72,12 +72,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const changePassword = async (currentPassword, newPassword) => {
+    try {
+      const data = await authService.changePassword(currentPassword, newPassword);
+      toast.success(data.message || 'Đổi mật khẩu thành công!');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Đổi mật khẩu thất bại';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
   const value = {
     user,
     login,
     register,
     logout,
     updateProfile,
+    changePassword,
     isAuthenticated: !!user,
     loading,
   };

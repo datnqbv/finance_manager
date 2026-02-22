@@ -16,6 +16,9 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Privacy from './pages/Privacy';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Statistics from './pages/Statistics';
@@ -41,6 +44,9 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<PublicRoute />} />
               <Route path="/home" element={<Landing />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="/login" element={<Login />} /> 
               <Route path="/register" element={<Register />} /> 
               <Route path="/forgot-password" element={<ForgotPassword />} /> 
