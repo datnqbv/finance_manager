@@ -41,6 +41,21 @@ const budgetSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  rolloverEnabled: {
+    type: Boolean,
+    default: false
+  },
+  // Số tiền dư/vượt của kỳ trước cộng vào kỳ này
+  // Dương = dư (ngân sách tăng), âm = vượt (ngân sách giảm)
+  rolloverAmount: {
+    type: Number,
+    default: 0
+  },
+  // Key "YYYY-M" để biết đã apply rollover kỳ nào rồi
+  lastRolloverMonth: {
+    type: String,
+    default: ''
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -59,8 +74,9 @@ budgetSchema.virtual('currentSpending').get(function() {
 });
 
 // Method để check alert thresholds
-budgetSchema.methods.checkAlerts = function(currentSpending) {
-  const percentage = (currentSpending / this.amount) * 100;
+budgetSchema.methods.checkAlerts = function(currentSpending, effectiveAmount) {
+  const base = effectiveAmount ?? this.amount;
+  const percentage = (currentSpending / base) * 100;
   const triggeredAlerts = this.alertThresholds.filter(threshold => 
     percentage >= threshold && this.notificationEnabled
   );

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useGoal } from '../context/GoalContext';
 import GoalModal from '../components/GoalModal';
-import { FiPlus, FiEdit2, FiTrash2, FiTarget } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiTarget, FiClock } from 'react-icons/fi';
 
 const Goals = () => {
   const { goals, goalStats, loading, createGoal, updateGoal, deleteGoal, addAmountToGoal } = useGoal();
@@ -9,6 +9,8 @@ const Goals = () => {
   const [selectedGoal, setSelectedGoal] = useState(null);
   const [showAddAmount, setShowAddAmount] = useState(null);
   const [addAmountValue, setAddAmountValue] = useState('');
+  const [addAmountNote, setAddAmountNote] = useState('');
+  const [showHistory, setShowHistory] = useState(null); // goal._id
   const [filter, setFilter] = useState('all'); // all, active, achieved
 
   const handleCreateGoal = async (goalData) => {
@@ -39,10 +41,11 @@ const Goals = () => {
       alert('Vui lòng nhập số tiền hợp lệ');
       return;
     }
-    const result = await addAmountToGoal(goalId, amount);
+    const result = await addAmountToGoal(goalId, amount, addAmountNote.trim());
     if (result.success) {
       setShowAddAmount(null);
       setAddAmountValue('');
+      setAddAmountNote('');
       if (result.message && result.message.includes('achieved')) {
         alert('🎉 ' + result.message);
       }
@@ -297,28 +300,37 @@ const Goals = () => {
                     <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">Đã hoàn thành mục tiêu!</p>
                   </div>
                 ) : showAddAmount === goal._id ? (
-                  <div className="flex gap-2">
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        value={addAmountValue}
+                        onChange={(e) => setAddAmountValue(e.target.value)}
+                        placeholder="Số tiền"
+                        className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-[#2a2a2a] rounded-xl dark:bg-[#1a1a1a] dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                        min="0"
+                        step="1000"
+                      />
+                      <button
+                        onClick={() => handleAddAmount(goal._id)}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors"
+                      >
+                        OK
+                      </button>
+                      <button
+                        onClick={() => { setShowAddAmount(null); setAddAmountValue(''); setAddAmountNote(''); }}
+                        className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-400 px-3 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
+                      >
+                        Hủy
+                      </button>
+                    </div>
                     <input
-                      type="number"
-                      value={addAmountValue}
-                      onChange={(e) => setAddAmountValue(e.target.value)}
-                      placeholder="Nhập số tiền"
-                      className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-[#2a2a2a] rounded-xl dark:bg-[#1a1a1a] dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                      min="0"
-                      step="1000"
+                      type="text"
+                      value={addAmountNote}
+                      onChange={(e) => setAddAmountNote(e.target.value)}
+                      placeholder="Ghi chú (tùy chọn)..."
+                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-[#2a2a2a] rounded-xl dark:bg-[#1a1a1a] dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                     />
-                    <button
-                      onClick={() => handleAddAmount(goal._id)}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors"
-                    >
-                      OK
-                    </button>
-                    <button
-                      onClick={() => { setShowAddAmount(null); setAddAmountValue(''); }}
-                      className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-400 px-3 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
-                    >
-                      Hủy
-                    </button>
                   </div>
                 ) : (
                   <button
@@ -327,6 +339,50 @@ const Goals = () => {
                   >
                     + Thêm tiền tích lũy
                   </button>
+                )}
+
+                {/* History button */}
+                {(goal.depositHistory?.length ?? 0) > 0 && (
+                  <button
+                    onClick={() => setShowHistory(showHistory === goal._id ? null : goal._id)}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1a1a1a] border border-gray-100 dark:border-[#2a2a2a] transition-colors mt-1"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <FiClock size={12} />
+                      Lịch sử nạp tiền
+                    </span>
+                    <span className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
+                      {goal.depositHistory.length}
+                    </span>
+                  </button>
+                )}
+
+                {/* History drawer */}
+                {showHistory === goal._id && (
+                  <div className="mt-2 border border-gray-100 dark:border-[#2a2a2a] rounded-xl overflow-hidden">
+                    <div className="bg-gray-50 dark:bg-[#1a1a1a] px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                      Lịch sử nạp tiền
+                    </div>
+                    <div className="max-h-52 overflow-y-auto divide-y divide-gray-100 dark:divide-[#222]">
+                      {[...goal.depositHistory].reverse().map((entry, i) => (
+                        <div key={i} className="flex items-start justify-between gap-2 px-3 py-2.5">
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                              +{formatCurrency(entry.amount)}
+                            </p>
+                            {entry.note && (
+                              <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{entry.note}</p>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5">
+                            {new Date(entry.date).toLocaleDateString('vi-VN', {
+                              day: '2-digit', month: '2-digit', year: 'numeric'
+                            })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             );

@@ -47,6 +47,10 @@ const userSchema = new mongoose.Schema({
     type: Date,
     select: false
   },
+  refreshToken: {
+    type: String,
+    select: false
+  },
   createdAt: {
     type: Date,
     default: Date.now

@@ -4,12 +4,23 @@ import User from '../models/User.model.js';
 import Category from '../models/Category.model.js';
 import { sendResetPasswordEmail, sendWelcomeEmail } from '../utils/sendEmail.js';
 
-// Generate JWT Token
-const generateToken = (id) => {
+// Generate short-lived access token (15 minutes)
+const generateAccessToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE || '7d'
+    expiresIn: '15m'
   });
 };
+
+// Generate long-lived refresh token (30 days)
+const generateRefreshToken = (id) => {
+  const secret = process.env.JWT_REFRESH_SECRET || (process.env.JWT_SECRET + '_refresh_v1');
+  return jwt.sign({ id }, secret, {
+    expiresIn: '30d'
+  });
+};
+
+// Keep backward compat alias used by resetPassword
+const generateToken = generateAccessToken;
 
 // @desc    Register new user
 // @route   POST /api/auth/register
@@ -42,8 +53,13 @@ export const register = async (req, res) => {
       // Don't fail registration if category creation fails
     }
 
-    // Generate token
-    const token = generateToken(user._id);
+    // Generate tokens
+    const token = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    // Save refresh token to DB
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
 
     // Gửi email chào mừng (không chờ, chạy background)
     sendWelcomeEmail(user.email, user.name).catch(err => 
@@ -55,6 +71,7 @@ export const register = async (req, res) => {
       message: 'Đăng ký thành công',
       data: {
         token,
+        refreshToken,
         user: {
           id: user._id,
           name: user.name,
@@ -108,14 +125,20 @@ export const login = async (req, res) => {
       });
     }
 
-    // Generate token
-    const token = generateToken(user._id);
+    // Generate tokens
+    const token = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    // Save refresh token to DB
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
 
     res.json({
       success: true,
       message: 'Đăng nhập thành công',
       data: {
         token,
+        refreshToken,
         user: {
           id: user._id,
           name: user.name,
@@ -345,14 +368,19 @@ export const resetPassword = async (req, res) => {
     user.resetPasswordExpire = undefined;
     await user.save();
 
-    // Generate new JWT token
-    const token = generateToken(user._id);
+    // Generate new tokens
+    const token = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
 
     res.json({
       success: true,
       message: 'Đặt lại mật khẩu thành công',
       data: {
         token,
+        refreshToken,
         user: {
           id: user._id,
           name: user.name,
@@ -368,5 +396,54 @@ export const resetPassword = async (req, res) => {
       success: false,
       message: error.message
     });
+  }
+};
+
+// @desc    Refresh access token using refresh token
+// @route   POST /api/auth/refresh-token
+// @access  Public
+export const refreshTokenHandler = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(401).json({ success: false, message: 'Không có refresh token' });
+    }
+
+    const refreshSecret = process.env.JWT_REFRESH_SECRET || (process.env.JWT_SECRET + '_refresh_v1');
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, refreshSecret);
+    } catch (err) {
+      return res.status(401).json({ success: false, message: 'Refresh token hết hạn hoặc không hợp lệ, vui lòng đăng nhập lại' });
+    }
+
+    const user = await User.findById(decoded.id).select('+refreshToken');
+    if (!user || user.refreshToken !== refreshToken) {
+      return res.status(401).json({ success: false, message: 'Refresh token không hợp lệ' });
+    }
+
+    const newAccessToken = generateAccessToken(user._id);
+    res.json({ success: true, data: { token: newAccessToken } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Logout - invalidate refresh token
+// @route   POST /api/auth/logout
+// @access  Public
+export const logoutHandler = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (refreshToken) {
+      await User.findOneAndUpdate(
+        { refreshToken },
+        { $set: { refreshToken: null } }
+      );
+    }
+    res.json({ success: true, message: 'Đăng xuất thành công' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

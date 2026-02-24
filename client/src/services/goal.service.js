@@ -32,8 +32,8 @@ const goalService = {
   },
 
   // Add amount to goal
-  addAmountToGoal: async (id, amount) => {
-    const response = await api.post(`/goals/${id}/add-amount`, { amount });
+  addAmountToGoal: async (id, amount, note = '') => {
+    const response = await api.post(`/goals/${id}/add-amount`, { amount, note });
     return response.data;
   },
 

@@ -159,7 +159,8 @@ const Budgets = () => {
             {budgets.map((budget) => {
               const pct = Math.min(budget.percentage, 100);
               const status = getStatus(budget.percentage);
-              const remaining = budget.amount - budget.currentSpending;
+              const effectiveAmount = budget.effectiveAmount ?? budget.amount;
+              const remaining = effectiveAmount - budget.currentSpending;
 
               return (
                 <div
@@ -222,6 +223,23 @@ const Budgets = () => {
                     )}
                   </div>
 
+                  {/* Rollover badge */}
+                  {budget.rolloverEnabled && budget.rolloverAmount !== 0 && (
+                    <div className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg mb-3 ${
+                      budget.rolloverAmount > 0
+                        ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                        : 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400'
+                    }`}>
+                      {budget.rolloverAmount > 0 ? '📂 Dư kỳ trước:' : '⚠️ Vượt kỳ trước:'}
+                      <span>{budget.rolloverAmount > 0 ? '+' : ''}{formatCurrency(budget.rolloverAmount)}</span>
+                    </div>
+                  )}
+                  {budget.rolloverEnabled && budget.rolloverAmount === 0 && (
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 mb-3">
+                      <span>🔄 Rollover bật — sẽ tính từ kỳ sau</span>
+                    </div>
+                  )}
+
                   {/* 3 stats */}
                   <div className="grid grid-cols-3 gap-2">
                     <div className="text-center bg-gray-50 dark:bg-[#1a1a1a] rounded-xl py-2.5 px-1">
@@ -231,9 +249,11 @@ const Budgets = () => {
                       </p>
                     </div>
                     <div className="text-center bg-gray-50 dark:bg-[#1a1a1a] rounded-xl py-2.5 px-1">
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Ngân sách</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">
+                        {budget.rolloverEnabled && budget.rolloverAmount !== 0 ? 'Hiệu lực' : 'Ngân sách'}
+                      </p>
                       <p className="text-xs font-bold text-gray-700 dark:text-gray-200 leading-tight">
-                        {formatCurrency(budget.amount)}
+                        {formatCurrency(effectiveAmount)}
                       </p>
                     </div>
                     <div className="text-center bg-gray-50 dark:bg-[#1a1a1a] rounded-xl py-2.5 px-1">

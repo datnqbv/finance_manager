@@ -10,7 +10,8 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
     amount: '',
     period: 'monthly',
     alertThresholds: [80, 100, 120],
-    notificationEnabled: true
+    notificationEnabled: true,
+    rolloverEnabled: false
   });
   const [errors, setErrors] = useState({});
 
@@ -26,7 +27,8 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
         amount: budget.amount || '',
         period: budget.period || 'monthly',
         alertThresholds: budget.alertThresholds || [80, 100, 120],
-        notificationEnabled: budget.notificationEnabled !== false
+        notificationEnabled: budget.notificationEnabled !== false,
+        rolloverEnabled: budget.rolloverEnabled || false
       });
     }
   }, [budget]);
@@ -220,6 +222,26 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
             <label htmlFor="notificationEnabled" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Bật thông báo cảnh báo
             </label>
+          </div>
+
+          {/* Rollover Enabled */}
+          <div className="rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/5 p-3 space-y-1">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="rolloverEnabled"
+                name="rolloverEnabled"
+                checked={formData.rolloverEnabled}
+                onChange={handleChange}
+                className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500"
+              />
+              <label htmlFor="rolloverEnabled" className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                Bật Rollover (chuyển dư/vượt sang kỳ sau)
+              </label>
+            </div>
+            <p className="text-xs text-emerald-600/80 dark:text-emerald-500/80 ml-8">
+              Nếu kỳ này chi ít, phần dư tự động cộng vào kỳ sau. Nếu vượt, sẽ bị trừ ở kỳ sau.
+            </p>
           </div>
 
           {/* Actions */}

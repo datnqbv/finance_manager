@@ -5,6 +5,9 @@ export const authService = {
     const response = await api.post('/auth/register', userData);
     if (response.data.success) {
       localStorage.setItem('token', response.data.data.token);
+      if (response.data.data.refreshToken) {
+        localStorage.setItem('refreshToken', response.data.data.refreshToken);
+      }
       localStorage.setItem('user', JSON.stringify(response.data.data.user));
     }
     return response.data;
@@ -14,14 +17,27 @@ export const authService = {
     const response = await api.post('/auth/login', credentials);
     if (response.data.success) {
       localStorage.setItem('token', response.data.data.token);
+      if (response.data.data.refreshToken) {
+        localStorage.setItem('refreshToken', response.data.data.refreshToken);
+      }
       localStorage.setItem('user', JSON.stringify(response.data.data.user));
     }
     return response.data;
   },
 
-  logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+  logout: async () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    try {
+      if (refreshToken) {
+        await api.post('/auth/logout', { refreshToken });
+      }
+    } catch (_) {
+      // Bỏ qua lỗi khi gọi logout API
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+    }
   },
 
   getMe: async () => {

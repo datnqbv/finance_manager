@@ -53,6 +53,13 @@ const goalSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  depositHistory: [
+    {
+      amount: { type: Number, required: true },
+      note:   { type: String, trim: true, default: '' },
+      date:   { type: Date, default: Date.now }
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now
@@ -86,15 +93,16 @@ goalSchema.virtual('daysRemaining').get(function() {
 });
 
 // Method để add money to goal
-goalSchema.methods.addAmount = async function(amount) {
+goalSchema.methods.addAmount = async function(amount, note = '') {
   this.currentAmount += amount;
-  
+  this.depositHistory.push({ amount, note, date: new Date() });
+
   // Check if goal is achieved
   if (this.currentAmount >= this.targetAmount && !this.isAchieved) {
     this.isAchieved = true;
     this.achievedDate = new Date();
   }
-  
+
   await this.save();
   return this;
 };

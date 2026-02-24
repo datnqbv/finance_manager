@@ -17,6 +17,7 @@ export const useTransactions = () => {
 
 export const TransactionProvider = ({ children }) => {
   const [transactions, setTransactions] = useState([]);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, totalPages: 1 });
   const [loading, setLoading] = useState(false);
 
   const fetchTransactions = async (params = {}) => {
@@ -24,6 +25,11 @@ export const TransactionProvider = ({ children }) => {
     try {
       const data = await transactionService.getTransactions(params);
       setTransactions(data.data);
+      setPagination({
+        total: data.total ?? data.count ?? 0,
+        page: data.page ?? 1,
+        totalPages: data.totalPages ?? 1,
+      });
       return { success: true, data: data.data };
     } catch (error) {
       const message = error.response?.data?.message || 'Không thể tải giao dịch';
@@ -77,6 +83,7 @@ export const TransactionProvider = ({ children }) => {
 
   const value = {
     transactions,
+    pagination,
     loading,
     fetchTransactions,
     createTransaction,

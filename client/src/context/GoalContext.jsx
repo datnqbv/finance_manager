@@ -108,11 +108,11 @@ export const GoalProvider = ({ children }) => {
   };
 
   // Add amount to goal
-  const addAmountToGoal = async (id, amount) => {
+  const addAmountToGoal = async (id, amount, note = '') => {
     try {
       setLoading(true);
       setError(null);
-      const data = await goalService.addAmountToGoal(id, amount);
+      const data = await goalService.addAmountToGoal(id, amount, note);
       setGoals(goals.map(g => g._id === id ? data.data : g));
       await fetchGoalStats();
       return { success: true, data: data.data, message: data.message };

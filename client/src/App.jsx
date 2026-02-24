@@ -9,6 +9,7 @@ import { CategoryProvider } from './context/CategoryContext';
 import { BudgetProvider } from './context/BudgetContext';
 import { RecurringProvider } from './context/RecurringContext';
 import { GoalProvider } from './context/GoalContext';
+import { DebtProvider } from './context/DebtContext';
 import { ThemeCustomizerProvider } from './context/ThemeCustomizerContext';
 import PrivateRoute from './components/PrivateRoute';
 import PublicRoute from './components/PublicRoute';
@@ -26,6 +27,7 @@ import Categories from './pages/Categories';
 import Budgets from './pages/Budgets';
 import RecurringTransactions from './pages/RecurringTransactions';
 import Goals from './pages/Goals';
+import Debts from './pages/Debts';
 import Profile from './pages/Profile';
 
 // hàm App chính của ứng dụng
@@ -37,6 +39,7 @@ function App() {
           <BudgetProvider> 
             <RecurringProvider> 
               <GoalProvider> 
+                <DebtProvider>
                 <TransactionProvider>
                   <Router> 
           <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] transition-colors duration-300">
@@ -70,6 +73,9 @@ function App() {
               <Route path="/goals" element={<PrivateRoute />}> 
                 <Route index element={<Goals />} /> 
               </Route>
+              <Route path="/debts" element={<PrivateRoute />}> 
+                <Route index element={<Debts />} /> 
+              </Route>
               <Route path="/statistics" element={<PrivateRoute />}> 
                 <Route index element={<Statistics />} /> 
               </Route>
@@ -95,6 +101,7 @@ function App() {
           </div>
               </Router> 
               </TransactionProvider> 
+                </DebtProvider>
             </GoalProvider>        
           </RecurringProvider> 
         </BudgetProvider>  

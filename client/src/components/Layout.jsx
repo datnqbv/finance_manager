@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 //Main layout wrapper - khung chứa chính của app
 
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import TransactionModal from './TransactionModal';
+import { FiPlus } from 'react-icons/fi';
 import { 
   FiHome,  
   FiBarChart2,
@@ -20,9 +22,10 @@ import {
   FiChevronLeft,
   FiCreditCard,
   FiRefreshCw,
-  FiTarget
+  FiTarget,
+  FiUsers
 } from 'react-icons/fi';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import DarkModeToggle from './DarkModeToggle';
 import GlobalSearch from './GlobalSearch';
 import { useThemeCustomizer } from '../context/ThemeCustomizerContext';
@@ -38,6 +41,7 @@ const Layout = ({ children }) => {
   const { user, logout } = useAuth(); // Lấy thông tin người dùng và hàm đăng xuất từ ngữ cảnh xác thực
   const { currentTheme, changeTheme, themes } = useThemeCustomizer(); // Lấy theme customizer
   const [sidebarOpen, setSidebarOpen] = useState(false); // Trạng thái mở/đóng sidebar
+  const [showQuickAdd, setShowQuickAdd] = useState(false); // FAB thêm giao dịch nhanh
   const [showUserMenu, setShowUserMenu] = useState(false); // Trạng thái hiển thị menu user
   const [showSettings, setShowSettings] = useState(false); // Trạng thái hiển thị submenu cài đặt
   const [showNotifications, setShowNotifications] = useState(false); // Trạng thái hiển thị thông báo
@@ -102,6 +106,7 @@ const Layout = ({ children }) => {
     { path: '/budgets', icon: FiDollarSign, label: 'Ngân sách', isImg: false },
     { path: '/recurring', icon: FiRefreshCw, label: 'Định kỳ', isImg: false },
     { path: '/goals', icon: FiTarget, label: 'Mục tiêu', isImg: false },
+    { path: '/debts', icon: FiUsers, label: 'Quản lý nợ', isImg: false },
     { path: '/statistics', icon: FiBarChart2, label: 'Thống kê', isImg: false },
     { path: '/profile', icon: FiUser, label: 'Tài khoản', isImg: false },
   ];
@@ -544,6 +549,26 @@ const Layout = ({ children }) => {
       
       {/* AI Chatbot - Fixed position */}
       <Chatbot />
+
+      {/* FAB - Thêm giao dịch nhanh */}
+      <button
+        onClick={() => setShowQuickAdd(true)}
+        title="Thêm giao dịch nhanh"
+        className="fixed bottom-24 right-5 z-40 w-14 h-14 rounded-full
+                   bg-emerald-500 hover:bg-emerald-600 active:scale-95
+                   text-white shadow-xl shadow-emerald-500/40
+                   flex items-center justify-center
+                   transition-all duration-200 hover:scale-110"
+      >
+        <FiPlus size={26} />
+      </button>
+
+      {/* Modal thêm giao dịch nhanh */}
+      <TransactionModal
+        isOpen={showQuickAdd}
+        transaction={null}
+        onClose={() => setShowQuickAdd(false)}
+      />
     </div>
   );
 };

@@ -49,6 +49,42 @@ const calculateSpending = async (userId, categoryName, dateRange) => {
   return result.length > 0 ? result[0].total : 0;
 };
 
+// Helper: get last period's date range
+const getLastPeriodRange = (period, now = new Date()) => {
+  const start = new Date(now);
+  const end   = new Date(now);
+  switch (period) {
+    case 'monthly':
+      start.setMonth(start.getMonth() - 1, 1);
+      end.setDate(0); // last day of previous month
+      break;
+    case 'weekly':
+      start.setDate(start.getDate() - 7 - start.getDay());
+      end.setDate(start.getDate() + 6);
+      break;
+    case 'yearly':
+      start.setFullYear(start.getFullYear() - 1, 0, 1);
+      end.setFullYear(start.getFullYear(), 11, 31);
+      break;
+  }
+  start.setHours(0, 0, 0, 0);
+  end.setHours(23, 59, 59, 999);
+  return { start, end };
+};
+
+// Helper: current period key string
+const currentPeriodKey = (period, now = new Date()) => {
+  switch (period) {
+    case 'monthly': return `${now.getFullYear()}-${now.getMonth() + 1}`;
+    case 'weekly':  {
+      const week = Math.ceil(now.getDate() / 7);
+      return `${now.getFullYear()}-${now.getMonth() + 1}-w${week}`;
+    }
+    case 'yearly':  return `${now.getFullYear()}`;
+    default: return `${now.getFullYear()}-${now.getMonth() + 1}`;
+  }
+};
+
 // @desc    Get all budgets for user with current spending
 // @route   GET /api/budgets
 // @access  Private
@@ -58,6 +94,25 @@ export const getBudgets = async (req, res) => {
       userId: req.user._id,
       isActive: true 
     }).sort({ categoryName: 1 });
+
+    const now = new Date();
+
+    // Auto-apply rollover for budgets that have it enabled
+    for (const budget of budgets) {
+      if (!budget.rolloverEnabled) continue;
+      const periodKey = currentPeriodKey(budget.period, now);
+      if (budget.lastRolloverMonth === periodKey) continue; // already applied this period
+
+      // Calculate spending in last period
+      const lastRange = getLastPeriodRange(budget.period, now);
+      const lastSpending = await calculateSpending(req.user._id, budget.categoryName, lastRange);
+      const lastEffective = budget.amount + budget.rolloverAmount;
+      const surplus = lastEffective - lastSpending; // positive = dư, negative = vượt
+
+      budget.rolloverAmount = surplus;
+      budget.lastRolloverMonth = periodKey;
+      await budget.save();
+    }
 
     // Calculate current spending for each budget
     const budgetsWithSpending = await Promise.all(
@@ -70,10 +125,12 @@ export const getBudgets = async (req, res) => {
         );
 
         const budgetObj = budget.toObject();
-        const alerts = budget.checkAlerts(currentSpending);
+        const effectiveAmount = budget.amount + budget.rolloverAmount;
+        const alerts = budget.checkAlerts(currentSpending, effectiveAmount);
 
         return {
           ...budgetObj,
+          effectiveAmount,
           currentSpending,
           ...alerts
         };
@@ -216,7 +273,7 @@ export const createBudget = async (req, res) => {
 // @access  Private
 export const updateBudget = async (req, res) => {
   try {
-    const { amount, period, alertThresholds, notificationEnabled, isActive } = req.body;
+    const { amount, period, alertThresholds, notificationEnabled, isActive, rolloverEnabled } = req.body;
 
     const budget = await Budget.findOne({
       _id: req.params.id,
@@ -236,6 +293,7 @@ export const updateBudget = async (req, res) => {
     if (alertThresholds) budget.alertThresholds = alertThresholds;
     if (notificationEnabled !== undefined) budget.notificationEnabled = notificationEnabled;
     if (isActive !== undefined) budget.isActive = isActive;
+    if (rolloverEnabled !== undefined) budget.rolloverEnabled = rolloverEnabled;
 
     await budget.save();
 

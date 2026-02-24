@@ -199,7 +199,7 @@ export const deleteGoal = async (req, res) => {
 // @access  Private
 export const addAmountToGoal = async (req, res) => {
   try {
-    const { amount } = req.body;
+    const { amount, note } = req.body;
 
     if (!amount || amount <= 0) {
       return res.status(400).json({
@@ -220,7 +220,7 @@ export const addAmountToGoal = async (req, res) => {
       });
     }
 
-    await goal.addAmount(amount);
+    await goal.addAmount(amount, note || '');
 
     res.status(200).json({
       success: true,

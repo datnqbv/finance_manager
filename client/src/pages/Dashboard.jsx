@@ -5,25 +5,38 @@ import { transactionService } from '../services/transaction.service';
 import goalService from '../services/goal.service';
 import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiActivity, FiAlertTriangle, FiTarget, FiSun, FiMoon, FiClock, FiList, FiArrowUpRight, FiArrowDownRight, FiPlus, FiPieChart } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
+import { useCategories } from '../context/CategoryContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, ComposedChart, Line, Area, AreaChart } from 'recharts';
 import PageTransition from '../components/PageTransition';
 import { DashboardSkeleton } from '../components/LoadingSkeleton';
+import OnboardingModal from '../components/OnboardingModal';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { categories, fetchCategories } = useCategories();
   const navigate = useNavigate();
   const [summary, setSummary] = useState(null);
   const [filteredSummary, setFilteredSummary] = useState(null);
   const [monthlyStats, setMonthlyStats] = useState([]);
   const [categoryStats, setCategoryStats] = useState([]);
+  const [lastMonthCategoryStats, setLastMonthCategoryStats] = useState([]);
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState('month');
   const [dailyFluctuation, setDailyFluctuation] = useState([]);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     fetchData();
+    fetchCategories();
   }, [timeFilter]);
+
+  // Hiện onboarding nếu user mới chưa có danh mục
+  useEffect(() => {
+    if (!loading && categories.length === 0 && !localStorage.getItem('onboardingDone')) {
+      setShowOnboarding(true);
+    }
+  }, [loading, categories.length]);
 
   const getDateRange = () => {
     const now = new Date();
@@ -57,6 +70,11 @@ const Dashboard = () => {
     try {
       const { startDate, endDate } = getDateRange();
       const now = new Date();
+
+      // Last month date range (để so sánh danh mục)
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+      const lastMonthEnd   = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59).toISOString();
+
       const monthlyPromises = [];
       for (let i = 5; i >= 0; i--) {
         const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -73,16 +91,18 @@ const Dashboard = () => {
             .catch(() => null)
         );
       }
-      const [summaryData, goalsData, transactionsData, categoryData, ...monthlyResults] = await Promise.all([
+      const [summaryData, goalsData, transactionsData, categoryData, lastMonthCatData, ...monthlyResults] = await Promise.all([
         statsService.getSummary(),
         goalService.getGoals(),
         transactionService.getTransactions({ startDate, endDate, limit: 1000 }),
         statsService.getCategoryStats(startDate, endDate),
+        statsService.getCategoryStats(lastMonthStart, lastMonthEnd).catch(() => ({ data: [] })),
         ...monthlyPromises
       ]);
       setSummary(summaryData.data);
       setGoals(Array.isArray(goalsData.data) ? goalsData.data : []);
       setCategoryStats(Array.isArray(categoryData.data) ? categoryData.data : []);
+      setLastMonthCategoryStats(Array.isArray(lastMonthCatData.data) ? lastMonthCatData.data : []);
       setMonthlyStats(monthlyResults.filter(item => item !== null));
       const transactions = transactionsData.data || [];
       const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
@@ -282,6 +302,41 @@ const Dashboard = () => {
           </div>
         )}
 
+        {/* ── Category Insights (so sánh tháng trước) ── */}
+        {(() => {
+          if (!lastMonthCategoryStats.length || !categoryStats.length) return null;
+          const insights = categoryStats
+            .filter(c => c.type === 'expense')
+            .map(cur => {
+              const prev = lastMonthCategoryStats.find(p => p.category === cur.category && p.type === 'expense');
+              if (!prev || prev.total === 0) return null;
+              const pct = ((cur.total - prev.total) / prev.total) * 100;
+              if (Math.abs(pct) < 20) return null;
+              return { category: cur.category, pct };
+            })
+            .filter(Boolean)
+            .sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
+            .slice(0, 3);
+          if (!insights.length) return null;
+          return (
+            <div className="flex flex-wrap gap-2">
+              {insights.map(({ category, pct }) => (
+                <span
+                  key={category}
+                  className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border ${
+                    pct > 0
+                      ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-400'
+                      : 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-400'
+                  }`}
+                >
+                  {pct > 0 ? '📈' : '📉'}
+                  {category} {pct > 0 ? 'tăng' : 'giảm'} {Math.abs(pct).toFixed(0)}% so với tháng trước
+                </span>
+              ))}
+            </div>
+          );
+        })()}
+
         {/* ── Stats Cards ── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
@@ -347,6 +402,36 @@ const Dashboard = () => {
             </div>
           ))}
         </div>
+
+        {/* ── Net Worth ── */}
+        {summary?.overall && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] border-l-4 border-l-indigo-500 rounded-2xl p-4">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tổng tài sản ròng (Net Worth)</p>
+              <p className={`text-xl font-black ${summary.overall.balance >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-red-600 dark:text-red-400'}`}>
+                {formatCurrency(summary.overall.balance)}
+              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Tích lũy từ trước đến nay</p>
+            </div>
+            <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] border-l-4 border-l-emerald-500 rounded-2xl p-4">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tổng thu nhập tích lũy</p>
+              <p className="text-xl font-black text-emerald-600 dark:text-emerald-400">{formatCurrency(summary.overall.totalIncome)}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{summary.overall.transactionCount} giao dịch</p>
+            </div>
+            <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] border-l-4 border-l-red-400 rounded-2xl p-4">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tổng chi tiêu tích lũy</p>
+              <p className="text-xl font-black text-red-500 dark:text-red-400">{formatCurrency(summary.overall.totalExpense)}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                Tỷ lệ tiết kiệm:{' '}
+                <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                  {summary.overall.totalIncome > 0
+                    ? `${(((summary.overall.totalIncome - summary.overall.totalExpense) / summary.overall.totalIncome) * 100).toFixed(1)}%`
+                    : '—'}
+                </span>
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ── Spending Ratio ── */}
         {filteredSummary?.income > 0 && (
@@ -638,6 +723,16 @@ const Dashboard = () => {
         </div>
 
       </div>
+
+      {/* ── Onboarding ── */}
+      {showOnboarding && (
+        <OnboardingModal
+          onClose={() => {
+            setShowOnboarding(false);
+            fetchCategories();
+          }}
+        />
+      )}
     </PageTransition>
   );
 };

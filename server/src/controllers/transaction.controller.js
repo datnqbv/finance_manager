@@ -131,7 +131,12 @@ const checkBudgetAndNotify = async (userId, category, transactionDate) => {
 // @access  Private
 export const getTransactions = async (req, res) => {
   try {
-    const { type, category, startDate, endDate, limit = 50 } = req.query;
+    const {
+      type, category, startDate, endDate,
+      search, amountMin, amountMax,
+      page = 1, limit = 10,
+      sortBy = 'date', sortOrder = 'desc'
+    } = req.query;
 
     // Build query
     const query = { userId: req.user.id };
@@ -141,16 +146,36 @@ export const getTransactions = async (req, res) => {
     if (startDate || endDate) {
       query.date = {};
       if (startDate) query.date.$gte = new Date(startDate);
-      if (endDate) query.date.$lte = new Date(endDate);
+      if (endDate)   query.date.$lte = new Date(endDate);
+    }
+    if (amountMin || amountMax) {
+      query.amount = {};
+      if (amountMin) query.amount.$gte = parseFloat(amountMin);
+      if (amountMax) query.amount.$lte = parseFloat(amountMax);
+    }
+    if (search) {
+      query.$or = [
+        { category: { $regex: search, $options: 'i' } },
+        { note:     { $regex: search, $options: 'i' } },
+      ];
     }
 
-    const transactions = await Transaction.find(query)
-      .sort({ date: -1 })
-      .limit(parseInt(limit));
+    const pageNum  = Math.max(1, parseInt(page));
+    const limitNum = parseInt(limit) === -1 ? 0 : Math.min(parseInt(limit) || 10, 500);
+    const skip     = (pageNum - 1) * limitNum;
+    const sort     = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
+    const [transactions, total] = await Promise.all([
+      Transaction.find(query).sort(sort).skip(limitNum > 0 ? skip : 0).limit(limitNum),
+      Transaction.countDocuments(query),
+    ]);
 
     res.json({
       success: true,
       count: transactions.length,
+      total,
+      page: pageNum,
+      totalPages: limitNum > 0 ? Math.ceil(total / limitNum) : 1,
       data: transactions
     });
   } catch (error) {
