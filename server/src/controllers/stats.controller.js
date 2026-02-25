@@ -1,4 +1,6 @@
 import Transaction from '../models/Transaction.model.js';
+import Goal from '../models/Goal.model.js';
+import mongoose from 'mongoose';
 
 // ─── ML Helpers ─────────────────────────────────────────────────────────────
 
@@ -93,27 +95,41 @@ export const getMonthlyStats = async (req, res) => {
 // @access  Private
 export const getSummary = async (req, res) => {
   try {
-    const transactions = await Transaction.find({ userId: req.user.id });
-
-    const totalIncome  = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const totalExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-
+    const userId = new mongoose.Types.ObjectId(req.user.id);
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const thisMonth = transactions.filter(t => t.date >= startOfMonth);
 
-    const monthlyIncome  = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const monthlyExpense = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const [overallAgg, monthlyAgg, recent] = await Promise.all([
+      // Total income/expense all-time — single aggregation, no document fetch
+      Transaction.aggregate([
+        { $match: { userId } },
+        { $group: { _id: '$type', total: { $sum: '$amount' }, count: { $sum: 1 } } }
+      ]),
+      // This-month income/expense
+      Transaction.aggregate([
+        { $match: { userId, date: { $gte: startOfMonth } } },
+        { $group: { _id: '$type', total: { $sum: '$amount' } } }
+      ]),
+      // Recent 5 transactions
+      Transaction.find({ userId: req.user.id }).sort({ date: -1 }).limit(5).lean()
+    ]);
 
-    const recentTransactions = await Transaction.find({ userId: req.user.id })
-      .sort({ date: -1 }).limit(5);
+    const toMap = (agg) => agg.reduce((m, r) => { m[r._id] = r; return m; }, {});
+    const overall = toMap(overallAgg);
+    const monthly = toMap(monthlyAgg);
+
+    const totalIncome  = overall.income?.total  ?? 0;
+    const totalExpense = overall.expense?.total  ?? 0;
+    const totalCount   = (overall.income?.count ?? 0) + (overall.expense?.count ?? 0);
+    const monthlyIncome  = monthly.income?.total  ?? 0;
+    const monthlyExpense = monthly.expense?.total ?? 0;
 
     res.json({
       success: true,
       data: {
-        overall: { totalIncome, totalExpense, balance: totalIncome - totalExpense, transactionCount: transactions.length },
+        overall: { totalIncome, totalExpense, balance: totalIncome - totalExpense, transactionCount: totalCount },
         thisMonth: { income: monthlyIncome, expense: monthlyExpense, balance: monthlyIncome - monthlyExpense },
-        recentTransactions
+        recentTransactions: recent
       }
     });
   } catch (error) {
@@ -156,31 +172,68 @@ export const getCategoryStats = async (req, res) => {
 export const compareStats = async (req, res) => {
   try {
     const { type = 'month', periods = 6, refYear, refMonth } = req.query;
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const n = parseInt(periods);
     const now = (refYear && refMonth)
       ? new Date(parseInt(refYear), parseInt(refMonth) - 1, 1)
       : new Date();
+
+    let startDate, endDate;
     const results = [];
 
-    for (let i = parseInt(periods) - 1; i >= 0; i--) {
-      let startDate, endDate, label;
+    if (type === 'year') {
+      const startYear = now.getFullYear() - n + 1;
+      startDate = new Date(startYear, 0, 1);
+      endDate   = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
 
-      if (type === 'year') {
-        const year = now.getFullYear() - i;
-        startDate = new Date(year, 0, 1);
-        endDate   = new Date(year, 11, 31, 23, 59, 59);
-        label     = `${year}`;
-      } else {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        startDate = new Date(d.getFullYear(), d.getMonth(), 1);
-        endDate   = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
-        label     = `${d.getMonth() + 1}/${d.getFullYear()}`;
+      // Single aggregation grouped by year
+      const agg = await Transaction.aggregate([
+        { $match: { userId, date: { $gte: startDate, $lte: endDate } } },
+        { $group: {
+            _id: { year: { $year: '$date' }, type: '$type' },
+            total: { $sum: '$amount' }, count: { $sum: 1 }
+        }}
+      ]);
+      const map = {};
+      agg.forEach(r => {
+        const key = r._id.year;
+        if (!map[key]) map[key] = { income: 0, expense: 0, count: 0 };
+        map[key][r._id.type] += r.total;
+        map[key].count += r.count;
+      });
+      for (let i = 0; i < n; i++) {
+        const year = startYear + i;
+        const d = map[year] || { income: 0, expense: 0, count: 0 };
+        results.push({ period: `${year}`, startDate: new Date(year, 0, 1), endDate: new Date(year, 11, 31, 23, 59, 59), income: d.income, expense: d.expense, balance: d.income - d.expense, transactionCount: d.count });
       }
+    } else {
+      const baseDate = new Date(now.getFullYear(), now.getMonth() - n + 1, 1);
+      startDate = baseDate;
+      endDate   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-      const txns = await Transaction.find({ userId: req.user.id, date: { $gte: startDate, $lte: endDate } });
-      const income  = txns.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-      const expense = txns.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-
-      results.push({ period: label, startDate, endDate, income, expense, balance: income - expense, transactionCount: txns.length });
+      // Single aggregation grouped by year+month
+      const agg = await Transaction.aggregate([
+        { $match: { userId, date: { $gte: startDate, $lte: endDate } } },
+        { $group: {
+            _id: { year: { $year: '$date' }, month: { $month: '$date' }, type: '$type' },
+            total: { $sum: '$amount' }, count: { $sum: 1 }
+        }}
+      ]);
+      const map = {};
+      agg.forEach(r => {
+        const key = `${r._id.year}-${r._id.month}`;
+        if (!map[key]) map[key] = { income: 0, expense: 0, count: 0 };
+        map[key][r._id.type] += r.total;
+        map[key].count += r.count;
+      });
+      for (let i = n - 1; i >= 0; i--) {
+        const d      = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key    = `${d.getFullYear()}-${d.getMonth() + 1}`;
+        const entry  = map[key] || { income: 0, expense: 0, count: 0 };
+        const sDate  = new Date(d.getFullYear(), d.getMonth(), 1);
+        const eDate  = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+        results.push({ period: `${d.getMonth() + 1}/${d.getFullYear()}`, startDate: sDate, endDate: eDate, income: entry.income, expense: entry.expense, balance: entry.income - entry.expense, transactionCount: entry.count });
+      }
     }
 
     const withGrowth = results.map((item, index) => {
@@ -204,22 +257,57 @@ export const forecastSpending = async (req, res) => {
   try {
     const { months = 6, refYear, refMonth } = req.query;
     const n   = parseInt(months);
+    const userId = new mongoose.Types.ObjectId(req.user.id);
     const now = (refYear && refMonth)
       ? new Date(parseInt(refYear), parseInt(refMonth) - 1, 1)
       : new Date();
+
+    // Define range: n months back from now
+    const rangeStart = new Date(now.getFullYear(), now.getMonth() - n, 1);
+    const rangeEnd   = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+    // Single aggregation for monthly type totals + category totals
+    const [monthlyAgg, catMonthlyAgg] = await Promise.all([
+      Transaction.aggregate([
+        { $match: { userId, date: { $gte: rangeStart, $lte: rangeEnd } } },
+        { $group: {
+            _id: { year: { $year: '$date' }, month: { $month: '$date' }, type: '$type' },
+            total: { $sum: '$amount' }
+        }}
+      ]),
+      Transaction.aggregate([
+        { $match: { userId, type: 'expense', date: { $gte: rangeStart, $lte: rangeEnd } } },
+        { $group: {
+            _id: { year: { $year: '$date' }, month: { $month: '$date' }, category: '$category' },
+            total: { $sum: '$amount' }
+        }}
+      ])
+    ]);
+
+    // Build month-keyed maps
+    const monthMap = {};
+    monthlyAgg.forEach(r => {
+      const key = `${r._id.year}-${r._id.month}`;
+      if (!monthMap[key]) monthMap[key] = { income: 0, expense: 0 };
+      monthMap[key][r._id.type] = r.total;
+    });
+    const catMap = {};
+    catMonthlyAgg.forEach(r => {
+      const cat = r._id.category;
+      const key = `${r._id.year}-${r._id.month}`;
+      if (!catMap[cat]) catMap[cat] = {};
+      catMap[cat][key] = r.total;
+    });
 
     const expenseHistory = [];
     const incomeHistory  = [];
     const labels         = [];
 
     for (let i = n; i >= 1; i--) {
-      const d     = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const start = new Date(d.getFullYear(), d.getMonth(), 1);
-      const end   = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
-
-      const txns = await Transaction.find({ userId: req.user.id, date: { $gte: start, $lte: end } });
-      expenseHistory.push(txns.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0));
-      incomeHistory.push(txns.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0));
+      const d   = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+      expenseHistory.push(monthMap[key]?.expense ?? 0);
+      incomeHistory.push(monthMap[key]?.income  ?? 0);
       labels.push(`${d.getMonth() + 1}/${d.getFullYear()}`);
     }
 
@@ -241,24 +329,19 @@ export const forecastSpending = async (req, res) => {
                        : incReg.slope < -avgIncome  * 0.02 ? 'decreasing'
                        : 'stable';
 
-    // Confidence interval (±1 std of residuals)
     const residuals   = expenseHistory.map((y, i) => y - (expReg.slope * i + expReg.intercept));
     const stdResidual = stddev(residuals);
     const finalFcstExp = forecastExpense > 0 ? forecastExpense : avgExpense;
     const finalFcstInc = forecastIncome  > 0 ? forecastIncome  : avgIncome;
 
-    // Category-level forecasts with trend
-    const categories = await Transaction.distinct('category', { userId: req.user.id, type: 'expense' });
+    // Category-level forecasts — all data already in catMap
     const categoryForecasts = {};
-
-    for (const category of categories) {
+    for (const [category, monthData] of Object.entries(catMap)) {
       const catHistory = [];
       for (let i = n; i >= 1; i--) {
-        const d     = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const start = new Date(d.getFullYear(), d.getMonth(), 1);
-        const end   = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
-        const txns  = await Transaction.find({ userId: req.user.id, type: 'expense', category, date: { $gte: start, $lte: end } });
-        catHistory.push(txns.reduce((s, t) => s + t.amount, 0));
+        const d   = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+        catHistory.push(monthData[key] ?? 0);
       }
       const catReg  = weightedLinearRegression(catHistory);
       const catAvg  = catHistory.reduce((a, b) => a + b, 0) / catHistory.length;
@@ -266,7 +349,6 @@ export const forecastSpending = async (req, res) => {
       const catTrend = catReg.slope >  catAvg * 0.03 ? 'increasing'
                      : catReg.slope < -catAvg * 0.03 ? 'decreasing'
                      : 'stable';
-
       categoryForecasts[category] = {
         forecast:  catFcst || Math.round(catAvg),
         average:   Math.round(catAvg),
@@ -310,20 +392,37 @@ export const forecastSpending = async (req, res) => {
 export const analyzeTrends = async (req, res) => {
   try {
     const { period = 12, refYear, refMonth } = req.query;
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const n = parseInt(period);
     const now = (refYear && refMonth)
       ? new Date(parseInt(refYear), parseInt(refMonth) - 1, 1)
       : new Date();
+
+    const rangeStart = new Date(now.getFullYear(), now.getMonth() - n + 1, 1);
+    const rangeEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+    const agg = await Transaction.aggregate([
+      { $match: { userId, date: { $gte: rangeStart, $lte: rangeEnd } } },
+      { $group: {
+          _id: { year: { $year: '$date' }, month: { $month: '$date' }, type: '$type' },
+          total: { $sum: '$amount' }
+      }}
+    ]);
+
+    const map = {};
+    agg.forEach(r => {
+      const key = `${r._id.year}-${r._id.month}`;
+      if (!map[key]) map[key] = { income: 0, expense: 0 };
+      map[key][r._id.type] = r.total;
+    });
+
     const trends = [];
-
-    for (let i = parseInt(period) - 1; i >= 0; i--) {
-      const d     = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const start = new Date(d.getFullYear(), d.getMonth(), 1);
-      const end   = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
-
-      const txns    = await Transaction.find({ userId: req.user.id, date: { $gte: start, $lte: end } });
-      const income  = txns.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-      const expense = txns.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-
+    for (let i = n - 1; i >= 0; i--) {
+      const d      = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key    = `${d.getFullYear()}-${d.getMonth() + 1}`;
+      const entry  = map[key] || { income: 0, expense: 0 };
+      const income  = entry.income;
+      const expense = entry.expense;
       trends.push({
         month: `${d.getMonth() + 1}/${d.getFullYear()}`,
         income,
@@ -333,13 +432,13 @@ export const analyzeTrends = async (req, res) => {
       });
     }
 
-    const avgIncome  = trends.reduce((s, t) => s + t.income, 0) / trends.length;
-    const avgExpense = trends.reduce((s, t) => s + t.expense, 0) / trends.length;
-    const avgSavings = trends.reduce((s, t) => s + t.savings, 0) / trends.length;
+    const avgIncome  = trends.reduce((s, t) => s + t.income,   0) / trends.length;
+    const avgExpense = trends.reduce((s, t) => s + t.expense,  0) / trends.length;
+    const avgSavings = trends.reduce((s, t) => s + t.savings,  0) / trends.length;
 
     const recentMonths     = trends.slice(-3);
     const historicalMonths = trends.slice(0, -3);
-    const recentAvg  = recentMonths.reduce((s, t) => s + t.expense, 0) / recentMonths.length;
+    const recentAvg     = recentMonths.reduce((s, t) => s + t.expense, 0) / recentMonths.length;
     const historicalAvg = historicalMonths.length > 0
       ? historicalMonths.reduce((s, t) => s + t.expense, 0) / historicalMonths.length
       : recentAvg;
@@ -436,31 +535,67 @@ export const getDailyStats = async (req, res) => {
 export const getWeeklyStats = async (req, res) => {
   try {
     const { weeks = 12 } = req.query;
-    const now     = new Date();
-    const results = [];
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const n   = parseInt(weeks);
+    const now = new Date();
 
-    for (let i = parseInt(weeks) - 1; i >= 0; i--) {
+    // Build week boundaries first
+    const weekSlots = [];
+    for (let i = n - 1; i >= 0; i--) {
       const endOfWeek   = new Date(now);
       endOfWeek.setDate(endOfWeek.getDate() - i * 7);
       const startOfWeek = new Date(endOfWeek);
       startOfWeek.setDate(startOfWeek.getDate() - 6);
       startOfWeek.setHours(0, 0, 0, 0);
       endOfWeek.setHours(23, 59, 59, 999);
-
-      const txns    = await Transaction.find({ userId: req.user.id, date: { $gte: startOfWeek, $lte: endOfWeek } });
-      const income  = txns.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-      const expense = txns.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-
-      results.push({
-        week: `${startOfWeek.getDate()}/${startOfWeek.getMonth() + 1} - ${endOfWeek.getDate()}/${endOfWeek.getMonth() + 1}`,
-        startDate: startOfWeek,
-        endDate: endOfWeek,
-        income,
-        expense,
-        balance: income - expense,
-        transactionCount: txns.length
-      });
+      weekSlots.push({ start: startOfWeek, end: endOfWeek });
     }
+
+    const rangeStart = weekSlots[0].start;
+    const rangeEnd   = weekSlots[weekSlots.length - 1].end;
+
+    // Single aggregation + ISO-week grouping
+    const agg = await Transaction.aggregate([
+      { $match: { userId, date: { $gte: rangeStart, $lte: rangeEnd } } },
+      { $group: {
+          _id: {
+            isoWeek:  { $isoWeek: '$date' },
+            isoYear:  { $isoWeekYear: '$date' },
+            type:     '$type'
+          },
+          total: { $sum: '$amount' },
+          count: { $sum: 1 }
+      }}
+    ]);
+    const weekMap = {};
+    agg.forEach(r => {
+      const key = `${r._id.isoYear}-${r._id.isoWeek}`;
+      if (!weekMap[key]) weekMap[key] = { income: 0, expense: 0, count: 0 };
+      weekMap[key][r._id.type] += r.total;
+      weekMap[key].count += r.count;
+    });
+
+    const getISOWeekKey = (d) => {
+      const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7));
+      const year = tmp.getUTCFullYear();
+      const week = Math.ceil((((tmp - new Date(Date.UTC(year, 0, 1))) / 86400000) + 1) / 7);
+      return `${year}-${week}`;
+    };
+
+    const results = weekSlots.map(({ start, end }) => {
+      const key   = getISOWeekKey(start);
+      const entry = weekMap[key] || { income: 0, expense: 0, count: 0 };
+      return {
+        week: `${start.getDate()}/${start.getMonth() + 1} - ${end.getDate()}/${end.getMonth() + 1}`,
+        startDate: start,
+        endDate: end,
+        income:           entry.income,
+        expense:          entry.expense,
+        balance:          entry.income - entry.expense,
+        transactionCount: entry.count
+      };
+    });
 
     res.json({ success: true, data: results });
   } catch (error) {
@@ -473,19 +608,56 @@ export const getWeeklyStats = async (req, res) => {
 // @access  Private
 export const getAIInsights = async (req, res) => {
   try {
+    const userId = new mongoose.Types.ObjectId(req.user.id);
     const now    = new Date();
     const months = 12;
 
-    // Collect 12 months of data
+    // 12 months range
+    const rangeStart12 = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
+    const rangeEnd12   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    // 6 months range for category trends
+    const rangeStart6  = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+    // Two aggregations replace all serial loops
+    const [monthlyAgg, catMonthlyAgg] = await Promise.all([
+      Transaction.aggregate([
+        { $match: { userId, date: { $gte: rangeStart12, $lte: rangeEnd12 } } },
+        { $group: {
+            _id: { year: { $year: '$date' }, month: { $month: '$date' }, type: '$type' },
+            total: { $sum: '$amount' }, count: { $sum: 1 }
+        }}
+      ]),
+      Transaction.aggregate([
+        { $match: { userId, type: 'expense', date: { $gte: rangeStart6, $lte: rangeEnd12 } } },
+        { $group: {
+            _id: { year: { $year: '$date' }, month: { $month: '$date' }, category: '$category' },
+            total: { $sum: '$amount' }
+        }}
+      ])
+    ]);
+
+    const monthMap = {};
+    monthlyAgg.forEach(r => {
+      const key = `${r._id.year}-${r._id.month}`;
+      if (!monthMap[key]) monthMap[key] = { income: 0, expense: 0, count: 0 };
+      monthMap[key][r._id.type] += r.total;
+      monthMap[key].count += r.count;
+    });
+
+    const catMap = {};
+    catMonthlyAgg.forEach(r => {
+      const cat = r._id.category;
+      const key = `${r._id.year}-${r._id.month}`;
+      if (!catMap[cat]) catMap[cat] = {};
+      catMap[cat][key] = r.total;
+    });
+
     const monthlyData = [];
     for (let i = months - 1; i >= 0; i--) {
-      const d     = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const start = new Date(d.getFullYear(), d.getMonth(), 1);
-      const end   = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
-      const txns  = await Transaction.find({ userId: req.user.id, date: { $gte: start, $lte: end } });
-      const income  = txns.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-      const expense = txns.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-      monthlyData.push({ label: `${d.getMonth() + 1}/${d.getFullYear()}`, income, expense, savings: income - expense, txCount: txns.length });
+      const d   = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+      const e   = monthMap[key] || { income: 0, expense: 0, count: 0 };
+      monthlyData.push({ label: `${d.getMonth() + 1}/${d.getFullYear()}`, income: e.income, expense: e.expense, savings: e.income - e.expense, txCount: e.count });
     }
 
     const expenses   = monthlyData.map(m => m.expense);
@@ -529,18 +701,14 @@ export const getAIInsights = async (req, res) => {
                       : healthScore >= 25 ? 'orange'
                       : 'red';
 
-    // Category trend (last 3 months vs prior 3 months)
-    const categories = await Transaction.distinct('category', { userId: req.user.id, type: 'expense' });
+    // Category trend (last 3 months vs prior 3 months) — data already in catMap from aggregation
     const categoryTrends = [];
-
-    for (const cat of categories) {
+    for (const [cat, monthData] of Object.entries(catMap)) {
       const recent3 = [], prior3 = [];
       for (let i = 0; i < 6; i++) {
-        const d     = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const start = new Date(d.getFullYear(), d.getMonth(), 1);
-        const end   = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
-        const txns  = await Transaction.find({ userId: req.user.id, type: 'expense', category: cat, date: { $gte: start, $lte: end } });
-        const total = txns.reduce((s, t) => s + t.amount, 0);
+        const d   = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+        const total = monthData[key] ?? 0;
         if (i < 3) recent3.push(total); else prior3.push(total);
       }
       const recentAvg = recent3.reduce((a, b) => a + b, 0) / 3;
@@ -592,6 +760,178 @@ export const getAIInsights = async (req, res) => {
         categoryTrends:  categoryTrends.slice(0, 5),
         recommendations,
         monthlyData
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Combined dashboard data — replaces 9+ individual calls with 1
+// @route   GET /api/stats/dashboard
+// @access  Private
+export const getDashboard = async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const { startDate, endDate } = req.query;
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Period range from query (or default to current month)
+    const periodStart = startDate ? new Date(startDate) : startOfMonth;
+    const periodEnd   = endDate   ? new Date(endDate)   : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+    // 6-month range for monthly chart
+    const sixMonthStart = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+    // Last month for category comparison
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd   = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+    // 7-day range for daily fluctuation
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    // Run all aggregations + queries in parallel
+    const [
+      overallAgg,
+      monthSummaryAgg,
+      sixMonthAgg,
+      periodAgg,
+      lastMonthCatAgg,
+      recent,
+      goals
+    ] = await Promise.all([
+      // All-time totals
+      Transaction.aggregate([
+        { $match: { userId } },
+        { $group: { _id: '$type', total: { $sum: '$amount' }, count: { $sum: 1 } } }
+      ]),
+      // Current month summary
+      Transaction.aggregate([
+        { $match: { userId, date: { $gte: startOfMonth } } },
+        { $group: { _id: '$type', total: { $sum: '$amount' } } }
+      ]),
+      // 6-month monthly breakdown
+      Transaction.aggregate([
+        { $match: { userId, date: { $gte: sixMonthStart } } },
+        { $group: {
+            _id: { year: { $year: '$date' }, month: { $month: '$date' }, type: '$type' },
+            total: { $sum: '$amount' }
+        }}
+      ]),
+      // Period transactions (for category stats + daily fluctuation)
+      Transaction.find({
+        userId: req.user.id,
+        date: { $gte: periodStart, $lte: periodEnd }
+      }).sort({ date: -1 }).lean(),
+      // Last month category stats
+      Transaction.aggregate([
+        { $match: { userId, date: { $gte: lastMonthStart, $lte: lastMonthEnd } } },
+        { $group: { _id: { category: '$category', type: '$type' }, total: { $sum: '$amount' }, count: { $sum: 1 } } }
+      ]),
+      // Recent 5 transactions
+      Transaction.find({ userId: req.user.id }).sort({ date: -1 }).limit(5).lean(),
+      // Goals (lightweight)
+      Goal.find({ userId: req.user.id }).lean()
+    ]);
+
+    // ── Overall summary ──
+    const toMap = (agg) => agg.reduce((m, r) => { m[r._id] = r; return m; }, {});
+    const overall  = toMap(overallAgg);
+    const monthly  = toMap(monthSummaryAgg);
+    const summary = {
+      overall: {
+        totalIncome:  overall.income?.total  ?? 0,
+        totalExpense: overall.expense?.total ?? 0,
+        balance: (overall.income?.total ?? 0) - (overall.expense?.total ?? 0),
+        transactionCount: (overall.income?.count ?? 0) + (overall.expense?.count ?? 0)
+      },
+      thisMonth: {
+        income:  monthly.income?.total  ?? 0,
+        expense: monthly.expense?.total ?? 0,
+        balance: (monthly.income?.total ?? 0) - (monthly.expense?.total ?? 0)
+      },
+      recentTransactions: recent
+    };
+
+    // ── 6-month chart ──
+    const sixMonthMap = {};
+    sixMonthAgg.forEach(r => {
+      const key = `${r._id.year}-${r._id.month}`;
+      if (!sixMonthMap[key]) sixMonthMap[key] = { income: 0, expense: 0 };
+      sixMonthMap[key][r._id.type] = r.total;
+    });
+    const monthlyStats = [];
+    for (let i = 5; i >= 0; i--) {
+      const d   = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+      const e   = sixMonthMap[key] || { income: 0, expense: 0 };
+      monthlyStats.push({ year: d.getFullYear(), month: d.getMonth() + 1, totalIncome: e.income, totalExpense: e.expense });
+    }
+
+    // ── Period category stats ──
+    const catMap = {};
+    periodAgg.forEach(t => {
+      if (!catMap[t.category]) catMap[t.category] = { category: t.category, income: 0, expense: 0, count: 0 };
+      catMap[t.category][t.type] += t.amount;
+      catMap[t.category].count++;
+    });
+    const categoryStats = Object.values(catMap).sort((a, b) => b.expense - a.expense);
+
+    // ── Last month category stats ──
+    const lastMonthCatMap = {};
+    lastMonthCatAgg.forEach(r => {
+      const cat = r._id.category;
+      if (!lastMonthCatMap[cat]) lastMonthCatMap[cat] = { category: cat, income: 0, expense: 0, count: 0 };
+      lastMonthCatMap[cat][r._id.type] += r.total;
+      lastMonthCatMap[cat].count += r.count;
+    });
+    const lastMonthCategoryStats = Object.values(lastMonthCatMap).sort((a, b) => b.expense - a.expense);
+
+    // ── Period summary (filtered) ──
+    const periodIncome  = periodAgg.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const periodExpense = periodAgg.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const filteredSummary = {
+      income: periodIncome,
+      expense: periodExpense,
+      balance: periodIncome - periodExpense,
+      transactionCount: periodAgg.length,
+      recentTransactions: periodAgg.slice(0, 5)
+    };
+
+    // ── Daily fluctuation (last 7 days from period transactions) ──
+    const dailyData = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      dailyData[key] = { date: key, dateLabel: `${d.getDate()}/${d.getMonth() + 1}`, income: 0, expense: 0, balance: 0, count: 0 };
+    }
+    periodAgg.forEach(t => {
+      const key = new Date(t.date).toISOString().split('T')[0];
+      if (dailyData[key]) {
+        if (t.type === 'income') dailyData[key].income += t.amount;
+        else dailyData[key].expense += t.amount;
+        dailyData[key].count++;
+      }
+    });
+    const dailyArr = Object.values(dailyData);
+    const avgIncome7  = dailyArr.reduce((s, d) => s + d.income,  0) / dailyArr.length;
+    const avgExpense7 = dailyArr.reduce((s, d) => s + d.expense, 0) / dailyArr.length;
+    dailyArr.forEach(d => { d.balance = d.income - d.expense; d.avgIncome = avgIncome7; d.avgExpense = avgExpense7; });
+
+    res.json({
+      success: true,
+      data: {
+        summary,
+        filteredSummary,
+        monthlyStats,
+        categoryStats,
+        lastMonthCategoryStats,
+        dailyFluctuation: dailyArr,
+        goals
       }
     });
   } catch (error) {

@@ -7,7 +7,19 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:exe": "npx esbuild src/index.js --bundle --platform=node --format=cjs --target=node18 --outfile=bundled.cjs --external:fsevents --external:kerberos --external:@mongodb-js/zstd --external:snappy --external:mongodb-client-encryption --external:cpu-features --external:aws4 && pkg bundled.cjs --target node18-win-x64 --no-bytecode --public --output ../dist/QuanLyChiTieu.exe"
+  },
+  "pkg": {
+    "scripts": [
+      "src/**/*.js"
+    ],
+    "assets": [
+      "node_modules/**/*"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ]
   },
   "keywords": [
     "expense",
@@ -33,6 +45,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "esbuild": "^0.27.3",
     "nodemon": "^3.0.1"
   }
 }

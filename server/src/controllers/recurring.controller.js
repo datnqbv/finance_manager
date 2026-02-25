@@ -269,69 +269,61 @@ export const executeRecurringTransaction = async (req, res) => {
 export const executePendingRecurringTransactions = async (req, res) => {
   try {
     const now = new Date();
-    
-    // Find all recurring transactions that should execute
+
     const pendingRecurring = await RecurringTransaction.find({
       isActive: true,
       nextExecution: { $lte: now }
     });
 
-    const results = [];
-
-    for (const recurring of pendingRecurring) {
-      if (recurring.shouldExecute()) {
-        try {
-          // Create transaction
-          const transaction = await Transaction.create({
-            userId: recurring.userId,
-            type: recurring.type,
-            category: recurring.category,
-            amount: recurring.amount,
-            note: `${recurring.note || ''} (Tự động - ${recurring.templateName})`,
-            date: now
-          });
-
-          // Update recurring
-          recurring.executedCount += 1;
-          recurring.lastExecuted = now;
-          recurring.nextExecution = recurring.calculateNextExecution();
-
-          // Check if should deactivate
-          if (recurring.endDate && now >= new Date(recurring.endDate)) {
-            recurring.isActive = false;
-          }
-          if (recurring.occurrences && recurring.executedCount >= recurring.occurrences) {
-            recurring.isActive = false;
-          }
-
-          await recurring.save();
-
-          results.push({
-            recurringId: recurring._id,
-            transactionId: transaction._id,
-            success: true
-          });
-        } catch (error) {
-          results.push({
-            recurringId: recurring._id,
-            success: false,
-            error: error.message
-          });
-        }
-      }
+    const toExecute = pendingRecurring.filter(r => r.shouldExecute());
+    if (toExecute.length === 0) {
+      return res.status(200).json({ success: true, message: 'Không có giao dịch cần thực hiện', data: [] });
     }
+
+    // Batch insert all transactions at once
+    const txDocs = toExecute.map(r => ({
+      userId:   r.userId,
+      type:     r.type,
+      category: r.category,
+      amount:   r.amount,
+      note:     `${r.note || ''} (Tự động - ${r.templateName})`,
+      date:     now
+    }));
+    const createdTx = await Transaction.insertMany(txDocs, { ordered: false });
+
+    // Batch update all recurring documents
+    const bulkOps = toExecute.map((r, i) => {
+      const newCount  = r.executedCount + 1;
+      const nextExec  = r.calculateNextExecution();
+      const deactivate = (r.endDate && now >= new Date(r.endDate)) ||
+                         (r.occurrences && newCount >= r.occurrences);
+      return {
+        updateOne: {
+          filter: { _id: r._id },
+          update: { $set: {
+            executedCount:   newCount,
+            lastExecuted:    now,
+            nextExecution:   nextExec,
+            ...(deactivate ? { isActive: false } : {})
+          }}
+        }
+      };
+    });
+    await RecurringTransaction.bulkWrite(bulkOps);
+
+    const results = toExecute.map((r, i) => ({
+      recurringId:   r._id,
+      transactionId: createdTx[i]?._id,
+      success: true
+    }));
 
     res.status(200).json({
       success: true,
-      message: `Đã thực hiện ${results.filter(r => r.success).length}/${results.length} giao dịch định kỳ`,
+      message: `Đã thực hiện ${results.length} giao dịch định kỳ`,
       data: results
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi khi thực hiện giao dịch định kỳ',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Lỗi khi thực hiện giao dịch định kỳ', error: error.message });
   }
 };
 

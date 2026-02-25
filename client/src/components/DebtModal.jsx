@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FiX } from 'react-icons/fi';
+import CurrencyInput from './CurrencyInput';
 
 const DebtModal = ({ debt, onClose, onSave }) => {
   const [form, setForm] = useState({
@@ -107,14 +108,11 @@ const DebtModal = ({ debt, onClose, onSave }) => {
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
               Số tiền <span className="text-red-500">*</span>
             </label>
-            <input
-              type="number"
+            <CurrencyInput
               value={form.amount}
-              onChange={e => change('amount', e.target.value)}
+              onChange={v => change('amount', v)}
               placeholder="0"
-              min="1"
-              step="1000"
-              className={`input ${errors.amount ? 'border-red-500' : ''}`}
+              error={!!errors.amount}
             />
             {errors.amount && <p className="text-xs text-red-500 mt-1">{errors.amount}</p>}
           </div>

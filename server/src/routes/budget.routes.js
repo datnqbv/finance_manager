@@ -6,7 +6,8 @@ import {
   updateBudget,
   deleteBudget,
   getBudgetStatus,
-  getAlerts
+  getAlerts,
+  getBudgetOverview
 } from '../controllers/budget.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 
@@ -15,7 +16,8 @@ const router = express.Router();
 // Protect all routes
 router.use(protect);
 
-// Special routes
+// Special routes (must be before /:id)
+router.get('/overview', getBudgetOverview);   // combined budgets + status + alerts
 router.get('/status', getBudgetStatus);
 router.get('/alerts', getAlerts);
 

@@ -89,8 +89,8 @@ const recurringTransactionSchema = new mongoose.Schema({
 });
 
 // Indexes để tối ưu truy vấn
-recurringTransactionSchema.index({ userId: 1, isActive: 1 }); // Tối ưu truy vấn giao dịch định kỳ theo user và trạng thái
-recurringTransactionSchema.index({ nextExecution: 1, isActive: 1 }); // Tối ưu truy vấn giao dịch định kỳ theo ngày thực hiện tiếp theo
+recurringTransactionSchema.index({ userId: 1, isActive: 1, nextExecution: 1 }); // covers getUpcoming + executePending
+recurringTransactionSchema.index({ userId: 1, createdAt: -1 });                 // covers getRecurringTransactions list
 
 // Method để tính ngày execution tiếp theo
 recurringTransactionSchema.methods.calculateNextExecution = function() {

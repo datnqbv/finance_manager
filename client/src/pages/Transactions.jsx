@@ -6,6 +6,7 @@ import TransactionModal from '../components/TransactionModal';
 import TransactionCalendar from '../components/TransactionCalendar';
 import ImportModal from '../components/ImportModal';
 import Pagination from '../components/Pagination';
+import { TransactionsPageSkeleton } from '../components/LoadingSkeleton';
 import { exportToPDF, exportToExcel } from '../utils/exportUtils';
 
 const Transactions = () => {
@@ -134,11 +135,7 @@ const Transactions = () => {
   };
 
   if (loading && transactions.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <TransactionsPageSkeleton />;
   }
 
   return (

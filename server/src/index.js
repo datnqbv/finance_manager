@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import path from 'path';
 import connectDB from './config/database.js';
 import authRoutes from './routes/auth.routes.js';
 import transactionRoutes from './routes/transaction.routes.js';
@@ -18,8 +20,18 @@ import importRoutes from './routes/import.routes.js';
 import { errorHandler } from './middleware/error.middleware.js';
 import { startCronJobs } from './services/cronJob.service.js';
 
+// Lấy __dirname an toàn cho cả ESM (dev) và pkg/CJS (exe)
+const _dirname = typeof __dirname !== 'undefined'
+  ? __dirname
+  : path.dirname(fileURLToPath(import.meta.url));
+
 // Load environment variables
-dotenv.config();
+// Khi chạy .exe (pkg), load .env từ cùng thư mục với .exe
+const isPackaged = typeof process.pkg !== 'undefined';
+const envPath = isPackaged
+  ? path.join(path.dirname(process.execPath), '.env')
+  : path.resolve('.env');
+dotenv.config({ path: envPath });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,14 +44,14 @@ startCronJobs();
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: process.env.CLIENT_URL || ['http://localhost:5173', 'http://localhost:5000'],
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' })); // Tăng giới hạn để hỗ trợ upload ảnh base64
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Routes
-app.get('/', (req, res) => {
+// API health check
+app.get('/api/health', (req, res) => {
   res.json({ 
     message: 'Personal Finance Manager API',
     version: '1.0.0',
@@ -60,6 +72,18 @@ app.use('/api/search', searchRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/debts', debtRoutes);
 app.use('/api/import', importRoutes);
+
+// Serve React static files (production build)
+// process.pkg is defined when running as a pkg .exe
+const clientDistPath = isPackaged
+  ? path.join(path.dirname(process.execPath), 'client', 'dist')
+  : path.join(_dirname, '../../client/dist');
+app.use(express.static(clientDistPath));
+
+// Catch-all: serve React index.html for any non-API route
+app.get('*', (req, res) => {
+  res.sendFile(path.join(clientDistPath, 'index.html'));
+});
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

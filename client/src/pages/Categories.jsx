@@ -3,6 +3,7 @@ import { useCategories } from '../context/CategoryContext';
 import { FiPlus, FiEdit2, FiTrash2, FiLock, FiTag } from 'react-icons/fi';
 import CategoryModal from '../components/CategoryModal';
 import { toast } from 'react-toastify';
+import { CategoriesSkeleton } from '../components/LoadingSkeleton';
 
 const Categories = () => {
   const { categories, loading, fetchCategories, createCategory, updateCategory, deleteCategory } = useCategories();
@@ -56,11 +57,7 @@ const Categories = () => {
   const expenseFiltered = filteredCategories.filter(c => c.type === 'expense' || c.type === 'both');
 
   if (loading && categories.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-emerald-500 border-t-transparent" />
-      </div>
-    );
+    return <CategoriesSkeleton />;
   }
 
   const CategoryCard = ({ category }) => (

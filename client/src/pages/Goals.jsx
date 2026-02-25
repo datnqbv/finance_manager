@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useGoal } from '../context/GoalContext';
 import GoalModal from '../components/GoalModal';
 import { FiPlus, FiEdit2, FiTrash2, FiTarget, FiClock } from 'react-icons/fi';
+import { GoalsSkeleton } from '../components/LoadingSkeleton';
+import CurrencyInput from '../components/CurrencyInput';
 
 const Goals = () => {
   const { goals, goalStats, loading, createGoal, updateGoal, deleteGoal, addAmountToGoal } = useGoal();
@@ -95,11 +97,7 @@ const Goals = () => {
   });
 
   if (loading && goals.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-emerald-500 border-t-transparent" />
-      </div>
-    );
+    return <GoalsSkeleton />;
   }
 
   const activeCount   = goals.filter(g => !g.isAchieved).length;
@@ -302,14 +300,11 @@ const Goals = () => {
                 ) : showAddAmount === goal._id ? (
                   <div className="space-y-2">
                     <div className="flex gap-2">
-                      <input
-                        type="number"
+                      <CurrencyInput
                         value={addAmountValue}
-                        onChange={(e) => setAddAmountValue(e.target.value)}
+                        onChange={v => setAddAmountValue(v)}
                         placeholder="Số tiền"
-                        className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-[#2a2a2a] rounded-xl dark:bg-[#1a1a1a] dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                        min="0"
-                        step="1000"
+                        baseClass="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-[#2a2a2a] rounded-xl dark:bg-[#1a1a1a] dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                       />
                       <button
                         onClick={() => handleAddAmount(goal._id)}

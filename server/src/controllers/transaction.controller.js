@@ -237,7 +237,7 @@ export const createTransaction = async (req, res) => {
     });
 
     // Tạo thông báo chi tiết cho giao dịch mới
-    const transactionDate = new Date(transaction.date);
+    const transactionDate = new Date();
     const formattedDate = transactionDate.toLocaleDateString('vi-VN', {
       day: '2-digit',
       month: '2-digit',
@@ -330,7 +330,7 @@ export const updateTransaction = async (req, res) => {
     );
 
     // Tạo thông báo cho việc cập nhật giao dịch
-    const transactionDate = new Date(transaction.date);
+    const transactionDate = new Date();
     const formattedDate = transactionDate.toLocaleDateString('vi-VN', {
       day: '2-digit',
       month: '2-digit',
@@ -401,7 +401,7 @@ export const deleteTransaction = async (req, res) => {
     }
 
     // Tạo thông báo trước khi xóa
-    const transactionDate = new Date(transaction.date);
+    const transactionDate = new Date();
     const formattedDate = transactionDate.toLocaleDateString('vi-VN', {
       day: '2-digit',
       month: '2-digit',

@@ -6,6 +6,8 @@ import {
   FiPlus, FiEdit2, FiTrash2, FiClock, FiCheck,
   FiChevronDown, FiChevronUp, FiAlertTriangle
 } from 'react-icons/fi';
+import { DebtsSkeleton } from '../components/LoadingSkeleton';
+import CurrencyInput from '../components/CurrencyInput';
 
 const Debts = () => {
   const { user } = useAuth();
@@ -56,11 +58,7 @@ const Debts = () => {
   const paidPct = (d) => d.amount === 0 ? 100 : Math.round(((d.amount - d.remainingAmount) / d.amount) * 100);
 
   if (loading && debts.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-emerald-500 border-t-transparent" />
-      </div>
-    );
+    return <DebtsSkeleton />;
   }
 
   return (
@@ -239,14 +237,11 @@ const Debts = () => {
                     {paying ? (
                       <div className="space-y-2">
                         <div className="flex gap-2">
-                          <input
-                            type="number"
+                          <CurrencyInput
                             value={payAmount}
-                            onChange={e => setPayAmount(e.target.value)}
+                            onChange={v => setPayAmount(v)}
                             placeholder="Số tiền"
-                            min="1"
-                            step="1000"
-                            className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-[#2a2a2a] rounded-xl dark:bg-[#1a1a1a] dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                            baseClass="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-[#2a2a2a] rounded-xl dark:bg-[#1a1a1a] dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                           />
                           <button onClick={() => handlePay(debt._id)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition">OK</button>
                           <button onClick={() => { setPayingId(null); setPayAmount(''); setPayNote(''); }} className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 px-3 py-2 rounded-xl text-xs font-bold transition">Hủy</button>

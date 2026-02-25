@@ -3,18 +3,17 @@ import { useBudgets } from '../context/BudgetContext';
 import { useAuth } from '../context/AuthContext';
 import { FiPlus, FiEdit2, FiTrash2, FiAlertCircle, FiCheckCircle, FiTrendingDown, FiShield } from 'react-icons/fi';
 import BudgetModal from '../components/BudgetModal';
+import { BudgetsSkeleton } from '../components/LoadingSkeleton';
 
 const Budgets = () => {
   const { user } = useAuth();
-  const { budgets, budgetStatus, alerts, loading, fetchBudgets, fetchBudgetStatus, fetchAlerts, createBudget, updateBudget, deleteBudget } = useBudgets();
+  const { budgets, budgetStatus, alerts, loading, fetchBudgetOverview, createBudget, updateBudget, deleteBudget } = useBudgets();
 
   const [showModal, setShowModal] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);
 
   useEffect(() => {
-    fetchBudgets();
-    fetchBudgetStatus();
-    fetchAlerts();
+    fetchBudgetOverview();
   }, []);
 
   const formatCurrency = (amount) => {
@@ -52,11 +51,7 @@ const Budgets = () => {
   const periodLabel = (p) => p === 'monthly' ? 'Tháng' : p === 'weekly' ? 'Tuần' : 'Năm';
 
   if (loading && budgets.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-emerald-500 border-t-transparent" />
-      </div>
-    );
+    return <BudgetsSkeleton />;
   }
 
   const overCount = budgetStatus?.summary?.overBudgetCount || 0;

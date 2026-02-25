@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { statsService } from '../services/stats.service';
-import { transactionService } from '../services/transaction.service';
-import goalService from '../services/goal.service';
 import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiActivity, FiAlertTriangle, FiTarget, FiSun, FiMoon, FiClock, FiList, FiArrowUpRight, FiArrowDownRight, FiPlus, FiPieChart } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { useCategories } from '../context/CategoryContext';
@@ -69,79 +67,23 @@ const Dashboard = () => {
     setLoading(true);
     try {
       const { startDate, endDate } = getDateRange();
-      const now = new Date();
 
-      // Last month date range (để so sánh danh mục)
-      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
-      const lastMonthEnd   = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59).toISOString();
+      // Single API call replaces 9+ separate requests
+      const response = await statsService.getDashboard(startDate, endDate);
+      const data = response.data;
 
-      const monthlyPromises = [];
-      for (let i = 5; i >= 0; i--) {
-        const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const year = targetDate.getFullYear();
-        const month = targetDate.getMonth() + 1;
-        monthlyPromises.push(
-          statsService.getMonthlyStats(year, month)
-            .then(response => {
-              if (response.data && response.data.summary) {
-                return { year, month, totalIncome: response.data.summary.income || 0, totalExpense: response.data.summary.expense || 0 };
-              }
-              return null;
-            })
-            .catch(() => null)
-        );
-      }
-      const [summaryData, goalsData, transactionsData, categoryData, lastMonthCatData, ...monthlyResults] = await Promise.all([
-        statsService.getSummary(),
-        goalService.getGoals(),
-        transactionService.getTransactions({ startDate, endDate, limit: 1000 }),
-        statsService.getCategoryStats(startDate, endDate),
-        statsService.getCategoryStats(lastMonthStart, lastMonthEnd).catch(() => ({ data: [] })),
-        ...monthlyPromises
-      ]);
-      setSummary(summaryData.data);
-      setGoals(Array.isArray(goalsData.data) ? goalsData.data : []);
-      setCategoryStats(Array.isArray(categoryData.data) ? categoryData.data : []);
-      setLastMonthCategoryStats(Array.isArray(lastMonthCatData.data) ? lastMonthCatData.data : []);
-      setMonthlyStats(monthlyResults.filter(item => item !== null));
-      const transactions = transactionsData.data || [];
-      const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-      const expense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-      setFilteredSummary({ income, expense, balance: income - expense, transactionCount: transactions.length, recentTransactions: transactions.slice(0, 5) });
-      calculateDailyFluctuation(transactions);
+      setSummary(data.summary);
+      setFilteredSummary(data.filteredSummary);
+      setMonthlyStats(data.monthlyStats || []);
+      setCategoryStats(data.categoryStats || []);
+      setLastMonthCategoryStats(data.lastMonthCategoryStats || []);
+      setDailyFluctuation(data.dailyFluctuation || []);
+      setGoals(Array.isArray(data.goals) ? data.goals : []);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const calculateDailyFluctuation = (transactions) => {
-    const dailyData = {};
-    const now = new Date();
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      const dateKey = date.toISOString().split('T')[0];
-      dailyData[dateKey] = { date: dateKey, dateLabel: `${date.getDate()}/${date.getMonth() + 1}`, income: 0, expense: 0, balance: 0, count: 0 };
-    }
-    transactions.forEach(t => {
-      const dateKey = new Date(t.date).toISOString().split('T')[0];
-      if (dailyData[dateKey]) {
-        if (t.type === 'income') dailyData[dateKey].income += t.amount;
-        else dailyData[dateKey].expense += t.amount;
-        dailyData[dateKey].count += 1;
-      }
-    });
-    const dailyArray = Object.values(dailyData);
-    const avgIncome = dailyArray.reduce((sum, d) => sum + d.income, 0) / dailyArray.length;
-    const avgExpense = dailyArray.reduce((sum, d) => sum + d.expense, 0) / dailyArray.length;
-    dailyArray.forEach(day => {
-      day.balance = day.income - day.expense;
-      day.avgIncome = avgIncome;
-      day.avgExpense = avgExpense;
-    });
-    setDailyFluctuation(dailyArray);
   };
 
   const getGreeting = () => {

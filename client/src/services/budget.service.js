@@ -42,6 +42,12 @@ export const getAlerts = async () => {
   return response.data;
 };
 
+// Get combined budgets + status + alerts in one call
+export const getBudgetOverview = async () => {
+  const response = await api.get('/budgets/overview');
+  return response.data;
+};
+
 export default {
   getBudgets,
   getBudget,
@@ -49,5 +55,6 @@ export default {
   updateBudget,
   deleteBudget,
   getBudgetStatus,
-  getAlerts
+  getAlerts,
+  getBudgetOverview
 };

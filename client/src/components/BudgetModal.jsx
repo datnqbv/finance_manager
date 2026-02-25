@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import CurrencyInput from './CurrencyInput';
 import { useCategories } from '../context/CategoryContext';
 import { FiX } from 'react-icons/fi';
 
@@ -132,15 +133,14 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Số tiền ngân sách <span className="text-red-500">*</span>
             </label>
-            <input
-              type="number"
-              name="amount"
+            <CurrencyInput
               value={formData.amount}
-              onChange={handleChange}
-              className={`input ${errors.amount ? 'border-red-500' : ''}`}
+              onChange={v => {
+                setFormData(prev => ({ ...prev, amount: v }));
+                if (errors.amount) setErrors(prev => ({ ...prev, amount: '' }));
+              }}
               placeholder="0"
-              min="0"
-              step="1"
+              error={!!errors.amount}
             />
             {errors.amount && (
               <p className="mt-1 text-sm text-red-500">{errors.amount}</p>

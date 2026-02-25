@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FaTimes, FaInfoCircle } from 'react-icons/fa';
+import CurrencyInput from './CurrencyInput';
 
 const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
   const [formData, setFormData] = useState({
@@ -177,17 +178,15 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Số Tiền Mục Tiêu * (VND)
               </label>
-              <input
-                type="number"
-                name="targetAmount"
+              <CurrencyInput
                 value={formData.targetAmount}
-                onChange={handleChange}
-                min="0"
-                step="1"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                  errors.targetAmount ? 'border-red-500' : 'border-gray-300'
-                }`}
+                onChange={v => {
+                  setFormData(prev => ({ ...prev, targetAmount: v }));
+                  if (errors.targetAmount) setErrors(prev => ({ ...prev, targetAmount: '' }));
+                }}
                 placeholder="0"
+                baseClass="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className={errors.targetAmount ? 'border-red-500' : 'border-gray-300'}
               />
               {errors.targetAmount && (
                 <p className="mt-1 text-sm text-red-500">{errors.targetAmount}</p>
@@ -198,17 +197,15 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Số Tiền Hiện Tại (VND)
               </label>
-              <input
-                type="number"
-                name="currentAmount"
+              <CurrencyInput
                 value={formData.currentAmount}
-                onChange={handleChange}
-                min="0"
-                step="1000"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                  errors.currentAmount ? 'border-red-500' : 'border-gray-300'
-                }`}
+                onChange={v => {
+                  setFormData(prev => ({ ...prev, currentAmount: v }));
+                  if (errors.currentAmount) setErrors(prev => ({ ...prev, currentAmount: '' }));
+                }}
                 placeholder="0"
+                baseClass="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className={errors.currentAmount ? 'border-red-500' : 'border-gray-300'}
               />
               {errors.currentAmount && (
                 <p className="mt-1 text-sm text-red-500">{errors.currentAmount}</p>

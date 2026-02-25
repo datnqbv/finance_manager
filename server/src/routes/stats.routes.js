@@ -9,7 +9,8 @@ import {
   getTopCategories,
   getDailyStats,
   getWeeklyStats,
-  getAIInsights
+  getAIInsights,
+  getDashboard
 } from '../controllers/stats.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 
@@ -18,6 +19,7 @@ const router = express.Router();
 // All routes require authentication
 router.use(protect);
 
+router.get('/dashboard', getDashboard);   // combined endpoint - replaces multiple calls
 router.get('/monthly', getMonthlyStats);
 router.get('/summary', getSummary);
 router.get('/categories', getCategoryStats);

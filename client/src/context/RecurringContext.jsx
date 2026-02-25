@@ -20,24 +20,26 @@ export const RecurringProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const { user } = useAuth();
 
-  // Auto-fetch recurring transactions when user is logged in
+  // Auto-fetch both lists in parallel on login
   useEffect(() => {
     if (user) {
-      fetchRecurringTransactions();
+      fetchAll();
     }
   }, [user]);
 
-  // Fetch recurring transactions
-  const fetchRecurringTransactions = async (isActive) => {
+  // Fetch both recurring + upcoming in parallel
+  const fetchAll = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setError(null);
-      const data = await recurringService.getRecurringTransactions(isActive);
-      setRecurringList(data.data || []);
+      const [recurringData, upcomingData] = await Promise.all([
+        recurringService.getRecurringTransactions(),
+        recurringService.getUpcomingRecurringTransactions()
+      ]);
+      setRecurringList(recurringData.data || []);
+      setUpcomingList(upcomingData.data  || []);
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Lỗi khi tải giao dịch định kỳ';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      const msg = err.response?.data?.message || 'Lỗi khi tải giao dịch định kỳ';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -58,17 +60,13 @@ export const RecurringProvider = ({ children }) => {
     try {
       setLoading(true);
       const data = await recurringService.createRecurringTransaction(recurringData);
-      await fetchRecurringTransactions();
-      await fetchUpcoming();
+      await fetchAll();
       toast.success(data.message || 'Tạo giao dịch định kỳ thành công');
       return data.data;
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Lỗi khi tạo giao dịch định kỳ';
-      toast.error(errorMessage);
+      toast.error(err.response?.data?.message || 'Lỗi khi tạo giao dịch định kỳ');
       throw err;
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   // Update recurring transaction
@@ -76,17 +74,13 @@ export const RecurringProvider = ({ children }) => {
     try {
       setLoading(true);
       const data = await recurringService.updateRecurringTransaction(id, recurringData);
-      await fetchRecurringTransactions();
-      await fetchUpcoming();
+      await fetchAll();
       toast.success(data.message || 'Cập nhật giao dịch định kỳ thành công');
       return data.data;
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Lỗi khi cập nhật giao dịch định kỳ';
-      toast.error(errorMessage);
+      toast.error(err.response?.data?.message || 'Lỗi khi cập nhật giao dịch định kỳ');
       throw err;
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   // Delete recurring transaction
@@ -94,16 +88,12 @@ export const RecurringProvider = ({ children }) => {
     try {
       setLoading(true);
       const data = await recurringService.deleteRecurringTransaction(id);
-      await fetchRecurringTransactions();
-      await fetchUpcoming();
+      await fetchAll();
       toast.success(data.message || 'Xóa giao dịch định kỳ thành công');
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Lỗi khi xóa giao dịch định kỳ';
-      toast.error(errorMessage);
+      toast.error(err.response?.data?.message || 'Lỗi khi xóa giao dịch định kỳ');
       throw err;
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   // Execute manually
@@ -111,17 +101,13 @@ export const RecurringProvider = ({ children }) => {
     try {
       setLoading(true);
       const data = await recurringService.executeRecurringTransaction(id);
-      await fetchRecurringTransactions();
-      await fetchUpcoming();
+      await fetchAll();
       toast.success(data.message || 'Thực hiện giao dịch thành công');
       return data.data;
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Lỗi khi thực hiện giao dịch';
-      toast.error(errorMessage);
+      toast.error(err.response?.data?.message || 'Lỗi khi thực hiện giao dịch');
       throw err;
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   const value = {
@@ -129,8 +115,9 @@ export const RecurringProvider = ({ children }) => {
     upcomingList,
     loading,
     error,
-    fetchRecurringTransactions,
+    fetchRecurringTransactions: fetchAll,
     fetchUpcoming,
+    fetchAll,
     createRecurringTransaction,
     updateRecurringTransaction,
     deleteRecurringTransaction,

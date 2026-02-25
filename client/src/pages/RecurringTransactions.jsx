@@ -3,6 +3,7 @@ import { useRecurring } from '../context/RecurringContext';
 import { useAuth } from '../context/AuthContext';
 import { FiPlus, FiEdit2, FiTrash2, FiPlay, FiPause, FiCalendar, FiRepeat } from 'react-icons/fi';
 import RecurringModal from '../components/RecurringModal';
+import { RecurringSkeleton } from '../components/LoadingSkeleton';
 
 const RecurringTransactions = () => {
   const { user } = useAuth();
@@ -10,8 +11,7 @@ const RecurringTransactions = () => {
     recurringList,
     upcomingList,
     loading,
-    fetchRecurringTransactions,
-    fetchUpcoming,
+    fetchAll,
     createRecurringTransaction,
     updateRecurringTransaction,
     deleteRecurringTransaction,
@@ -23,8 +23,7 @@ const RecurringTransactions = () => {
   const [filterActive, setFilterActive] = useState('all'); // all, active, inactive
 
   useEffect(() => {
-    fetchRecurringTransactions();
-    fetchUpcoming();
+    fetchAll();
   }, []);
 
   const formatCurrency = (amount) => {
@@ -111,11 +110,7 @@ const RecurringTransactions = () => {
   };
 
   if (loading && recurringList.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-emerald-500 border-t-transparent" />
-      </div>
-    );
+    return <RecurringSkeleton />;
   }
 
   const activeCount = recurringList.filter(r => r.isActive).length;

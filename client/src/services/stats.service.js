@@ -1,6 +1,28 @@
 import api from './api';
 
+// ── Simple in-memory TTL cache (60 seconds) for heavy stats endpoints ──
+const cache = new Map();
+const TTL = 60_000;
+
+const cachedGet = async (key, url, params) => {
+  const entry = cache.get(key);
+  if (entry && Date.now() - entry.ts < TTL) return entry.data;
+  const response = await api.get(url, params ? { params } : undefined);
+  cache.set(key, { data: response.data, ts: Date.now() });
+  return response.data;
+};
+
+export const clearStatsCache = () => cache.clear();
+
 export const statsService = {
+  // Combined dashboard call — one request instead of many
+  getDashboard: async (startDate, endDate) => {
+    const params = {};
+    if (startDate) params.startDate = startDate;
+    if (endDate)   params.endDate   = endDate;
+    const key = `dashboard-${startDate}-${endDate}`;
+    return cachedGet(key, '/stats/dashboard', params);
+  },
   getMonthlyStats: async (year, month) => {
     const params = {};
     if (year) params.year = year;

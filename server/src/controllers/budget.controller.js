@@ -1,6 +1,45 @@
 import Budget from '../models/Budget.model.js';
 import Transaction from '../models/Transaction.model.js';
 import Category from '../models/Category.model.js';
+import mongoose from 'mongoose';
+
+// ── Inline checkAlerts helper (works on .lean() objects) ─────────────────────
+const checkAlertsInline = (alertThresholds, notificationEnabled, currentSpending, effectiveAmount) => {
+  const pct = effectiveAmount > 0 ? (currentSpending / effectiveAmount) * 100 : 0;
+  const thresholds = alertThresholds?.length ? alertThresholds : [80, 100, 120];
+  const triggered  = thresholds.filter(t => pct >= t && notificationEnabled !== false);
+  return { percentage: Math.round(pct), triggeredAlerts: triggered, isOverBudget: pct > 100 };
+};
+
+// ── Batch spending lookup: groups budgets by date range, 1 aggregation/group ─
+const buildSpendingLookup = async (userId, budgets) => {
+  const rangeGroups = {};
+  budgets.forEach(b => {
+    const { start, end } = getDateRange(b.period, b.startDate);
+    const key = `${start.getTime()}-${end.getTime()}`;
+    if (!rangeGroups[key]) rangeGroups[key] = { start, end };
+  });
+
+  const spendingByKey = {};
+  await Promise.all(Object.entries(rangeGroups).map(async ([key, { start, end }]) => {
+    const agg = await Transaction.aggregate([
+      { $match: { userId: new mongoose.Types.ObjectId(userId), type: 'expense', date: { $gte: start, $lte: end } } },
+      { $group: { _id: '$category', total: { $sum: '$amount' } } }
+    ]);
+    const catSpend = {};
+    let totalSpend = 0;
+    agg.forEach(r => { catSpend[r._id] = r.total; totalSpend += r.total; });
+    spendingByKey[key] = { catSpend, totalSpend };
+  }));
+
+  // Returns a function: budget → currentSpending
+  return (b) => {
+    const { start, end } = getDateRange(b.period, b.startDate);
+    const key = `${start.getTime()}-${end.getTime()}`;
+    const { catSpend = {}, totalSpend = 0 } = spendingByKey[key] || {};
+    return b.categoryName ? (catSpend[b.categoryName] ?? 0) : totalSpend;
+  };
+};
 
 // Helper function to get date range based on period
 const getDateRange = (period, startDate = new Date()) => {
@@ -90,64 +129,64 @@ const currentPeriodKey = (period, now = new Date()) => {
 // @access  Private
 export const getBudgets = async (req, res) => {
   try {
-    const budgets = await Budget.find({ 
-      userId: req.user._id,
-      isActive: true 
-    }).sort({ categoryName: 1 });
+    const userId = req.user._id;
+    const now    = new Date();
 
-    const now = new Date();
+    const budgets = await Budget.find({ userId, isActive: true }).sort({ categoryName: 1 }).lean();
 
-    // Auto-apply rollover for budgets that have it enabled
-    for (const budget of budgets) {
-      if (!budget.rolloverEnabled) continue;
-      const periodKey = currentPeriodKey(budget.period, now);
-      if (budget.lastRolloverMonth === periodKey) continue; // already applied this period
-
-      // Calculate spending in last period
-      const lastRange = getLastPeriodRange(budget.period, now);
-      const lastSpending = await calculateSpending(req.user._id, budget.categoryName, lastRange);
-      const lastEffective = budget.amount + budget.rolloverAmount;
-      const surplus = lastEffective - lastSpending; // positive = dư, negative = vượt
-
-      budget.rolloverAmount = surplus;
-      budget.lastRolloverMonth = periodKey;
-      await budget.save();
-    }
-
-    // Calculate current spending for each budget
-    const budgetsWithSpending = await Promise.all(
-      budgets.map(async (budget) => {
-        const dateRange = getDateRange(budget.period, budget.startDate);
-        const currentSpending = await calculateSpending(
-          req.user._id,
-          budget.categoryName,
-          dateRange
-        );
-
-        const budgetObj = budget.toObject();
-        const effectiveAmount = budget.amount + budget.rolloverAmount;
-        const alerts = budget.checkAlerts(currentSpending, effectiveAmount);
-
-        return {
-          ...budgetObj,
-          effectiveAmount,
-          currentSpending,
-          ...alerts
-        };
-      })
+    // ── Rollover: batch by period, 1 aggregation per period type ─────────────
+    const rolloverTargets = budgets.filter(b =>
+      b.rolloverEnabled && b.lastRolloverMonth !== currentPeriodKey(b.period, now)
     );
 
-    res.status(200).json({
-      success: true,
-      count: budgetsWithSpending.length,
-      data: budgetsWithSpending
+    if (rolloverTargets.length > 0) {
+      const byPeriod = {};
+      rolloverTargets.forEach(b => { (byPeriod[b.period] ??= []).push(b); });
+
+      const rolloverWrites = [];
+      await Promise.all(Object.entries(byPeriod).map(async ([period, pBudgets]) => {
+        const lastRange = getLastPeriodRange(period, now);
+        const agg = await Transaction.aggregate([
+          { $match: { userId: new mongoose.Types.ObjectId(userId), type: 'expense', date: { $gte: lastRange.start, $lte: lastRange.end } } },
+          { $group: { _id: '$category', total: { $sum: '$amount' } } }
+        ]);
+        const catSpend   = {};
+        let   totalSpend = 0;
+        agg.forEach(r => { catSpend[r._id] = r.total; totalSpend += r.total; });
+
+        const periodKey = currentPeriodKey(period, now);
+        pBudgets.forEach(b => {
+          const lastSpending  = b.categoryName ? (catSpend[b.categoryName] ?? 0) : totalSpend;
+          const surplus       = (b.amount + (b.rolloverAmount || 0)) - lastSpending;
+          rolloverWrites.push({ id: b._id.toString(), rolloverAmount: surplus, lastRolloverMonth: periodKey });
+        });
+      }));
+
+      if (rolloverWrites.length > 0) {
+        await Budget.bulkWrite(rolloverWrites.map(u => ({
+          updateOne: { filter: { _id: u.id }, update: { $set: { rolloverAmount: u.rolloverAmount, lastRolloverMonth: u.lastRolloverMonth } } }
+        })));
+        const writeMap = Object.fromEntries(rolloverWrites.map(u => [u.id, u]));
+        budgets.forEach(b => {
+          const u = writeMap[b._id.toString()];
+          if (u) { b.rolloverAmount = u.rolloverAmount; b.lastRolloverMonth = u.lastRolloverMonth; }
+        });
+      }
+    }
+
+    // ── Current spending: 1 aggregation per unique date range ────────────────
+    const getSpending = await buildSpendingLookup(userId, budgets);
+
+    const result = budgets.map(b => {
+      const currentSpending  = getSpending(b);
+      const effectiveAmount  = b.amount + (b.rolloverAmount || 0);
+      const alerts           = checkAlertsInline(b.alertThresholds, b.notificationEnabled, currentSpending, effectiveAmount);
+      return { ...b, effectiveAmount, currentSpending, ...alerts };
     });
+
+    res.status(200).json({ success: true, count: result.length, data: result });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi khi lấy danh sách ngân sách',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Lỗi khi lấy danh sách ngân sách', error: error.message });
   }
 };
 
@@ -348,57 +387,35 @@ export const deleteBudget = async (req, res) => {
 // @access  Private
 export const getBudgetStatus = async (req, res) => {
   try {
-    const budgets = await Budget.find({ 
-      userId: req.user._id,
-      isActive: true 
+    const userId  = req.user._id;
+    const budgets = await Budget.find({ userId, isActive: true }).lean();
+
+    const getSpending = await buildSpendingLookup(userId, budgets);
+
+    const statusList = budgets.map(b => {
+      const currentSpending = getSpending(b);
+      const effectiveAmount = b.amount + (b.rolloverAmount || 0);
+      const alerts = checkAlertsInline(b.alertThresholds, b.notificationEnabled, currentSpending, effectiveAmount);
+      return {
+        budgetId: b._id, categoryName: b.categoryName || 'Tổng',
+        amount: b.amount, effectiveAmount, currentSpending,
+        remaining: effectiveAmount - currentSpending, ...alerts
+      };
     });
 
-    const statusList = await Promise.all(
-      budgets.map(async (budget) => {
-        const dateRange = getDateRange(budget.period, budget.startDate);
-        const currentSpending = await calculateSpending(
-          req.user._id,
-          budget.categoryName,
-          dateRange
-        );
-
-        const alerts = budget.checkAlerts(currentSpending);
-
-        return {
-          budgetId: budget._id,
-          categoryName: budget.categoryName || 'Tổng',
-          amount: budget.amount,
-          currentSpending,
-          remaining: budget.amount - currentSpending,
-          ...alerts
-        };
-      })
-    );
-
-    // Overall statistics
-    const totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
-    const totalSpending = statusList.reduce((sum, s) => sum + s.currentSpending, 0);
-    const overBudgetCount = statusList.filter(s => s.isOverBudget).length;
+    const totalBudget   = budgets.reduce((s, b) => s + b.amount, 0);
+    const totalSpending = statusList.reduce((s, b) => s + b.currentSpending, 0);
+    const overBudgetCount = statusList.filter(b => b.isOverBudget).length;
 
     res.status(200).json({
       success: true,
       data: {
         budgets: statusList,
-        summary: {
-          totalBudget,
-          totalSpending,
-          totalRemaining: totalBudget - totalSpending,
-          overBudgetCount,
-          percentage: Math.round((totalSpending / totalBudget) * 100)
-        }
+        summary: { totalBudget, totalSpending, totalRemaining: totalBudget - totalSpending, overBudgetCount, percentage: Math.round((totalSpending / totalBudget) * 100) }
       }
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi khi lấy tổng quan ngân sách',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Lỗi khi lấy tổng quan ngân sách', error: error.message });
   }
 };
 
@@ -407,50 +424,118 @@ export const getBudgetStatus = async (req, res) => {
 // @access  Private
 export const getAlerts = async (req, res) => {
   try {
-    const budgets = await Budget.find({ 
-      userId: req.user._id,
-      isActive: true,
-      notificationEnabled: true
-    });
+    const userId  = req.user._id;
+    const budgets = await Budget.find({ userId, isActive: true, notificationEnabled: true }).lean();
+
+    const getSpending = await buildSpendingLookup(userId, budgets);
 
     const alerts = [];
-
-    for (const budget of budgets) {
-      const dateRange = getDateRange(budget.period, budget.startDate);
-      const currentSpending = await calculateSpending(
-        req.user._id,
-        budget.categoryName,
-        dateRange
-      );
-
-      const alertInfo = budget.checkAlerts(currentSpending);
-
+    budgets.forEach(b => {
+      const currentSpending = getSpending(b);
+      const effectiveAmount = b.amount + (b.rolloverAmount || 0);
+      const alertInfo = checkAlertsInline(b.alertThresholds, b.notificationEnabled, currentSpending, effectiveAmount);
       if (alertInfo.triggeredAlerts.length > 0) {
         alerts.push({
-          budgetId: budget._id,
-          categoryName: budget.categoryName || 'Tổng',
-          amount: budget.amount,
-          currentSpending,
-          percentage: alertInfo.percentage,
-          triggeredAlerts: alertInfo.triggeredAlerts,
-          isOverBudget: alertInfo.isOverBudget,
+          budgetId: b._id, categoryName: b.categoryName || 'Tổng',
+          amount: b.amount, currentSpending, percentage: alertInfo.percentage,
+          triggeredAlerts: alertInfo.triggeredAlerts, isOverBudget: alertInfo.isOverBudget,
           message: alertInfo.isOverBudget
-            ? `Vượt ngân sách ${budget.categoryName || 'tổng'} ${alertInfo.percentage - 100}%`
-            : `Đạt ${alertInfo.percentage}% ngân sách ${budget.categoryName || 'tổng'}`
+            ? `Vượt ngân sách ${b.categoryName || 'tổng'} ${alertInfo.percentage - 100}%`
+            : `Đạt ${alertInfo.percentage}% ngân sách ${b.categoryName || 'tổng'}`
         });
+      }
+    });
+
+    res.status(200).json({ success: true, count: alerts.length, data: alerts });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi khi lấy cảnh báo', error: error.message });
+  }
+};
+
+// @desc    Combined budgets + status + alerts in one call
+// @route   GET /api/budgets/overview
+// @access  Private
+export const getBudgetOverview = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const now    = new Date();
+
+    // Rollover check (same batch logic as getBudgets)
+    const allBudgets = await Budget.find({ userId, isActive: true }).sort({ categoryName: 1 }).lean();
+
+    const rolloverTargets = allBudgets.filter(b =>
+      b.rolloverEnabled && b.lastRolloverMonth !== currentPeriodKey(b.period, now)
+    );
+    if (rolloverTargets.length > 0) {
+      const byPeriod = {};
+      rolloverTargets.forEach(b => { (byPeriod[b.period] ??= []).push(b); });
+      const rolloverWrites = [];
+      await Promise.all(Object.entries(byPeriod).map(async ([period, pBudgets]) => {
+        const lastRange = getLastPeriodRange(period, now);
+        const agg = await Transaction.aggregate([
+          { $match: { userId: new mongoose.Types.ObjectId(userId), type: 'expense', date: { $gte: lastRange.start, $lte: lastRange.end } } },
+          { $group: { _id: '$category', total: { $sum: '$amount' } } }
+        ]);
+        const catSpend = {}; let totalSpend = 0;
+        agg.forEach(r => { catSpend[r._id] = r.total; totalSpend += r.total; });
+        const periodKey = currentPeriodKey(period, now);
+        pBudgets.forEach(b => {
+          const lastSpending = b.categoryName ? (catSpend[b.categoryName] ?? 0) : totalSpend;
+          const surplus = (b.amount + (b.rolloverAmount || 0)) - lastSpending;
+          rolloverWrites.push({ id: b._id.toString(), rolloverAmount: surplus, lastRolloverMonth: periodKey });
+        });
+      }));
+      if (rolloverWrites.length > 0) {
+        await Budget.bulkWrite(rolloverWrites.map(u => ({
+          updateOne: { filter: { _id: u.id }, update: { $set: { rolloverAmount: u.rolloverAmount, lastRolloverMonth: u.lastRolloverMonth } } }
+        })));
+        const writeMap = Object.fromEntries(rolloverWrites.map(u => [u.id, u]));
+        allBudgets.forEach(b => { const u = writeMap[b._id.toString()]; if (u) { b.rolloverAmount = u.rolloverAmount; b.lastRolloverMonth = u.lastRolloverMonth; }});
       }
     }
 
+    // Single batch spending lookup
+    const getSpending = await buildSpendingLookup(userId, allBudgets);
+
+    const budgetsWithSpending = allBudgets.map(b => {
+      const currentSpending = getSpending(b);
+      const effectiveAmount = b.amount + (b.rolloverAmount || 0);
+      const alerts = checkAlertsInline(b.alertThresholds, b.notificationEnabled, currentSpending, effectiveAmount);
+      return { ...b, effectiveAmount, currentSpending, ...alerts };
+    });
+
+    // Build status summary
+    const totalBudget   = allBudgets.reduce((s, b) => s + b.amount, 0);
+    const totalSpending = budgetsWithSpending.reduce((s, b) => s + b.currentSpending, 0);
+    const overBudgetCount = budgetsWithSpending.filter(b => b.isOverBudget).length;
+    const status = {
+      budgets: budgetsWithSpending.map(b => ({
+        budgetId: b._id, categoryName: b.categoryName || 'Tổng',
+        amount: b.amount, effectiveAmount: b.effectiveAmount, currentSpending: b.currentSpending,
+        remaining: b.effectiveAmount - b.currentSpending,
+        percentage: b.percentage, triggeredAlerts: b.triggeredAlerts, isOverBudget: b.isOverBudget
+      })),
+      summary: { totalBudget, totalSpending, totalRemaining: totalBudget - totalSpending, overBudgetCount,
+        percentage: totalBudget > 0 ? Math.round((totalSpending / totalBudget) * 100) : 0 }
+    };
+
+    // Build alerts
+    const triggeredAlerts = budgetsWithSpending
+      .filter(b => b.notificationEnabled !== false && b.triggeredAlerts?.length > 0)
+      .map(b => ({
+        budgetId: b._id, categoryName: b.categoryName || 'Tổng',
+        amount: b.amount, currentSpending: b.currentSpending, percentage: b.percentage,
+        triggeredAlerts: b.triggeredAlerts, isOverBudget: b.isOverBudget,
+        message: b.isOverBudget
+          ? `Vượt ngân sách ${b.categoryName || 'tổng'} ${b.percentage - 100}%`
+          : `Đạt ${b.percentage}% ngân sách ${b.categoryName || 'tổng'}`
+      }));
+
     res.status(200).json({
       success: true,
-      count: alerts.length,
-      data: alerts
+      data: { budgets: budgetsWithSpending, status, alerts: triggeredAlerts }
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi khi lấy cảnh báo',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Lỗi khi lấy tổng quan ngân sách', error: error.message });
   }
 };

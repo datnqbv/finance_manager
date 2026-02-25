@@ -39,10 +39,13 @@ const transactionSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index để tìm kiếm nhanh
+// Indexes để tìm kiếm nhanh
 transactionSchema.index({ userId: 1, date: -1 });
 transactionSchema.index({ userId: 1, type: 1 });
 transactionSchema.index({ userId: 1, category: 1 });
+// Compound indexes cho aggregation queries (dashboard/stats)
+transactionSchema.index({ userId: 1, type: 1, date: -1 });
+transactionSchema.index({ userId: 1, date: -1, amount: 1 });
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
 

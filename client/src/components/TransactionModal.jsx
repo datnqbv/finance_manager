@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import CurrencyInput from './CurrencyInput';
 import { useTransactions } from '../context/TransactionContext';
 import { useCategories } from '../context/CategoryContext';
 import { FiX, FiAlertCircle } from 'react-icons/fi';
@@ -174,15 +175,9 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Số tiền
             </label>
-            <input
-              type="number"
-              name="amount"
+            <CurrencyInput
               value={formData.amount}
-              onChange={handleChange}
-              required
-              min="0"
-              step="1"
-              className="input"
+              onChange={v => setFormData(prev => ({ ...prev, amount: v }))}
               placeholder="0"
             />
           </div>

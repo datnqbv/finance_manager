@@ -11,6 +11,7 @@ import {
   FiCalendar, FiTarget, FiAlertCircle, FiCheckCircle,
   FiInfo, FiMinus, FiZap
 } from 'react-icons/fi';
+import { StatisticsPageSkeleton } from '../components/LoadingSkeleton';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -807,6 +808,8 @@ const Statistics = () => {
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
+  if (loading && !summary) return <StatisticsPageSkeleton />;
+
   return (
     <div className="space-y-5">
       {/* Header */}
