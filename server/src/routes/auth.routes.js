@@ -13,6 +13,8 @@ const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true, // chỉ đếm request thất bại
+  // Tắt hoàn toàn khi chạy test để tránh block các test case
+  skip: () => process.env.NODE_ENV === 'test',
 });
 
 // Rate limiter: max 5 register attempts per hour per IP
@@ -22,6 +24,8 @@ const registerLimiter = rateLimit({
   message: { success: false, message: 'Quá nhiều yêu cầu đăng ký. Vui lòng thử lại sau 1 giờ.' },
   standardHeaders: true,
   legacyHeaders: false,
+  // Tắt hoàn toàn khi chạy test
+  skip: () => process.env.NODE_ENV === 'test',
 });
 
 router.post('/register', registerLimiter, register);

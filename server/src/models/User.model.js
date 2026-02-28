@@ -62,7 +62,7 @@ const userSchema = new mongoose.Schema({
 // Mã hóa password trước khi lưu
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) {
-    next();
+    return next(); // ← return để dừng thực thi, không hash lại password
   }
   
   const salt = await bcrypt.genSalt(10);

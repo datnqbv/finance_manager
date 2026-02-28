@@ -554,13 +554,13 @@ const Layout = ({ children }) => {
       <button
         onClick={() => setShowQuickAdd(true)}
         title="Thêm giao dịch nhanh"
-        className="fixed bottom-24 right-5 z-40 w-14 h-14 rounded-full
+        className="fixed bottom-[72px] right-6 z-40 w-11 h-11 rounded-full
                    bg-emerald-500 hover:bg-emerald-600 active:scale-95
                    text-white shadow-xl shadow-emerald-500/40
                    flex items-center justify-center
                    transition-all duration-200 hover:scale-110"
       >
-        <FiPlus size={26} />
+        <FiPlus size={20} />
       </button>
 
       {/* Modal thêm giao dịch nhanh */}

@@ -477,12 +477,70 @@ ${Array.isArray(context.goals) && context.goals.length > 0
         try {
             return `${i + 1}. **${g.name}**: Mục tiêu ${Number(g.target).toLocaleString('vi-VN')} VND
    → Đã đạt: ${Number(g.current).toLocaleString('vi-VN')} VND (${g.progress}%)
-   → Còn thiếu: ${Number(g.remaining).toLocaleString('vi-VN')} VND${g.deadline ? `\n   → Deadline: ${new Date(g.deadline).toLocaleDateString('vi-VN')}` : ''}`;
+   → Còn thiếu: ${Number(g.remaining).toLocaleString('vi-VN')} VND${g.deadline ? `\n   → Deadline: ${new Date(g.deadline).toLocaleDateString('vi-VN')}` : ''}${g.priority ? `\n   → Ưu tiên: ${g.priority}` : ''}${g.isAchieved ? '\n   → ✅ Đã hoàn thành' : ''}`;
         } catch (e) {
             return '';
         }
       }).filter(Boolean).join('\n\n')
     : 'Chưa đặt mục tiêu'}
+
+─────────────────────────────────────────────────
+💸 QUẢN LÝ NỢ
+─────────────────────────────────────────────────
+${context.debtSummary ? `📊 Tổng quan:
+   • Tổng tiền đã cho vay: ${Number(context.debtSummary.totalLent || 0).toLocaleString('vi-VN')} VND
+   • Tổng tiền đang vay: ${Number(context.debtSummary.totalBorrowed || 0).toLocaleString('vi-VN')} VND
+   • Còn được nhận lại: ${Number(context.debtSummary.totalLentRemaining || 0).toLocaleString('vi-VN')} VND
+   • Còn phải trả: ${Number(context.debtSummary.totalBorrowedRemaining || 0).toLocaleString('vi-VN')} VND` : ''}
+
+${Array.isArray(context.debts) && context.debts.length > 0
+    ? context.debts.map((d, i) => {
+        try {
+            return `${i + 1}. **${d.name}** (${d.debtType === 'lend' ? '🤝 Cho vay' : '💸 Đi vay'})
+   → Người: ${d.personName || 'Không rõ'}
+   → Tổng số: ${Number(d.totalAmount).toLocaleString('vi-VN')} VND
+   → Còn lại: ${Number(d.remainingAmount).toLocaleString('vi-VN')} VND
+   → Trạng thái: ${d.status === 'active' ? '⏳ Đang hoạt động' : '✅ Đã tất toán'}${d.dueDate ? `\n   → Hạn: ${new Date(d.dueDate).toLocaleDateString('vi-VN')}` : ''}`;
+        } catch (e) {
+            return '';
+        }
+      }).filter(Boolean).join('\n\n')
+    : 'Chưa có khoản nợ nào'}
+
+─────────────────────────────────────────────────
+🔄 GIAO DỊCH ĐỊNH KỲ
+─────────────────────────────────────────────────
+${Array.isArray(context.recurringTransactions) && context.recurringTransactions.length > 0
+    ? context.recurringTransactions.map((r, i) => {
+        try {
+            const freqMap = { daily: 'Hàng ngày', weekly: 'Hàng tuần', monthly: 'Hàng tháng', yearly: 'Hàng năm' };
+            return `${i + 1}. **${r.name}** (${r.type === 'income' ? '📈 Thu' : '📉 Chi'})
+   → Danh mục: ${r.category} | Số tiền: ${Number(r.amount).toLocaleString('vi-VN')} VND
+   → Chu kỳ: ${freqMap[r.frequency] || r.frequency}
+   → Trạng thái: ${r.isActive ? '✅ Đang hoạt động' : '⏸️ Tạm dừng'}
+   → Đã thực hiện: ${r.executedCount || 0} lần`;
+        } catch (e) {
+            return '';
+        }
+      }).filter(Boolean).join('\n\n')
+    : 'Chưa có giao dịch định kỳ'}
+
+${Array.isArray(context.upcomingRecurring) && context.upcomingRecurring.length > 0 ? `
+📅 **Sắp tới (gần nhất):**
+${context.upcomingRecurring.map((r, i) => {
+    try {
+        const date = new Date(r.nextExecution).toLocaleDateString('vi-VN');
+        return `   • ${r.name}: ${Number(r.amount).toLocaleString('vi-VN')} VND - Ngày ${date}`;
+    } catch (e) { return ''; }
+}).filter(Boolean).join('\n')}` : ''}
+
+─────────────────────────────────────────────────
+📁 DANH MỤC HIỆN CÓ
+─────────────────────────────────────────────────
+${Array.isArray(context.categories) && context.categories.length > 0
+    ? `Thu nhập: ${context.categories.filter(c => c.type === 'income' || c.type === 'both').map(c => c.name).join(', ') || 'Chưa có'}
+Chi tiêu: ${context.categories.filter(c => c.type === 'expense' || c.type === 'both').map(c => c.name).join(', ') || 'Chưa có'}`
+    : 'Chưa có danh mục nào'}
 
 ══════════════════════════════════════════════════
 💡 HƯỚNG DẪN PHÂN TÍCH CHO BẠN (AI ASSISTANT)
@@ -494,6 +552,9 @@ ${Array.isArray(context.goals) && context.goals.length > 0
 • Khi hỏi "chi vào đâu" hoặc "chi nhiều nhất vào đâu", liệt kê **CHI TIÊU THEO DANH MỤC** của tháng đó
 • Nếu hỏi tháng nào KHÔNG có trong 6 tháng gần nhất, thông báo "Không có dữ liệu tháng đó trong hệ thống"
 • So sánh tháng này vs tháng trước: dùng phần **SO SÁNH**
+• Khi hỏi về NỢ (cho vay, đi vay, ai nợ tôi, tôi nợ ai), dùng phần **QUẢN LÝ NỢ**
+• Khi hỏi về GIAO DỊCH ĐỊNH KỲ (lương, tiền nhà, định kỳ sắp tới), dùng phần **GIAO DỊCH ĐỊNH KỲ**
+• Khi hỏi về DANH MỤC (có danh mục gì, danh mục nào), dùng phần **DANH MỤC HIỆN CÓ**
 • Đưa ra lời khuyên dựa trên xu hướng chi tiêu thực tế
 • Cảnh báo nếu chi tiêu tăng đột biến hoặc vượt ngân sách
 • Khen ngợi nếu tiết kiệm tốt hoặc đạt mục tiêu

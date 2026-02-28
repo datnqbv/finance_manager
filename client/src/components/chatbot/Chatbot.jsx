@@ -8,12 +8,18 @@ import { useAuth } from '../../context/AuthContext';
 import { useTransactions } from '../../context/TransactionContext';
 import { useBudgets } from '../../context/BudgetContext';
 import { useGoal } from '../../context/GoalContext';
+import { useDebt } from '../../context/DebtContext';
+import { useCategories } from '../../context/CategoryContext';
+import { useRecurring } from '../../context/RecurringContext';
 
 const Chatbot = () => {
   const { user } = useAuth();
   const { transactions } = useTransactions();
   const { budgets } = useBudgets();
   const { goals } = useGoal();
+  const { debts, stats: debtStats } = useDebt();
+  const { categories } = useCategories();
+  const { recurringList, upcomingList } = useRecurring();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([
@@ -263,7 +269,55 @@ const Chatbot = () => {
           current: g.currentAmount || 0,
           remaining: g.targetAmount - (g.currentAmount || 0),
           progress: ((g.currentAmount || 0) / g.targetAmount * 100).toFixed(1),
-          deadline: g.deadline
+          deadline: g.deadline,
+          priority: g.priority,
+          isAchieved: g.isAchieved
+        })),
+
+        // Categories
+        categories: categories.map(c => ({
+          name: c.name,
+          type: c.type,
+          icon: c.icon,
+          color: c.color
+        })),
+
+        // Debts
+        debts: debts.map(d => ({
+          name: d.name,
+          debtType: d.debtType, // 'lend' hoặc 'borrow'
+          totalAmount: d.totalAmount,
+          remainingAmount: d.remainingAmount,
+          paidAmount: d.totalAmount - (d.remainingAmount || d.totalAmount),
+          status: d.status,
+          dueDate: d.dueDate,
+          personName: d.personName,
+          interestRate: d.interestRate
+        })),
+        debtSummary: debtStats ? {
+          totalLent: debtStats.totalLent || 0,
+          totalBorrowed: debtStats.totalBorrowed || 0,
+          totalLentRemaining: debtStats.totalLentRemaining || 0,
+          totalBorrowedRemaining: debtStats.totalBorrowedRemaining || 0
+        } : null,
+
+        // Giao dịch định kỳ
+        recurringTransactions: recurringList.map(r => ({
+          name: r.templateName,
+          type: r.type,
+          category: r.category,
+          amount: r.amount,
+          frequency: r.frequency,
+          isActive: r.isActive,
+          nextExecution: r.nextExecution,
+          executedCount: r.executedCount
+        })),
+        upcomingRecurring: upcomingList.slice(0, 10).map(r => ({
+          name: r.templateName,
+          type: r.type,
+          amount: r.amount,
+          nextExecution: r.nextExecution,
+          frequency: r.frequency
         }))
       };
 
@@ -302,12 +356,12 @@ const Chatbot = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-primary-500 via-primary-600 to-purple-600 
+          className="fixed bottom-6 right-6 w-11 h-11 bg-gradient-to-br from-primary-500 via-primary-600 to-purple-600 
                    text-white rounded-full shadow-2xl hover:shadow-primary-500/50 hover:scale-110 
                    transition-all duration-300 flex items-center justify-center z-50 group"
           aria-label="Open chatbot"
         >
-          <FiMessageCircle size={28} className="group-hover:rotate-12 transition-transform" />
+          <FiMessageCircle size={20} className="group-hover:rotate-12 transition-transform" />
           <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white 
                         animate-pulse"></div>
         </button>

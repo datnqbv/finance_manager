@@ -94,6 +94,8 @@ const Statistics = () => {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const load = async () => {
       setLoading(true);
       try {
@@ -110,6 +112,9 @@ const Statistics = () => {
           statsService.getDailyStats(monthStart, monthEnd),
           statsService.getAIInsights(),
         ]);
+
+        // Nếu effect đã bị cleanup (StrictMode unmount hoặc deps thay đổi), không cập nhật state
+        if (controller.signal.aborted) return;
 
         // Monthly: { success, data: { summary: { income, expense }, transactions } }
         if (m.status === 'fulfilled') {
@@ -202,10 +207,11 @@ const Statistics = () => {
           }
         }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
     load();
+    return () => controller.abort();
   }, [selectedYear, selectedMonth]);
 
   const reloadDaily = useCallback(async (days) => {
