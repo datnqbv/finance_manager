@@ -74,11 +74,11 @@ Tất cả ảnh demo được lấy trực tiếp từ thư mục `assets/Scree
 
 | Xem trước 1 | Xem trước 2 |
 | --- | --- |
-| ![Landing Page](assets/Screenshot/LandingPage.png) | ![Dashboard](assets/Screenshot/Dashboard.png) |
-| ![Transactions](assets/Screenshot/Transaction.png) | ![Categories](assets/Screenshot/Categories.png) |
-| ![Budgets](assets/Screenshot/Budget.png) | ![Goals](assets/Screenshot/Goal.png) |
+| ![Landing Page](assets/Screenshot/LandingPage.png) | ![Dashboard](assets/Screenshot/dashboard.png) |
+| ![Transactions](assets/Screenshot/transaction.png) | ![Categories](assets/Screenshot/categories.png) |
+| ![Budgets](assets/Screenshot/Budget.png) | ![Goals](assets/Screenshot/goal.png) |
 | ![Recurring Transactions](assets/Screenshot/RecurringTransactions.png) | ![Debts](assets/Screenshot/Debts.png) |
-| ![Statistics](assets/Screenshot/Statistics.png) | ![Profile](assets/Screenshot/User.png) |
+| ![Statistics](assets/Screenshot/statistics.png) | ![Profile](assets/Screenshot/user.png) |
 
 
 
