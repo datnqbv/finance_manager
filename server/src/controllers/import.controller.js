@@ -31,6 +31,7 @@ export const upload = multer({
  * Normalize header names to standard keys:
  *   date, type, amount, category, note
  */
+// cái này là để người dùng có thể đặt tên cột linh hoạt, ví dụ "Ngày" hoặc "date" đều được hiểu là trường "date" trong DB. Tương tự với "type", "amount", "category", "note". Nếu header không khớp với bất kỳ trường nào, sẽ giữ nguyên (có thể dùng để debug hoặc mở rộng sau này).
 const normalizeHeader = (header) => {
   const h = header.trim().toLowerCase();
   if (['date', 'ngày', 'ngay', 'ngày/tháng/năm', 'ngày giao dịch'].includes(h)) return 'date';

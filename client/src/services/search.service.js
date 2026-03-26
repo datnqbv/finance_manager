@@ -4,7 +4,7 @@ const searchService = {
   /**
    * Global search - Tìm kiếm toàn bộ hệ thống
    * @param {string} query - Search query
-   * @param {string} type - Type filter: 'all', 'transaction', 'category', 'budget', 'goal', 'recurring'
+    * @param {string} type - Type filter: 'all', 'transaction', 'category', 'budget', 'goal'
    * @param {number} limit - Number of results per type
    */
   globalSearch: async (query, type = 'all', limit = 20) => {

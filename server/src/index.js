@@ -3,7 +3,6 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import express from 'express';
 import connectDB from './config/database.js';
-import { startCronJobs } from './services/cronJob.service.js';
 import app from './app.js';
 
 // Lấy __dirname an toàn cho cả ESM (dev) và pkg/CJS (exe)
@@ -23,9 +22,6 @@ const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
 connectDB();
-
-// Start cron jobs (recurring transactions auto-execute)
-startCronJobs();
 
 // Serve React static files (production build)
 // process.pkg is defined when running as a pkg .exe

@@ -1,6 +1,5 @@
 import Budget from '../models/Budget.model.js';
 import Goal from '../models/Goal.model.js';
-import RecurringTransaction from '../models/RecurringTransaction.model.js';
 import Transaction from '../models/Transaction.model.js';
 import Notification from '../models/Notification.model.js';
 
@@ -112,9 +111,8 @@ export const getNotifications = async (req, res) => {
       read: false 
     });
 
-    // Tạo thêm các thông báo tự động (goal, recurring) - không bao gồm budget vì đã tạo trong transaction
+    // Tạo thêm các thông báo tự động từ goals - không bao gồm budget vì đã tạo trong transaction
     const autoNotifications = [];
-    const now = new Date();
     const notificationIds = new Set();
 
     // 1. Kiểm tra các mục tiêu
@@ -149,47 +147,6 @@ export const getNotifications = async (req, res) => {
             time: getTimeAgo(goal.updatedAt),
             read: false,
             createdAt: goal.updatedAt
-          });
-        }
-      }
-    }
-
-    // 2. Kiểm tra các giao dịch định kỳ
-    const recurringTransactions = await RecurringTransaction.find({
-      userId: req.user.id,
-      isActive: true
-    });
-
-    for (const recurring of recurringTransactions) {
-      const nextDate = new Date(recurring.nextDate);
-      const daysUntilDue = Math.ceil((nextDate - now) / (1000 * 60 * 60 * 24));
-
-      if (daysUntilDue <= 0) {
-        const notifId = `recurring-overdue-${recurring._id}`;
-        if (!notificationIds.has(notifId)) {
-          notificationIds.add(notifId);
-          autoNotifications.push({
-            id: notifId,
-            type: 'warning',
-            title: 'Giao dịch định kỳ quá hạn',
-            message: `"${recurring.templateName || recurring.description}" đã quá hạn ${Math.abs(daysUntilDue)} ngày`,
-            time: getTimeAgo(recurring.nextDate),
-            read: false,
-            createdAt: recurring.nextDate
-          });
-        }
-      } else if (daysUntilDue <= 3) {
-        const notifId = `recurring-upcoming-${recurring._id}`;
-        if (!notificationIds.has(notifId)) {
-          notificationIds.add(notifId);
-          autoNotifications.push({
-            id: notifId,
-            type: 'info',
-            title: 'Giao dịch định kỳ sắp đến',
-            message: `"${recurring.templateName || recurring.description}" sẽ được thực hiện trong ${daysUntilDue} ngày nữa`,
-            time: getTimeAgo(recurring.updatedAt),
-            read: false,
-            createdAt: recurring.updatedAt
           });
         }
       }

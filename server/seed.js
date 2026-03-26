@@ -4,7 +4,6 @@ import mongoose from 'mongoose';
 import Transaction from './src/models/Transaction.model.js';
 import Category from './src/models/Category.model.js';
 import Goal from './src/models/Goal.model.js';
-import RecurringTransaction from './src/models/RecurringTransaction.model.js';
 import User from './src/models/User.model.js';
 
 const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/quanlychitieu';
@@ -40,7 +39,6 @@ const goalNames = [
 ];
 
 const priorities = ['high', 'medium', 'low'];
-const frequencies = ['daily', 'weekly', 'monthly', 'yearly'];
 const types = ['income', 'expense'];
 
 async function seed() {
@@ -54,7 +52,6 @@ async function seed() {
       Category.deleteMany({ userId: oldUser._id }),
       Transaction.deleteMany({ userId: oldUser._id }),
       Goal.deleteMany({ userId: oldUser._id }),
-      RecurringTransaction.deleteMany({ userId: oldUser._id }),
     ]);
     await User.deleteOne({ _id: oldUser._id });
     console.log('🗑️  Đã xoá user và dữ liệu cũ');
@@ -82,7 +79,7 @@ async function seed() {
   await Category.insertMany(categories);
   console.log('✅ Đã insert 100 danh mục (categories)');
 
-  // Các tên category để dùng cho transaction và recurring
+  // Các tên category để dùng cho transaction
   const catNames = categories.map(c => c.name);
 
   // Seed 100 transactions
@@ -114,22 +111,6 @@ async function seed() {
   });
   await Goal.insertMany(goals);
   console.log('✅ Đã insert 100 mục tiêu (goals)');
-
-  // Seed 100 recurring transactions
-  const recurring = Array.from({ length: 100 }, (_, i) => ({
-    userId,
-    templateName: `Giao dịch định kỳ ${i + 1}`,
-    type: types[i % 2],
-    category: catNames[randomInt(0, 99)],
-    amount: randomInt(50000, 2000000),
-    note: `Giao dịch định kỳ mẫu số ${i + 1}`,
-    frequency: frequencies[i % 4],
-    startDate: randomDate(new Date(2026, 0, 1), new Date(2026, 5, 30)),
-    endDate: i % 5 === 0 ? randomDate(new Date(2026, 6, 1), new Date(2026, 11, 31)) : null,
-    isActive: true,
-  }));
-  await RecurringTransaction.insertMany(recurring);
-  console.log('✅ Đã insert 100 giao dịch định kỳ (recurring transactions)');
 
   console.log('\n🎉 Seed hoàn tất! Tài khoản demo:');
   console.log('   Email:    seed@demo.com');

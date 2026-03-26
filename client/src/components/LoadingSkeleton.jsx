@@ -221,55 +221,6 @@ export const BudgetsSkeleton = () => (
 );
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Recurring Transactions
-// ═══════════════════════════════════════════════════════════════════════════
-export const RecurringSkeleton = () => (
-  <div className="space-y-5 animate-in fade-in duration-300">
-    <SkeletonPageHeader />
-    {/* Upcoming mini panel */}
-    <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4 space-y-3">
-      <SkeletonText width="w-40" height="h-4" />
-      <div className="flex gap-3 overflow-hidden">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="flex-shrink-0 w-40 space-y-2 bg-gray-50 dark:bg-[#1a1a1a] rounded-xl p-3">
-            <SkeletonText width="w-24" height="h-4" />
-            <SkeletonText width="w-16" height="h-3" />
-            <SkeletonText width="w-20" height="h-3" />
-          </div>
-        ))}
-      </div>
-    </div>
-    {/* Filter tabs */}
-    <div className="flex gap-2">
-      {[...Array(3)].map((_, i) => <SkeletonCard key={i} className="h-9 w-24 rounded-xl" />)}
-    </div>
-    {/* Cards */}
-    <div className="space-y-3">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4 flex items-center gap-4">
-          <SkeletonCard className="w-10 h-10 rounded-xl flex-shrink-0" />
-          <div className="flex-1 space-y-2">
-            <SkeletonText width="w-36" height="h-4" />
-            <div className="flex gap-2">
-              <SkeletonText width="w-16" height="h-3" />
-              <SkeletonText width="w-20" height="h-3" />
-            </div>
-          </div>
-          <div className="text-right space-y-1.5">
-            <SkeletonText width="w-20" height="h-5" />
-            <SkeletonText width="w-14" height="h-3" />
-          </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <SkeletonCard className="w-8 h-8 rounded-lg" />
-            <SkeletonCard className="w-8 h-8 rounded-lg" />
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-// ═══════════════════════════════════════════════════════════════════════════
 // Goals
 // ═══════════════════════════════════════════════════════════════════════════
 export const GoalsSkeleton = () => (

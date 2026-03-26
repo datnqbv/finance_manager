@@ -7,7 +7,6 @@ import { AuthProvider } from './context/AuthContext';
 import { TransactionProvider } from './context/TransactionContext';
 import { CategoryProvider } from './context/CategoryContext';
 import { BudgetProvider } from './context/BudgetContext';
-import { RecurringProvider } from './context/RecurringContext';
 import { GoalProvider } from './context/GoalContext';
 import { DebtProvider } from './context/DebtContext';
 import { ThemeCustomizerProvider } from './context/ThemeCustomizerContext';
@@ -25,7 +24,6 @@ import Transactions from './pages/Transactions';
 import Statistics from './pages/Statistics';
 import Categories from './pages/Categories';
 import Budgets from './pages/Budgets';
-import RecurringTransactions from './pages/RecurringTransactions';
 import Goals from './pages/Goals';
 import Debts from './pages/Debts';
 import Profile from './pages/Profile';
@@ -37,7 +35,6 @@ function App() {
       <AuthProvider>  
         <CategoryProvider> 
           <BudgetProvider> 
-            <RecurringProvider> 
               <GoalProvider> 
                 <DebtProvider>
                 <TransactionProvider>
@@ -66,9 +63,6 @@ function App() {
               </Route>
               <Route path="/budgets" element={<PrivateRoute />}> 
                 <Route index element={<Budgets />} /> 
-              </Route>
-              <Route path="/recurring" element={<PrivateRoute />}> 
-                <Route index element={<RecurringTransactions />} /> 
               </Route>
               <Route path="/goals" element={<PrivateRoute />}> 
                 <Route index element={<Goals />} /> 
@@ -103,7 +97,6 @@ function App() {
               </TransactionProvider> 
                 </DebtProvider>
             </GoalProvider>        
-          </RecurringProvider> 
         </BudgetProvider>  
       </CategoryProvider>
     </AuthProvider>

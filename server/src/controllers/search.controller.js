@@ -1,14 +1,14 @@
+
 import Transaction from '../models/Transaction.model.js';
 import Category from '../models/Category.model.js';
 import Budget from '../models/Budget.model.js';
 import Goal from '../models/Goal.model.js';
-import RecurringTransaction from '../models/RecurringTransaction.model.js';
 
 /**
  * @desc    Global search sử dụng MongoDB Aggregation Pipeline
  * @route   GET /api/search
  * @access  Private
- * @query   q (search query), type (optional: transaction|category|budget|goal|recurring|all)
+ * @query   q (search query), type (optional: transaction|category|budget|goal|all)
  */
 export const globalSearch = async (req, res) => {
   try {
@@ -23,7 +23,6 @@ export const globalSearch = async (req, res) => {
           categories: [],
           budgets: [],
           goals: [],
-          recurring: [],
           total: 0
         }
       });
@@ -208,37 +207,6 @@ export const globalSearch = async (req, res) => {
       ]);
     }
 
-    // 5. SEARCH RECURRING TRANSACTIONS
-    if (type === 'all' || type === 'recurring') {
-      results.recurring = await RecurringTransaction.aggregate([
-        {
-          $match: {
-            userId: req.user._id,
-            $or: [
-              { category: { $regex: searchRegex } },
-              { note: { $regex: searchRegex } }
-            ]
-          }
-        },
-        {
-          $addFields: {
-            relevanceScore: {
-              $add: [
-                { $cond: [{ $eq: ['$category', searchQuery] }, 10, 0] },
-                { $cond: [{ $regexMatch: { input: '$category', regex: searchRegex } }, 5, 0] }
-              ]
-            }
-          }
-        },
-        {
-          $sort: { relevanceScore: -1, nextDate: 1 }
-        },
-        {
-          $limit: parseInt(limit)
-        }
-      ]);
-    }
-
     // Calculate total results
     const total = Object.values(results).reduce((sum, arr) => sum + (arr?.length || 0), 0);
 
@@ -269,7 +237,7 @@ export const advancedSearch = async (req, res) => {
   try {
     const {
       query,
-      type, // transaction, category, budget, goal, recurring
+      type, // transaction, category, budget, goal
       filters = {}
     } = req.body;
 

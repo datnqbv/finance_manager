@@ -7,8 +7,8 @@ README này được viết theo hướng nhà tuyển dụng có thể đọc n
 ## 1) Tổng quan nhanh
 
 - Bài toán: người dùng cá nhân thường khó theo dõi thu chi, dễ vượt ngân sách và thiếu góc nhìn tổng quan tài chính.
-- Giải pháp: ứng dụng hỗ trợ quản lý giao dịch, mục tiêu tiết kiệm, khoản nợ, giao dịch định kỳ, thống kê biểu đồ, tìm kiếm toàn cục và xuất báo cáo.
-- Giá trị kỹ thuật: kiến trúc tách `client/server`, REST API, xác thực JWT + refresh token, cron job tự động hóa, có kiểm thử cho cả frontend và backend.
+- Giải pháp: ứng dụng hỗ trợ quản lý giao dịch, mục tiêu tiết kiệm, khoản nợ, thống kê biểu đồ, tìm kiếm toàn cục và xuất báo cáo.
+- Giá trị kỹ thuật: kiến trúc tách `client/server`, REST API, xác thực JWT + refresh token, có kiểm thử cho cả frontend và backend.
 
 ## 2) Chức năng chính
 
@@ -17,7 +17,6 @@ README này được viết theo hướng nhà tuyển dụng có thể đọc n
 - Quản lý danh mục: icon, màu sắc, tùy biến theo ngữ cảnh chi tiêu.
 - Quản lý ngân sách: theo danh mục/tổng thể, cảnh báo ngưỡng, theo dõi tiến độ.
 - Quản lý mục tiêu: tạo mục tiêu tiết kiệm, nạp thêm tiền, theo dõi hạn và tiến độ.
-- Quản lý giao dịch định kỳ: lặp theo ngày/tuần/tháng/năm, kích hoạt/tạm dừng, xem lịch sắp tới.
 - Quản lý khoản nợ: theo dõi và cập nhật trạng thái nợ.
 
 ### Phân tích và năng suất
@@ -39,10 +38,9 @@ README này được viết theo hướng nhà tuyển dụng có thể đọc n
 - Frontend: React SPA (`client/`) sử dụng Context API + service layer.
 - Backend: Node.js/Express (`server/`) theo hướng MVC + middleware.
 - Cơ sở dữ liệu: MongoDB với Mongoose.
-- Tự động hóa: `node-cron` cho recurring transactions.
 
 ### Các module API chính
-- `auth`, `transactions`, `categories`, `budgets`, `goals`, `recurring`
+- `auth`, `transactions`, `categories`, `budgets`, `goals`
 - `debts`, `notifications`, `stats`, `search`, `import`, `chat`, `contact`
 
 ## 4) Công nghệ sử dụng
@@ -60,7 +58,7 @@ README này được viết theo hướng nhà tuyển dụng có thể đọc n
 - `Node.js`, `Express`, `MongoDB`, `Mongoose`
 - `jsonwebtoken`, `bcryptjs`, `express-validator`
 - `express-rate-limit`, `cors`, `dotenv`
-- `multer` (upload), `nodemailer` (email), `node-cron`
+- `multer` (upload), `nodemailer` (email)
 - Import dữ liệu: `csv-parse`, `xlsx`
 - Kiểm thử: `Jest`, `Supertest`, `mongodb-memory-server`
 
@@ -77,8 +75,8 @@ Tất cả ảnh demo được lấy trực tiếp từ thư mục `assets/Scree
 | ![Landing Page](assets/Screenshot/LandingPage.png) | ![Dashboard](assets/Screenshot/dashboard.png) |
 | ![Transactions](assets/Screenshot/transaction.png) | ![Categories](assets/Screenshot/categories.png) |
 | ![Budgets](assets/Screenshot/Budget.png) | ![Goals](assets/Screenshot/goal.png) |
-| ![Recurring Transactions](assets/Screenshot/RecurringTransactions.png) | ![Debts](assets/Screenshot/Debts.png) |
-| ![Statistics](assets/Screenshot/statistics.png) | ![Profile](assets/Screenshot/user.png) |
+| ![Debts](assets/Screenshot/Debts.png) | ![Statistics](assets/Screenshot/statistics.png) |
+| ![Profile](assets/Screenshot/user.png) |  |
 
 
 

@@ -21,7 +21,6 @@ import {
   FiChevronRight,
   FiChevronLeft,
   FiCreditCard,
-  FiRefreshCw,
   FiTarget,
   FiUsers
 } from 'react-icons/fi';
@@ -104,7 +103,6 @@ const Layout = ({ children }) => {
     { path: '/transactions', icon: FiCreditCard, label: 'Giao dịch', isImg: false },
     { path: '/categories', icon: FiFolder, label: 'Danh mục', isImg: false },
     { path: '/budgets', icon: FiDollarSign, label: 'Ngân sách', isImg: false },
-    { path: '/recurring', icon: FiRefreshCw, label: 'Định kỳ', isImg: false },
     { path: '/goals', icon: FiTarget, label: 'Mục tiêu', isImg: false },
     { path: '/debts', icon: FiUsers, label: 'Quản lý nợ', isImg: false },
     { path: '/statistics', icon: FiBarChart2, label: 'Thống kê', isImg: false },

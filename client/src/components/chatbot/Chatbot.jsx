@@ -10,7 +10,6 @@ import { useBudgets } from '../../context/BudgetContext';
 import { useGoal } from '../../context/GoalContext';
 import { useDebt } from '../../context/DebtContext';
 import { useCategories } from '../../context/CategoryContext';
-import { useRecurring } from '../../context/RecurringContext';
 
 const Chatbot = () => {
   const { user } = useAuth();
@@ -19,7 +18,6 @@ const Chatbot = () => {
   const { goals } = useGoal();
   const { debts, stats: debtStats } = useDebt();
   const { categories } = useCategories();
-  const { recurringList, upcomingList } = useRecurring();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([
@@ -299,26 +297,7 @@ const Chatbot = () => {
           totalBorrowed: debtStats.totalBorrowed || 0,
           totalLentRemaining: debtStats.totalLentRemaining || 0,
           totalBorrowedRemaining: debtStats.totalBorrowedRemaining || 0
-        } : null,
-
-        // Giao dịch định kỳ
-        recurringTransactions: recurringList.map(r => ({
-          name: r.templateName,
-          type: r.type,
-          category: r.category,
-          amount: r.amount,
-          frequency: r.frequency,
-          isActive: r.isActive,
-          nextExecution: r.nextExecution,
-          executedCount: r.executedCount
-        })),
-        upcomingRecurring: upcomingList.slice(0, 10).map(r => ({
-          name: r.templateName,
-          type: r.type,
-          amount: r.amount,
-          nextExecution: r.nextExecution,
-          frequency: r.frequency
-        }))
+        } : null
       };
 
       const response = await sendChatMessage(text, userContext);

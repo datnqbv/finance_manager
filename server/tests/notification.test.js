@@ -85,7 +85,7 @@ describe('GET /api/notifications', () => {
 
     expect(res.status).toBe(200);
     // DB notifications chưa đọc phải thoả mãn
-    const dbNotifs = res.body.data.notifications.filter(n => n.id && !n.id.startsWith('goal-') && !n.id.startsWith('recurring-'));
+    const dbNotifs = res.body.data.notifications.filter(n => n.id && !n.id.startsWith('goal-'));
     expect(dbNotifs.every(n => n.read === false)).toBe(true);
   });
 
@@ -230,7 +230,7 @@ describe('DELETE /api/notifications/all', () => {
     expect(getRes.body.data.unreadCount).toBe(0);
     // DB notifications phải rỗng
     const dbNotifs = getRes.body.data.notifications.filter(
-      n => !String(n.id).startsWith('goal-') && !String(n.id).startsWith('recurring-')
+      n => !String(n.id).startsWith('goal-')
     );
     expect(dbNotifs).toHaveLength(0);
   });

@@ -313,7 +313,7 @@ export const forecastSpending = async (req, res) => {
 
     const expReg = weightedLinearRegression(expenseHistory);
     const incReg = weightedLinearRegression(incomeHistory);
-
+    //logic du dự báo: nếu dự báo âm thì dùng trung bình, nếu r2 thấp thì cảnh báo độ tin cậy, nếu slope cao thì cảnh báo xu hướng tăng mạnh
     const forecastExpense = Math.round(Math.max(0, expReg.slope * n + expReg.intercept));
     const forecastIncome  = Math.round(Math.max(0, incReg.slope * n + incReg.intercept));
     const avgExpense = Math.round(expenseHistory.reduce((a, b) => a + b, 0) / n);

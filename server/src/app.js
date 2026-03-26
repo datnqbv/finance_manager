@@ -1,5 +1,5 @@
 /**
- * app.js - Express app factory (không chứa listen/connectDB/startCronJobs)
+ * app.js - Express app factory (không chứa listen/connectDB)
  * Dùng riêng cho production (import vào index.js) và cho tests (import vào test files)
  */
 import express from 'express';
@@ -9,7 +9,6 @@ import transactionRoutes from './routes/transaction.routes.js';
 import statsRoutes from './routes/stats.routes.js';
 import categoryRoutes from './routes/category.routes.js';
 import budgetRoutes from './routes/budget.routes.js';
-import recurringRoutes from './routes/recurring.routes.js';
 import goalRoutes from './routes/goal.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import chatRoutes from './routes/chat.routes.js';
@@ -36,7 +35,6 @@ app.use('/api/transactions',  transactionRoutes);
 app.use('/api/stats',         statsRoutes);
 app.use('/api/categories',    categoryRoutes);
 app.use('/api/budgets',       budgetRoutes);
-app.use('/api/recurring',     recurringRoutes);
 app.use('/api/goals',         goalRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat',          chatRoutes);

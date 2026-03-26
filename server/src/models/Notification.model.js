@@ -9,7 +9,7 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['transaction', 'budget', 'goal', 'recurring', 'info', 'warning', 'error', 'success'],
+    enum: ['transaction', 'budget', 'goal', 'info', 'warning', 'error', 'success'],
     required: true
   },
   title: {
@@ -28,7 +28,7 @@ const notificationSchema = new mongoose.Schema({
   },
   relatedModel: {
     type: String,
-    enum: ['Transaction', 'Budget', 'Goal', 'RecurringTransaction', null],
+    enum: ['Transaction', 'Budget', 'Goal', null],
     default: null
   },
   read: {

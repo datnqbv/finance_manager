@@ -5,7 +5,6 @@ import { useTransactions } from '../context/TransactionContext';
 import { useCategories } from '../context/CategoryContext';
 import { useBudgets } from '../context/BudgetContext';
 import { useGoal } from '../context/GoalContext';
-import { useRecurring } from '../context/RecurringContext';
 
 const GlobalSearch = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,7 +17,6 @@ const GlobalSearch = () => {
   const { categories } = useCategories();
   const { budgets } = useBudgets();
   const { goals } = useGoal();
-  const { recurringList } = useRecurring();
 
   // Close search when clicking outside
   useEffect(() => {
@@ -101,7 +99,6 @@ const GlobalSearch = () => {
     console.log('Search Query:', lowerQuery);
     console.log('Budgets:', budgets?.length || 0, budgets);
     console.log('Goals:', goals?.length || 0, goals);
-    console.log('Recurring:', recurringList?.length || 0, recurringList);
     console.log('Transactions:', transactions?.length || 0);
     console.log('Categories:', categories?.length || 0);
     console.log('===========================');
@@ -112,7 +109,6 @@ const GlobalSearch = () => {
       { title: 'Giao dịch', path: '/transactions', icon: '📝', keywords: ['transactions', 'giao dịch', 'giao dich', 'transaction'] },
       { title: 'Danh mục', path: '/categories', icon: '📁', keywords: ['categories', 'danh mục', 'danh muc', 'category'] },
       { title: 'Ngân sách', path: '/budgets', icon: '💰', keywords: ['budgets', 'ngân sách', 'ngan sach', 'budget'] },
-      { title: 'Định kỳ', path: '/recurring', icon: '🔄', keywords: ['recurring', 'định kỳ', 'dinh ky', 'repeat'] },
       { title: 'Mục tiêu', path: '/goals', icon: '🎯', keywords: ['goals', 'mục tiêu', 'muc tieu', 'target'] },
       { title: 'Thống kê', path: '/statistics', icon: '📊', keywords: ['statistics', 'thống kê', 'thong ke', 'stats', 'chart'] },
       { title: 'Tài khoản', path: '/profile', icon: '👤', keywords: ['profile', 'tài khoản', 'tai khoan', 'account'] },
@@ -262,36 +258,12 @@ const GlobalSearch = () => {
         matchText: g.name
       }));
 
-    // Search in recurring transactions
-    const isRecurringKeyword = fuzzyMatch('định kỳ', lowerQuery) || fuzzyMatch('recurring', lowerQuery);
-    
-    const recurringResults = (recurringList || [])
-      .filter(r => {
-        if (isRecurringKeyword) return true;
-        const nameMatch = fuzzyMatch(r.templateName, lowerQuery) || fuzzyMatch(r.description, lowerQuery);
-        const categoryMatch = fuzzyMatch(r.category, lowerQuery);
-        const amountMatch = r.amount?.toString().includes(lowerQuery);
-        const frequencyMatch = fuzzyMatch(r.frequency, lowerQuery);
-        return nameMatch || categoryMatch || amountMatch || frequencyMatch;
-      })
-      .slice(0, isRecurringKeyword ? 5 : 3)
-      .map(r => ({
-        type: 'recurring',
-        id: r._id,
-        title: r.templateName || r.description || 'Giao dịch định kỳ',
-        subtitle: `${r.type === 'income' ? 'Thu' : 'Chi'} định kỳ ${r.frequency === 'daily' ? 'hàng ngày' : r.frequency === 'weekly' ? 'hàng tuần' : r.frequency === 'monthly' ? 'hàng tháng' : 'hàng năm'} - ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(r.amount)}`,
-        path: '/recurring',
-        icon: r.isActive ? '🔄' : '⏸️',
-        matchText: r.templateName || r.description
-      }));
-
     // Combine results and sort by relevance score
     const allResults = [
       ...transactionResults,
       ...categoryResults,
       ...budgetResults,
-      ...goalResults,
-      ...recurringResults
+      ...goalResults
     ];
     
     // Sort all results by relevance score
@@ -309,12 +281,11 @@ const GlobalSearch = () => {
       categories: categoryResults.length,
       budgets: budgetResults.length,
       goals: goalResults.length,
-      recurring: recurringResults.length,
       total: finalResults.length
     });
     
     setSearchResults(finalResults);
-  }, [transactions, categories, budgets, goals, recurringList]);
+  }, [transactions, categories, budgets, goals]);
 
   // Debounced search with useEffect
   useEffect(() => {
@@ -404,14 +375,12 @@ const GlobalSearch = () => {
                         ${result.type === 'category' ? 'bg-orange-100 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400' : ''}
                         ${result.type === 'budget' ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400' : ''}
                         ${result.type === 'goal' ? 'bg-pink-100 dark:bg-pink-500/10 text-pink-700 dark:text-pink-400' : ''}
-                        ${result.type === 'recurring' ? 'bg-cyan-100 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400' : ''}
                       `}>
                         {result.type === 'page' && 'Trang'}
                         {result.type === 'transaction' && 'Giao dịch'}
                         {result.type === 'category' && 'Danh mục'}
                         {result.type === 'budget' && 'Ngân sách'}
                         {result.type === 'goal' && 'Mục tiêu'}
-                        {result.type === 'recurring' && 'Định kỳ'}
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">

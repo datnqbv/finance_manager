@@ -197,14 +197,6 @@ DELETE /api/goals/:id - Xóa mục tiêu
 POST /api/goals/:id/add-amount - Thêm tiền vào mục tiêu
 GET /api/goals/stats - Thống kê mục tiêu
 
-**Recurring:**
-GET /api/recurring - Lấy danh sách giao dịch định kỳ
-POST /api/recurring - Thêm giao dịch định kỳ
-PUT /api/recurring/:id - Sửa giao dịch định kỳ
-DELETE /api/recurring/:id - Xóa giao dịch định kỳ
-POST /api/recurring/:id/execute - Thực hiện thủ công
-GET /api/recurring/upcoming - Lấy giao dịch sắp tới
-
 **Stats:**
 GET /api/stats/summary - Tổng quan tài chính
 GET /api/stats/monthly - Thống kê theo tháng
@@ -508,33 +500,6 @@ ${Array.isArray(context.debts) && context.debts.length > 0
     : 'Chưa có khoản nợ nào'}
 
 ─────────────────────────────────────────────────
-🔄 GIAO DỊCH ĐỊNH KỲ
-─────────────────────────────────────────────────
-${Array.isArray(context.recurringTransactions) && context.recurringTransactions.length > 0
-    ? context.recurringTransactions.map((r, i) => {
-        try {
-            const freqMap = { daily: 'Hàng ngày', weekly: 'Hàng tuần', monthly: 'Hàng tháng', yearly: 'Hàng năm' };
-            return `${i + 1}. **${r.name}** (${r.type === 'income' ? '📈 Thu' : '📉 Chi'})
-   → Danh mục: ${r.category} | Số tiền: ${Number(r.amount).toLocaleString('vi-VN')} VND
-   → Chu kỳ: ${freqMap[r.frequency] || r.frequency}
-   → Trạng thái: ${r.isActive ? '✅ Đang hoạt động' : '⏸️ Tạm dừng'}
-   → Đã thực hiện: ${r.executedCount || 0} lần`;
-        } catch (e) {
-            return '';
-        }
-      }).filter(Boolean).join('\n\n')
-    : 'Chưa có giao dịch định kỳ'}
-
-${Array.isArray(context.upcomingRecurring) && context.upcomingRecurring.length > 0 ? `
-📅 **Sắp tới (gần nhất):**
-${context.upcomingRecurring.map((r, i) => {
-    try {
-        const date = new Date(r.nextExecution).toLocaleDateString('vi-VN');
-        return `   • ${r.name}: ${Number(r.amount).toLocaleString('vi-VN')} VND - Ngày ${date}`;
-    } catch (e) { return ''; }
-}).filter(Boolean).join('\n')}` : ''}
-
-─────────────────────────────────────────────────
 📁 DANH MỤC HIỆN CÓ
 ─────────────────────────────────────────────────
 ${Array.isArray(context.categories) && context.categories.length > 0
@@ -553,7 +518,6 @@ Chi tiêu: ${context.categories.filter(c => c.type === 'expense' || c.type === '
 • Nếu hỏi tháng nào KHÔNG có trong 6 tháng gần nhất, thông báo "Không có dữ liệu tháng đó trong hệ thống"
 • So sánh tháng này vs tháng trước: dùng phần **SO SÁNH**
 • Khi hỏi về NỢ (cho vay, đi vay, ai nợ tôi, tôi nợ ai), dùng phần **QUẢN LÝ NỢ**
-• Khi hỏi về GIAO DỊCH ĐỊNH KỲ (lương, tiền nhà, định kỳ sắp tới), dùng phần **GIAO DỊCH ĐỊNH KỲ**
 • Khi hỏi về DANH MỤC (có danh mục gì, danh mục nào), dùng phần **DANH MỤC HIỆN CÓ**
 • Đưa ra lời khuyên dựa trên xu hướng chi tiêu thực tế
 • Cảnh báo nếu chi tiêu tăng đột biến hoặc vượt ngân sách
