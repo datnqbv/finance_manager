@@ -156,10 +156,10 @@ const Categories = () => {
   );
 
   return (
-    <div className="space-y-5">
+    <div className={`cat-layout-grid ${filterType === 'all' ? 'cat-layout-all' : 'cat-layout-single'}`}>
 
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="cat-area-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <FiTag className="text-gray-500 dark:text-gray-400" size={20} />
@@ -180,7 +180,7 @@ const Categories = () => {
       </div>
 
       {/* ── Stats ── */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="cat-area-stats grid grid-cols-3 gap-3">
         {[
           { label: 'Tổng danh mục', value: categories.length, border: 'border-l-gray-400', icon: '🗂️', valueColor: 'text-gray-800 dark:text-gray-100' },
           { label: 'Thu nhập', value: allIncome.length, border: 'border-l-emerald-500', icon: '📈', valueColor: 'text-emerald-600 dark:text-emerald-400' },
@@ -199,7 +199,7 @@ const Categories = () => {
       </div>
 
       {/* ── Filter tabs ── */}
-      <div className="flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5 w-fit">
+      <div className="cat-area-filtertabs flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5 w-fit">
         {[
           { label: `Tất cả (${categories.length})`, value: 'all' },
           { label: `Thu nhập (${allIncome.length})`, value: 'income' },
@@ -221,22 +221,26 @@ const Categories = () => {
 
       {/* ── Category sections ── */}
       {filterType === 'all' ? (
-        <div className="space-y-7">
-          <SectionBlock
-            title="Danh mục Thu nhập"
-            items={incomeFiltered}
-            emptyText="Chưa có danh mục thu nhập"
-            accentColor="bg-emerald-500"
-          />
-          <SectionBlock
-            title="Danh mục Chi tiêu"
-            items={expenseFiltered}
-            emptyText="Chưa có danh mục chi tiêu"
-            accentColor="bg-red-500"
-          />
-        </div>
+        <>
+          <div className="cat-area-income">
+            <SectionBlock
+              title="Danh mục Thu nhập"
+              items={incomeFiltered}
+              emptyText="Chưa có danh mục thu nhập"
+              accentColor="bg-emerald-500"
+            />
+          </div>
+          <div className="cat-area-expense">
+            <SectionBlock
+              title="Danh mục Chi tiêu"
+              items={expenseFiltered}
+              emptyText="Chưa có danh mục chi tiêu"
+              accentColor="bg-red-500"
+            />
+          </div>
+        </>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <div className="cat-area-single grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {filteredCategories.length > 0 ? (
             <>
               {filteredCategories.map(cat => <CategoryCard key={cat._id} category={cat} />)}

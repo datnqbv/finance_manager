@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { statsService } from '../services/stats.service';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -74,13 +74,13 @@ const Statistics = () => {
   const [loading, setLoading]             = useState(true);
 
   const [monthly,    setMonthly]    = useState(null);
-  const [summary,    setSummary]    = useState(null);
   const [catStats,   setCatStats]   = useState([]);
   const [compare,    setCompare]    = useState([]);
   const [forecast,   setForecast]   = useState(null);
   const [trends,     setTrends]     = useState(null);
   const [daily,      setDaily]      = useState([]);
   const [aiInsights, setAiInsights] = useState(null);
+  const monthBundleCacheRef = useRef(new Map());
 
   const fmt = useCallback((n) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(n || 0),
@@ -93,126 +93,186 @@ const Statistics = () => {
     return n;
   }, []);
 
+  const getMonthKey = useCallback((year, month) => `${year}-${month}`, []);
+
+  const applyMonthBundle = useCallback((bundle) => {
+    setMonthly(bundle.monthly);
+    setCatStats(bundle.catStats);
+    setCompare(bundle.compare);
+    setForecast(bundle.forecast);
+    setTrends(bundle.trends);
+    setDaily(bundle.daily);
+  }, []);
+
+  const fetchMonthBundle = useCallback(async (year, month) => {
+    const monthStart = new Date(year, month - 1, 1).toISOString().split('T')[0];
+    const monthEnd = new Date(year, month, 0).toISOString().split('T')[0];
+
+    const [m, c, cmp, f, t, d] = await Promise.allSettled([
+      statsService.getMonthlyStats(year, month),
+      statsService.getCategoryStats(monthStart, monthEnd),
+      statsService.compareStats('month', 6, year, month),
+      statsService.forecastSpending(6, year, month),
+      statsService.analyzeTrends(12, year, month),
+      statsService.getDailyStats(monthStart, monthEnd),
+    ]);
+
+    const bundle = {
+      monthly: null,
+      catStats: [],
+      compare: [],
+      forecast: null,
+      trends: null,
+      daily: [],
+    };
+
+    if (m.status === 'fulfilled') {
+      const md = m.value?.data;
+      bundle.monthly = {
+        totalIncome: md?.summary?.income || 0,
+        totalExpense: md?.summary?.expense || 0,
+        totalTransactions: md?.transactions || 0,
+      };
+    }
+
+    if (c.status === 'fulfilled') {
+      const raw = c.value?.data || [];
+      bundle.catStats = raw.map(item => ({
+        _id: item.category,
+        totalIncome: item.income || 0,
+        totalExpense: item.expense || 0,
+        count: item.count || 0,
+      }));
+    }
+
+    if (cmp.status === 'fulfilled') {
+      const periods = cmp.value?.data?.periods || [];
+      bundle.compare = periods.map(p => {
+        const [mon, yr] = (p.period || '').split('/');
+        return {
+          month: parseInt(mon) || 0,
+          year: parseInt(yr) || 0,
+          totalIncome: p.income || 0,
+          totalExpense: p.expense || 0,
+        };
+      });
+    }
+
+    if (f.status === 'fulfilled') {
+      const fd = f.value?.data;
+      bundle.forecast = fd ? { ...fd.forecast, byCategory: fd.byCategory } : null;
+    }
+
+    if (t.status === 'fulfilled') {
+      const td = t.value?.data;
+      const monthlyData = (td?.trends || []).map(item => {
+        const [mon, yr] = (item.month || '').split('/');
+        return {
+          month: parseInt(mon) || 0,
+          year: parseInt(yr) || 0,
+          income: item.income || 0,
+          expense: item.expense || 0,
+          savings: item.savings || 0,
+          savingsRate: item.savingsRate || 0,
+        };
+      });
+      bundle.trends = {
+        monthlyData,
+        averageIncome: td?.analysis?.averageIncome || 0,
+        averageExpense: td?.analysis?.averageExpense || 0,
+        averageSavings: td?.analysis?.averageSavings || 0,
+        overallTrend: td?.analysis?.spendingTrend || '—',
+      };
+    }
+
+    if (d.status === 'fulfilled') {
+      const raw = d.value?.data || [];
+      bundle.daily = raw.map(item => ({ ...item, count: item.transactions || 0 }));
+    }
+
+    return bundle;
+  }, []);
+
+  const prefetchMonth = useCallback(async (year, month) => {
+    if (month < 1 || month > 12) return;
+    const key = getMonthKey(year, month);
+    if (monthBundleCacheRef.current.has(key)) return;
+    try {
+      const bundle = await fetchMonthBundle(year, month);
+      monthBundleCacheRef.current.set(key, bundle);
+    } catch {
+      // Prefetch lỗi thì bỏ qua để không ảnh hưởng luồng chính
+    }
+  }, [fetchMonthBundle, getMonthKey]);
+
   useEffect(() => {
     const controller = new AbortController();
+    const currentKey = getMonthKey(selectedYear, selectedMonth);
+    const cached = monthBundleCacheRef.current.get(currentKey);
+
+    if (cached) {
+      applyMonthBundle(cached);
+      setLoading(false);
+    } else {
+      setLoading(true);
+      setMonthly(null);
+      setCatStats([]);
+      setCompare([]);
+      setForecast(null);
+      setTrends(null);
+      setDaily([]);
+    }
 
     const load = async () => {
-      setLoading(true);
       try {
-        const monthStart = new Date(selectedYear, selectedMonth - 1, 1).toISOString().split('T')[0];
-        const monthEnd   = new Date(selectedYear, selectedMonth, 0).toISOString().split('T')[0];
-
-        const [m, s, c, cmp, f, t, d, ai] = await Promise.allSettled([
-          statsService.getMonthlyStats(selectedYear, selectedMonth),
-          statsService.getSummary(),
-          statsService.getCategoryStats(monthStart, monthEnd),
-          statsService.compareStats('month', 6, selectedYear, selectedMonth),
-          statsService.forecastSpending(6, selectedYear, selectedMonth),
-          statsService.analyzeTrends(12, selectedYear, selectedMonth),
-          statsService.getDailyStats(monthStart, monthEnd),
-          statsService.getAIInsights(),
-        ]);
-
-        // Nếu effect đã bị cleanup (StrictMode unmount hoặc deps thay đổi), không cập nhật state
+        const bundle = await fetchMonthBundle(selectedYear, selectedMonth);
         if (controller.signal.aborted) return;
 
-        // Monthly: { success, data: { summary: { income, expense }, transactions } }
-        if (m.status === 'fulfilled') {
-          const md = m.value?.data;
-          setMonthly({
-            totalIncome:       md?.summary?.income      || 0,
-            totalExpense:      md?.summary?.expense     || 0,
-            totalTransactions: md?.transactions         || 0,
-          });
-        }
+        monthBundleCacheRef.current.set(currentKey, bundle);
+        applyMonthBundle(bundle);
 
-        if (s.status === 'fulfilled') setSummary(s.value?.data);
-
-        // Category: { success, data: [{ category, income, expense, count }] }
-        if (c.status === 'fulfilled') {
-          const raw = c.value?.data || [];
-          setCatStats(raw.map(item => ({
-            _id:          item.category,
-            totalIncome:  item.income  || 0,
-            totalExpense: item.expense || 0,
-            count:        item.count   || 0,
-          })));
-        }
-
-        // Compare: { success, data: { periods: [{ period:"1/2025", income, expense }] } }
-        if (cmp.status === 'fulfilled') {
-          const periods = cmp.value?.data?.periods || [];
-          setCompare(periods.map(p => {
-            const [mon, yr] = (p.period || '').split('/');
-            return {
-              month:        parseInt(mon) || 0,
-              year:         parseInt(yr)  || 0,
-              totalIncome:  p.income  || 0,
-              totalExpense: p.expense || 0,
-            };
-          }));
-        }
-
-        // Forecast: { success, data: { forecast: { nextMonthExpense,... }, byCategory } }
-        if (f.status === 'fulfilled') {
-          const fd = f.value?.data;
-          setForecast(fd ? { ...fd.forecast, byCategory: fd.byCategory } : null);
-        }
-
-        // Trends: { success, data: { trends:[{ month:"1/2025", income, expense }], analysis:{...} } }
-        if (t.status === 'fulfilled') {
-          const td = t.value?.data;
-          const monthlyData = (td?.trends || []).map(item => {
-            const [mon, yr] = (item.month || '').split('/');
-            return {
-              month:       parseInt(mon) || 0,
-              year:        parseInt(yr)  || 0,
-              income:      item.income      || 0,
-              expense:     item.expense     || 0,
-              savings:     item.savings     || 0,
-              savingsRate: item.savingsRate || 0,
-            };
-          });
-          setTrends({
-            monthlyData,
-            averageIncome:  td?.analysis?.averageIncome  || 0,
-            averageExpense: td?.analysis?.averageExpense || 0,
-            averageSavings: td?.analysis?.averageSavings || 0,
-            overallTrend:   td?.analysis?.spendingTrend || '—',
-          });
-        }
-
-        // Daily: { success, data: [{ date, income, expense, transactions }] }
-        if (d.status === 'fulfilled') {
-          const raw = d.value?.data || [];
-          setDaily(raw.map(item => ({ ...item, count: item.transactions || 0 })));
-        }
-
-        // AI: { success, data: { healthScore, anomalies, categoryTrends, bestMonth, worstMonth, ... } }
-        if (ai.status === 'fulfilled') {
-          const aid = ai.value?.data;
-          if (aid) {
-            setAiInsights({
-              ...aid,
-              savingsRate:     aid.avgSavingsRate || 0,
-              categoryTrends:  (aid.categoryTrends || []).map(c => ({
-                category: c.category,
-                recent:   c.recentAvg     || 0,
-                prior:    c.priorAvg      || 0,
-                change:   c.changePercent || 0,
-              })),
-              bestMonth:  aid.bestMonth  ? { name: aid.bestMonth.label  } : null,
-              worstMonth: aid.worstMonth ? { name: aid.worstMonth.label } : null,
-            });
-          }
-        }
+        // Prefetch tháng liền kề để chuyển tháng gần như tức thì
+        const prevMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
+        const prevYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
+        const nextMonth = selectedMonth === 12 ? 1 : selectedMonth + 1;
+        const nextYear = selectedMonth === 12 ? selectedYear + 1 : selectedYear;
+        prefetchMonth(prevYear, prevMonth);
+        prefetchMonth(nextYear, nextMonth);
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
     };
+
     load();
     return () => controller.abort();
-  }, [selectedYear, selectedMonth]);
+  }, [selectedYear, selectedMonth, fetchMonthBundle, getMonthKey, applyMonthBundle, prefetchMonth]);
+
+  useEffect(() => {
+    const loadAiInsights = async () => {
+      try {
+        const ai = await statsService.getAIInsights();
+        const aid = ai?.data;
+        if (aid) {
+          setAiInsights({
+            ...aid,
+            savingsRate: aid.avgSavingsRate || 0,
+            categoryTrends: (aid.categoryTrends || []).map(c => ({
+              category: c.category,
+              recent: c.recentAvg || 0,
+              prior: c.priorAvg || 0,
+              change: c.changePercent || 0,
+            })),
+            bestMonth: aid.bestMonth ? { name: aid.bestMonth.label } : null,
+            worstMonth: aid.worstMonth ? { name: aid.worstMonth.label } : null,
+          });
+        }
+      } catch {
+        setAiInsights(null);
+      }
+    };
+
+    loadAiInsights();
+  }, []);
 
   const reloadDaily = useCallback(async (days) => {
     const end   = new Date().toISOString().split('T')[0];
@@ -814,7 +874,7 @@ const Statistics = () => {
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
-  if (loading && !summary) return <StatisticsPageSkeleton />;
+  if (loading && !monthly) return <StatisticsPageSkeleton />;
 
   return (
     <div className="space-y-5">

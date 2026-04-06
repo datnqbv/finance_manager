@@ -104,10 +104,10 @@ const Goals = () => {
   const achievedCount = goals.filter(g => g.isAchieved).length;
 
   return (
-    <div className="space-y-5">
+    <div className={`goal-layout-grid ${filteredGoals.length === 0 ? 'goal-layout-empty' : 'goal-layout-default'}`}>
 
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="goal-area-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <FiTarget className="text-gray-500 dark:text-gray-400" size={20} />
@@ -128,7 +128,7 @@ const Goals = () => {
 
       {/* ── Stats ── */}
       {goalStats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="goal-area-stats grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
             { label: 'Tổng mục tiêu',    value: goalStats.totalGoals,     border: 'border-l-gray-400',    icon: '🏆', valueColor: 'text-gray-800 dark:text-gray-100' },
             { label: 'Đang thực hiện',   value: goalStats.activeGoals,    border: 'border-l-amber-500',   icon: '🔥', valueColor: 'text-amber-600 dark:text-amber-400' },
@@ -149,7 +149,7 @@ const Goals = () => {
       )}
 
       {/* ── Filter tabs ── */}
-      <div className="flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5 w-fit">
+      <div className="goal-area-tabs flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5 w-fit">
         {[
           { label: `Tất cả (${goals.length})`,           value: 'all' },
           { label: `Đang thực hiện (${activeCount})`,    value: 'active' },
@@ -171,7 +171,7 @@ const Goals = () => {
 
       {/* ── Goal Cards ── */}
       {filteredGoals.length === 0 ? (
-        <div className="text-center py-16">
+        <div className="goal-area-list text-center py-16">
           <div className="w-16 h-16 bg-gray-100 dark:bg-[#1a1a1a] rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
             🏆
           </div>
@@ -185,7 +185,7 @@ const Goals = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="goal-area-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredGoals.map((goal) => {
             const progress      = Math.min(goal.progressPercentage || 0, 100);
             const priorityBadge = getPriorityBadge(goal.priority);

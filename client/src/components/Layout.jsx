@@ -22,12 +22,15 @@ import {
   FiChevronLeft,
   FiCreditCard,
   FiTarget,
-  FiUsers
+  FiUsers,
+  FiShield,
+  FiHelpCircle
 } from 'react-icons/fi';
 import { useEffect } from 'react';
 import DarkModeToggle from './DarkModeToggle';
 import GlobalSearch from './GlobalSearch';
 import { useThemeCustomizer } from '../context/ThemeCustomizerContext';
+import { useTheme } from '../context/ThemeContext';
 import { getNotifications, markAsRead as markNotificationAsRead, markAllAsRead as markAllNotificationsAsRead } from '../services/notification.service';
 import Chatbot from './chatbot/Chatbot';
 
@@ -39,6 +42,7 @@ const Layout = ({ children }) => {
   const navigate = useNavigate(); // Điều hướng trang
   const { user, logout } = useAuth(); // Lấy thông tin người dùng và hàm đăng xuất từ ngữ cảnh xác thực
   const { currentTheme, changeTheme, themes } = useThemeCustomizer(); // Lấy theme customizer
+  const { isDarkMode } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false); // Trạng thái mở/đóng sidebar
   const [showQuickAdd, setShowQuickAdd] = useState(false); // FAB thêm giao dịch nhanh
   const [showUserMenu, setShowUserMenu] = useState(false); // Trạng thái hiển thị menu user
@@ -134,43 +138,46 @@ const Layout = ({ children }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-64 
-                    bg-stone-100 dark:bg-[#111111] 
-                    border-r border-gray-200 dark:border-[#2a2a2a] 
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-[280px] 
+                    bg-[linear-gradient(165deg,#edf6ee_0%,#e2efe4_55%,#d8e9dc_100%)] dark:bg-[linear-gradient(165deg,#111812_0%,#131e15_55%,#172419_100%)] 
+                    border-r border-[#c8d8c9] dark:border-[#2a3a2c] 
                     transform transition-all duration-300 ease-in-out
                     backdrop-blur-xl dark:backdrop-blur-2xl
                     ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
-        <div className="flex flex-col h-full">
+        <div className="sidebar-nav-grid h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-gray-200 dark:border-[#2a2a2a]">
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 
-                            flex items-center justify-center text-2xl shadow-lg animate-bounce">
+          <div className="sidebar-brand p-4 border-b border-[#c8d8c9] dark:border-[#2a3a2c]">
+            <div className="rounded-2xl border border-[#bfd1c1] bg-white/75 p-4 shadow-sm dark:border-[#2a3a2c] dark:bg-[#121b13]">
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 
+                            flex items-center justify-center text-2xl shadow-lg">
                 <img
                   src="/icons/money-bag.png"
                   alt="Finance Manager Logo"
                   className="w-8 h-8 object-contain"
                 />
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                <div>
+                <h1 className="text-[1.9rem] leading-8 font-black text-[#0d2140] dark:text-[#e8f2ea]">
                   Finance Manager
                 </h1>
-                <p className="text-xs text-gray-500 dark:text-gray-500">
+                <p className="text-xs text-[#6a7d6c] dark:text-[#8fa392]">
                   v1.0.1
                 </p>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Back to Home Link */}
-          <div className="px-4 pt-4">
+          <div className="sidebar-home px-4 pt-3">
             <Link
               to="/home"
               className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
-                       text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#222222] 
-                       hover:text-primary-600 dark:hover:text-primary-400 group"
+                       text-[#4e6450] dark:text-[#9ab09c] hover:bg-white/80 dark:hover:bg-[#1b2a1d] 
+                       border border-transparent hover:border-[#c8d8c9] dark:hover:border-[#2d4530]
+                       hover:text-[#2e5735] dark:hover:text-[#c9e3ce] group"
             >
               <svg 
                 className="w-5 h-5 group-hover:scale-110 transition-transform" 
@@ -185,7 +192,10 @@ const Layout = ({ children }) => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          <nav className="sidebar-menu p-4 space-y-1.5 overflow-y-auto">
+            <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#6e8270] dark:text-[#839686]">
+              Điều hướng nhanh
+            </p>
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
 
@@ -194,23 +204,57 @@ const Layout = ({ children }) => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
+                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 group border
                     ${isActive
-                      ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/30'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222222] hover:text-gray-900 dark:hover:text-white'
+                      ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/30 border-primary-500/40 -translate-y-[1px]'
+                      : 'text-[#2e3f5c] dark:text-[#c8d9ca] bg-white/35 dark:bg-transparent border-transparent hover:bg-white/80 dark:hover:bg-[#1b2a1d] hover:border-[#c9d8cb] dark:hover:border-[#2e4530] hover:text-[#1e2f49] dark:hover:text-white'
                     }`}
                 >
                   {item.isImg
                     ? <img src={item.icon} alt={item.label} className="w-5 h-5 object-contain" />
-                    : React.createElement(item.icon, { size: 20, className: isActive ? '' : 'group-hover:scale-110 transition-transform' })
+                    : React.createElement(item.icon, { size: 20, className: isActive ? '' : 'group-hover:scale-110 transition-transform opacity-90' })
                   }
-                  <span className="font-medium">{item.label}</span>
+                  <span className="font-semibold">{item.label}</span>
                 </Link>
               );
             })}
           </nav>
 
-          
+          <div className="sidebar-footer px-4 pb-4 pt-2 border-t border-[#c8d8c9] dark:border-[#2a3a2c]">
+            <div className="rounded-2xl bg-white/75 dark:bg-[#121b13] border border-[#c8d8c9] dark:border-[#2a3a2c] p-3 shadow-sm">
+              <div className="flex items-center gap-2.5 mb-2.5">
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user?.name || 'User avatar'}
+                    className="w-8 h-8 rounded-full object-cover border border-[#c8d8c9] dark:border-[#2a3a2c]"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white text-xs font-bold flex items-center justify-center">
+                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-[#334d37] dark:text-[#d9e6db] truncate">{user?.name || 'Người dùng'}</p>
+                  <p className="text-[11px] text-[#6f806f] dark:text-[#93a694] truncate">{user?.email || ''}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  to="/profile"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#c8d8c9] dark:border-[#2a3a2c] py-1.5 text-[11px] font-semibold text-[#526c56] dark:text-[#a5b8a7] hover:bg-[#eff6f0] dark:hover:bg-[#1b2a1d] transition-colors"
+                >
+                  <FiUser size={12} /> Hồ sơ
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 dark:border-red-900/40 py-1.5 text-[11px] font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                >
+                  <FiLogOut size={12} /> Thoát
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -439,21 +483,6 @@ const Layout = ({ children }) => {
                               <FiUser size={18} />
                               <span className="text-sm font-medium">Tài khoản</span>
                             </Link>
-
-                            <button
-                              onClick={() => {
-                                setShowUserMenu(false);
-                                setShowSettings(false);
-                                handleLogout();
-                              }}
-                              className="flex items-center gap-3 px-4 py-2.5 w-full
-                                       hover:bg-red-50 dark:hover:bg-red-500/10
-                                       text-red-600 dark:text-red-400 transition-colors
-                                       border-t border-gray-200 dark:border-[#2a2a2a] mt-2"
-                            >
-                              <FiLogOut size={18} />
-                              <span className="text-sm font-medium">Đăng xuất</span>
-                            </button>
                           </div>
                         </div>
 
@@ -472,6 +501,18 @@ const Layout = ({ children }) => {
 
                           {/* Theme Selector Section - Scrollable */}
                           <div className="px-4 py-4 overflow-y-auto flex-1">
+                            <div className="mb-4 rounded-xl border border-gray-200 dark:border-[#2a2a2a] p-3 bg-gray-50 dark:bg-[#171717]">
+                              <div className="flex items-center justify-between gap-3">
+                                <div>
+                                  <p className="text-sm font-semibold text-gray-900 dark:text-white">Chế độ nền</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    Đang dùng: {isDarkMode ? 'Dark mode' : 'Light mode'}
+                                  </p>
+                                </div>
+                                <DarkModeToggle />
+                              </div>
+                            </div>
+
                             <div className="mb-4">
                               <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-1">
                                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -522,6 +563,53 @@ const Layout = ({ children }) => {
                             </div>
 
                             <div className="mt-4 pt-3 border-t border-gray-200 dark:border-[#2a2a2a]">
+                              <div className="space-y-1.5 mb-3">
+                                <Link
+                                  to="/profile"
+                                  onClick={() => {
+                                    setShowUserMenu(false);
+                                    setShowSettings(false);
+                                  }}
+                                  className="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1a1a1a] transition-colors"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <FiUser size={16} />
+                                    Hồ sơ tài khoản
+                                  </span>
+                                  <FiChevronRight size={16} />
+                                </Link>
+
+                                <Link
+                                  to="/privacy"
+                                  onClick={() => {
+                                    setShowUserMenu(false);
+                                    setShowSettings(false);
+                                  }}
+                                  className="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1a1a1a] transition-colors"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <FiShield size={16} />
+                                    Quyền riêng tư
+                                  </span>
+                                  <FiChevronRight size={16} />
+                                </Link>
+
+                                <Link
+                                  to="/contact"
+                                  onClick={() => {
+                                    setShowUserMenu(false);
+                                    setShowSettings(false);
+                                  }}
+                                  className="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1a1a1a] transition-colors"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <FiHelpCircle size={16} />
+                                    Hỗ trợ & liên hệ
+                                  </span>
+                                  <FiChevronRight size={16} />
+                                </Link>
+                              </div>
+
                               <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                                 💡 Màu sẽ được lưu tự động
                               </p>
@@ -553,8 +641,8 @@ const Layout = ({ children }) => {
         onClick={() => setShowQuickAdd(true)}
         title="Thêm giao dịch nhanh"
         className="fixed bottom-[72px] right-6 z-40 w-11 h-11 rounded-full
-                   bg-emerald-500 hover:bg-emerald-600 active:scale-95
-                   text-white shadow-xl shadow-emerald-500/40
+             bg-primary-500 hover:bg-primary-600 active:scale-95
+             text-white shadow-xl shadow-primary-500/40
                    flex items-center justify-center
                    transition-all duration-200 hover:scale-110"
       >

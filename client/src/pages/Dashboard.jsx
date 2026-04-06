@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { statsService } from '../services/stats.service';
-import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiActivity, FiAlertTriangle, FiTarget, FiSun, FiMoon, FiClock, FiList, FiArrowUpRight, FiArrowDownRight, FiPlus, FiPieChart } from 'react-icons/fi';
+import { FiTrendingUp, FiDollarSign, FiActivity, FiAlertTriangle, FiTarget, FiSun, FiMoon, FiClock, FiList, FiArrowUpRight, FiArrowDownRight, FiPlus, FiPieChart } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { useCategories } from '../context/CategoryContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, ComposedChart, Line, Area, AreaChart } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, ComposedChart, Line } from 'recharts';
 import PageTransition from '../components/PageTransition';
 import { DashboardSkeleton } from '../components/LoadingSkeleton';
 import OnboardingModal from '../components/OnboardingModal';
@@ -187,48 +187,70 @@ const Dashboard = () => {
     <PageTransition>
       <div className="space-y-5">
 
-        {/* ── Header ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2 mb-0.5">
+        {/* ── Hero Header ── */}
+        <div className="relative overflow-hidden rounded-3xl border border-[#c8d8c9] bg-[linear-gradient(135deg,#f4faf3_0%,#e7f2e8_55%,#d9ebdc_100%)] p-5 sm:p-6 shadow-[0_10px_35px_rgba(55,90,61,0.08)] dark:border-[#2a3b2c] dark:bg-[linear-gradient(135deg,#0f1711_0%,#132217_50%,#17301f_100%)]">
+          <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#94c9a0]/25 blur-2xl" />
+          <div className="pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full bg-[#6ba978]/20 blur-xl" />
+
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
               {greeting.icon}
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-xl font-black text-[#1f3022] dark:text-[#e5f5e7]">
                 {greeting.text},{' '}
-                <span className="text-emerald-600 dark:text-emerald-400">{user?.name}</span>
+                <span className="text-[#3f7848] dark:text-[#8bd39a]">{user?.name}</span>
               </h1>
             </div>
+              <p className="text-sm text-[#5f735f] dark:text-[#9db09f] mt-1">
+                Bức tranh tài chính {getTimeFilterLabel()} của bạn ở một nơi duy nhất.
+              </p>
             {aiInsight && (
-              <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full mt-1.5 ${
-                aiInsight.type === 'success' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400' :
-                aiInsight.type === 'warning' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400' :
-                'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400'
+              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full mt-2 border ${
+                aiInsight.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/25 dark:text-emerald-300' :
+                aiInsight.type === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-amber-300' :
+                'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/25 dark:text-blue-300'
               }`}>
                 {aiInsight.type === 'success' ? '📈' : aiInsight.type === 'warning' ? '⚠️' : '💡'}
                 {aiInsight.message}
               </span>
             )}
-          </div>
 
-          {/* Segmented time filter */}
-          <div className="flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5 self-start sm:self-auto">
-            {[
-              { label: 'Hôm nay', value: 'today' },
-              { label: 'Tuần này', value: 'week' },
-              { label: 'Tháng này', value: 'month' },
-              { label: 'Năm nay', value: 'year' },
-            ].map(f => (
+            <div className="mt-3 flex flex-wrap gap-2">
               <button
-                key={f.value}
-                onClick={() => setTimeFilter(f.value)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                  timeFilter === f.value
-                    ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                }`}
+                onClick={() => navigate('/transactions')}
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#b8d1bc] bg-white/70 px-3 py-1.5 text-xs font-semibold text-[#35583b] transition hover:bg-white dark:border-[#2c4731] dark:bg-[#111b13] dark:text-[#a8d2af]"
               >
-                {f.label}
+                <FiList size={13} /> Xem giao dịch
               </button>
-            ))}
+              <button
+                onClick={() => navigate('/goals')}
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#b8d1bc] bg-white/70 px-3 py-1.5 text-xs font-semibold text-[#35583b] transition hover:bg-white dark:border-[#2c4731] dark:bg-[#111b13] dark:text-[#a8d2af]"
+              >
+                <FiTarget size={13} /> Xem mục tiêu
+              </button>
+            </div>
+            </div>
+
+            <div className="flex items-center bg-white/70 dark:bg-[#0c140d]/70 border border-[#c8d8c9] dark:border-[#2a3b2c] p-1 rounded-xl gap-0.5 self-start sm:self-auto backdrop-blur-sm">
+              {[
+                { label: 'Hôm nay', value: 'today' },
+                { label: 'Tuần này', value: 'week' },
+                { label: 'Tháng này', value: 'month' },
+                { label: 'Năm nay', value: 'year' },
+              ].map(f => (
+                <button
+                  key={f.value}
+                  onClick={() => setTimeFilter(f.value)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                    timeFilter === f.value
+                      ? 'bg-[#5d9f67] text-white shadow-sm'
+                      : 'text-[#647764] dark:text-[#96ad98] hover:text-[#2f4c34] dark:hover:text-[#d6ecd8]'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -324,7 +346,7 @@ const Dashboard = () => {
           ].map((card, i) => (
             <div
               key={i}
-              className={`bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] border-l-4 ${card.border} rounded-2xl p-4 hover:shadow-md transition-shadow duration-200`}
+              className={`bg-white/95 dark:bg-[#111111] border border-[#d5e3d6] dark:border-[#243126] border-l-4 ${card.border} rounded-2xl p-4 hover:shadow-md transition-shadow duration-200`}
             >
               <div className="flex items-start justify-between mb-3">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 leading-snug pr-2">{card.label}</p>
@@ -348,19 +370,19 @@ const Dashboard = () => {
         {/* ── Net Worth ── */}
         {summary?.overall && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] border-l-4 border-l-indigo-500 rounded-2xl p-4">
+            <div className="bg-white/95 dark:bg-[#111111] border border-[#d5e3d6] dark:border-[#243126] border-l-4 border-l-indigo-500 rounded-2xl p-4">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tổng tài sản ròng (Net Worth)</p>
               <p className={`text-xl font-black ${summary.overall.balance >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-red-600 dark:text-red-400'}`}>
                 {formatCurrency(summary.overall.balance)}
               </p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Tích lũy từ trước đến nay</p>
             </div>
-            <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] border-l-4 border-l-emerald-500 rounded-2xl p-4">
+            <div className="bg-white/95 dark:bg-[#111111] border border-[#d5e3d6] dark:border-[#243126] border-l-4 border-l-emerald-500 rounded-2xl p-4">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tổng thu nhập tích lũy</p>
               <p className="text-xl font-black text-emerald-600 dark:text-emerald-400">{formatCurrency(summary.overall.totalIncome)}</p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{summary.overall.transactionCount} giao dịch</p>
             </div>
-            <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] border-l-4 border-l-red-400 rounded-2xl p-4">
+            <div className="bg-white/95 dark:bg-[#111111] border border-[#d5e3d6] dark:border-[#243126] border-l-4 border-l-red-400 rounded-2xl p-4">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tổng chi tiêu tích lũy</p>
               <p className="text-xl font-black text-red-500 dark:text-red-400">{formatCurrency(summary.overall.totalExpense)}</p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
@@ -377,7 +399,7 @@ const Dashboard = () => {
 
         {/* ── Spending Ratio ── */}
         {filteredSummary?.income > 0 && (
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+          <div className="bg-white/95 dark:bg-[#111111] border border-[#d5e3d6] dark:border-[#243126] rounded-2xl p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                 Tỷ lệ chi tiêu {getTimeFilterLabel()}
@@ -414,7 +436,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
           {/* Savings Goal */}
-          <div className="lg:col-span-2 bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5">
+          <div className="lg:col-span-2 bg-white/95 dark:bg-[#111111] border border-[#d5e3d6] dark:border-[#243126] rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <FiTarget className="text-purple-600 dark:text-purple-400" size={17} />
               <h3 className="text-sm font-bold text-gray-900 dark:text-white">Mục tiêu tiết kiệm</h3>
@@ -471,7 +493,7 @@ const Dashboard = () => {
                 <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Tạo mục tiêu để theo dõi tiết kiệm</p>
                 <button
                   onClick={() => navigate('/goals')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 text-white text-xs font-bold rounded-xl hover:bg-purple-700 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#5d9f67] text-white text-xs font-bold rounded-xl hover:bg-[#4f8f5a] transition-colors"
                 >
                   <FiPlus size={13} /> Tạo mục tiêu
                 </button>
@@ -480,7 +502,7 @@ const Dashboard = () => {
           </div>
 
           {/* Recent Transactions */}
-          <div className="lg:col-span-3 bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5">
+          <div className="lg:col-span-3 bg-white/95 dark:bg-[#111111] border border-[#d5e3d6] dark:border-[#243126] rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <FiList className="text-gray-500 dark:text-gray-400" size={17} />
@@ -543,7 +565,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
           {/* Daily 7-day chart */}
-          <div className="lg:col-span-3 bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5">
+          <div className="lg:col-span-3 bg-white/95 dark:bg-[#111111] border border-[#d5e3d6] dark:border-[#243126] rounded-2xl p-5">
             <div className="mb-4">
               <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <FiActivity className="text-blue-500" size={16} />
@@ -584,7 +606,7 @@ const Dashboard = () => {
           </div>
 
           {/* Category breakdown */}
-          <div className="lg:col-span-2 bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5">
+          <div className="lg:col-span-2 bg-white/95 dark:bg-[#111111] border border-[#d5e3d6] dark:border-[#243126] rounded-2xl p-5">
             <div className="mb-4">
               <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <FiPieChart className="text-purple-500" size={16} />
@@ -638,7 +660,7 @@ const Dashboard = () => {
         </div>
 
         {/* ── 6-month Bar Chart ── */}
-        <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5">
+        <div className="bg-white/95 dark:bg-[#111111] border border-[#d5e3d6] dark:border-[#243126] rounded-2xl p-5">
           <div className="mb-4">
             <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <FiTrendingUp className="text-emerald-500" size={16} />

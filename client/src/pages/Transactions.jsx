@@ -134,13 +134,21 @@ const Transactions = () => {
     setCurrentPage(1);
   };
 
+  const pageIncome = transactions
+    .filter((t) => t.type === 'income')
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
+  const pageExpense = transactions
+    .filter((t) => t.type === 'expense')
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
+  const pageBalance = pageIncome - pageExpense;
+
   if (loading && transactions.length === 0) {
     return <TransactionsPageSkeleton />;
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center flex-wrap gap-4">
+    <div className={`tx-layout-grid ${viewMode === 'list' ? 'tx-layout-list' : 'tx-layout-calendar'}`}>
+      <div className="tx-area-header flex justify-between items-center flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Giao dịch</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Quản lý các giao dịch thu chi</p>
@@ -206,64 +214,92 @@ const Transactions = () => {
 
       {/* ── CALENDAR VIEW ── */}
       {viewMode === 'calendar' && (
-        <TransactionCalendar
-          transactions={transactions}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          calendarMonth={calendarMonth}
-          onMonthChange={handleCalendarMonthChange}
-          formatCurrency={formatCurrency}
-          loading={loading}
-        />
+        <div className="tx-area-calendar">
+          <TransactionCalendar
+            transactions={transactions}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            calendarMonth={calendarMonth}
+            onMonthChange={handleCalendarMonthChange}
+            formatCurrency={formatCurrency}
+            loading={loading}
+          />
+        </div>
       )}
 
       {/* ── LIST VIEW: Filters ── */}
       {viewMode === 'list' && (
-      <div className="card">
+      <div className="tx-area-summary grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="rounded-2xl border border-[#d5e3d6] dark:border-[#243126] bg-white/95 dark:bg-[#111111] p-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Thu nhập (trang hiện tại)</p>
+          <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(pageIncome)}</p>
+        </div>
+        <div className="rounded-2xl border border-[#d5e3d6] dark:border-[#243126] bg-white/95 dark:bg-[#111111] p-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Chi tiêu (trang hiện tại)</p>
+          <p className="text-lg font-bold text-red-600 dark:text-red-400">{formatCurrency(pageExpense)}</p>
+        </div>
+        <div className="rounded-2xl border border-[#d5e3d6] dark:border-[#243126] bg-white/95 dark:bg-[#111111] p-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Chênh lệch (trang hiện tại)</p>
+          <p className={`text-lg font-bold ${pageBalance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+            {formatCurrency(pageBalance)}
+          </p>
+        </div>
+      </div>
+      )}
+
+      {/* ── LIST VIEW: Filters ── */}
+      {viewMode === 'list' && (
+      <div className="tx-area-filters card tx-filter-card">
         <div className="space-y-4">
-          {/* Basic Filters */}
-          <div className="flex items-center gap-4 flex-wrap">
-            <FiFilter className="text-gray-400" />
+          <div className="tx-filter-grid">
+            <div className="tx-filter-search">
+              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">Tìm kiếm</label>
+              <div className="relative">
+                <FiFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Danh mục hoặc ghi chú..."
+                  defaultValue={filter.searchText}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="input pl-10 w-full"
+                />
+              </div>
+            </div>
 
-            {/* Search - debounced */}
-            <input
-              type="text"
-              placeholder="Tìm kiếm theo danh mục hoặc ghi chú..."
-              defaultValue={filter.searchText}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="input flex-1 min-w-[200px]"
-            />
+            <div className="tx-filter-type">
+              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">Loại giao dịch</label>
+              <select
+                value={filter.type}
+                onChange={(e) => handleFilterChange('type', e.target.value)}
+                className="input w-full"
+              >
+                <option value="">Tất cả loại</option>
+                <option value="income">Thu nhập</option>
+                <option value="expense">Chi tiêu</option>
+              </select>
+            </div>
 
-            {/* Type Filter */}
-            <select
-              value={filter.type}
-              onChange={(e) => handleFilterChange('type', e.target.value)}
-              className="input w-40"
-            >
-              <option value="">Tất cả loại</option>
-              <option value="income">Thu nhập</option>
-              <option value="expense">Chi tiêu</option>
-            </select>
-
-            {/* Advanced Filters Toggle */}
-            <button
-              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className="btn btn-secondary"
-            >
-              {showAdvancedFilters ? 'Ẩn bộ lọc' : 'Bộ lọc nâng cao'}
-            </button>
-
-            {/* Clear Filters */}
-            <button onClick={clearFilters} className="btn btn-secondary">
-              Xóa bộ lọc
-            </button>
+            <div className="tx-filter-actions">
+              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">Hành động</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className="btn btn-secondary w-full"
+                >
+                  {showAdvancedFilters ? 'Ẩn nâng cao' : 'Bộ lọc nâng cao'}
+                </button>
+                <button onClick={clearFilters} className="btn btn-secondary w-full">
+                  Xóa bộ lọc
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Advanced Filters */}
           {showAdvancedFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="tx-filter-advanced-grid pt-4 border-t border-gray-200 dark:border-gray-700">
               {/* Category text search */}
-              <div>
+              <div className="tx-adv-category">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Danh mục</label>
                 <input
                   type="text"
@@ -275,7 +311,7 @@ const Transactions = () => {
               </div>
 
               {/* Date Range */}
-              <div>
+              <div className="tx-adv-date">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Khoảng thời gian
                 </label>
@@ -297,7 +333,7 @@ const Transactions = () => {
               </div>
 
               {/* Amount Range */}
-              <div>
+              <div className="tx-adv-amount">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Khoảng số tiền
                 </label>
@@ -337,7 +373,7 @@ const Transactions = () => {
 
       {/* ── LIST VIEW: Transactions List ── */}
       {viewMode === 'list' && (
-      <div className="card">
+      <div className="tx-area-table card tx-table-card">
         {transactions.length > 0 ? (
           <>
             <div className="overflow-x-auto">

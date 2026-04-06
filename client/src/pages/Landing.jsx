@@ -42,6 +42,14 @@ function StatItem({ icon, value, suffix, label, delay, started }) {
   );
 }
 
+const FEATURED_ARTWORK = {
+  title: 'Dòng tiền thịnh vượng',
+  subtitle: 'Kỷ luật tạo nên tự do tài chính',
+  desc1: 'Hình ảnh cá chép vượt thác trước long môn tượng trưng cho dòng tiền đi lên nhờ sự bền bỉ, quản lý ngân sách rõ ràng và quyết định đúng lúc.',
+  desc2: 'Khi thu nhập, chi tiêu và tiết kiệm được vận hành có kế hoạch, dòng tiền sẽ không chỉ ổn định mà còn mở ra nhiều cơ hội lớn cho mục tiêu cuộc sống.',
+  image: '/art/dragon.png',
+};
+
 const Landing = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -49,6 +57,9 @@ const Landing = () => {
   const [scrolled, setScrolled] = useState(false);
   const [statsStarted, setStatsStarted] = useState(false);
   const statsRef = useRef(null);
+  const ctaWaveLayerRef = useRef(null);
+  const ctaWaveRafRef = useRef(null);
+  const ctaWavePosRef = useRef({ x: 50, y: 50, tx: 50, ty: 50, active: false });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -70,8 +81,71 @@ const Landing = () => {
 
     return () => {
       window.removeEventListener('scroll', onScroll);
+      if (ctaWaveRafRef.current) cancelAnimationFrame(ctaWaveRafRef.current);
     };
   }, []);
+
+  const runWaveAnimation = () => {
+    if (ctaWaveRafRef.current) return;
+
+    const tick = () => {
+      const p = ctaWavePosRef.current;
+      p.x += (p.tx - p.x) * 0.07;
+      p.y += (p.ty - p.y) * 0.07;
+
+      if (ctaWaveLayerRef.current) {
+        ctaWaveLayerRef.current.style.setProperty('--wave-x', `${p.x}%`);
+        ctaWaveLayerRef.current.style.setProperty('--wave-y', `${p.y}%`);
+      }
+
+      const nearTarget = Math.abs(p.tx - p.x) < 0.03 && Math.abs(p.ty - p.y) < 0.03;
+      if (!p.active && nearTarget) {
+        ctaWaveRafRef.current = null;
+        return;
+      }
+
+      ctaWaveRafRef.current = requestAnimationFrame(tick);
+    };
+
+    ctaWaveRafRef.current = requestAnimationFrame(tick);
+  };
+
+  const handleCtaWaveMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    ctaWavePosRef.current.tx = Math.max(0, Math.min(100, x));
+    ctaWavePosRef.current.ty = Math.max(0, Math.min(100, y));
+    ctaWavePosRef.current.active = true;
+    runWaveAnimation();
+  };
+
+  const handleCtaWaveLeave = () => {
+    ctaWavePosRef.current.tx = 50;
+    ctaWavePosRef.current.ty = 50;
+    ctaWavePosRef.current.active = false;
+    runWaveAnimation();
+  };
+
+  const handleArtCardMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const rx = ((50 - y) / 50) * 3.2;
+    const ry = ((x - 50) / 50) * 4;
+
+    e.currentTarget.style.setProperty('--mx', `${x}%`);
+    e.currentTarget.style.setProperty('--my', `${y}%`);
+    e.currentTarget.style.setProperty('--rx', `${rx.toFixed(2)}deg`);
+    e.currentTarget.style.setProperty('--ry', `${ry.toFixed(2)}deg`);
+  };
+
+  const handleArtCardLeave = (e) => {
+    e.currentTarget.style.setProperty('--mx', '50%');
+    e.currentTarget.style.setProperty('--my', '50%');
+    e.currentTarget.style.setProperty('--rx', '0deg');
+    e.currentTarget.style.setProperty('--ry', '0deg');
+  };
 
   return (
     <div className="min-h-screen bg-white text-slate-900 antialiased">
@@ -140,6 +214,130 @@ const Landing = () => {
           100% { transform:translateY(-100%); }
         }
         .ticker-inner { animation:ticker 6s steps(1) infinite; }
+
+        /* ── AI artwork hover ── */
+        .ai-art-card {
+          --mx: 50%;
+          --my: 50%;
+          --rx: 0deg;
+          --ry: 0deg;
+        }
+        .ai-art-media {
+          transform: perspective(1000px) rotateX(var(--rx)) rotateY(var(--ry)) scale(1.01);
+          transition: transform .45s cubic-bezier(.22,.61,.36,1);
+          will-change: transform;
+        }
+        .ai-art-card:hover .ai-art-media {
+          transform: perspective(1000px) rotateX(var(--rx)) rotateY(var(--ry)) scale(1.045);
+        }
+        .ai-art-shine {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(260px 180px at var(--mx) var(--my), rgba(255,255,255,.32), rgba(255,255,255,0) 72%);
+          opacity: .55;
+          mix-blend-mode: screen;
+          pointer-events: none;
+          transition: opacity .35s ease;
+        }
+        .ai-art-card:hover .ai-art-shine { opacity: .78; }
+
+        /* ── Growth roadmap mood ── */
+        .growth-surface {
+          background:
+            radial-gradient(1200px 420px at 50% -10%, rgba(16,185,129,0.14), rgba(16,185,129,0) 62%),
+            linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        .growth-card {
+          position: relative;
+          overflow: hidden;
+          border: 1px solid #e2e8f0;
+          background: linear-gradient(165deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.88) 100%);
+          box-shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
+          transition: transform .36s cubic-bezier(.22,.61,.36,1), box-shadow .36s ease, border-color .36s ease;
+        }
+        .growth-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(110deg, rgba(16,185,129,0) 0%, rgba(16,185,129,0.08) 40%, rgba(16,185,129,0) 82%);
+          transform: translateX(-100%);
+          transition: transform .7s ease;
+          pointer-events: none;
+        }
+        .growth-card:hover {
+          transform: translateY(-8px);
+          border-color: #a7f3d0;
+          box-shadow: 0 18px 44px rgba(15, 23, 42, 0.14);
+        }
+        .growth-card:hover::before { transform: translateX(100%); }
+
+        /* ── Water wave field on CTA ── */
+        .cta-wave-surface {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          pointer-events: none;
+          --wave-x: 50%;
+          --wave-y: 50%;
+        }
+        .cta-wave-surface::before {
+          content: '';
+          position: absolute;
+          inset: -10%;
+          background:
+            repeating-radial-gradient(circle at var(--wave-x) var(--wave-y), rgba(255,255,255,.18) 0 1px, rgba(255,255,255,0) 1px 54px),
+            radial-gradient(520px 520px at var(--wave-x) var(--wave-y), rgba(255,255,255,.16) 0%, rgba(255,255,255,.08) 34%, rgba(255,255,255,0) 72%);
+          opacity: .4;
+          transform: translateZ(0);
+          animation: cta-water-breathe 10.5s ease-in-out infinite;
+        }
+        .cta-wave-surface::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(180deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.02) 45%, rgba(0,0,0,.06) 100%);
+        }
+        .cta-wave-ripple {
+          position: absolute;
+          left: var(--wave-x);
+          top: var(--wave-y);
+          width: 46px;
+          height: 46px;
+          border-radius: 999px;
+          border: 1px solid rgba(255,255,255,.42);
+          transform: translate(-50%, -50%) scale(.16);
+          opacity: 0;
+          will-change: transform, opacity;
+        }
+        .cta-wave-ripple.r1 { animation: cta-water-ripple 6.8s ease-out infinite; }
+        .cta-wave-ripple.r2 { animation: cta-water-ripple 6.8s ease-out 2.4s infinite; }
+        .cta-wave-ripple.r3 { animation: cta-water-ripple 6.8s ease-out 4.8s infinite; }
+        .cta-wave-core {
+          position: absolute;
+          left: var(--wave-x);
+          top: var(--wave-y);
+          width: 54px;
+          height: 54px;
+          transform: translate(-50%, -50%);
+          border-radius: 999px;
+          background: radial-gradient(circle, rgba(255,255,255,.38) 0%, rgba(255,255,255,.18) 30%, rgba(255,255,255,0) 72%);
+          filter: blur(0.6px);
+          opacity: .52;
+        }
+        @keyframes cta-water-ripple {
+          0%   { transform: translate(-50%, -50%) scale(.2); opacity: .45; }
+          75%  { opacity: .18; }
+          100% { transform: translate(-50%, -50%) scale(9.5); opacity: 0; }
+        }
+        @keyframes cta-water-breathe {
+          0%,100% { transform: scale(1) translate3d(0,0,0); }
+          50%     { transform: scale(1.01) translate3d(0,-2px,0); }
+        }
+        @media (hover:none) {
+          .cta-wave-surface::before { opacity: .38; }
+          .cta-wave-ripple,
+          .cta-wave-core { display: none; }
+        }
       `}</style>
 
       {/* ══════════ HEADER ══════════ */}
@@ -523,59 +721,124 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* ══════════ TESTIMONIALS ══════════ */}
-      <section id="testimonials" className="py-20 px-5 sm:px-8 bg-slate-50">
+      {/* ══════════ FEATURED INSPIRATION ART ══════════ */}
+      <section className="py-20 px-5 sm:px-8 bg-slate-50 border-y border-slate-100">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14 reveal">
+          <div className="text-center mb-10 reveal">
             <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-widest">
-              Đánh giá thật từ người dùng
+              Cảm hứng nghệ thuật
             </span>
             <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-slate-900">
-              Họ nói gì về chúng tôi
+              Dòng tiền và mục tiêu cuộc sống
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-5">
-            {[
-              { name: 'Nguyễn Văn A', role: 'Nhân viên văn phòng', text: 'Tiết kiệm được 30% thu nhập mỗi tháng nhờ theo dõi chi tiêu rõ ràng hơn nhiều!', rating: 5, initColor: 'bg-emerald-600' },
-              { name: 'Trần Thị B',   role: 'Freelancer',           text: 'Giao diện cực sạch, dễ dùng. AI chatbot tư vấn tài chính rất hữu ích!', rating: 5, initColor: 'bg-violet-600' },
-              { name: 'Lê Văn C',     role: 'Sinh viên',            text: 'Hoàn toàn phù hợp cho người mới bắt đầu. Báo cáo tháng rất chi tiết!', rating: 5, initColor: 'bg-blue-600' },
-            ].map((t, i) => (
-              <div key={i} className={`reveal reveal-delay-${i+1} bg-white rounded-2xl p-6 border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}>
-                {/* Stars */}
-                <div className="flex gap-0.5 mb-4">
-                  {Array.from({ length: t.rating }).map((_, j) => (
-                    <FaStar key={j} className="text-amber-400" size={15} />
-                  ))}
+          <div className="grid lg:grid-cols-[1fr_1.45fr] gap-8 lg:gap-10 items-center">
+            <article className="reveal">
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">
+                {FEATURED_ARTWORK.title}
+              </h3>
+              <p className="mt-3 text-sm font-semibold text-emerald-700 uppercase tracking-widest">
+                {FEATURED_ARTWORK.subtitle}
+              </p>
+              <p className="mt-5 text-base text-slate-600 leading-relaxed">
+                {FEATURED_ARTWORK.desc1}
+              </p>
+              <p className="mt-4 text-base text-slate-600 leading-relaxed">
+                {FEATURED_ARTWORK.desc2}
+              </p>
+            </article>
+
+            <figure
+              onMouseMove={handleArtCardMove}
+              onMouseLeave={handleArtCardLeave}
+              className="ai-art-card reveal reveal-delay-2 group rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-2xl transition-all duration-500"
+            >
+              <div className="ai-art-media relative aspect-[16/10] overflow-hidden">
+                <img
+                  src={FEATURED_ARTWORK.image}
+                  alt={FEATURED_ARTWORK.title}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="ai-art-shine" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/45 via-slate-900/10 to-transparent" />
+              </div>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ GROWTH ROADMAP ══════════ */}
+      <section id="testimonials" className="growth-surface py-24 px-5 sm:px-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12 reveal">
+            <span className="text-xs font-bold text-emerald-700 bg-white/80 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-widest">
+              Bản đồ tăng trưởng
+            </span>
+            <h2 className="mt-4 text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
+              Lộ trình Dòng tiền thịnh vượng
+            </h2>
+            <p className="mt-4 text-sm sm:text-base text-slate-500 max-w-2xl mx-auto">
+              Thay vì lời khen, đây là khung hành động thực tế giúp bạn đi từ kiểm soát chi tiêu đến tự do tài chính theo từng giai đoạn rõ ràng.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-[1fr_1.2fr] gap-6">
+            <article className="growth-card reveal rounded-3xl p-7">
+              <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">Tư duy và nhịp độ</h3>
+              <p className="mt-4 text-slate-600 leading-relaxed">
+                Mục tiêu không phải “thắt chặt cực đoan”, mà là tạo một dòng tiền lành mạnh: biết tiền đi đâu, ưu tiên gì trước, và duy trì thói quen tích lũy mỗi tháng.
+              </p>
+              <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3">
+                  <p className="text-xs uppercase tracking-widest text-emerald-700 font-bold">Ưu tiên</p>
+                  <p className="mt-1 font-semibold text-slate-800">An toàn quỹ dự phòng</p>
                 </div>
-                {/* Quote */}
-                <p className="text-sm text-slate-700 leading-relaxed mb-5">
-                  <span className="text-2xl text-emerald-200 font-serif leading-none mr-1">"</span>
-                  {t.text}
-                  <span className="text-2xl text-emerald-200 font-serif leading-none ml-1">"</span>
-                </p>
-                {/* Author */}
-                <div className="flex items-center gap-3 pt-4 border-t border-slate-50">
-                  <div className={`w-10 h-10 ${t.initColor} rounded-full flex items-center justify-center text-white font-bold text-sm`}>
-                    {t.name[0]}
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-slate-800">{t.name}</div>
-                    <div className="text-xs text-slate-400">{t.role}</div>
-                  </div>
+                <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-3">
+                  <p className="text-xs uppercase tracking-widest text-blue-700 font-bold">Nhịp đều</p>
+                  <p className="mt-1 font-semibold text-slate-800">Tích lũy tự động hàng tháng</p>
+                </div>
+                <div className="rounded-2xl border border-violet-100 bg-violet-50/70 p-3 col-span-2">
+                  <p className="text-xs uppercase tracking-widest text-violet-700 font-bold">Nguyên tắc</p>
+                  <p className="mt-1 font-semibold text-slate-800">Theo dõi - Tối ưu - Nâng cấp liên tục</p>
                 </div>
               </div>
-            ))}
+            </article>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[
+                { step: '01', title: 'Nắm dòng tiền', desc: 'Phân loại thu/chi và xác định điểm rò rỉ lớn nhất.', icon: <FaWallet size={16} className="text-emerald-600"/> },
+                { step: '02', title: 'Đặt mốc ngân sách', desc: 'Khóa trần chi tiêu theo nhóm và cảnh báo sớm.', icon: <FaCreditCard size={16} className="text-blue-600"/> },
+                { step: '03', title: 'Thiết lập mục tiêu', desc: 'Biến mục tiêu dài hạn thành cột mốc nhỏ dễ theo.', icon: <FaBullseye size={16} className="text-violet-600"/> },
+                { step: '04', title: 'Đo và tăng trưởng', desc: 'Theo dõi biểu đồ tháng để nâng hiệu quả tiết kiệm.', icon: <FaChartLine size={16} className="text-amber-600"/> },
+              ].map((item, i) => (
+                <article key={item.step} className={`growth-card reveal reveal-delay-${(i % 4) + 1} rounded-3xl p-5`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-black tracking-widest text-slate-400">CHẶNG {item.step}</span>
+                    {item.icon}
+                  </div>
+                  <h4 className="text-lg font-extrabold text-slate-900 tracking-tight">{item.title}</h4>
+                  <p className="mt-2 text-sm text-slate-600 leading-relaxed">{item.desc}</p>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* ══════════ CTA ══════════ */}
-      <section className="relative py-24 px-5 sm:px-8 overflow-hidden bg-emerald-600">
-        {/* Decorative ring */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-[600px] h-[600px] border border-white/10 rounded-full spin-slow" />
-          <div className="absolute w-[400px] h-[400px] border border-white/10 rounded-full" style={{animationDirection:'reverse'}} />
+      <section
+        className="relative py-24 px-5 sm:px-8 overflow-hidden bg-emerald-600"
+        onMouseMove={handleCtaWaveMove}
+        onMouseEnter={handleCtaWaveMove}
+        onMouseLeave={handleCtaWaveLeave}
+      >
+        <div ref={ctaWaveLayerRef} className="cta-wave-surface">
+          <span className="cta-wave-ripple r1" />
+          <span className="cta-wave-ripple r2" />
+          <span className="cta-wave-ripple r3" />
+          <span className="cta-wave-core" />
         </div>
         <div className="absolute top-8 left-16 text-white/10 text-8xl font-black pointer-events-none select-none">₫</div>
         <div className="absolute bottom-8 right-16 text-white/10 text-8xl font-black pointer-events-none select-none">%</div>

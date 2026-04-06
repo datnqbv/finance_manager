@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -237,6 +239,386 @@ button {
   
   .dark .backdrop-blur-xl {
     background-color: rgba(17, 17, 17, 0.95);
+  }
+}
+
+/* Scoped style for redesigned Login page */
+.login-art-page {
+  font-family: 'Manrope', 'Inter', system-ui, sans-serif;
+}
+
+.login-art-page h1,
+.login-art-page h2,
+.login-art-page .login-display {
+  font-family: 'Space Grotesk', 'Manrope', sans-serif;
+}
+
+.login-shell {
+  animation: loginFadeIn 480ms ease-out;
+}
+
+.login-form-card {
+  animation: loginCardRise 620ms ease-out;
+}
+
+.login-shape-float {
+  animation: loginShapeFloat 6.2s ease-in-out infinite;
+}
+
+.login-shape-float-delayed {
+  animation: loginShapeFloat 7.1s ease-in-out 320ms infinite;
+}
+
+.login-shape-float-slow {
+  animation: loginShapeFloatSlow 8s ease-in-out infinite;
+}
+
+.login-shape-spin {
+  animation: loginSpin 26s linear infinite;
+}
+
+@keyframes loginFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes loginCardRise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes loginShapeFloat {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes loginShapeFloatSlow {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(-28deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(-24deg);
+  }
+}
+
+@keyframes loginSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Sidebar grid areas for navigation layout */
+.sidebar-nav-grid {
+  display: grid;
+  grid-template-areas:
+    'brand'
+    'home'
+    'menu'
+    'footer';
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+}
+
+.sidebar-brand {
+  grid-area: brand;
+}
+
+.sidebar-home {
+  grid-area: home;
+}
+
+.sidebar-menu {
+  grid-area: menu;
+}
+
+.sidebar-footer {
+  grid-area: footer;
+}
+
+/* Grid-area layout for Transactions page */
+.tx-layout-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.tx-layout-list {
+  grid-template-areas:
+    'header'
+    'filters'
+    'table';
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.tx-layout-calendar {
+  grid-template-areas:
+    'header'
+    'calendar';
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.tx-area-header {
+  grid-area: header;
+}
+
+.tx-area-filters {
+  grid-area: filters;
+}
+
+.tx-area-summary {
+  grid-area: summary;
+}
+
+.tx-area-table {
+  grid-area: table;
+}
+
+.tx-area-calendar {
+  grid-area: calendar;
+}
+
+.tx-filter-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-areas:
+    'search'
+    'type'
+    'actions';
+}
+
+.tx-filter-search {
+  grid-area: search;
+}
+
+.tx-filter-type {
+  grid-area: type;
+}
+
+.tx-filter-actions {
+  grid-area: actions;
+}
+
+.tx-filter-advanced-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-areas:
+    'category'
+    'date'
+    'amount';
+}
+
+.tx-adv-category {
+  grid-area: category;
+}
+
+.tx-adv-date {
+  grid-area: date;
+}
+
+.tx-adv-amount {
+  grid-area: amount;
+}
+
+@media (min-width: 768px) {
+  .tx-filter-grid {
+    grid-template-areas:
+      'search search'
+      'type actions';
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .tx-filter-advanced-grid {
+    grid-template-areas:
+      'category date'
+      'amount amount';
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .tx-layout-list {
+    grid-template-areas:
+      'header header'
+      'summary summary'
+      'table filters';
+    grid-template-columns: minmax(0, 1fr) 340px;
+    align-items: start;
+  }
+
+  .tx-filter-grid {
+    grid-template-areas:
+      'search'
+      'type'
+      'actions';
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tx-filter-advanced-grid {
+    grid-template-areas:
+      'category'
+      'date'
+      'amount';
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tx-filter-card {
+    position: sticky;
+    top: 88px;
+  }
+}
+
+/* Grid-area layout for Categories page */
+.cat-layout-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.cat-layout-all {
+  grid-template-areas:
+    'header'
+    'stats'
+    'tabs'
+    'income'
+    'expense';
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.cat-layout-single {
+  grid-template-areas:
+    'header'
+    'stats'
+    'tabs'
+    'single';
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.cat-area-header {
+  grid-area: header;
+}
+
+.cat-area-stats {
+  grid-area: stats;
+}
+
+.cat-area-filtertabs {
+  grid-area: tabs;
+}
+
+.cat-area-income {
+  grid-area: income;
+}
+
+.cat-area-expense {
+  grid-area: expense;
+}
+
+.cat-area-single {
+  grid-area: single;
+}
+
+@media (max-width: 767px) {
+  .cat-area-stats {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .cat-layout-all {
+    grid-template-areas:
+      'header header'
+      'stats tabs'
+      'income income'
+      'expense expense';
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .cat-layout-single {
+    grid-template-areas:
+      'header header'
+      'stats tabs'
+      'single single';
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .cat-area-filtertabs {
+    justify-self: end;
+    align-self: end;
+  }
+}
+
+/* Grid-area layout for Goals page */
+.goal-layout-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.goal-layout-default,
+.goal-layout-empty {
+  grid-template-areas:
+    'header'
+    'stats'
+    'tabs'
+    'list';
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.goal-area-header {
+  grid-area: header;
+}
+
+.goal-area-stats {
+  grid-area: stats;
+}
+
+.goal-area-tabs {
+  grid-area: tabs;
+}
+
+.goal-area-list {
+  grid-area: list;
+}
+
+@media (max-width: 767px) {
+  .goal-area-stats {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .goal-layout-default,
+  .goal-layout-empty {
+    grid-template-areas:
+      'header header'
+      'stats tabs'
+      'list list';
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .goal-area-tabs {
+    justify-self: end;
+    align-self: end;
   }
 }
 

@@ -4,6 +4,12 @@ import api from './api';
 const cache = new Map();
 const TTL = 60_000;
 
+const buildCacheKey = (url, params = {}) => {
+  const sorted = Object.entries(params).sort(([a], [b]) => a.localeCompare(b));
+  const qs = sorted.map(([k, v]) => `${k}=${v}`).join('&');
+  return qs ? `${url}?${qs}` : url;
+};
+
 const cachedGet = async (key, url, params) => {
   const entry = cache.get(key);
   if (entry && Date.now() - entry.ts < TTL) return entry.data;
@@ -27,9 +33,8 @@ export const statsService = {
     const params = {};
     if (year) params.year = year;
     if (month) params.month = month;
-    
-    const response = await api.get('/stats/monthly', { params });
-    return response.data;
+
+    return cachedGet(buildCacheKey('/stats/monthly', params), '/stats/monthly', params);
   },
 
   getSummary: async () => {
@@ -41,9 +46,8 @@ export const statsService = {
     const params = {};
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
-    
-    const response = await api.get('/stats/categories', { params });
-    return response.data;
+
+    return cachedGet(buildCacheKey('/stats/categories', params), '/stats/categories', params);
   },
 
   // So sánh thu chi giữa các tháng/năm
@@ -51,8 +55,7 @@ export const statsService = {
     const params = { type, periods };
     if (refYear)  params.refYear  = refYear;
     if (refMonth) params.refMonth = refMonth;
-    const response = await api.get('/stats/compare', { params });
-    return response.data;
+    return cachedGet(buildCacheKey('/stats/compare', params), '/stats/compare', params);
   },
 
   // Dự báo chi tiêu tháng tới
@@ -60,8 +63,7 @@ export const statsService = {
     const params = { months };
     if (refYear)  params.refYear  = refYear;
     if (refMonth) params.refMonth = refMonth;
-    const response = await api.get('/stats/forecast', { params });
-    return response.data;
+    return cachedGet(buildCacheKey('/stats/forecast', params), '/stats/forecast', params);
   },
 
   // Phân tích xu hướng chi tiêu
@@ -69,8 +71,7 @@ export const statsService = {
     const params = { period };
     if (refYear)  params.refYear  = refYear;
     if (refMonth) params.refMonth = refMonth;
-    const response = await api.get('/stats/trends', { params });
-    return response.data;
+    return cachedGet(buildCacheKey('/stats/trends', params), '/stats/trends', params);
   },
 
   // Top danh mục chi tiêu
@@ -88,9 +89,8 @@ export const statsService = {
     const params = {};
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
-    
-    const response = await api.get('/stats/daily', { params });
-    return response.data;
+
+    return cachedGet(buildCacheKey('/stats/daily', params), '/stats/daily', params);
   },
 
   // Thống kê theo tuần
@@ -103,7 +103,6 @@ export const statsService = {
 
   // Phân tích AI: điểm sức khỏe tài chính, phát hiện bất thường, gợi ý
   getAIInsights: async () => {
-    const response = await api.get('/stats/ai-insights');
-    return response.data;
+    return cachedGet('/stats/ai-insights', '/stats/ai-insights');
   },
 };
