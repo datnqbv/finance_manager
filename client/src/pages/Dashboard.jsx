@@ -4,14 +4,15 @@ import { statsService } from '../services/stats.service';
 import { FiTrendingUp, FiDollarSign, FiActivity, FiAlertTriangle, FiTarget, FiSun, FiMoon, FiClock, FiList, FiArrowUpRight, FiArrowDownRight, FiPlus, FiPieChart } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { useCategories } from '../context/CategoryContext';
+import { useLanguage } from '../context/LanguageContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, ComposedChart, Line } from 'recharts';
 import PageTransition from '../components/PageTransition';
 import { DashboardSkeleton } from '../components/LoadingSkeleton';
-import OnboardingModal from '../components/OnboardingModal';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { categories, fetchCategories } = useCategories();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [summary, setSummary] = useState(null);
   const [filteredSummary, setFilteredSummary] = useState(null);
@@ -22,20 +23,12 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState('month');
   const [dailyFluctuation, setDailyFluctuation] = useState([]);
-  const [showOnboarding, setShowOnboarding] = useState(false);
   const [txFilter, setTxFilter] = useState('all');
 
   useEffect(() => {
     fetchData();
     fetchCategories();
   }, [timeFilter]);
-
-  // Hiện onboarding nếu user mới chưa có danh mục
-  useEffect(() => {
-    if (!loading && categories.length === 0 && !localStorage.getItem('onboardingDone')) {
-      setShowOnboarding(true);
-    }
-  }, [loading, categories.length]);
 
   const getDateRange = () => {
     const now = new Date();
@@ -89,17 +82,17 @@ const Dashboard = () => {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return { text: 'Chào buổi sáng', icon: <FiSun className="text-amber-500" size={22} /> };
-    if (hour < 18) return { text: 'Chào buổi chiều', icon: <FiClock className="text-orange-500" size={22} /> };
-    return { text: 'Chào buổi tối', icon: <FiMoon className="text-indigo-500" size={22} /> };
+    if (hour < 12) return { text: t('goodMorning'), icon: <FiSun className="text-amber-500" size={22} /> };
+    if (hour < 18) return { text: t('goodAfternoon'), icon: <FiClock className="text-orange-500" size={22} /> };
+    return { text: t('goodEvening'), icon: <FiMoon className="text-indigo-500" size={22} /> };
   };
 
   const getTimeFilterLabel = () => {
     switch (timeFilter) {
-      case 'today': return 'hôm nay';
-      case 'week': return 'tuần này';
-      case 'year': return 'năm nay';
-      default: return 'tháng này';
+      case 'today': return t('today');
+      case 'week': return t('thisWeek');
+      case 'year': return t('thisYear');
+      default: return t('thisMonth');
     }
   };
 
@@ -141,8 +134,8 @@ const Dashboard = () => {
   const getChartData = () => {
     return monthlyStats.map(stat => ({
       month: `T${stat.month}`,
-      'Thu nhập': stat.totalIncome || 0,
-      'Chi tiêu': stat.totalExpense || 0,
+      [t('monthlyIncome')]: stat.totalIncome || 0,
+      [t('monthlyExpense')]: stat.totalExpense || 0,
       'Tiết kiệm': Math.max((stat.totalIncome || 0) - (stat.totalExpense || 0), 0)
     }));
   };
@@ -244,20 +237,20 @@ const Dashboard = () => {
               <h1 className="mt-3 text-5xl font-black tracking-tight">{formatCurrency(filteredSummary?.balance || 0)}</h1>
               <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-[#d8fff2]">
                 <FiTrendingUp size={12} />
-                {monthChange >= 0 ? '+' : ''}{monthChange.toFixed(1)}% so với tháng trước
+                {monthChange >= 0 ? '+' : ''}{monthChange.toFixed(1)}% {t('monthlyComparison')}
               </div>
 
               <div className="mt-8 grid grid-cols-1 gap-4 border-t border-[#1e6b57] pt-5 sm:grid-cols-3">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Thu nhập hàng tháng</p>
+                  <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{t('monthlyIncome')}</p>
                   <p className="mt-1 text-2xl font-bold">{formatCurrency(filteredSummary?.income || 0)}</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Chi tiêu hàng tháng</p>
+                  <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{t('monthlyExpense')}</p>
                   <p className="mt-1 text-2xl font-bold">{formatCurrency(filteredSummary?.expense || 0)}</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Tỷ lệ tiết kiệm</p>
+                  <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{t('savingsRate')}</p>
                   <p className="mt-1 text-2xl font-bold">{Math.max(100 - spendingPct, 0).toFixed(1)}%</p>
                 </div>
               </div>
@@ -267,9 +260,9 @@ const Dashboard = () => {
           <div className="xl:col-span-4 space-y-4">
             <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">Tiến độ mục tiêu</h3>
+                <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">{t('goalProgress')}</h3>
                 <button onClick={() => navigate('/goals')} className="text-xs font-semibold text-[#3a4a62] hover:underline dark:text-[#b9c3d0]">
-                  Xem tất cả
+                  {t('viewAll')}
                 </button>
               </div>
 
@@ -285,14 +278,14 @@ const Dashboard = () => {
                     </div>
                   </div>
                 )) : (
-                  <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Bạn chưa có mục tiêu nào.</p>
+                  <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{t('noGoals')}</p>
                 )}
               </div>
 
               <div className="mt-4 rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
-                <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">Gợi ý thông minh</p>
+                <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{t('intelligentSuggestion')}</p>
                 <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">
-                  {aiInsight?.message || 'Bạn có thể tiết kiệm thêm nếu giữ mức chi tiêu hiện tại.'}
+                  {aiInsight?.message || t('defaultSuggestion')}
                 </p>
               </div>
             </div>
@@ -314,11 +307,11 @@ const Dashboard = () => {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Biến động tài chính</h3>
-                <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Thu nhập và chi tiêu trong 6 tháng qua</p>
+                <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{t('monthlyIncome')} {t('and')} {t('monthlyExpense')} trong 6 tháng qua</p>
               </div>
               <div className="flex items-center gap-3 text-xs font-semibold text-[#5e6573] dark:text-[#a7afbc]">
-                <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#003d2d]" /> Thu nhập</span>
-                <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#a8b6cf]" /> Chi tiêu</span>
+                <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#003d2d]" /> {t('monthlyIncome')}</span>
+                <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#a8b6cf]" /> {t('monthlyExpense')}</span>
               </div>
             </div>
 
@@ -328,23 +321,23 @@ const Dashboard = () => {
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#6e7380' }} axisLine={false} tickLine={false} />
                 <YAxis hide />
                 <Tooltip content={<ChartTooltip />} />
-                <Bar dataKey="Thu nhập" fill="#003d2d" radius={[8, 8, 0, 0]} maxBarSize={34} />
-                <Bar dataKey="Chi tiêu" fill="#b9c5db" radius={[8, 8, 0, 0]} maxBarSize={34} />
+                <Bar dataKey={t('monthlyIncome')} fill="#003d2d" radius={[8, 8, 0, 0]} maxBarSize={34} />
+                <Bar dataKey={t('monthlyExpense')} fill="#b9c5db" radius={[8, 8, 0, 0]} maxBarSize={34} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           <div className="xl:col-span-4 rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Dự báo chi tiêu</h3>
-              <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">30 ngày tới</span>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{t('expenseForecast')}</h3>
+              <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">{t('currentExpense')} tới</span>
             </div>
 
             <div className="mb-3 rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
-              <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">Ước tính tháng tới</p>
+              <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{t('forecastedExpense')}</p>
               <p className="mt-1 text-lg font-black text-[#1f2733] dark:text-[#e8edf4]">{formatCurrency(forecastExpense)}</p>
               <p className={`mt-1 text-xs font-semibold ${forecastDelta > 0 ? 'text-[#b54747] dark:text-[#f3a5a5]' : 'text-[#2f8e6f] dark:text-[#8dd5bd]'}`}>
-                {forecastDelta > 0 ? '+' : ''}{forecastDeltaPct.toFixed(1)}% so với tháng này
+                {forecastDelta > 0 ? '+' : ''}{forecastDeltaPct.toFixed(1)}% {t('monthlyComparison')}
               </p>
             </div>
 
@@ -367,7 +360,7 @@ const Dashboard = () => {
                       <div className="h-8 w-8 rounded-lg flex items-center justify-center font-bold bg-[#dce7f7] text-[#31557e] dark:bg-[#2a3a4f] dark:text-[#9fc4ef]">{idx + 1}</div>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-bold text-[#1f2733] dark:text-[#e8edf4]">{item.name || 'Chi tiêu khác'}</p>
-                        <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">Danh mục rủi ro chi tiêu cao</p>
+                        <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">Danh mục có rủi ro cao</p>
                       </div>
                     </div>
                     <p className="text-sm font-black text-[#1a1f29] dark:text-[#eff2f6]">{formatCurrency(item.amount)}</p>
@@ -375,10 +368,10 @@ const Dashboard = () => {
 
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <span className="rounded-full bg-[#e8effa] px-2 py-0.5 text-[11px] font-semibold text-[#365e8b] dark:bg-[#2a3f59] dark:text-[#a6caf3]">
-                      Ưu tiên theo dõi
+                      {t('topCategories')}
                     </span>
                     <span className="text-[11px] font-semibold text-[#667084] dark:text-[#a4acba]">
-                      {topForecastTotal > 0 ? `${Math.round((item.amount / topForecastTotal) * 100)}% trong top danh mục` : '0% trong top danh mục'}
+                      {topForecastTotal > 0 ? `${Math.round((item.amount / topForecastTotal) * 100)}%` : '0%'}
                     </span>
                   </div>
 
@@ -401,9 +394,9 @@ const Dashboard = () => {
             <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Giao dịch gần đây</h3>
             <div className="flex items-center gap-2">
               {[
-                { key: 'all', label: 'Tất cả' },
-                { key: 'expense', label: 'Chi tiêu' },
-                { key: 'income', label: 'Thu nhập' },
+                { key: 'all', label: t('all') },
+                { key: 'expense', label: t('expense') },
+                { key: 'income', label: t('income') },
               ].map((filter) => (
                 <button
                   key={filter.key}
@@ -425,9 +418,9 @@ const Dashboard = () => {
               <thead>
                 <tr className="border-b border-[#eceff4] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:text-[#9fa7b4]">
                   <th className="px-5 py-3">Mô tả</th>
-                  <th className="px-5 py-3">Danh mục</th>
-                  <th className="px-5 py-3">Ngày</th>
-                  <th className="px-5 py-3 text-right">Số tiền</th>
+                  <th className="px-5 py-3">{t('category')}</th>
+                  <th className="px-5 py-3">{t('date')}</th>
+                  <th className="px-5 py-3 text-right">{t('amount')}</th>
                   <th className="px-5 py-3 text-right">Trạng thái</th>
                 </tr>
               </thead>
@@ -464,16 +457,6 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-
-      {/* ── Onboarding ── */}
-      {showOnboarding && (
-        <OnboardingModal
-          onClose={() => {
-            setShowOnboarding(false);
-            fetchCategories();
-          }}
-        />
-      )}
     </PageTransition>
   );
 };

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useDebt } from '../context/DebtContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import DebtModal from '../components/DebtModal';
 import {
   FiPlus, FiEdit2, FiTrash2, FiClock, FiCheck,
@@ -14,6 +15,7 @@ const Debts = () => {
   const ITEMS_PER_PAGE = 8;
   const { user } = useAuth();
   const { debts, stats, loading, createDebt, updateDebt, deleteDebt, addPayment, settleDebt } = useDebt();
+  const { t } = useLanguage();
 
   const [showModal, setShowModal] = useState(false);
   const [editingDebt, setEditingDebt] = useState(null);

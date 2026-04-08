@@ -9,7 +9,7 @@ import { CategoryProvider } from './context/CategoryContext';
 import { BudgetProvider } from './context/BudgetContext';
 import { GoalProvider } from './context/GoalContext';
 import { DebtProvider } from './context/DebtContext';
-import { ThemeCustomizerProvider } from './context/ThemeCustomizerContext';
+import { LanguageProvider } from './context/LanguageContext';
 import PrivateRoute from './components/PrivateRoute';
 import PublicRoute from './components/PublicRoute';
 import Landing from './pages/Landing';
@@ -31,7 +31,7 @@ import Profile from './pages/Profile';
 // hàm App chính của ứng dụng
 function App() {
   return (
-    <ThemeCustomizerProvider>
+    <LanguageProvider>
       <AuthProvider>  
         <CategoryProvider> 
           <BudgetProvider> 
@@ -100,7 +100,7 @@ function App() {
         </BudgetProvider>  
       </CategoryProvider>
     </AuthProvider>
-    </ThemeCustomizerProvider>
+    </LanguageProvider>
   );
 }
 

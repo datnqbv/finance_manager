@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTransactions } from '../context/TransactionContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { FiPlus, FiEdit2, FiTrash2, FiFilter, FiDownload, FiList, FiCalendar, FiUpload } from 'react-icons/fi';
 import TransactionModal from '../components/TransactionModal';
 import TransactionCalendar from '../components/TransactionCalendar';
@@ -12,6 +13,7 @@ import { exportToPDF, exportToExcel } from '../utils/exportUtils';
 const Transactions = () => {
   const { user } = useAuth();
   const { transactions, pagination, loading, fetchTransactions, deleteTransaction } = useTransactions();
+  const { t } = useLanguage();
   const [showModal, setShowModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
@@ -205,7 +207,7 @@ const Transactions = () => {
           </button>
           <button
             onClick={() => setShowModal(true)}
-            className="btn btn-primary flex items-center gap-2"
+            className="hidden sm:inline-flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#00523d]"
           >
             <FiPlus /> Thêm giao dịch
           </button>

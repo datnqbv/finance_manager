@@ -15,7 +15,6 @@ import {
   FiMenu,
   FiX,
   FiBell,
-  FiCheck,
   FiAlertCircle,
   FiSettings,
   FiChevronRight,
@@ -29,8 +28,8 @@ import {
 import { useEffect } from 'react';
 import DarkModeToggle from './DarkModeToggle';
 import GlobalSearch from './GlobalSearch';
-import { useThemeCustomizer } from '../context/ThemeCustomizerContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { getNotifications, markAsRead as markNotificationAsRead, markAllAsRead as markAllNotificationsAsRead } from '../services/notification.service';
 import Chatbot from './chatbot/Chatbot';
 
@@ -41,8 +40,9 @@ const Layout = ({ children }) => {
   const location = useLocation(); // Lấy thông tin đường dẫn hiện tại
   const navigate = useNavigate(); // Điều hướng trang
   const { user, logout } = useAuth(); // Lấy thông tin người dùng và hàm đăng xuất từ ngữ cảnh xác thực
-  const { currentTheme, changeTheme, themes } = useThemeCustomizer(); // Lấy theme customizer
+  const { language, setLanguage } = useLanguage();
   const { isDarkMode } = useTheme();
+  const isEnglish = language === 'en';
   const [sidebarOpen, setSidebarOpen] = useState(false); // Trạng thái mở/đóng sidebar
   const [showQuickAdd, setShowQuickAdd] = useState(false); // FAB thêm giao dịch nhanh
   const [showUserMenu, setShowUserMenu] = useState(false); // Trạng thái hiển thị menu user
@@ -103,14 +103,14 @@ const Layout = ({ children }) => {
   
   // Định nghĩa các mục trong sidebar
   const menuItems = [
-    { path: '/dashboard', icon: FiHome, label: 'Tổng quan', isImg: false },
-    { path: '/transactions', icon: FiCreditCard, label: 'Giao dịch', isImg: false },
-    { path: '/categories', icon: FiFolder, label: 'Danh mục', isImg: false },
-    { path: '/budgets', icon: FiDollarSign, label: 'Ngân sách', isImg: false },
-    { path: '/goals', icon: FiTarget, label: 'Mục tiêu', isImg: false },
-    { path: '/debts', icon: FiUsers, label: 'Quản lý nợ', isImg: false },
-    { path: '/statistics', icon: FiBarChart2, label: 'Thống kê', isImg: false },
-    { path: '/profile', icon: FiUser, label: 'Tài khoản', isImg: false },
+    { path: '/dashboard', icon: FiHome, label: isEnglish ? 'Overview' : 'Tổng quan', isImg: false },
+    { path: '/transactions', icon: FiCreditCard, label: isEnglish ? 'Transactions' : 'Giao dịch', isImg: false },
+    { path: '/categories', icon: FiFolder, label: isEnglish ? 'Categories' : 'Danh mục', isImg: false },
+    { path: '/budgets', icon: FiDollarSign, label: isEnglish ? 'Budgets' : 'Ngân sách', isImg: false },
+    { path: '/goals', icon: FiTarget, label: isEnglish ? 'Goals' : 'Mục tiêu', isImg: false },
+    { path: '/debts', icon: FiUsers, label: isEnglish ? 'Debt Management' : 'Quản lý nợ', isImg: false },
+    { path: '/statistics', icon: FiBarChart2, label: isEnglish ? 'Statistics' : 'Thống kê', isImg: false },
+    { path: '/profile', icon: FiUser, label: isEnglish ? 'Account' : 'Tài khoản', isImg: false },
   ];
 
   // Xử lý đăng xuất
@@ -163,7 +163,7 @@ const Layout = ({ children }) => {
                   Curator Pro
                 </h1>
                 <p className="text-[11px] text-[#6a727f] dark:text-[#a0a5ad]">
-                  Ngân hàng ưu tiên
+                  {isEnglish ? 'Priority banking' : 'Ngân hàng ưu tiên'}
                 </p>
                 </div>
               </div>
@@ -184,14 +184,14 @@ const Layout = ({ children }) => {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span className="font-medium">Về trang chủ</span>
+              <span className="font-medium">{isEnglish ? 'Back to home' : 'Về trang chủ'}</span>
             </Link>
           </div>
 
           {/* Navigation */}
           <nav className="sidebar-menu p-3 space-y-1 overflow-y-auto">
             <p className="px-2 pb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#77808f] dark:text-[#8d94a1]">
-              Điều hướng nhanh
+              {isEnglish ? 'Quick navigation' : 'Điều hướng nhanh'}
             </p>
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
@@ -232,7 +232,7 @@ const Layout = ({ children }) => {
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-[#2d323b] dark:text-[#eceef2] truncate">{user?.name || 'Người dùng'}</p>
+                  <p className="text-xs font-semibold text-[#2d323b] dark:text-[#eceef2] truncate">{user?.name || (isEnglish ? 'User' : 'Người dùng')}</p>
                   <p className="text-[11px] text-[#6a727f] dark:text-[#a0a5ad] truncate">{user?.email || ''}</p>
                 </div>
               </div>
@@ -241,13 +241,13 @@ const Layout = ({ children }) => {
                   to="/profile"
                   className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#d3d7df] dark:border-[#30333b] py-1.5 text-[11px] font-semibold text-[#4f5662] dark:text-[#a8adb6] hover:bg-[#eef4fb] dark:hover:bg-[#2a2e37] transition-colors"
                 >
-                  <FiUser size={12} /> Hồ sơ
+                  <FiUser size={12} /> {isEnglish ? 'Profile' : 'Hồ sơ'}
                 </Link>
                 <button
                   onClick={handleLogout}
                   className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 dark:border-red-900/40 py-1.5 text-[11px] font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                 >
-                  <FiLogOut size={12} /> Thoát
+                  <FiLogOut size={12} /> {isEnglish ? 'Logout' : 'Thoát'}
                 </button>
               </div>
             </div>
@@ -273,15 +273,15 @@ const Layout = ({ children }) => {
               {/* Left: Page title for mobile */}
               <div className="lg:hidden min-w-[120px]">
                 <h2 className="text-lg font-semibold text-[#1f2328] dark:text-[#eceef2]">
-                  {menuItems.find(item => item.path === location.pathname)?.label || 'Dashboard'}
+                  {menuItems.find(item => item.path === location.pathname)?.label || (isEnglish ? 'Overview' : 'Tổng quan')}
                 </h2>
               </div>
 
               <div className="hidden lg:flex items-center gap-2 text-sm text-[#6d717a] dark:text-[#9ea3ad]">
-                <span>Trang chủ</span>
+                <span>{isEnglish ? 'Home' : 'Trang chủ'}</span>
                 <span>/</span>
                 <span className="font-semibold text-[#22262c] dark:text-[#eceef2]">
-                  {menuItems.find(item => item.path === location.pathname)?.label || 'Tổng quan'}
+                  {menuItems.find(item => item.path === location.pathname)?.label || (isEnglish ? 'Overview' : 'Tổng quan')}
                 </span>
               </div>
 
@@ -333,14 +333,14 @@ const Layout = ({ children }) => {
                         {/* Header */}
                         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[#2a2a2a]">
                           <h3 className="font-semibold text-gray-900 dark:text-white">
-                            Thông báo
+                            {isEnglish ? 'Notifications' : 'Thông báo'}
                           </h3>
                           {unreadCount > 0 && (
                             <button
                               onClick={markAllAsRead}
                               className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
                             >
-                              Đánh dấu đã đọc
+                              {isEnglish ? 'Mark all as read' : 'Đánh dấu đã đọc'}
                             </button>
                           )}
                         </div>
@@ -393,7 +393,7 @@ const Layout = ({ children }) => {
                             <div className="p-8 text-center">
                               <FiBell className="mx-auto text-gray-300 dark:text-gray-600 mb-2" size={48} />
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Không có thông báo mới
+                                {isEnglish ? 'No new notifications' : 'Không có thông báo mới'}
                               </p>
                             </div>
                           )}
@@ -412,7 +412,7 @@ const Layout = ({ children }) => {
                            hover:bg-[#eef4fb] dark:hover:bg-[#2b2f39]
                            border border-[#d3d7df] dark:border-[#353943]
                            transition-colors duration-200"
-                  title="Cài đặt"
+                  title={isEnglish ? 'Settings' : 'Cài đặt'}
                 >
                   <FiSettings size={18} className="text-gray-700 dark:text-gray-300" />
                 </button>
@@ -485,7 +485,7 @@ const Layout = ({ children }) => {
                             >
                               <div className="flex items-center gap-3">
                                 <FiSettings size={18} />
-                                <span className="text-sm font-medium">Cài đặt</span>
+                                <span className="text-sm font-medium">{isEnglish ? 'Settings' : 'Cài đặt'}</span>
                               </div>
                               <FiChevronRight size={18} />
                             </button>
@@ -501,7 +501,7 @@ const Layout = ({ children }) => {
                                        text-gray-700 dark:text-gray-300 transition-colors"
                             >
                               <FiUser size={18} />
-                              <span className="text-sm font-medium">Tài khoản</span>
+                              <span className="text-sm font-medium">{isEnglish ? 'Account' : 'Tài khoản'}</span>
                             </Link>
                           </div>
                         </div>
@@ -515,18 +515,18 @@ const Layout = ({ children }) => {
                               className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
                             >
                               <FiChevronLeft size={18} />
-                              <span className="text-sm font-semibold">Cài đặt</span>
+                              <span className="text-sm font-semibold">{isEnglish ? 'Settings' : 'Cài đặt'}</span>
                             </button>
                           </div>
 
-                          {/* Theme Selector Section - Scrollable */}
+                          {/* Settings Section - Scrollable */}
                           <div className="px-4 py-4 overflow-y-auto flex-1">
                             <div className="mb-4 rounded-xl border border-gray-200 dark:border-[#2a2a2a] p-3 bg-gray-50 dark:bg-[#171717]">
                               <div className="flex items-center justify-between gap-3">
                                 <div>
-                                  <p className="text-sm font-semibold text-gray-900 dark:text-white">Chế độ nền</p>
+                                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{isEnglish ? 'Theme mode' : 'Chế độ nền'}</p>
                                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    Đang dùng: {isDarkMode ? 'Dark mode' : 'Light mode'}
+                                    {isEnglish ? 'Current' : 'Đang dùng'}: {isDarkMode ? 'Dark mode' : 'Light mode'}
                                   </p>
                                 </div>
                                 <DarkModeToggle />
@@ -536,50 +536,38 @@ const Layout = ({ children }) => {
                             <div className="mb-4">
                               <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-1">
                                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clipRule="evenodd" />
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-4-8a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" clipRule="evenodd" />
                                 </svg>
-                                Chọn màu chủ đạo
+                                {isEnglish ? 'Language' : 'Ngôn ngữ'}
                               </h3>
                               <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Tùy chỉnh giao diện theo sở thích
+                                {isEnglish ? 'Choose your application display language' : 'Chọn ngôn ngữ hiển thị cho ứng dụng'}
                               </p>
                             </div>
 
-                            {/* Theme Grid - Direct Display */}
-                            <div className="grid grid-cols-3 gap-3">
-                              {Object.entries(themes).map(([key, theme]) => (
-                                <button
-                                  key={key}
-                                  onClick={() => changeTheme(key)}
-                                  className={`relative p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105
-                                            ${currentTheme === key 
-                                              ? 'border-gray-400 dark:border-gray-500 shadow-lg' 
-                                              : 'border-gray-200 dark:border-[#2a2a2a] hover:border-gray-300 dark:hover:border-[#3a3a3a]'
-                                            }`}
-                                >
-                                  {/* Color preview */}
-                                  <div 
-                                    className={`w-full h-12 rounded-lg bg-gradient-to-br ${theme.gradient} 
-                                              mb-2 flex items-center justify-center`}
-                                  >
-                                    {currentTheme === key && (
-                                      <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg">
-                                        <FiCheck size={14} style={{ color: theme.primary }} />
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Theme name */}
-                                  <p className={`text-xs font-semibold text-center
-                                                ${currentTheme === key 
-                                                  ? 'text-gray-900 dark:text-white' 
-                                                  : 'text-gray-600 dark:text-gray-400'
-                                                }`}
-                                  >
-                                    {theme.name}
-                                  </p>
-                                </button>
-                              ))}
+                            <div className="grid grid-cols-2 gap-3">
+                              <button
+                                onClick={() => setLanguage('vi')}
+                                className={`rounded-xl border px-3 py-3 text-left transition-colors ${
+                                  language === 'vi'
+                                    ? 'border-[#2f8e6f] bg-[#e9f7f1] text-[#0d3a2d] dark:border-[#58c39e] dark:bg-[#1f3a32] dark:text-[#bcebd9]'
+                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-[#2a2a2a] dark:bg-[#171717] dark:text-gray-300 dark:hover:bg-[#1f1f1f]'
+                                }`}
+                              >
+                                <p className="text-sm font-semibold">Tiếng Việt</p>
+                                <p className="text-xs opacity-75">VI</p>
+                              </button>
+                              <button
+                                onClick={() => setLanguage('en')}
+                                className={`rounded-xl border px-3 py-3 text-left transition-colors ${
+                                  language === 'en'
+                                    ? 'border-[#2f8e6f] bg-[#e9f7f1] text-[#0d3a2d] dark:border-[#58c39e] dark:bg-[#1f3a32] dark:text-[#bcebd9]'
+                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-[#2a2a2a] dark:bg-[#171717] dark:text-gray-300 dark:hover:bg-[#1f1f1f]'
+                                }`}
+                              >
+                                <p className="text-sm font-semibold">English</p>
+                                <p className="text-xs opacity-75">EN</p>
+                              </button>
                             </div>
 
                             <div className="mt-4 pt-3 border-t border-gray-200 dark:border-[#2a2a2a]">
@@ -594,7 +582,7 @@ const Layout = ({ children }) => {
                                 >
                                   <span className="flex items-center gap-2">
                                     <FiUser size={16} />
-                                    Hồ sơ tài khoản
+                                    {isEnglish ? 'Account profile' : 'Hồ sơ tài khoản'}
                                   </span>
                                   <FiChevronRight size={16} />
                                 </Link>
@@ -609,7 +597,7 @@ const Layout = ({ children }) => {
                                 >
                                   <span className="flex items-center gap-2">
                                     <FiShield size={16} />
-                                    Quyền riêng tư
+                                    {isEnglish ? 'Privacy' : 'Quyền riêng tư'}
                                   </span>
                                   <FiChevronRight size={16} />
                                 </Link>
@@ -624,14 +612,14 @@ const Layout = ({ children }) => {
                                 >
                                   <span className="flex items-center gap-2">
                                     <FiHelpCircle size={16} />
-                                    Hỗ trợ & liên hệ
+                                    {isEnglish ? 'Support & contact' : 'Hỗ trợ & liên hệ'}
                                   </span>
                                   <FiChevronRight size={16} />
                                 </Link>
                               </div>
 
                               <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                                💡 Màu sẽ được lưu tự động
+                                💡 {isEnglish ? 'Language is saved automatically' : 'Ngôn ngữ được lưu tự động'}
                               </p>
                             </div>
                           </div>
@@ -645,7 +633,7 @@ const Layout = ({ children }) => {
                   onClick={() => setShowQuickAdd(true)}
                   className="hidden sm:inline-flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#00523d]"
                 >
-                  <FiPlus size={16} /> Thêm Giao dịch
+                  <FiPlus size={16} /> {isEnglish ? 'Add Transaction' : 'Thêm Giao dịch'}
                 </button>
               </div>
             </div>

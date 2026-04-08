@@ -335,9 +335,7 @@ const Chatbot = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-11 h-11 bg-gradient-to-br from-primary-500 via-primary-600 to-purple-600 
-                   text-white rounded-full shadow-2xl hover:shadow-primary-500/50 hover:scale-110 
-                   transition-all duration-300 flex items-center justify-center z-50 group"
+          className="fixed bottom-6 right-6 w-11 h-11 bg-[#003d2d] hover:bg-[#00523d] text-white rounded-full shadow-2xl hover:shadow-[#003d2d]/50 hover:scale-110 transition-all duration-300 flex items-center justify-center z-50 group"
           aria-label="Open chatbot"
         >
           <FiMessageCircle size={20} className="group-hover:rotate-12 transition-transform" />
@@ -353,7 +351,7 @@ const Chatbot = () => {
                         isMinimized ? 'h-16' : 'h-[650px]'
                       }`}>
           {/* Header */}
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary-500 via-primary-600 to-purple-600 
+          <div className="flex items-center justify-between p-4 bg-[#003d2d]
                         text-white rounded-t-2xl cursor-pointer"
                onClick={() => setIsMinimized(!isMinimized)}>
             <div className="flex items-center gap-3">
@@ -409,7 +407,7 @@ const Chatbot = () => {
                 {/* Typing Indicator */}
                 {isLoading && (
                   <div className="flex gap-3 animate-in fade-in duration-300">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#003d2d]
                                   flex items-center justify-center text-white shadow-lg">
                       <FiMessageCircle size={16} />
                     </div>
@@ -417,11 +415,11 @@ const Chatbot = () => {
                       <div className="inline-block bg-white dark:bg-gray-700 px-5 py-3 rounded-2xl shadow-md 
                                     border border-gray-100 dark:border-gray-600">
                         <div className="flex gap-1.5">
-                          <div className="w-2.5 h-2.5 bg-primary-500 rounded-full animate-bounce" 
+                          <div className="w-2.5 h-2.5 bg-[#003d2d] rounded-full animate-bounce"
                                style={{ animationDelay: '0ms' }}></div>
-                          <div className="w-2.5 h-2.5 bg-primary-500 rounded-full animate-bounce" 
+                          <div className="w-2.5 h-2.5 bg-[#003d2d] rounded-full animate-bounce"
                                style={{ animationDelay: '150ms' }}></div>
-                          <div className="w-2.5 h-2.5 bg-primary-500 rounded-full animate-bounce" 
+                          <div className="w-2.5 h-2.5 bg-[#003d2d] rounded-full animate-bounce"
                                style={{ animationDelay: '300ms' }}></div>
                         </div>
                       </div>
@@ -441,8 +439,8 @@ const Chatbot = () => {
                           key={index}
                           onClick={() => handleSuggestionClick(suggestion)}
                           className="px-3 py-2 text-sm bg-white dark:bg-gray-700 border-2 border-gray-200 
-                                   dark:border-gray-600 rounded-xl hover:border-primary-500 
-                                   hover:bg-primary-50 dark:hover:bg-gray-600 transition-all 
+                                   dark:border-gray-600 rounded-xl hover:border-[#003d2d]
+                                   hover:bg-[#f0faf8] dark:hover:bg-gray-600 transition-all
                                    text-gray-700 dark:text-gray-300 text-left font-medium
                                    hover:shadow-md hover:scale-105"
                         >

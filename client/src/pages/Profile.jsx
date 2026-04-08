@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'react-toastify';
 import {
   FiUser, FiMail, FiDollarSign, FiCamera, FiLock,
@@ -30,6 +31,7 @@ const TextInput = ({ icon: Icon, ...props }) => (
 // ── Main Component ─────────────────────────────────────────────────────────
 const Profile = () => {
   const { user, updateProfile, changePassword } = useAuth();
+  const { t } = useLanguage();
 
   // ── Profile form state
   const [profileForm, setProfileForm] = useState({

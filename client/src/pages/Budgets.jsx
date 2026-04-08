@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useBudgets } from '../context/BudgetContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { FiPlus, FiEdit2, FiTrash2, FiAlertCircle, FiShield, FiTrendingUp } from 'react-icons/fi';
 import BudgetModal from '../components/BudgetModal';
 import Pagination from '../components/Pagination';
@@ -10,6 +11,7 @@ const Budgets = () => {
   const ITEMS_PER_PAGE = 8;
   const { user } = useAuth();
   const { budgets, budgetStatus, alerts, loading, fetchBudgetOverview, createBudget, updateBudget, deleteBudget } = useBudgets();
+  const { t } = useLanguage();
 
   const [showModal, setShowModal] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);

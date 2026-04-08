@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useCategories } from '../context/CategoryContext';
+import { useLanguage } from '../context/LanguageContext';
 import { FiPlus, FiEdit2, FiTrash2, FiLock, FiTag } from 'react-icons/fi';
 import CategoryModal from '../components/CategoryModal';
 import Pagination from '../components/Pagination';
@@ -9,6 +10,7 @@ import { CategoriesSkeleton } from '../components/LoadingSkeleton';
 const Categories = () => {
   const ITEMS_PER_PAGE = 8;
   const { categories, loading, fetchCategories, createCategory, updateCategory, deleteCategory } = useCategories();
+  const { t } = useLanguage();
 
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);

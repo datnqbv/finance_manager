@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useGoal } from '../context/GoalContext';
+import { useLanguage } from '../context/LanguageContext';
 import GoalModal from '../components/GoalModal';
 import { FiPlus, FiEdit2, FiTrash2, FiTarget, FiClock } from 'react-icons/fi';
 import { GoalsSkeleton } from '../components/LoadingSkeleton';
@@ -9,6 +10,7 @@ import Pagination from '../components/Pagination';
 const Goals = () => {
   const ITEMS_PER_PAGE = 8;
   const { goals, goalStats, loading, createGoal, updateGoal, deleteGoal, addAmountToGoal } = useGoal();
+  const { t } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState(null);
   const [showAddAmount, setShowAddAmount] = useState(null);
