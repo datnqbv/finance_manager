@@ -121,13 +121,16 @@ const Layout = ({ children }) => {
 
   // Giao diện của Layout
   return (
-    <div className="min-h-screen flex bg-gray-50 dark:bg-[#0a0a0a]">
+    <div
+      className="min-h-screen flex bg-[#f3f4f6] dark:bg-[#111216]"
+      style={{ fontFamily: "'Manrope', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}
+    >
       {/* Mobile menu button */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-white dark:bg-[#111111] 
-                   border border-gray-200 dark:border-[#2a2a2a] shadow-lg
-                   hover:scale-105 transition-all duration-200"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white dark:bg-[#1b1c20] 
+                   border border-[#cfd2d8] dark:border-[#32353d] shadow-sm
+                   hover:bg-[#f5f8fc] dark:hover:bg-[#242730] transition-colors duration-200"
       >
         {sidebarOpen ? (
           <FiX size={24} className="text-gray-700 dark:text-white" />
@@ -138,32 +141,29 @@ const Layout = ({ children }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-[280px] 
-                    bg-[linear-gradient(165deg,#edf6ee_0%,#e2efe4_55%,#d8e9dc_100%)] dark:bg-[linear-gradient(165deg,#111812_0%,#131e15_55%,#172419_100%)] 
-                    border-r border-[#c8d8c9] dark:border-[#2a3a2c] 
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-[250px] bg-[#e9ecef] dark:bg-[#1b1e24]
+                    border-r border-[#d8dce2] dark:border-[#2d323c]
                     transform transition-all duration-300 ease-in-out
-                    backdrop-blur-xl dark:backdrop-blur-2xl
                     ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         <div className="sidebar-nav-grid h-full">
           {/* Logo */}
-          <div className="sidebar-brand p-4 border-b border-[#c8d8c9] dark:border-[#2a3a2c]">
-            <div className="rounded-2xl border border-[#bfd1c1] bg-white/75 p-4 shadow-sm dark:border-[#2a3a2c] dark:bg-[#121b13]">
+          <div className="sidebar-brand p-4 border-b border-[#d8dce2] dark:border-[#2d323c]">
+            <div className="rounded-xl border border-[#d8dce2] bg-[#f1f3f5] p-3 dark:border-[#323844] dark:bg-[#242936]">
               <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 
-                            flex items-center justify-center text-2xl shadow-lg">
+                <div className="w-10 h-10 rounded-lg bg-[#d9efe4] dark:bg-[#244236] flex items-center justify-center text-2xl">
                 <img
                   src="/icons/money-bag.png"
                   alt="Finance Manager Logo"
-                  className="w-8 h-8 object-contain"
+                  className="w-6 h-6 object-contain"
                 />
               </div>
                 <div>
-                <h1 className="text-[1.9rem] leading-8 font-black text-[#0d2140] dark:text-[#e8f2ea]">
-                  Finance Manager
+                <h1 className="text-[1.05rem] leading-5 font-bold text-[#1f2328] dark:text-[#eceef2]">
+                  Curator Pro
                 </h1>
-                <p className="text-xs text-[#6a7d6c] dark:text-[#8fa392]">
-                  v1.0.1
+                <p className="text-[11px] text-[#6a727f] dark:text-[#a0a5ad]">
+                  Ngân hàng ưu tiên
                 </p>
                 </div>
               </div>
@@ -171,13 +171,10 @@ const Layout = ({ children }) => {
           </div>
 
           {/* Back to Home Link */}
-          <div className="sidebar-home px-4 pt-3">
+          <div className="sidebar-home px-3 pt-3">
             <Link
               to="/home"
-              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
-                       text-[#4e6450] dark:text-[#9ab09c] hover:bg-white/80 dark:hover:bg-[#1b2a1d] 
-                       border border-transparent hover:border-[#c8d8c9] dark:hover:border-[#2d4530]
-                       hover:text-[#2e5735] dark:hover:text-[#c9e3ce] group"
+              className="flex items-center gap-2.5 rounded-xl border border-[#d7dce4] bg-white px-3 py-2.5 text-sm text-[#4f5662] transition-colors hover:bg-[#edf5f0] hover:text-[#1f5d45] dark:border-[#333844] dark:bg-[#22252d] dark:text-[#a8adb6] dark:hover:bg-[#273332] dark:hover:text-[#9fd7be] group"
             >
               <svg 
                 className="w-5 h-5 group-hover:scale-110 transition-transform" 
@@ -192,8 +189,8 @@ const Layout = ({ children }) => {
           </div>
 
           {/* Navigation */}
-          <nav className="sidebar-menu p-4 space-y-1.5 overflow-y-auto">
-            <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#6e8270] dark:text-[#839686]">
+          <nav className="sidebar-menu p-3 space-y-1 overflow-y-auto">
+            <p className="px-2 pb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#77808f] dark:text-[#8d94a1]">
               Điều hướng nhanh
             </p>
             {menuItems.map((item) => {
@@ -204,10 +201,10 @@ const Layout = ({ children }) => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 group border
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group border text-sm
                     ${isActive
-                      ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/30 border-primary-500/40 -translate-y-[1px]'
-                      : 'text-[#2e3f5c] dark:text-[#c8d9ca] bg-white/35 dark:bg-transparent border-transparent hover:bg-white/80 dark:hover:bg-[#1b2a1d] hover:border-[#c9d8cb] dark:hover:border-[#2e4530] hover:text-[#1e2f49] dark:hover:text-white'
+                      ? 'bg-white text-[#0d3a2d] border-[#cfe2d8] shadow-sm dark:bg-[#273332] dark:text-[#b9e4d2] dark:border-[#335348]'
+                      : 'text-[#4f5662] bg-transparent border-transparent hover:bg-[#f2f4f7] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
                     }`}
                 >
                   {item.isImg
@@ -220,29 +217,29 @@ const Layout = ({ children }) => {
             })}
           </nav>
 
-          <div className="sidebar-footer px-4 pb-4 pt-2 border-t border-[#c8d8c9] dark:border-[#2a3a2c]">
-            <div className="rounded-2xl bg-white/75 dark:bg-[#121b13] border border-[#c8d8c9] dark:border-[#2a3a2c] p-3 shadow-sm">
+          <div className="sidebar-footer px-3 pb-3 pt-2 border-t border-[#d8dce2] dark:border-[#2d323c]">
+            <div className="rounded-xl bg-white dark:bg-[#20242e] border border-[#d8dce2] dark:border-[#323844] p-3 shadow-sm">
               <div className="flex items-center gap-2.5 mb-2.5">
                 {user?.avatar ? (
                   <img
                     src={user.avatar}
                     alt={user?.name || 'User avatar'}
-                    className="w-8 h-8 rounded-full object-cover border border-[#c8d8c9] dark:border-[#2a3a2c]"
+                    className="w-8 h-8 rounded-full object-cover border border-[#d3d7df] dark:border-[#30333b]"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white text-xs font-bold flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-[#006fc7] text-white text-xs font-bold flex items-center justify-center">
                     {user?.name?.charAt(0).toUpperCase() || 'U'}
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-[#334d37] dark:text-[#d9e6db] truncate">{user?.name || 'Người dùng'}</p>
-                  <p className="text-[11px] text-[#6f806f] dark:text-[#93a694] truncate">{user?.email || ''}</p>
+                  <p className="text-xs font-semibold text-[#2d323b] dark:text-[#eceef2] truncate">{user?.name || 'Người dùng'}</p>
+                  <p className="text-[11px] text-[#6a727f] dark:text-[#a0a5ad] truncate">{user?.email || ''}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Link
                   to="/profile"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#c8d8c9] dark:border-[#2a3a2c] py-1.5 text-[11px] font-semibold text-[#526c56] dark:text-[#a5b8a7] hover:bg-[#eff6f0] dark:hover:bg-[#1b2a1d] transition-colors"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#d3d7df] dark:border-[#30333b] py-1.5 text-[11px] font-semibold text-[#4f5662] dark:text-[#a8adb6] hover:bg-[#eef4fb] dark:hover:bg-[#2a2e37] transition-colors"
                 >
                   <FiUser size={12} /> Hồ sơ
                 </Link>
@@ -270,15 +267,22 @@ const Layout = ({ children }) => {
       {/* Main content wrapper */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white dark:bg-[#111111] border-b border-gray-200 dark:border-[#2a2a2a] 
-                         sticky top-0 z-30 backdrop-blur-xl bg-white/80 dark:bg-[#111111]/80">
-          <div className="px-4 lg:px-8 py-4">
+        <header className="bg-[#f8fafb] dark:bg-[#191d24] border-b border-[#d8dce2] dark:border-[#2f343e] sticky top-0 z-30">
+          <div className="px-4 lg:px-6 py-3">
             <div className="flex items-center justify-between gap-4">
               {/* Left: Page title for mobile */}
-              <div className="lg:hidden">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <div className="lg:hidden min-w-[120px]">
+                <h2 className="text-lg font-semibold text-[#1f2328] dark:text-[#eceef2]">
                   {menuItems.find(item => item.path === location.pathname)?.label || 'Dashboard'}
                 </h2>
+              </div>
+
+              <div className="hidden lg:flex items-center gap-2 text-sm text-[#6d717a] dark:text-[#9ea3ad]">
+                <span>Trang chủ</span>
+                <span>/</span>
+                <span className="font-semibold text-[#22262c] dark:text-[#eceef2]">
+                  {menuItems.find(item => item.path === location.pathname)?.label || 'Tổng quan'}
+                </span>
               </div>
 
               {/* Center: Global Search */}
@@ -294,16 +298,18 @@ const Layout = ({ children }) => {
                 </div>
 
                 {/* Dark Mode Toggle */}
-                <DarkModeToggle />
+                <div className="hidden">
+                  <DarkModeToggle />
+                </div>
 
                 {/* Notifications */}
                 <div className="relative">
                   <button 
                     onClick={() => setShowNotifications(!showNotifications)}
-                    className="p-2.5 rounded-xl bg-gray-50 dark:bg-[#1a1a1a] 
-                                     hover:bg-gray-100 dark:hover:bg-[#222222] 
-                                     border border-gray-200 dark:border-[#2a2a2a]
-                                     transition-all duration-200 hover:scale-105 relative group">
+                    className="p-2 rounded-md bg-white dark:bg-[#242730] 
+                                     hover:bg-[#eef4fb] dark:hover:bg-[#2b2f39] 
+                                     border border-[#d3d7df] dark:border-[#353943]
+                                     transition-colors duration-200 relative group">
                     <FiBell size={20} className="text-gray-700 dark:text-gray-300" />
                     {unreadCount > 0 && (
                       <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs 
@@ -397,15 +403,29 @@ const Layout = ({ children }) => {
                   )}
                 </div>
 
+                <button
+                  onClick={() => {
+                    setShowUserMenu(true);
+                    setShowSettings(true);
+                  }}
+                  className="p-2 rounded-md bg-white dark:bg-[#242730]
+                           hover:bg-[#eef4fb] dark:hover:bg-[#2b2f39]
+                           border border-[#d3d7df] dark:border-[#353943]
+                           transition-colors duration-200"
+                  title="Cài đặt"
+                >
+                  <FiSettings size={18} className="text-gray-700 dark:text-gray-300" />
+                </button>
+
                 {/* User Menu */}
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-3 px-3 py-2 rounded-xl 
-                             bg-gray-50 dark:bg-[#1a1a1a] 
-                             hover:bg-gray-100 dark:hover:bg-[#222222]
-                             border border-gray-200 dark:border-[#2a2a2a]
-                             transition-all duration-200 hover:scale-105"
+                    className="flex items-center gap-3 px-2.5 py-2 rounded-xl 
+                             bg-white dark:bg-[#242730] 
+                             hover:bg-[#eef4fb] dark:hover:bg-[#2b2f39]
+                             border border-[#d3d7df] dark:border-[#353943]
+                             transition-colors duration-200"
                   >
                     {user?.avatar ? (
                       <img 
@@ -419,7 +439,7 @@ const Layout = ({ children }) => {
                         {user?.name?.charAt(0).toUpperCase() || 'U'}
                       </div>
                     )}
-                    <div className="hidden md:block text-left">
+                    <div className="hidden xl:block text-left">
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">
                         {user?.name}
                       </p>
@@ -620,14 +640,21 @@ const Layout = ({ children }) => {
                     </>
                   )}
                 </div>
+
+                <button
+                  onClick={() => setShowQuickAdd(true)}
+                  className="hidden sm:inline-flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#00523d]"
+                >
+                  <FiPlus size={16} /> Thêm Giao dịch
+                </button>
               </div>
             </div>
           </div>
         </header>
 
         {/* Main content */}
-        <main className="flex-1 overflow-auto bg-gray-50 dark:bg-[#0a0a0a]">
-          <div className="container mx-auto px-4 py-8 lg:px-8">
+        <main className="flex-1 overflow-auto bg-[#f3f4f6] dark:bg-[#111216]">
+          <div className="mx-auto w-full max-w-[1600px] px-3 py-4 lg:px-5">
             {children}
           </div>
         </main>
@@ -635,19 +662,6 @@ const Layout = ({ children }) => {
       
       {/* AI Chatbot - Fixed position */}
       <Chatbot />
-
-      {/* FAB - Thêm giao dịch nhanh */}
-      <button
-        onClick={() => setShowQuickAdd(true)}
-        title="Thêm giao dịch nhanh"
-        className="fixed bottom-[72px] right-6 z-40 w-11 h-11 rounded-full
-             bg-primary-500 hover:bg-primary-600 active:scale-95
-             text-white shadow-xl shadow-primary-500/40
-                   flex items-center justify-center
-                   transition-all duration-200 hover:scale-110"
-      >
-        <FiPlus size={20} />
-      </button>
 
       {/* Modal thêm giao dịch nhanh */}
       <TransactionModal

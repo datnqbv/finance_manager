@@ -4,12 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import DebtModal from '../components/DebtModal';
 import {
   FiPlus, FiEdit2, FiTrash2, FiClock, FiCheck,
-  FiChevronDown, FiChevronUp, FiAlertTriangle
+  FiAlertTriangle, FiTrendingUp
 } from 'react-icons/fi';
 import { DebtsSkeleton } from '../components/LoadingSkeleton';
 import CurrencyInput from '../components/CurrencyInput';
+import Pagination from '../components/Pagination';
 
 const Debts = () => {
+  const ITEMS_PER_PAGE = 8;
   const { user } = useAuth();
   const { debts, stats, loading, createDebt, updateDebt, deleteDebt, addPayment, settleDebt } = useDebt();
 
@@ -21,6 +23,7 @@ const Debts = () => {
   const [payingId, setPayingId]           = useState(null);
   const [payAmount, setPayAmount]         = useState('');
   const [payNote, setPayNote]             = useState('');
+  const [currentPage, setCurrentPage]     = useState(1);
 
   const fmt = (n) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(n);
@@ -38,6 +41,33 @@ const Debts = () => {
     if (filterStatus !== 'all' && d.status !== filterStatus) return false;
     return true;
   });
+
+  const totalItems = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedDebts = filtered.slice(
+    (safeCurrentPage - 1) * ITEMS_PER_PAGE,
+    safeCurrentPage * ITEMS_PER_PAGE
+  );
+
+  const activeDebts = debts.filter(d => d.status === 'active');
+  const totalLend = stats?.totalLend ?? debts.filter(d => d.type === 'lend').reduce((s, d) => s + (d.remainingAmount || 0), 0);
+  const totalBorrow = stats?.totalBorrow ?? debts.filter(d => d.type === 'borrow').reduce((s, d) => s + (d.remainingAmount || 0), 0);
+  const netBalance = totalLend - totalBorrow;
+  const settledCount = debts.filter(d => d.status === 'settled').length;
+
+  const topProgressDebts = [...activeDebts]
+    .sort((a, b) => paidPct(b) - paidPct(a))
+    .slice(0, 3);
+
+  const dueSoonDebts = [...activeDebts]
+    .filter(d => d.dueDate)
+    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+    .slice(0, 3);
+
+  const chartDebts = [...activeDebts]
+    .sort((a, b) => (b.amount || 0) - (a.amount || 0))
+    .slice(0, 6);
 
   const handleSave = async (data) => {
     if (editingDebt) return updateDebt(editingDebt._id, data);
@@ -63,263 +93,381 @@ const Debts = () => {
 
   return (
     <div className="space-y-5">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
+        <div className="xl:col-span-8 rounded-xl bg-[#004b38] p-6 text-white shadow-[0_14px_40px_rgba(1,56,42,0.28)] relative overflow-hidden">
+          <div className="absolute -right-8 top-1/2 h-52 w-52 -translate-y-1/2 rounded-full bg-[#4c8f7a] opacity-35" />
+          <div className="relative">
+            <div className="flex items-center gap-2">
+              <span className="text-[#b8e4d6]">🤝</span>
+              <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">Quản lý công nợ</p>
+            </div>
+            <h1 className="mt-3 text-5xl font-black tracking-tight">{fmt(Math.abs(netBalance))}</h1>
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-[#d8fff2]">
+              <FiTrendingUp size={12} /> {netBalance >= 0 ? 'Vị thế dương' : 'Vị thế âm'} ({netBalance >= 0 ? 'Bạn đang được nợ nhiều hơn' : 'Bạn đang nợ nhiều hơn'})
+            </div>
 
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🤝</span>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Quản lý nợ</h1>
-          </div>
-          <p className="text-sm text-gray-400 mt-0.5 ml-7">Theo dõi các khoản vay mượn cá nhân</p>
-        </div>
-        <button
-          onClick={() => { setEditingDebt(null); setShowModal(true); }}
-          className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm self-start sm:self-auto"
-        >
-          <FiPlus size={16} /> Thêm khoản nợ
-        </button>
-      </div>
-
-      {/* ── Stats ── */}
-      {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {[
-            { label: 'Người khác nợ tôi', value: fmt(stats.totalLend),   border: 'border-l-emerald-500', icon: '💰', color: 'text-emerald-600 dark:text-emerald-400' },
-            { label: 'Tôi đang nợ',       value: fmt(stats.totalBorrow), border: 'border-l-red-500',     icon: '💸', color: 'text-red-600 dark:text-red-400' },
-            { label: 'Khoản đang cho vay', value: stats.activeLend + ' khoản',   border: 'border-l-blue-500',    icon: '🤝', color: 'text-blue-600 dark:text-blue-400' },
-            { label: 'Khoản đang vay',    value: stats.activeBorrow + ' khoản', border: 'border-l-amber-500',   icon: '📋', color: 'text-amber-600 dark:text-amber-400' },
-          ].map((s, i) => (
-            <div key={i} className={`bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222] border-l-4 ${s.border} rounded-2xl px-4 py-3`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">{s.label}</p>
-                  <p className={`text-lg font-black leading-tight ${s.color}`}>{s.value}</p>
-                </div>
-                <span className="text-2xl">{s.icon}</span>
+            <div className="mt-8 grid grid-cols-1 gap-4 border-t border-[#1e6b57] pt-5 sm:grid-cols-3">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Người khác nợ tôi</p>
+                <p className="mt-1 text-2xl font-bold">{fmt(totalLend)}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Tôi đang nợ</p>
+                <p className="mt-1 text-2xl font-bold">{fmt(totalBorrow)}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Đã tất toán</p>
+                <p className="mt-1 text-2xl font-bold">{settledCount}/{debts.length}</p>
               </div>
             </div>
-          ))}
+          </div>
         </div>
-      )}
 
-      {/* ── Filters ── */}
-      <div className="flex flex-wrap gap-2">
-        {/* Type filter */}
-        <div className="flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5">
-          {[{ label: 'Tất cả', value: 'all' }, { label: '🤝 Tôi cho vay', value: 'lend' }, { label: '💸 Tôi vay', value: 'borrow' }].map(f => (
-            <button
-              key={f.value}
-              onClick={() => setFilterType(f.value)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${ filterType === f.value ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700' }`}
-            >{f.label}</button>
-          ))}
-        </div>
-        {/* Status filter */}
-        <div className="flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5">
-          {[{ label: 'Đang hoạt động', value: 'active' }, { label: 'Đã tất toán', value: 'settled' }, { label: 'Tất cả', value: 'all' }].map(f => (
-            <button
-              key={f.value}
-              onClick={() => setFilterStatus(f.value)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${ filterStatus === f.value ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700' }`}
-            >{f.label}</button>
-          ))}
+        <div className="xl:col-span-4 space-y-4">
+          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">Tiến độ trả nợ</h3>
+              <button onClick={() => { setEditingDebt(null); setShowModal(true); }} className="text-xs font-semibold text-[#3a4a62] hover:underline dark:text-[#b9c3d0]">
+                Thêm mới
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {topProgressDebts.length > 0 ? topProgressDebts.map((debt) => {
+                const pct = paidPct(debt);
+                return (
+                  <div key={debt._id}>
+                    <div className="mb-1 flex items-center justify-between text-xs text-[#586074] dark:text-[#a9afbb]">
+                      <span className="font-semibold truncate pr-3">{debt.personName}</span>
+                      <span className="font-bold">{pct}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-[#e3e7ee] dark:bg-[#2d3340]">
+                      <div className={`h-full rounded-full ${debt.type === 'lend' ? 'bg-emerald-600' : 'bg-red-500'}`} style={{ width: `${Math.min(pct, 100)}%` }} />
+                    </div>
+                  </div>
+                );
+              }) : (
+                <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Bạn chưa có khoản nợ nào.</p>
+              )}
+            </div>
+
+            <div className="mt-4 rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
+              <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">Gợi ý thông minh</p>
+              <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">
+                {activeDebts.length > 0
+                  ? 'Ưu tiên xử lý các khoản sắp đến hạn để tránh phát sinh quá hạn.'
+                  : 'Tuyệt vời! Bạn không có khoản nợ đang hoạt động.'}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── Cards ── */}
-      {filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="w-16 h-16 bg-gray-100 dark:bg-[#1a1a1a] rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🤝</div>
-          <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">Chưa có khoản nợ nào</p>
-          <p className="text-xs text-gray-400 mb-5">Thêm khoản vay mượn để theo dõi</p>
-          <button onClick={() => { setEditingDebt(null); setShowModal(true); }} className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors">
-            <FiPlus size={15} /> Thêm khoản đầu tiên
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map(debt => {
-            const isLend     = debt.type === 'lend';
-            const isSettled  = debt.status === 'settled';
-            const pct        = paidPct(debt);
-            const days       = daysUntil(debt.dueDate);
-            const overdue    = days !== null && days < 0 && !isSettled;
-            const nearDue    = days !== null && days >= 0 && days <= 7 && !isSettled;
-            const expanded   = expandedId === debt._id;
-            const paying     = payingId   === debt._id;
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
+        <div className="xl:col-span-8 rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Biến động công nợ</h3>
+              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Đã thanh toán và còn lại theo từng khoản</p>
+            </div>
+            <div className="text-xs font-semibold text-[#5e6573] dark:text-[#a7afbc]">Top 6 khoản</div>
+          </div>
 
-            return (
-              <div
-                key={debt._id}
-                className={`group bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222] border-l-4 rounded-2xl p-5 hover:shadow-md transition-all duration-200 ${
-                  isSettled   ? 'border-l-gray-300 dark:border-l-[#333] opacity-70'
-                  : isLend    ? 'border-l-emerald-500'
-                  : 'border-l-red-500'
-                }`}
-              >
-                {/* Top row */}
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                        isLend
-                          ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                          : 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400'
-                      }`}>
-                        {isLend ? '🤝 Cho vay' : '💸 Tôi vay'}
-                      </span>
-                      {isSettled && (
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400">
-                          ✅ Tất toán
-                        </span>
-                      )}
+          {chartDebts.length > 0 ? (
+            <div className="flex items-end gap-4 h-[220px] px-2">
+              {chartDebts.map((debt) => {
+                const progress = paidPct(debt);
+                const reachedHeight = Math.max(progress, 8);
+                const remainHeight = Math.max(100 - progress, 8);
+                return (
+                  <div key={debt._id} className="flex-1 min-w-0">
+                    <div className="h-[170px] flex items-end justify-center gap-2">
+                      <div className={`w-4 rounded-t-md ${debt.type === 'lend' ? 'bg-[#0b6f53]' : 'bg-[#b4534b]'}`} style={{ height: `${reachedHeight}%` }} />
+                      <div className="w-4 rounded-t-md bg-[#b7c4d8]" style={{ height: `${remainHeight}%` }} />
                     </div>
-                    <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">{debt.personName}</h3>
-                    {debt.description && (
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate">{debt.description}</p>
-                    )}
+                    <p className="mt-2 truncate text-center text-[11px] font-semibold text-[#6a7280] dark:text-[#aeb5c2]">{debt.personName}</p>
                   </div>
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2">
-                    <button onClick={() => { setEditingDebt(debt); setShowModal(true); }} className="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-[#2a2a2a] text-gray-400 hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-500/20 dark:hover:text-blue-400 transition">
-                      <FiEdit2 size={12} />
-                    </button>
-                    <button onClick={() => handleDelete(debt)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-[#2a2a2a] text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-500/20 dark:hover:text-red-400 transition">
-                      <FiTrash2 size={12} />
-                    </button>
-                  </div>
-                </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="h-[220px] flex items-center justify-center text-sm text-[#6f7480] dark:text-[#a4acba]">
+              Chưa có dữ liệu công nợ.
+            </div>
+          )}
+        </div>
 
-                {/* Amount + progress */}
-                <div className="mb-3">
-                  <div className="flex items-end justify-between mb-1.5">
-                    <div>
-                      <p className="text-xs text-gray-400">Còn lại</p>
-                      <p className={`text-xl font-black ${isLend ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {fmt(debt.remainingAmount)}
+        <div className="xl:col-span-4 rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Khoản sắp tới hạn</h3>
+            <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">Lịch nợ</span>
+          </div>
+
+          <div className="space-y-3">
+            {dueSoonDebts.length > 0 ? dueSoonDebts.map((debt) => {
+              const days = daysUntil(debt.dueDate);
+              const overdue = days !== null && days < 0;
+              return (
+                <div key={debt._id} className="flex items-center justify-between rounded-xl bg-[#f4f6f9] p-3 dark:bg-[#232936]">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${overdue ? 'bg-[#f3d7d2] text-[#7b3e35]' : 'bg-[#dfe8f6] text-[#476082]'}`}>
+                      {overdue ? <FiAlertTriangle size={14} /> : <FiClock size={14} />}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-[#1f2733] dark:text-[#e8edf4]">{debt.personName}</p>
+                      <p className={`text-xs ${overdue ? 'text-red-600 dark:text-red-400' : 'text-[#6f7480] dark:text-[#a4acba]'}`}>
+                        {overdue ? `Quá hạn ${Math.abs(days)} ngày` : `Còn ${days} ngày`}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-400">Gốc</p>
-                      <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">{fmt(debt.amount)}</p>
-                    </div>
                   </div>
-                  <div className="h-2 bg-gray-100 dark:bg-[#2a2a2a] rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-700 ${isSettled ? 'bg-gray-400' : isLend ? 'bg-emerald-500' : 'bg-red-500'}`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1 text-right">Đã trả {pct}%</p>
+                  <p className="text-sm font-black text-[#1a1f29] dark:text-[#eff2f6]">{fmt(debt.remainingAmount)}</p>
                 </div>
-
-                {/* Due date */}
-                {debt.dueDate && (
-                  <div className={`flex items-center gap-1.5 text-xs font-medium mb-3 ${
-                    isSettled ? 'text-gray-400'
-                    : overdue  ? 'text-red-600 dark:text-red-400'
-                    : nearDue  ? 'text-amber-600 dark:text-amber-400'
-                    : 'text-gray-500 dark:text-gray-400'
-                  }`}>
-                    {overdue ? <FiAlertTriangle size={12} /> : <FiClock size={12} />}
-                    {overdue
-                      ? `Quá hạn ${Math.abs(days)} ngày`
-                      : days === 0 ? 'Hạn hôm nay!'
-                      : nearDue ? `Còn ${days} ngày (${fmtDate(debt.dueDate)})`
-                      : `Hạn: ${fmtDate(debt.dueDate)}`}
-                  </div>
-                )}
-
-                {/* Actions buttons */}
-                {!isSettled && (
-                  <div className="space-y-2">
-                    {paying ? (
-                      <div className="space-y-2">
-                        <div className="flex gap-2">
-                          <CurrencyInput
-                            value={payAmount}
-                            onChange={v => setPayAmount(v)}
-                            placeholder="Số tiền"
-                            baseClass="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-[#2a2a2a] rounded-xl dark:bg-[#1a1a1a] dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                          />
-                          <button onClick={() => handlePay(debt._id)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition">OK</button>
-                          <button onClick={() => { setPayingId(null); setPayAmount(''); setPayNote(''); }} className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 px-3 py-2 rounded-xl text-xs font-bold transition">Hủy</button>
-                        </div>
-                        <input
-                          type="text"
-                          value={payNote}
-                          onChange={e => setPayNote(e.target.value)}
-                          placeholder="Ghi chú (tùy chọn)..."
-                          className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-[#2a2a2a] rounded-xl dark:bg-[#1a1a1a] dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => { setPayingId(debt._id); setPayAmount(''); setPayNote(''); }}
-                          className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition ${
-                            isLend
-                              ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100'
-                              : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30 hover:bg-red-100'
-                          }`}
-                        >
-                          {isLend ? '+ Thu tiền' : '+ Ghi trả nợ'}
-                        </button>
-                        <button
-                          onClick={() => settleDebt(debt._id)}
-                          className="px-3 py-2 rounded-xl text-xs font-semibold border border-gray-200 dark:border-[#2a2a2a] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition flex items-center gap-1"
-                          title="Đánh dấu tất toán"
-                        >
-                          <FiCheck size={13} /> Tất toán
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* History toggle */}
-                {debt.paymentHistory?.length > 0 && (
-                  <button
-                    onClick={() => setExpandedId(expanded ? null : debt._id)}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1a1a1a] border border-gray-100 dark:border-[#2a2a2a] transition mt-2"
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <FiClock size={12} /> Lịch sử thanh toán
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full">{debt.paymentHistory.length}</span>
-                      {expanded ? <FiChevronUp size={12} /> : <FiChevronDown size={12} />}
-                    </span>
-                  </button>
-                )}
-
-                {/* History drawer */}
-                {expanded && (
-                  <div className="mt-2 border border-gray-100 dark:border-[#2a2a2a] rounded-xl overflow-hidden">
-                    <div className="bg-gray-50 dark:bg-[#1a1a1a] px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                      Lịch sử
-                    </div>
-                    <div className="max-h-52 overflow-y-auto divide-y divide-gray-100 dark:divide-[#222]">
-                      {[...debt.paymentHistory].reverse().map((h, i) => (
-                        <div key={i} className="flex items-start justify-between gap-2 px-3 py-2.5">
-                          <div className="min-w-0">
-                            <p className={`text-xs font-semibold ${isLend ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                              {isLend ? '+' : '-'}{fmt(h.amount)}
-                            </p>
-                            {h.note && <p className="text-xs text-gray-400 truncate mt-0.5">{h.note}</p>}
-                          </div>
-                          <p className="text-[10px] text-gray-400 flex-shrink-0 mt-0.5">{fmtDate(h.date)}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+              );
+            }) : (
+              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Không có khoản nào gần đến hạn.</p>
+            )}
+          </div>
         </div>
-      )}
+      </div>
+
+      <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25]">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eceff4] px-5 py-4 dark:border-[#2b313d]">
+          <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Danh sách công nợ</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2">
+              {[{ label: 'Tất cả', value: 'all' }, { label: 'Tôi cho vay', value: 'lend' }, { label: 'Tôi vay', value: 'borrow' }].map(f => (
+                <button
+                  key={f.value}
+                  onClick={() => {
+                    setFilterType(f.value);
+                    setCurrentPage(1);
+                  }}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    filterType === f.value
+                      ? 'bg-[#eceff4] text-[#1f2733] dark:bg-[#303746] dark:text-[#f1f4f8]'
+                      : 'bg-[#f8f9fb] text-[#6f7480] hover:bg-[#edf1f6] dark:bg-[#232936] dark:text-[#a4acba] dark:hover:bg-[#2d3442]'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+              {[{ label: 'Đang hoạt động', value: 'active' }, { label: 'Đã tất toán', value: 'settled' }, { label: 'Tất cả trạng thái', value: 'all' }].map(f => (
+                <button
+                  key={f.value}
+                  onClick={() => {
+                    setFilterStatus(f.value);
+                    setCurrentPage(1);
+                  }}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    filterStatus === f.value
+                      ? 'bg-[#eceff4] text-[#1f2733] dark:bg-[#303746] dark:text-[#f1f4f8]'
+                      : 'bg-[#f8f9fb] text-[#6f7480] hover:bg-[#edf1f6] dark:bg-[#232936] dark:text-[#a4acba] dark:hover:bg-[#2d3442]'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => { setEditingDebt(null); setShowModal(true); }}
+              className="ml-1 inline-flex items-center gap-1.5 rounded-xl bg-[#003d2d] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#00523d]"
+            >
+              <FiPlus size={13} /> Thêm khoản nợ
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#eceff4] bg-[#f8f9fb] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:bg-[#232936] dark:text-[#9fa7b4]">
+                <th className="px-5 py-3">Đối tượng</th>
+                <th className="px-5 py-3">Loại</th>
+                <th className="px-5 py-3">Còn lại</th>
+                <th className="px-5 py-3">Gốc</th>
+                <th className="px-5 py-3">Tiến độ</th>
+                <th className="px-5 py-3">Hạn</th>
+                <th className="px-5 py-3">Trạng thái</th>
+                <th className="px-5 py-3 text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedDebts.length > 0 ? paginatedDebts.map((debt, idx) => {
+                const isLend = debt.type === 'lend';
+                const isSettled = debt.status === 'settled';
+                const pct = paidPct(debt);
+                const days = daysUntil(debt.dueDate);
+                const overdue = days !== null && days < 0 && !isSettled;
+                const expanded = expandedId === debt._id;
+                const paying = payingId === debt._id;
+
+                return [
+                  <tr key={`row-${debt._id}`} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
+                    <td className="px-5 py-4">
+                      <p className="font-bold text-[#1d2430] dark:text-[#eef1f5]">{debt.personName}</p>
+                      <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{debt.description || 'Khoản vay mượn cá nhân'}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${isLend ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'}`}>
+                        {isLend ? 'Cho vay' : 'Tôi vay'}
+                      </span>
+                    </td>
+                    <td className={`px-5 py-4 font-semibold ${isLend ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>{fmt(debt.remainingAmount)}</td>
+                    <td className="px-5 py-4 text-[#303846] dark:text-[#c9d1db] font-semibold">{fmt(debt.amount)}</td>
+                    <td className="px-5 py-4">
+                      <div className="w-24">
+                        <p className="text-xs font-semibold text-[#4f596b] dark:text-[#b9c3d1] mb-1">{pct}%</p>
+                        <div className="h-2 rounded-full bg-[#e3e7ee] dark:bg-[#2d3340]">
+                          <div className={`h-full rounded-full ${isSettled ? 'bg-gray-400' : isLend ? 'bg-emerald-600' : 'bg-red-500'}`} style={{ width: `${Math.min(pct, 100)}%` }} />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-xs font-semibold">
+                      {debt.dueDate ? (
+                        <span className={overdue ? 'text-red-600 dark:text-red-400' : 'text-[#6f7480] dark:text-[#a4acba]'}>
+                          {overdue ? `Quá hạn ${Math.abs(days)} ngày` : fmtDate(debt.dueDate)}
+                        </span>
+                      ) : <span className="text-[#6f7480] dark:text-[#a4acba]">—</span>}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${isSettled ? 'bg-[#e4f8ef] text-[#12724e] dark:bg-[#213c33] dark:text-[#80d6b4]' : 'bg-[#fff4db] text-[#8a6a2f] dark:bg-[#3a3422] dark:text-[#f0d493]'}`}>
+                        {isSettled ? 'Tất toán' : 'Đang hoạt động'}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {!isSettled && (
+                          <button
+                            onClick={() => {
+                              setPayingId(paying ? null : debt._id);
+                              setExpandedId(null);
+                              setPayAmount('');
+                              setPayNote('');
+                            }}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#e7f6ee] text-[#1f7d55] hover:bg-[#d7f0e4] dark:bg-[#204236] dark:text-[#8edbbb] dark:hover:bg-[#285344]"
+                            title="Ghi thanh toán"
+                          >
+                            <FiPlus size={14} />
+                          </button>
+                        )}
+                        {(debt.paymentHistory?.length ?? 0) > 0 && (
+                          <button
+                            onClick={() => {
+                              setExpandedId(expanded ? null : debt._id);
+                              setPayingId(null);
+                            }}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc] dark:hover:bg-[#364050]"
+                            title="Lịch sử"
+                          >
+                            <FiClock size={14} />
+                          </button>
+                        )}
+                        {!isSettled && (
+                          <button
+                            onClick={() => settleDebt(debt._id)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#e6ecfa] text-[#6177a6] hover:bg-[#dce6fa] dark:bg-[#313b54] dark:text-[#a9bcdf] dark:hover:bg-[#39455f]"
+                            title="Tất toán"
+                          >
+                            <FiCheck size={14} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => { setEditingDebt(debt); setShowModal(true); }}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc] dark:hover:bg-[#364050]"
+                          title="Chỉnh sửa"
+                        >
+                          <FiEdit2 size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(debt)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#f8eceb] text-[#a55d56] hover:bg-[#f4dedc] dark:bg-[#3b2a2c] dark:text-[#e0a29a] dark:hover:bg-[#4a3336]"
+                          title="Xóa"
+                        >
+                          <FiTrash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>,
+
+                  paying ? (
+                    <tr key={`pay-${debt._id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f8fbfa] dark:bg-[#1f2d29]">
+                      <td colSpan={8} className="px-5 py-3">
+                        <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                          <div className="md:w-64">
+                            <CurrencyInput
+                              value={payAmount}
+                              onChange={v => setPayAmount(v)}
+                              placeholder="Số tiền"
+                              baseClass="w-full px-3 py-2 text-sm border border-gray-200 dark:border-[#334640] rounded-xl dark:bg-[#18231f] dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                            />
+                          </div>
+                          <input
+                            type="text"
+                            value={payNote}
+                            onChange={e => setPayNote(e.target.value)}
+                            placeholder="Ghi chú (tùy chọn)..."
+                            className="md:flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-[#334640] rounded-xl dark:bg-[#18231f] dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                          />
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => handlePay(debt._id)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition">Xác nhận</button>
+                            <button onClick={() => { setPayingId(null); setPayAmount(''); setPayNote(''); }} className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 px-3 py-2 rounded-xl text-xs font-bold transition">Hủy</button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : null,
+
+                  expanded ? (
+                    <tr key={`history-${debt._id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f9fafc] dark:bg-[#212734]">
+                      <td colSpan={8} className="px-5 py-3">
+                        <div className="max-h-52 overflow-y-auto divide-y divide-gray-100 dark:divide-[#2b3241] rounded-xl border border-[#e8edf4] dark:border-[#2f3748]">
+                          {[...debt.paymentHistory].reverse().map((h, i) => (
+                            <div key={i} className="flex items-start justify-between gap-2 px-3 py-2.5">
+                              <div className="min-w-0">
+                                <p className={`text-xs font-semibold ${isLend ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                                  {isLend ? '+' : '-'}{fmt(h.amount)}
+                                </p>
+                                {h.note && <p className="text-xs text-gray-400 truncate mt-0.5">{h.note}</p>}
+                              </div>
+                              <p className="text-[10px] text-gray-400 flex-shrink-0 mt-0.5">{fmtDate(h.date)}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ) : null,
+                ];
+              }) : (
+                <tr>
+                  <td colSpan={8} className="px-5 py-12 text-center">
+                    <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Không có khoản nợ phù hợp với bộ lọc hiện tại.</p>
+                    <button
+                      onClick={() => { setEditingDebt(null); setShowModal(true); }}
+                      className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00523d]"
+                    >
+                      <FiPlus size={14} /> Thêm khoản đầu tiên
+                    </button>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {totalItems > 0 && (
+          <div className="px-5 pb-4">
+            <Pagination
+              currentPage={safeCurrentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onItemsPerPageChange={() => {}}
+              totalItems={totalItems}
+              showItemsPerPageSelector={false}
+            />
+          </div>
+        )}
+      </div>
 
       {showModal && (
         <DebtModal

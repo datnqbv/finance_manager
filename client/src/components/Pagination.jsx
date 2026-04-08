@@ -6,7 +6,9 @@ const Pagination = ({
   onPageChange, 
   itemsPerPage, 
   onItemsPerPageChange,
-  totalItems 
+  totalItems,
+  showItemsPerPageSelector = true,
+  itemsPerPageOptions = [5, 10, 20, 50, 100],
 }) => {
   const getPageNumbers = () => {
     const pages = [];
@@ -31,29 +33,29 @@ const Pagination = ({
     return pages;
   };
 
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
     <div className="flex items-center justify-between flex-wrap gap-4 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
       {/* Items per page selector */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-600 dark:text-gray-400">Hiển thị</span>
-        <select
-          value={itemsPerPage}
-          onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-          className="input w-20 py-1"
-        >
-          <option value={5}>5</option>
-          <option value={10}>10</option>
-          <option value={20}>20</option>
-          <option value={50}>50</option>
-          <option value={100}>100</option>
-        </select>
-        <span className="text-sm text-gray-600 dark:text-gray-400">
-          / trang
-        </span>
-      </div>
+      {showItemsPerPageSelector && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600 dark:text-gray-400">Hiển thị</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+            className="input w-20 py-1"
+          >
+            {itemsPerPageOptions.map((value) => (
+              <option key={value} value={value}>{value}</option>
+            ))}
+          </select>
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            / trang
+          </span>
+        </div>
+      )}
 
       {/* Page info */}
       <div className="text-sm text-gray-600 dark:text-gray-400">

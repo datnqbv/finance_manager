@@ -307,54 +307,78 @@ const Statistics = () => {
     }));
     const topExpCats = [...catStats].sort((a, b) => b.totalExpense - a.totalExpense).slice(0, 6);
     const maxExp = topExpCats[0]?.totalExpense || 1;
+    const overviewIncome = monthly?.totalIncome || 0;
+    const overviewExpense = monthly?.totalExpense || 0;
+    const overviewSaving = overviewIncome - overviewExpense;
+    const overviewSavingRate = overviewIncome > 0 ? (overviewSaving / overviewIncome) * 100 : 0;
 
     return (
       <div className="space-y-5">
-        {/* Month/Year selector */}
-        <div className="flex flex-wrap gap-2 items-center">
-          <div className="flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5 flex-wrap">
-            {Array.from({length: 12}, (_, i) => i + 1).map(m => (
-              <button key={m}
-                onClick={() => setSelectedMonth(m)}
-                className={`w-9 h-7 rounded-lg text-xs font-semibold transition-all ${
-                  selectedMonth === m
-                    ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >T{m}</button>
-            ))}
+        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">Tổng quan theo kỳ</h3>
+              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Theo dõi hiệu suất tài chính theo tháng và năm</p>
+            </div>
+            <div className="rounded-full bg-[#eef2f7] px-3 py-1 text-xs font-semibold text-[#435066] dark:bg-[#2a3341] dark:text-[#c7d1df]">
+              Tỷ lệ tiết kiệm: {overviewSavingRate.toFixed(1)}%
+            </div>
           </div>
-          <div className="flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5">
-            {[selectedYear - 1, selectedYear, selectedYear + 1].map(y => (
-              <button key={y}
-                onClick={() => setSelectedYear(y)}
-                className={`px-3 h-7 rounded-lg text-xs font-semibold transition-all ${
-                  selectedYear === y
-                    ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >{y}</button>
-            ))}
+
+          <div className="mt-3 flex flex-wrap gap-2 items-center">
+            <div className="flex items-center bg-[#f4f7fb] dark:bg-[#222935] p-1 rounded-xl gap-0.5 flex-wrap">
+              {Array.from({length: 12}, (_, i) => i + 1).map(m => (
+                <button key={m}
+                  onClick={() => setSelectedMonth(m)}
+                  className={`w-9 h-7 rounded-lg text-xs font-semibold transition-all ${
+                    selectedMonth === m
+                      ? 'bg-white dark:bg-[#303746] text-[#1f2733] dark:text-[#f1f4f8] shadow-sm'
+                      : 'text-[#7f8795] dark:text-[#9ba3b2] hover:text-[#2d3645] dark:hover:text-[#e5eaf1]'
+                  }`}
+                >T{m}</button>
+              ))}
+            </div>
+            <div className="flex items-center bg-[#f4f7fb] dark:bg-[#222935] p-1 rounded-xl gap-0.5">
+              {[selectedYear - 1, selectedYear, selectedYear + 1].map(y => (
+                <button key={y}
+                  onClick={() => setSelectedYear(y)}
+                  className={`px-3 h-7 rounded-lg text-xs font-semibold transition-all ${
+                    selectedYear === y
+                      ? 'bg-white dark:bg-[#303746] text-[#1f2733] dark:text-[#f1f4f8] shadow-sm'
+                      : 'text-[#7f8795] dark:text-[#9ba3b2] hover:text-[#2d3645] dark:hover:text-[#e5eaf1]'
+                  }`}
+                >{y}</button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* KPI cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <KpiCard label="Thu nhập" value={fmt(monthly?.totalIncome)} border="border-l-emerald-500" icon="📈" valueColor="text-emerald-600 dark:text-emerald-400" loading={loading}/>
-          <KpiCard label="Chi tiêu" value={fmt(monthly?.totalExpense)} border="border-l-red-500" icon="📉" valueColor="text-red-600 dark:text-red-400" loading={loading}/>
-          <KpiCard label="Tiết kiệm" value={fmt((monthly?.totalIncome || 0) - (monthly?.totalExpense || 0))}
-            border={(monthly?.totalIncome||0) >= (monthly?.totalExpense||0) ? 'border-l-blue-500' : 'border-l-orange-500'}
-            icon="💰" valueColor="text-blue-600 dark:text-blue-400" loading={loading}/>
-          <KpiCard label="Giao dịch" value={`${monthly?.totalTransactions ?? '—'}`} sub="tháng này"
-            border="border-l-purple-500" icon="🔢" valueColor="text-purple-600 dark:text-purple-400" loading={loading}/>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Thu nhập</p>
+            <p className="mt-2 text-2xl font-black text-[#159b63] dark:text-[#58d49f]">{fmt(overviewIncome)}</p>
+          </div>
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Chi tiêu</p>
+            <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">{fmt(overviewExpense)}</p>
+          </div>
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Tiết kiệm ròng</p>
+            <p className={`mt-2 text-2xl font-black ${overviewSaving >= 0 ? 'text-[#2e67da] dark:text-[#8eb2ff]' : 'text-[#c0701c] dark:text-[#f2ba76]'}`}>
+              {fmt(overviewSaving)}
+            </p>
+          </div>
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Giao dịch</p>
+            <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{monthly?.totalTransactions ?? 0}</p>
+          </div>
         </div>
 
-        {/* Pie + Top categories */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-blue-500"/>
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Tỷ lệ chi tiêu theo danh mục</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Tỷ lệ chi tiêu theo danh mục</h3>
             </div>
             {pieData.length > 0 ? (
               <ResponsiveContainer width="100%" height={220}>
@@ -366,39 +390,38 @@ const Statistics = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[220px] flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">Chưa có dữ liệu</div>
+              <div className="h-[220px] flex items-center justify-center text-sm text-[#6f7480] dark:text-[#a4acba]">Chưa có dữ liệu</div>
             )}
           </div>
 
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-red-500"/>
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Top danh mục chi tiêu</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Top danh mục chi tiêu</h3>
             </div>
             <div className="space-y-2.5">
               {topExpCats.map((c, i) => (
                 <div key={c._id}>
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="font-medium text-gray-700 dark:text-gray-300 truncate max-w-[60%]">{c._id}</span>
-                    <span className="font-bold text-red-600 dark:text-red-400 flex-shrink-0 ml-2">{fmt(c.totalExpense)}</span>
+                    <span className="font-semibold text-[#1f2733] dark:text-[#e8edf4] truncate max-w-[60%]">{c._id}</span>
+                    <span className="font-bold text-[#df4b4b] dark:text-[#ff8f8f] flex-shrink-0 ml-2">{fmt(c.totalExpense)}</span>
                   </div>
-                  <div className="h-1.5 bg-gray-100 dark:bg-[#2a2a2a] rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-[#e1e7f0] dark:bg-[#2e3542] rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-all duration-700"
                       style={{ width: `${(c.totalExpense / maxExp) * 100}%`, backgroundColor: COLORS[i % COLORS.length] }}/>
                   </div>
                 </div>
               ))}
-              {topExpCats.length === 0 && <p className="text-sm text-gray-400 dark:text-gray-500 py-8 text-center">Chưa có dữ liệu</p>}
+              {topExpCats.length === 0 && <p className="text-sm text-[#6f7480] dark:text-[#a4acba] py-8 text-center">Chưa có dữ liệu</p>}
             </div>
           </div>
         </div>
 
-        {/* Category bar chart */}
         {catStats.length > 0 && (
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-purple-500"/>
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Thu/Chi theo danh mục</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Thu/Chi theo danh mục</h3>
             </div>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={catStats.slice(0,8).map(c => ({ name: c._id, 'Thu nhập': c.totalIncome||0, 'Chi tiêu': c.totalExpense||0 }))} margin={{left: 0, right: 0}}>
@@ -420,17 +443,37 @@ const Statistics = () => {
   // ── Compare tab ──────────────────────────────────────────────────────────
   const CompareTab = () => (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard label="Tổng thu (6 tháng)"  value={fmt(compare.reduce((s,m)=>s+(m.totalIncome||0),0))}  border="border-l-emerald-500" icon="📈" valueColor="text-emerald-600 dark:text-emerald-400" loading={loading}/>
-        <KpiCard label="Tổng chi (6 tháng)"  value={fmt(compare.reduce((s,m)=>s+(m.totalExpense||0),0))} border="border-l-red-500"     icon="📉" valueColor="text-red-600 dark:text-red-400"     loading={loading}/>
-        <KpiCard label="TB thu/tháng" value={fmt(compare.length ? compare.reduce((s,m)=>s+(m.totalIncome||0),0)/compare.length : 0)} border="border-l-blue-500" icon="💵" valueColor="text-blue-600 dark:text-blue-400" loading={loading}/>
-        <KpiCard label="TB chi/tháng" value={fmt(compare.length ? compare.reduce((s,m)=>s+(m.totalExpense||0),0)/compare.length : 0)} border="border-l-orange-500" icon="💸" valueColor="text-orange-600 dark:text-orange-400" loading={loading}/>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Tổng thu (6 tháng)</p>
+          <p className="mt-2 text-2xl font-black text-[#159b63] dark:text-[#58d49f]">
+            {fmt(compare.reduce((s,m)=>s+(m.totalIncome||0),0))}
+          </p>
+        </div>
+        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Tổng chi (6 tháng)</p>
+          <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">
+            {fmt(compare.reduce((s,m)=>s+(m.totalExpense||0),0))}
+          </p>
+        </div>
+        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">TB thu/tháng</p>
+          <p className="mt-2 text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff]">
+            {fmt(compare.length ? compare.reduce((s,m)=>s+(m.totalIncome||0),0)/compare.length : 0)}
+          </p>
+        </div>
+        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">TB chi/tháng</p>
+          <p className="mt-2 text-2xl font-black text-[#c0701c] dark:text-[#f2ba76]">
+            {fmt(compare.length ? compare.reduce((s,m)=>s+(m.totalExpense||0),0)/compare.length : 0)}
+          </p>
+        </div>
       </div>
 
-      <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+      <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-1 h-4 rounded-full bg-blue-500"/>
-          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">So sánh thu/chi 6 tháng gần nhất</h3>
+          <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">So sánh thu/chi 6 tháng gần nhất</h3>
         </div>
         {compare.length > 0 ? (
           <ResponsiveContainer width="100%" height={260}>
@@ -444,20 +487,20 @@ const Statistics = () => {
               <Bar dataKey="Chi tiêu" fill="#ef4444" radius={[4,4,0,0]}/>
             </BarChart>
           </ResponsiveContainer>
-        ) : <div className="h-[260px] flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">Chưa có dữ liệu</div>}
+        ) : <div className="h-[260px] flex items-center justify-center text-sm text-[#6f7480] dark:text-[#a4acba]">Chưa có dữ liệu</div>}
       </div>
 
       {compare.length > 0 && (
-        <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100 dark:border-[#222222]">
-            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Chi tiết theo tháng</h3>
+        <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] overflow-hidden">
+          <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Chi tiết theo tháng</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
-              <thead className="bg-gray-50 dark:bg-[#1a1a1a]">
+              <thead className="bg-[#f8f9fb] dark:bg-[#232936]">
                 <tr>
                   {['Tháng','Thu nhập','Chi tiêu','Tiết kiệm','Tỷ lệ tiết kiệm','Tăng trưởng chi'].map(h => (
-                    <th key={h} className="px-4 py-2.5 text-left font-semibold text-gray-500 dark:text-gray-400">{h}</th>
+                    <th key={h} className="px-4 py-2.5 text-left font-semibold text-[#7a808c] dark:text-[#9fa7b4]">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -468,7 +511,7 @@ const Statistics = () => {
                   const prev    = compare[i-1];
                   const growth  = prev?.totalExpense ? (((m.totalExpense - prev.totalExpense)/prev.totalExpense)*100).toFixed(1) : '—';
                   return (
-                    <tr key={i} className="border-t border-gray-50 dark:border-[#222222] hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors">
+                    <tr key={i} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
                       <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">T{m.month}/{m.year}</td>
                       <td className="px-4 py-2.5 text-emerald-600 dark:text-emerald-400 font-medium">{fmt(m.totalIncome)}</td>
                       <td className="px-4 py-2.5 text-red-600 dark:text-red-400 font-medium">{fmt(m.totalExpense)}</td>
@@ -506,21 +549,39 @@ const Statistics = () => {
     ];
 
     const catForecastList = f?.byCategory ? Object.entries(f.byCategory).slice(0,8) : [];
+    const confidenceMap = {
+      high: 'Tin cậy cao',
+      medium: 'Trung bình',
+      low: 'Thấp',
+    };
 
     return (
       <div className="space-y-5">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <KpiCard label="Dự báo chi tiêu" value={fmt(f?.nextMonthExpense)} sub={<TrendBadge trend={f?.expenseTrend}/>} border="border-l-red-500" icon="🔮" valueColor="text-red-600 dark:text-red-400" loading={loading}/>
-          <KpiCard label="Dự báo thu nhập" value={fmt(f?.nextMonthIncome)} sub={<TrendBadge trend={f?.incomeTrend}/>} border="border-l-emerald-500" icon="💡" valueColor="text-emerald-600 dark:text-emerald-400" loading={loading}/>
-          <KpiCard label="Dự báo tiết kiệm" value={fmt(f?.nextMonthSavings)} border="border-l-blue-500" icon="🏦" valueColor="text-blue-600 dark:text-blue-400" loading={loading}/>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Dự báo chi tiêu</p>
+            <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">{fmt(f?.nextMonthExpense)}</p>
+          </div>
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Dự báo thu nhập</p>
+            <p className="mt-2 text-2xl font-black text-[#159b63] dark:text-[#58d49f]">{fmt(f?.nextMonthIncome)}</p>
+          </div>
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Dự báo tiết kiệm</p>
+            <p className="mt-2 text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff]">{fmt(f?.nextMonthSavings)}</p>
+          </div>
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Độ tin cậy mô hình</p>
+            <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{confidenceMap[f?.confidence] || '—'}</p>
+          </div>
         </div>
 
         {f && (
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <div className="w-1 h-4 rounded-full bg-purple-500"/>
-                <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Mô hình dự báo ML</h3>
+                <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Mô hình dự báo ML</h3>
               </div>
               <div className="flex items-center gap-2">
                 <ConfidenceBadge confidence={f.confidence}/>
@@ -559,22 +620,22 @@ const Statistics = () => {
         )}
 
         {catForecastList.length > 0 && (
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-[#222222]">
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Dự báo chi tiêu theo danh mục</h3>
+          <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Dự báo chi tiêu theo danh mục</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="bg-gray-50 dark:bg-[#1a1a1a]">
+                <thead className="bg-[#f8f9fb] dark:bg-[#232936]">
                   <tr>
                     {['Danh mục','Trung bình/tháng','Dự báo tháng tới','Xu hướng','Độ tin cậy'].map(h => (
-                      <th key={h} className="px-4 py-2.5 text-left font-semibold text-gray-500 dark:text-gray-400">{h}</th>
+                      <th key={h} className="px-4 py-2.5 text-left font-semibold text-[#7a808c] dark:text-[#9fa7b4]">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {catForecastList.map(([cat, d]) => (
-                    <tr key={cat} className="border-t border-gray-50 dark:border-[#222222] hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors">
+                    <tr key={cat} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
                       <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">{cat}</td>
                       <td className="px-4 py-2.5 text-gray-600 dark:text-gray-300">{fmt(d.average)}</td>
                       <td className="px-4 py-2.5 font-bold text-red-600 dark:text-red-400">{fmt(d.forecast)}</td>
@@ -595,22 +656,32 @@ const Statistics = () => {
   const TrendsTab = () => {
     const t = trends;
     const trendData = t?.monthlyData || [];
-    const maxRate = Math.max(...trendData.map(r => Math.abs(r.savingsRate || 0)), 1);
-
     return (
       <div className="space-y-5">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <KpiCard label="TB Thu/tháng"  value={fmt(t?.averageIncome)} border="border-l-emerald-500" icon="📈" valueColor="text-emerald-600 dark:text-emerald-400" loading={loading}/>
-          <KpiCard label="TB Chi/tháng"  value={fmt(t?.averageExpense)} border="border-l-red-500" icon="📉" valueColor="text-red-600 dark:text-red-400" loading={loading}/>
-          <KpiCard label="TB Tiết kiệm"  value={fmt(t?.averageSavings)} border="border-l-blue-500" icon="💰" valueColor="text-blue-600 dark:text-blue-400" loading={loading}/>
-          <KpiCard label="Xu hướng chi"  value={t?.overallTrend || '—'} border="border-l-purple-500" icon="📊" valueColor="text-purple-600 dark:text-purple-400" loading={loading}/>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">TB Thu/tháng</p>
+            <p className="mt-2 text-2xl font-black text-[#159b63] dark:text-[#58d49f]">{fmt(t?.averageIncome)}</p>
+          </div>
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">TB Chi/tháng</p>
+            <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">{fmt(t?.averageExpense)}</p>
+          </div>
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">TB Tiết kiệm</p>
+            <p className="mt-2 text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff]">{fmt(t?.averageSavings)}</p>
+          </div>
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Xu hướng chi</p>
+            <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{t?.overallTrend || '—'}</p>
+          </div>
         </div>
 
         {trendData.length > 0 && (
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-blue-500"/>
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Xu hướng thu/chi/tiết kiệm 12 tháng</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Xu hướng thu/chi/tiết kiệm 12 tháng</h3>
             </div>
             <ResponsiveContainer width="100%" height={250}>
               <AreaChart data={trendData.map(d => ({
@@ -642,16 +713,16 @@ const Statistics = () => {
         )}
 
         {trendData.length > 0 && (
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-[#222222]">
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Chi tiết theo tháng</h3>
+          <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Chi tiết theo tháng</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="bg-gray-50 dark:bg-[#1a1a1a]">
+                <thead className="bg-[#f8f9fb] dark:bg-[#232936]">
                   <tr>
                     {['Tháng','Thu nhập','Chi tiêu','Tiết kiệm','Tỷ lệ tiết kiệm'].map(h => (
-                      <th key={h} className="px-4 py-2.5 text-left font-semibold text-gray-500 dark:text-gray-400">{h}</th>
+                      <th key={h} className="px-4 py-2.5 text-left font-semibold text-[#7a808c] dark:text-[#9fa7b4]">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -659,7 +730,7 @@ const Statistics = () => {
                   {trendData.map((d, i) => {
                     const rate = d.income ? ((d.savings/d.income)*100) : 0;
                     return (
-                      <tr key={i} className="border-t border-gray-50 dark:border-[#222222] hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors">
+                      <tr key={i} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
                         <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">T{d.month}/{d.year}</td>
                         <td className="px-4 py-2.5 text-emerald-600 dark:text-emerald-400 font-medium">{fmt(d.income)}</td>
                         <td className="px-4 py-2.5 text-red-600 dark:text-red-400 font-medium">{fmt(d.expense)}</td>
@@ -685,27 +756,53 @@ const Statistics = () => {
   };
 
   // ── Daily tab ─────────────────────────────────────────────────────────────
-  const DailyTab = () => (
+  const DailyTab = () => {
+    const dailyIncomeTotal = daily.reduce((sum, item) => sum + (item.income || 0), 0);
+    const dailyExpenseTotal = daily.reduce((sum, item) => sum + (item.expense || 0), 0);
+    const dailyTxTotal = daily.reduce((sum, item) => sum + (item.count || 0), 0);
+
+    return (
     <div className="space-y-5">
-      <div className="flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5 w-fit">
+      <div className="flex items-center bg-[#f4f7fb] dark:bg-[#222935] p-1 rounded-xl gap-0.5 w-fit">
         {[7, 14, 30].map(d => (
           <button key={d}
             onClick={() => handleDailyRange(d)}
             className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               dailyRange === d
-                ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200'
+                ? 'bg-white dark:bg-[#303746] text-[#1f2733] dark:text-[#f1f4f8] shadow-sm'
+                : 'text-[#7f8795] dark:text-[#9ba3b2] hover:text-[#2d3645] dark:hover:text-[#e5eaf1]'
             }`}
           >{d} ngày</button>
         ))}
       </div>
 
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Tổng thu giai đoạn</p>
+          <p className="mt-2 text-2xl font-black text-[#159b63] dark:text-[#58d49f]">{fmt(dailyIncomeTotal)}</p>
+        </div>
+        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Tổng chi giai đoạn</p>
+          <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">{fmt(dailyExpenseTotal)}</p>
+        </div>
+        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Cân bằng ròng</p>
+          <p className={`mt-2 text-2xl font-black ${dailyIncomeTotal - dailyExpenseTotal >= 0 ? 'text-[#2e67da] dark:text-[#8eb2ff]' : 'text-[#c0701c] dark:text-[#f2ba76]'}`}>
+            {fmt(dailyIncomeTotal - dailyExpenseTotal)}
+          </p>
+        </div>
+        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Số giao dịch</p>
+          <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{dailyTxTotal}</p>
+        </div>
+      </div>
+
       {daily.length > 0 ? (
         <>
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-emerald-500"/>
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Thu/chi theo ngày</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Thu/chi theo ngày</h3>
             </div>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={daily.map(d => ({
@@ -723,22 +820,22 @@ const Statistics = () => {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-[#222222]">
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Chi tiết theo ngày</h3>
+          <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Chi tiết theo ngày</h3>
             </div>
             <div className="overflow-x-auto max-h-80 overflow-y-auto">
               <table className="w-full text-xs">
-                <thead className="bg-gray-50 dark:bg-[#1a1a1a] sticky top-0">
+                <thead className="bg-[#f8f9fb] dark:bg-[#232936] sticky top-0">
                   <tr>
                     {['Ngày','Thu nhập','Chi tiêu','Số giao dịch'].map(h => (
-                      <th key={h} className="px-4 py-2.5 text-left font-semibold text-gray-500 dark:text-gray-400">{h}</th>
+                      <th key={h} className="px-4 py-2.5 text-left font-semibold text-[#7a808c] dark:text-[#9fa7b4]">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {[...daily].reverse().map((d, i) => (
-                    <tr key={i} className="border-t border-gray-50 dark:border-[#222222] hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors">
+                    <tr key={i} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
                       <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">
                         {new Date(d.date).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'})}
                       </td>
@@ -753,15 +850,16 @@ const Statistics = () => {
           </div>
         </>
       ) : (
-        <div className="text-center py-16 text-sm text-gray-400 dark:text-gray-500">Chưa có dữ liệu trong khoảng thời gian này</div>
+        <div className="text-center py-16 text-sm text-[#6f7480] dark:text-[#a4acba]">Chưa có dữ liệu trong khoảng thời gian này</div>
       )}
     </div>
-  );
+    );
+  };
 
   // ── AI Insights tab ──────────────────────────────────────────────────────
   const AITab = () => {
     const ai = aiInsights;
-    if (!ai) return <div className="text-center py-16 text-sm text-gray-400 dark:text-gray-500">Đang tải nhận xét AI...</div>;
+    if (!ai) return <div className="text-center py-16 text-sm text-[#6f7480] dark:text-[#a4acba]">Đang tải nhận xét AI...</div>;
 
     const score = ai.healthScore || 0;
     const scoreColor = score >= 70 ? 'text-emerald-600 dark:text-emerald-400' : score >= 40 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
@@ -773,14 +871,35 @@ const Statistics = () => {
       error:   'bg-red-50 border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-400',
       info:    'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-400',
     };
+    const recommendationsCount = ai.recommendations?.length || 0;
+    const anomaliesCount = ai.anomalies?.length || 0;
 
     return (
       <div className="space-y-5">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Điểm sức khỏe</p>
+            <p className={`mt-2 text-2xl font-black ${scoreColor}`}>{score}/100</p>
+          </div>
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Tỷ lệ tiết kiệm TB</p>
+            <p className="mt-2 text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff]">{ai.savingsRate?.toFixed(1) || 0}%</p>
+          </div>
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Khuyến nghị AI</p>
+            <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{recommendationsCount}</p>
+          </div>
+          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Bất thường</p>
+            <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">{anomaliesCount}</p>
+          </div>
+        </div>
+
         {/* Health score */}
-        <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5">
+        <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-1 h-4 rounded-full bg-purple-500"/>
-            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Điểm sức khỏe tài chính</h3>
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Điểm sức khỏe tài chính</h3>
           </div>
           <div className="flex items-center gap-6">
             <div className="text-center">
@@ -797,15 +916,15 @@ const Statistics = () => {
                  : 'Tài chính cần được cải thiện. Hãy chú ý đến các cảnh báo.'}
               </p>
               <div className="grid grid-cols-3 gap-2 mt-3 text-xs text-center">
-                <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-lg py-2">
+                <div className="bg-[#f7f9fc] dark:bg-[#232936] rounded-lg py-2">
                   <p className="text-gray-400 dark:text-gray-500 mb-0.5">Tỷ lệ TK</p>
                   <p className="font-bold text-gray-700 dark:text-gray-200">{ai.savingsRate?.toFixed(1) || 0}%</p>
                 </div>
-                <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-lg py-2">
+                <div className="bg-[#f7f9fc] dark:bg-[#232936] rounded-lg py-2">
                   <p className="text-gray-400 dark:text-gray-500 mb-0.5">Tháng tốt nhất</p>
                   <p className="font-bold text-emerald-600 dark:text-emerald-400">{ai.bestMonth?.name || '—'}</p>
                 </div>
-                <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-lg py-2">
+                <div className="bg-[#f7f9fc] dark:bg-[#232936] rounded-lg py-2">
                   <p className="text-gray-400 dark:text-gray-500 mb-0.5">Tháng khó nhất</p>
                   <p className="font-bold text-red-600 dark:text-red-400">{ai.worstMonth?.name || '—'}</p>
                 </div>
@@ -817,7 +936,7 @@ const Statistics = () => {
         {/* Recommendations */}
         {ai.recommendations?.length > 0 && (
           <div className="space-y-2">
-            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 px-1">Gợi ý từ AI</h3>
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5] px-1">Gợi ý từ AI</h3>
             {ai.recommendations.map((r, i) => (
               <div key={i} className={`flex items-start gap-3 px-4 py-3 rounded-xl border text-sm ${recColors[r.type] || recColors.info}`}>
                 <span className="flex-shrink-0 mt-0.5">{recIcons[r.type] || recIcons.info}</span>
@@ -829,10 +948,10 @@ const Statistics = () => {
 
         {/* Anomalies */}
         {ai.anomalies?.length > 0 && (
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-red-500"/>
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Giao dịch bất thường phát hiện</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Giao dịch bất thường phát hiện</h3>
             </div>
             <div className="space-y-2">
               {ai.anomalies.map((a, i) => (
@@ -850,13 +969,13 @@ const Statistics = () => {
 
         {/* Category trends */}
         {ai.categoryTrends?.length > 0 && (
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-[#222222]">
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Xu hướng danh mục đáng chú ý</h3>
+          <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Xu hướng danh mục đáng chú ý</h3>
             </div>
-            <div className="divide-y divide-gray-50 dark:divide-[#222222]">
+            <div className="divide-y divide-[#eef1f6] dark:divide-[#2a303b]">
               {ai.categoryTrends.map((c, i) => (
-                <div key={i} className="flex items-center justify-between px-4 py-3">
+                <div key={i} className="flex items-center justify-between px-4 py-3 hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
                   <div>
                     <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">{c.category}</p>
                     <p className="text-xs text-gray-400 dark:text-gray-500">3 tháng gần: {fmt(c.recent)} vs trước: {fmt(c.prior)}</p>
@@ -876,19 +995,82 @@ const Statistics = () => {
   // ── Render ────────────────────────────────────────────────────────────────
   if (loading && !monthly) return <StatisticsPageSkeleton />;
 
+  const currentIncome = monthly?.totalIncome || 0;
+  const currentExpense = monthly?.totalExpense || 0;
+  const currentBalance = currentIncome - currentExpense;
+  const savingRate = currentIncome > 0 ? Math.max(((currentBalance / currentIncome) * 100), 0) : 0;
+  const healthScore = aiInsights?.healthScore || 0;
+  const monthTopCategory = [...catStats]
+    .sort((a, b) => (b.totalExpense || 0) - (a.totalExpense || 0))[0];
+  const periodLabel = `Tháng ${selectedMonth}/${selectedYear}`;
+
   return (
     <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center gap-2">
-        <FiBarChart2 className="text-gray-500 dark:text-gray-400" size={20}/>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Thống kê</h1>
-        <span className="text-xs bg-gray-100 dark:bg-[#1a1a1a] text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full font-medium">
-          ML-powered
-        </span>
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
+        <div className="xl:col-span-8 rounded-xl bg-[#004b38] p-6 text-white shadow-[0_14px_40px_rgba(1,56,42,0.28)] relative overflow-hidden">
+          <div className="absolute -right-8 top-1/2 h-52 w-52 -translate-y-1/2 rounded-full bg-[#4c8f7a] opacity-35" />
+          <div className="relative">
+            <div className="flex items-center gap-2">
+              <FiBarChart2 size={18} className="text-[#b8e4d6]" />
+              <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">Bảng điều khiển thống kê</p>
+            </div>
+            <h1 className="mt-3 text-5xl font-black tracking-tight">{fmt(currentBalance)}</h1>
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-[#d8fff2]">
+              <FiZap size={12} />
+              {periodLabel} • Tỷ lệ tiết kiệm {savingRate.toFixed(1)}%
+            </div>
+
+            <div className="mt-8 grid grid-cols-1 gap-4 border-t border-[#1e6b57] pt-5 sm:grid-cols-3">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Tổng thu</p>
+                <p className="mt-1 text-2xl font-bold">{fmt(currentIncome)}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Tổng chi</p>
+                <p className="mt-1 text-2xl font-bold">{fmt(currentExpense)}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Số giao dịch</p>
+                <p className="mt-1 text-2xl font-bold">{monthly?.totalTransactions ?? 0}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="xl:col-span-4 space-y-4">
+          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">Chỉ số AI</h3>
+              <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">ML-powered</span>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <div className="mb-1 flex items-center justify-between text-xs text-[#586074] dark:text-[#a9afbb]">
+                  <span className="font-semibold">Điểm sức khỏe tài chính</span>
+                  <span className="font-bold">{healthScore}/100</span>
+                </div>
+                <div className="h-2 rounded-full bg-[#e3e7ee] dark:bg-[#2d3340] overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${healthScore >= 70 ? 'bg-[#2f8e6f]' : healthScore >= 40 ? 'bg-[#d29b2a]' : 'bg-[#c24b4b]'}`}
+                    style={{ width: `${Math.max(0, Math.min(healthScore, 100))}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
+                <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">Danh mục chi cao nhất</p>
+                <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">
+                  {monthTopCategory ? `${monthTopCategory._id}: ${fmt(monthTopCategory.totalExpense)}` : 'Chưa có dữ liệu danh mục'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-1.5">
+      <div className="rounded-xl bg-white p-1.5 shadow-sm dark:bg-[#191d25]">
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
           {TABS.map(t => (
             <button key={t.key}
@@ -896,7 +1078,7 @@ const Statistics = () => {
               className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
                 activeTab === t.key
                   ? TAB_ACTIVE
-                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
+                  : 'text-[#6f7480] dark:text-[#a4acba] hover:text-[#1f2733] dark:hover:text-[#e8edf4] hover:bg-[#f3f5f9] dark:hover:bg-[#242c38]'
               }`}
             >
               {t.icon}

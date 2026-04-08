@@ -2,15 +2,18 @@ import { useEffect, useState } from 'react';
 import { useCategories } from '../context/CategoryContext';
 import { FiPlus, FiEdit2, FiTrash2, FiLock, FiTag } from 'react-icons/fi';
 import CategoryModal from '../components/CategoryModal';
+import Pagination from '../components/Pagination';
 import { toast } from 'react-toastify';
 import { CategoriesSkeleton } from '../components/LoadingSkeleton';
 
 const Categories = () => {
+  const ITEMS_PER_PAGE = 8;
   const { categories, loading, fetchCategories, createCategory, updateCategory, deleteCategory } = useCategories();
 
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [filterType, setFilterType] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchCategories();
@@ -53,221 +56,251 @@ const Categories = () => {
     return true;
   });
 
-  const incomeFiltered = filteredCategories.filter(c => c.type === 'income' || c.type === 'both');
-  const expenseFiltered = filteredCategories.filter(c => c.type === 'expense' || c.type === 'both');
+  const incomeOnly = categories.filter(c => c.type === 'income').length;
+  const expenseOnly = categories.filter(c => c.type === 'expense').length;
+  const bothType = categories.filter(c => c.type === 'both').length;
+  const defaultCount = categories.filter(c => c.isDefault).length;
+  const customCount = categories.length - defaultCount;
+
+  const pct = (value) => (categories.length > 0 ? (value / categories.length) * 100 : 0);
+
+  const sortedCategories = [...filteredCategories].sort((a, b) => {
+    const orderDiff = (a.order || 0) - (b.order || 0);
+    if (orderDiff !== 0) return orderDiff;
+    return (a.name || '').localeCompare((b.name || ''), 'vi');
+  });
+
+  const totalItems = sortedCategories.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+  const paginatedCategories = sortedCategories.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterType]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   if (loading && categories.length === 0) {
     return <CategoriesSkeleton />;
   }
 
-  const CategoryCard = ({ category }) => (
-    <div className="group bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4 hover:shadow-md transition-all duration-200">
-      <div className="flex items-start gap-3">
-        {/* Icon */}
-        <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
-          style={{ backgroundColor: (category.color || '#10b981') + '20' }}
-        >
-          {category.icon || '📁'}
-        </div>
-
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate">{category.name}</h3>
-            {category.isDefault && (
-              <span className="inline-flex items-center gap-0.5 text-xs text-gray-400 dark:text-gray-500">
-                <FiLock size={10} />
-              </span>
-            )}
-          </div>
-          <span className={`inline-block mt-1 text-xs font-medium px-2 py-0.5 rounded-full ${
-            category.type === 'income'
-              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400'
-              : category.type === 'expense'
-              ? 'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-400'
-              : 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400'
-          }`}>
-            {category.type === 'income' ? 'Thu nhập' : category.type === 'expense' ? 'Chi tiêu' : 'Cả hai'}
-          </span>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex-shrink-0">
-          <button
-            onClick={() => handleEdit(category)}
-            className="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-500/20 dark:hover:text-blue-400 transition-colors"
-            title="Chỉnh sửa"
-          >
-            <FiEdit2 size={12} />
-          </button>
-          <button
-            onClick={() => handleDelete(category)}
-            disabled={category.isDefault}
-            className="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-500/20 dark:hover:text-red-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            title={category.isDefault ? 'Không thể xóa danh mục mặc định' : 'Xóa'}
-          >
-            <FiTrash2 size={12} />
-          </button>
-        </div>
-      </div>
-
-      {/* Color accent strip */}
-      <div
-        className="h-0.5 mt-4 rounded-full opacity-40"
-        style={{ backgroundColor: category.color || '#10b981' }}
-      />
-    </div>
-  );
-
-  const SectionBlock = ({ title, items, emptyText, accentColor }) => (
-    <div>
-      <div className={`flex items-center gap-2 mb-3`}>
-        <div className={`w-1 h-4 rounded-full ${accentColor}`} />
-        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300">{title}</h2>
-        <span className="text-xs bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
-          {items.length}
-        </span>
-      </div>
-      {items.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {items.map(cat => <CategoryCard key={cat._id} category={cat} />)}
-          {/* Add new button inline */}
-          <button
-            onClick={() => setShowModal(true)}
-            className="border-2 border-dashed border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 flex flex-col items-center justify-center gap-2 text-gray-400 dark:text-gray-600 hover:border-emerald-400 hover:text-emerald-500 dark:hover:border-emerald-500/50 dark:hover:text-emerald-500 transition-colors group min-h-[88px]"
-          >
-            <FiPlus size={18} className="transition-transform group-hover:scale-110" />
-            <span className="text-xs font-medium">Thêm danh mục</span>
-          </button>
-        </div>
-      ) : (
-        <div className="border-2 border-dashed border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-6 text-center">
-          <p className="text-sm text-gray-400 dark:text-gray-500 mb-3">{emptyText}</p>
-          <button
-            onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
-          >
-            <FiPlus size={12} /> Thêm ngay
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
   return (
-    <div className={`cat-layout-grid ${filterType === 'all' ? 'cat-layout-all' : 'cat-layout-single'}`}>
+    <div className="space-y-5">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
+        <div className="xl:col-span-8 rounded-xl bg-[#004b38] p-6 text-white shadow-[0_14px_40px_rgba(1,56,42,0.28)] relative overflow-hidden">
+          <div className="absolute -right-8 top-1/2 h-52 w-52 -translate-y-1/2 rounded-full bg-[#4c8f7a] opacity-35" />
+          <div className="relative">
+            <div className="flex items-center gap-2">
+              <FiTag size={18} className="text-[#b8e4d6]" />
+              <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">Quản lý danh mục</p>
+            </div>
+            <h1 className="mt-3 text-5xl font-black tracking-tight">{categories.length}</h1>
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-[#d8fff2]">
+              <FiLock size={12} /> {defaultCount} mặc định • {customCount} tùy chỉnh
+            </div>
 
-      {/* ── Header ── */}
-      <div className="cat-area-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <FiTag className="text-gray-500 dark:text-gray-400" size={20} />
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Danh mục</h1>
-            <span className="text-xs bg-gray-100 dark:bg-[#1a1a1a] text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full font-medium">
-              {categories.length} danh mục
-            </span>
-          </div>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5 ml-7">Quản lý và tùy chỉnh nhãn thu chi</p>
-        </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm self-start sm:self-auto"
-        >
-          <FiPlus size={16} />
-          Thêm danh mục
-        </button>
-      </div>
-
-      {/* ── Stats ── */}
-      <div className="cat-area-stats grid grid-cols-3 gap-3">
-        {[
-          { label: 'Tổng danh mục', value: categories.length, border: 'border-l-gray-400', icon: '🗂️', valueColor: 'text-gray-800 dark:text-gray-100' },
-          { label: 'Thu nhập', value: allIncome.length, border: 'border-l-emerald-500', icon: '📈', valueColor: 'text-emerald-600 dark:text-emerald-400' },
-          { label: 'Chi tiêu', value: allExpense.length, border: 'border-l-red-500', icon: '📉', valueColor: 'text-red-600 dark:text-red-400' },
-        ].map((s, i) => (
-          <div key={i} className={`bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] border-l-4 ${s.border} rounded-2xl px-4 py-3`}>
-            <div className="flex items-center justify-between">
+            <div className="mt-8 grid grid-cols-1 gap-4 border-t border-[#1e6b57] pt-5 sm:grid-cols-3">
               <div>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">{s.label}</p>
-                <p className={`text-2xl font-black ${s.valueColor}`}>{s.value}</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Danh mục thu nhập</p>
+                <p className="mt-1 text-2xl font-bold">{allIncome.length}</p>
               </div>
-              <span className="text-2xl">{s.icon}</span>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Danh mục chi tiêu</p>
+                <p className="mt-1 text-2xl font-bold">{allExpense.length}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Dùng cho cả hai</p>
+                <p className="mt-1 text-2xl font-bold">{bothType}</p>
+              </div>
             </div>
           </div>
-        ))}
-      </div>
-
-      {/* ── Filter tabs ── */}
-      <div className="cat-area-filtertabs flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5 w-fit">
-        {[
-          { label: `Tất cả (${categories.length})`, value: 'all' },
-          { label: `Thu nhập (${allIncome.length})`, value: 'income' },
-          { label: `Chi tiêu (${allExpense.length})`, value: 'expense' },
-        ].map(f => (
-          <button
-            key={f.value}
-            onClick={() => setFilterType(f.value)}
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
-              filterType === f.value
-                ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Category sections ── */}
-      {filterType === 'all' ? (
-        <>
-          <div className="cat-area-income">
-            <SectionBlock
-              title="Danh mục Thu nhập"
-              items={incomeFiltered}
-              emptyText="Chưa có danh mục thu nhập"
-              accentColor="bg-emerald-500"
-            />
-          </div>
-          <div className="cat-area-expense">
-            <SectionBlock
-              title="Danh mục Chi tiêu"
-              items={expenseFiltered}
-              emptyText="Chưa có danh mục chi tiêu"
-              accentColor="bg-red-500"
-            />
-          </div>
-        </>
-      ) : (
-        <div className="cat-area-single grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {filteredCategories.length > 0 ? (
-            <>
-              {filteredCategories.map(cat => <CategoryCard key={cat._id} category={cat} />)}
-              <button
-                onClick={() => setShowModal(true)}
-                className="border-2 border-dashed border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 flex flex-col items-center justify-center gap-2 text-gray-400 dark:text-gray-600 hover:border-emerald-400 hover:text-emerald-500 dark:hover:border-emerald-500/50 dark:hover:text-emerald-500 transition-colors group min-h-[88px]"
-              >
-                <FiPlus size={18} className="transition-transform group-hover:scale-110" />
-                <span className="text-xs font-medium">Thêm danh mục</span>
-              </button>
-            </>
-          ) : (
-            <div className="col-span-full text-center py-14">
-              <div className="w-14 h-14 bg-gray-100 dark:bg-[#1a1a1a] rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
-                🗂️
-              </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Chưa có danh mục nào</p>
-              <button
-                onClick={() => setShowModal(true)}
-                className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
-              >
-                <FiPlus size={14} /> Thêm danh mục đầu tiên
-              </button>
-            </div>
-          )}
         </div>
-      )}
+
+        <div className="xl:col-span-4 space-y-4">
+          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">Phân bổ danh mục</h3>
+              <button
+                onClick={() => setShowModal(true)}
+                className="text-xs font-semibold text-[#3a4a62] hover:underline dark:text-[#b9c3d0]"
+              >
+                Thêm mới
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {[
+                { label: 'Chỉ thu nhập', value: incomeOnly, color: 'bg-emerald-600 dark:bg-emerald-500' },
+                { label: 'Chỉ chi tiêu', value: expenseOnly, color: 'bg-red-500 dark:bg-red-400' },
+                { label: 'Cả hai', value: bothType, color: 'bg-blue-500 dark:bg-blue-400' },
+              ].map((item) => (
+                <div key={item.label}>
+                  <div className="mb-1 flex items-center justify-between text-xs text-[#586074] dark:text-[#a9afbb]">
+                    <span className="font-semibold">{item.label}</span>
+                    <span className="font-bold">{pct(item.value).toFixed(0)}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-[#e3e7ee] dark:bg-[#2d3340]">
+                    <div className={`h-full rounded-full ${item.color}`} style={{ width: `${pct(item.value)}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
+              <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">Gợi ý tối ưu</p>
+              <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">
+                {categories.length < 8
+                  ? 'Bạn có thể thêm danh mục chi tiết hơn để thống kê chính xác.'
+                  : 'Danh mục đang đủ tốt, hãy rà soát và gộp các mục trùng lặp.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25]">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eceff4] px-5 py-4 dark:border-[#2b313d]">
+          <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Danh sách danh mục</h3>
+          <div className="flex items-center gap-2">
+            {[
+              { label: `Tất cả (${categories.length})`, value: 'all' },
+              { label: `Thu nhập (${allIncome.length})`, value: 'income' },
+              { label: `Chi tiêu (${allExpense.length})`, value: 'expense' },
+            ].map(f => (
+              <button
+                key={f.value}
+                onClick={() => setFilterType(f.value)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  filterType === f.value
+                    ? 'bg-[#eceff4] text-[#1f2733] dark:bg-[#303746] dark:text-[#f1f4f8]'
+                    : 'bg-[#f8f9fb] text-[#6f7480] hover:bg-[#edf1f6] dark:bg-[#232936] dark:text-[#a4acba] dark:hover:bg-[#2d3442]'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+            <button
+              onClick={() => setShowModal(true)}
+              className="ml-1 inline-flex items-center gap-1.5 rounded-xl bg-[#003d2d] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#00523d]"
+            >
+              <FiPlus size={13} /> Thêm danh mục
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+            <thead>
+                <tr className="border-b border-[#eceff4] bg-[#f8f9fb] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:bg-[#232936] dark:text-[#9fa7b4]">
+                <th className="px-5 py-3">Mô tả</th>
+                <th className="px-5 py-3">Loại</th>
+                <th className="px-5 py-3">Màu</th>
+                <th className="px-5 py-3">Thứ tự</th>
+                <th className="px-5 py-3">Trạng thái</th>
+                <th className="px-5 py-3 text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedCategories.length > 0 ? paginatedCategories.map((category, idx) => (
+                <tr key={category._id} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-9 w-9 rounded-lg flex items-center justify-center text-lg" style={{ backgroundColor: `${category.color || '#10b981'}1f` }}>
+                        {category.icon || '📁'}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate font-bold text-[#1d2430] dark:text-[#eef1f5]">{category.name}</p>
+                        <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">Mã: {category._id?.slice(-6)}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                      category.type === 'income'
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                        : category.type === 'expense'
+                        ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                        : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                    }`}>
+                      {category.type === 'income' ? 'Thu nhập' : category.type === 'expense' ? 'Chi tiêu' : 'Cả hai'}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#4b5361] dark:text-[#b3bbc8]">
+                      <span className="h-3 w-3 rounded-full" style={{ backgroundColor: category.color || '#10b981' }} />
+                      {category.color || '#10b981'}
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 font-semibold text-[#303846] dark:text-[#c9d1db]">{category.order || 0}</td>
+                  <td className="px-5 py-4">
+                    {category.isDefault ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#edf0f5] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#5b6474] dark:bg-[#313846] dark:text-[#bac4d3]">
+                        <FiLock size={10} /> Mặc định
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-[#e4f8ef] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#12724e] dark:bg-[#213c33] dark:text-[#80d6b4]">
+                        Tùy chỉnh
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        onClick={() => handleEdit(category)}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc] dark:hover:bg-[#364050]"
+                        title="Chỉnh sửa"
+                      >
+                        <FiEdit2 size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(category)}
+                        disabled={category.isDefault}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#f8eceb] text-[#a55d56] hover:bg-[#f4dedc] disabled:cursor-not-allowed disabled:opacity-40 dark:bg-[#3b2a2c] dark:text-[#e0a29a] dark:hover:bg-[#4a3336]"
+                        title={category.isDefault ? 'Không thể xóa danh mục mặc định' : 'Xóa'}
+                      >
+                        <FiTrash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={6} className="px-5 py-12 text-center">
+                    <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Không có danh mục phù hợp với bộ lọc hiện tại.</p>
+                    <button
+                      onClick={() => setShowModal(true)}
+                      className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00523d]"
+                    >
+                      <FiPlus size={14} /> Thêm danh mục đầu tiên
+                    </button>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {totalItems > 0 && (
+          <div className="px-5 pb-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onItemsPerPageChange={() => {}}
+              totalItems={totalItems}
+              showItemsPerPageSelector={false}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Modal */}
       {showModal && (
