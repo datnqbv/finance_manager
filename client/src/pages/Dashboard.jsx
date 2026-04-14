@@ -12,8 +12,8 @@ import { DashboardSkeleton } from '../components/LoadingSkeleton';
 const Dashboard = () => {
   const { user } = useAuth();
   const { categories, fetchCategories } = useCategories();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
   const navigate = useNavigate();
   const [summary, setSummary] = useState(null);
   const [filteredSummary, setFilteredSummary] = useState(null);

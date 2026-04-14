@@ -19,8 +19,8 @@ const Chatbot = () => {
   const { goals } = useGoal();
   const { debts, stats: debtStats } = useDebt();
   const { categories } = useCategories();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([

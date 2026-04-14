@@ -1,4 +1,5 @@
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { useLanguage } from '../context/LanguageContext';
 
 const Pagination = ({ 
   currentPage, 
@@ -10,6 +11,9 @@ const Pagination = ({
   showItemsPerPageSelector = true,
   itemsPerPageOptions = [5, 10, 20, 50, 100],
 }) => {
+  const { language } = useLanguage();
+  const isEnglish = language === 'en';
+
   const getPageNumbers = () => {
     const pages = [];
     const maxPagesToShow = 5;
@@ -41,7 +45,7 @@ const Pagination = ({
       {/* Items per page selector */}
       {showItemsPerPageSelector && (
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Hiển thị</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">{isEnglish ? 'Show' : 'Hiển thị'}</span>
           <select
             value={itemsPerPage}
             onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
@@ -52,14 +56,14 @@ const Pagination = ({
             ))}
           </select>
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            / trang
+            {isEnglish ? '/ page' : '/ trang'}
           </span>
         </div>
       )}
 
       {/* Page info */}
       <div className="text-sm text-gray-600 dark:text-gray-400">
-        Hiển thị <span className="font-semibold">{startItem}</span> - <span className="font-semibold">{endItem}</span> trong tổng số <span className="font-semibold">{totalItems}</span>
+        {isEnglish ? 'Showing' : 'Hiển thị'} <span className="font-semibold">{startItem}</span> - <span className="font-semibold">{endItem}</span> {isEnglish ? 'of' : 'trong tổng số'} <span className="font-semibold">{totalItems}</span>
       </div>
 
       {/* Page navigation */}
@@ -68,7 +72,7 @@ const Pagination = ({
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
           className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          title="Trang trước"
+          title={isEnglish ? 'Previous page' : 'Trang trước'}
         >
           <FiChevronLeft />
         </button>
@@ -95,7 +99,7 @@ const Pagination = ({
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
           className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          title="Trang sau"
+          title={isEnglish ? 'Next page' : 'Trang sau'}
         >
           <FiChevronRight />
         </button>

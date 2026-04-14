@@ -11,8 +11,8 @@ const Budgets = () => {
   const ITEMS_PER_PAGE = 8;
   const { user } = useAuth();
   const { budgets, budgetStatus, alerts, loading, fetchBudgetOverview, createBudget, updateBudget, deleteBudget } = useBudgets();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
 
   const [showModal, setShowModal] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);

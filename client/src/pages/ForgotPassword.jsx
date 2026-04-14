@@ -9,8 +9,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
   const [step, setStep] = useState(1); // 1: nhập email, 2: nhập token + password mới
   const [email, setEmail] = useState('');
   const [resetToken, setResetToken] = useState('');

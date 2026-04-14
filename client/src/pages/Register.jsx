@@ -7,8 +7,8 @@ import { FiMail, FiLock, FiUser, FiAlertCircle, FiArrowLeft, FiEye, FiEyeOff } f
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
   const [formData, setFormData] = useState({
     name: '',
     email: '',

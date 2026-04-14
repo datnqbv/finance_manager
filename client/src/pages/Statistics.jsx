@@ -70,8 +70,8 @@ const KpiCard = ({ label, value, sub, border, icon, valueColor, loading }) => (
 
 const Statistics = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear]   = useState(new Date().getFullYear());

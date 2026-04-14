@@ -7,8 +7,8 @@ import { FiMail, FiLock, FiAlertCircle, FiArrowLeft, FiEye, FiEyeOff } from 'rea
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
   const [formData, setFormData] = useState({
     email: '',
     password: '',

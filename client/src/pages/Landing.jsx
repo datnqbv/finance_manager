@@ -58,8 +58,8 @@ const getFeaturedArtwork = (isEnglish) => ({
 const Landing = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
   const FEATURED_ARTWORK = getFeaturedArtwork(isEnglish);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);

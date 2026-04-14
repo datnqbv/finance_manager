@@ -10,8 +10,8 @@ import Pagination from '../components/Pagination';
 const Goals = () => {
   const ITEMS_PER_PAGE = 8;
   const { goals, goalStats, loading, createGoal, updateGoal, deleteGoal, addAmountToGoal } = useGoal();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState(null);
   const [showAddAmount, setShowAddAmount] = useState(null);

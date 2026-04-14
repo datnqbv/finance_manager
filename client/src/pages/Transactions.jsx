@@ -13,8 +13,8 @@ import { exportToPDF, exportToExcel } from '../utils/exportUtils';
 const Transactions = () => {
   const { user } = useAuth();
   const { transactions, pagination, loading, fetchTransactions, deleteTransaction } = useTransactions();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
   const [showModal, setShowModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);

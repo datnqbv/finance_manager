@@ -15,8 +15,8 @@ const Debts = () => {
   const ITEMS_PER_PAGE = 8;
   const { user } = useAuth();
   const { debts, stats, loading, createDebt, updateDebt, deleteDebt, addPayment, settleDebt } = useDebt();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
 
   const [showModal, setShowModal] = useState(false);
   const [editingDebt, setEditingDebt] = useState(null);

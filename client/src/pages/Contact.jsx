@@ -6,8 +6,8 @@ import { useLanguage } from '../context/LanguageContext';
 
 const Contact = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);

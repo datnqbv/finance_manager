@@ -4,8 +4,8 @@ import { useLanguage } from '../context/LanguageContext';
 
 const Privacy = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
   const sections = isEnglish
     ? [
         {

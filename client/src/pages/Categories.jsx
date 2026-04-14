@@ -10,8 +10,8 @@ import { CategoriesSkeleton } from '../components/LoadingSkeleton';
 const Categories = () => {
   const ITEMS_PER_PAGE = 8;
   const { categories, loading, fetchCategories, createCategory, updateCategory, deleteCategory } = useCategories();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
 
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);

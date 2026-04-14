@@ -4,8 +4,8 @@ import { useLanguage } from '../context/LanguageContext';
 
 const About = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
 
   return (
     <div className="min-h-screen bg-white text-slate-900 antialiased">

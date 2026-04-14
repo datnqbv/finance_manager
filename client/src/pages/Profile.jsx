@@ -31,8 +31,8 @@ const TextInput = ({ icon: Icon, ...props }) => (
 // ── Main Component ─────────────────────────────────────────────────────────
 const Profile = () => {
   const { user, updateProfile, changePassword } = useAuth();
-  const { t } = useLanguage();
-  const isEnglish = t('language') === 'English';
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
 
   // ── Profile form state
   const [profileForm, setProfileForm] = useState({
