@@ -3,11 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FiMail, FiKey, FiLock, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { useLanguage } from '../context/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const isEnglish = t('language') === 'English';
   const [step, setStep] = useState(1); // 1: nhập email, 2: nhập token + password mới
   const [email, setEmail] = useState('');
   const [resetToken, setResetToken] = useState('');
@@ -34,7 +37,7 @@ const ForgotPassword = () => {
         toast.success(response.data.message);
       }
     } catch (error) {
-      const message = error.response?.data?.message || 'Có lỗi xảy ra';
+      const message = error.response?.data?.message || (isEnglish ? 'An error occurred' : 'Có lỗi xảy ra');
       toast.error(message);
     } finally {
       setLoading(false);
@@ -45,12 +48,12 @@ const ForgotPassword = () => {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
-      toast.error('Mật khẩu xác nhận không khớp!');
+      toast.error(isEnglish ? 'Password confirmation does not match!' : 'Mật khẩu xác nhận không khớp!');
       return;
     }
 
     if (newPassword.length < 6) {
-      toast.error('Mật khẩu phải có ít nhất 6 ký tự!');
+      toast.error(isEnglish ? 'Password must have at least 6 characters!' : 'Mật khẩu phải có ít nhất 6 ký tự!');
       return;
     }
 
@@ -71,7 +74,7 @@ const ForgotPassword = () => {
         }, 2000);
       }
     } catch (error) {
-      const message = error.response?.data?.message || 'Có lỗi xảy ra';
+      const message = error.response?.data?.message || (isEnglish ? 'An error occurred' : 'Có lỗi xảy ra');
       toast.error(message);
     } finally {
       setLoading(false);
@@ -87,14 +90,14 @@ const ForgotPassword = () => {
             className="inline-flex items-center gap-2 rounded-full border border-[#bfd2c2] bg-white/60 px-4 py-2 text-sm font-semibold text-[#4b5f4f] transition hover:bg-white"
           >
             <FiArrowLeft className="text-base" />
-            Quay lại trang chủ
+            {isEnglish ? 'Back to home' : 'Quay lại trang chủ'}
           </button>
           <Link
             to="/login"
             className="inline-flex items-center gap-2 rounded-full border border-[#bfd2c2] bg-white/60 px-4 py-2 text-sm font-semibold text-[#4b5f4f] transition hover:bg-white"
           >
             <FiArrowLeft className="text-base" />
-            Về đăng nhập
+            {isEnglish ? 'Back to login' : 'Về đăng nhập'}
           </Link>
         </div>
 
@@ -109,8 +112,8 @@ const ForgotPassword = () => {
                 </h1>
                 <p className="mt-2 text-sm text-[#687a6a]">
                   {step === 1
-                    ? 'Nhập email để nhận mã xác thực 6 chữ số.'
-                    : 'Nhập mã và tạo mật khẩu mới cho tài khoản.'}
+                    ? (isEnglish ? 'Enter your email to receive a 6-digit verification code.' : 'Nhập email để nhận mã xác thực 6 chữ số.')
+                    : (isEnglish ? 'Enter the code and create a new password for your account.' : 'Nhập mã và tạo mật khẩu mới cho tài khoản.')}
                 </p>
               </div>
 
@@ -133,20 +136,20 @@ const ForgotPassword = () => {
                     disabled={loading}
                     className="w-full rounded-xl bg-[#5d9f67] py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#4f8f5a] disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {loading ? 'Đang gửi...' : 'Lấy mã xác thực'}
+                    {loading ? (isEnglish ? 'Sending...' : 'Đang gửi...') : (isEnglish ? 'Get verification code' : 'Lấy mã xác thực')}
                   </button>
                 </form>
               ) : (
                 <form onSubmit={handleResetPassword} className="space-y-4">
                   {generatedToken ? (
                     <div className="rounded-xl border border-[#b9dabc] bg-[#eff8ef] p-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-[#4d6d51]">Mã xác thực demo</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-[#4d6d51]">{isEnglish ? 'Demo verification code' : 'Mã xác thực demo'}</p>
                       <p className="py-2 text-center text-3xl font-black tracking-[0.3em] text-[#3f7848]">{generatedToken}</p>
-                      <p className="text-center text-xs text-[#728373]">Hiệu lực trong 10 phút</p>
+                        <p className="text-center text-xs text-[#728373]">{isEnglish ? 'Valid for 10 minutes' : 'Hiệu lực trong 10 phút'}</p>
                     </div>
                   ) : (
                     <div className="rounded-xl border border-[#c6dac8] bg-[#f1f8f1] p-4 text-xs text-[#607361]">
-                      Mã xác thực đã gửi đến <span className="font-bold text-[#2f4b33]">{email}</span>. Vui lòng kiểm tra hộp thư và spam.
+                        {isEnglish ? 'Verification code has been sent to ' : 'Mã xác thực đã gửi đến '}<span className="font-bold text-[#2f4b33]">{email}</span>{isEnglish ? '. Please check your inbox and spam folder.' : '. Vui lòng kiểm tra hộp thư và spam.'}
                     </div>
                   )}
 
@@ -172,13 +175,13 @@ const ForgotPassword = () => {
                       required
                       minLength={6}
                       className="w-full rounded-xl border border-[#dce7dc] bg-[#f8fbf7] py-3 pl-11 pr-11 text-sm text-[#273029] placeholder:text-[#98a999] focus:border-[#62af6f] focus:outline-none"
-                      placeholder="Mật khẩu mới"
+                      placeholder={isEnglish ? 'New password' : 'Mật khẩu mới'}
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword((prev) => !prev)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#809382] transition hover:bg-[#e8f3e8] hover:text-[#4d6b51]"
-                      aria-label={showNewPassword ? 'Ẩn mật khẩu mới' : 'Hiện mật khẩu mới'}
+                      aria-label={showNewPassword ? (isEnglish ? 'Hide new password' : 'Ẩn mật khẩu mới') : (isEnglish ? 'Show new password' : 'Hiện mật khẩu mới')}
                     >
                       {showNewPassword ? <FiEyeOff size={17} /> : <FiEye size={17} />}
                     </button>
@@ -192,13 +195,13 @@ const ForgotPassword = () => {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                       className="w-full rounded-xl border border-[#dce7dc] bg-[#f8fbf7] py-3 pl-11 pr-11 text-sm text-[#273029] placeholder:text-[#98a999] focus:border-[#62af6f] focus:outline-none"
-                      placeholder="Xác nhận mật khẩu"
+                      placeholder={isEnglish ? 'Confirm password' : 'Xác nhận mật khẩu'}
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword((prev) => !prev)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#809382] transition hover:bg-[#e8f3e8] hover:text-[#4d6b51]"
-                      aria-label={showConfirmPassword ? 'Ẩn xác nhận mật khẩu' : 'Hiện xác nhận mật khẩu'}
+                      aria-label={showConfirmPassword ? (isEnglish ? 'Hide confirm password' : 'Ẩn xác nhận mật khẩu') : (isEnglish ? 'Show confirm password' : 'Hiện xác nhận mật khẩu')}
                     >
                       {showConfirmPassword ? <FiEyeOff size={17} /> : <FiEye size={17} />}
                     </button>
@@ -209,7 +212,7 @@ const ForgotPassword = () => {
                     disabled={loading}
                     className="w-full rounded-xl bg-[#5d9f67] py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#4f8f5a] disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {loading ? 'Đang đặt lại...' : 'Đặt lại mật khẩu'}
+                    {loading ? (isEnglish ? 'Resetting...' : 'Đang đặt lại...') : (isEnglish ? 'Reset password' : 'Đặt lại mật khẩu')}
                   </button>
 
                   <button
@@ -217,7 +220,7 @@ const ForgotPassword = () => {
                     onClick={() => setStep(1)}
                     className="w-full rounded-xl border border-[#cfdbcf] bg-[#f4f8f3] py-3 text-sm font-semibold text-[#5d6f5f] transition hover:bg-[#edf5ec]"
                   >
-                    Quay lại bước nhập email
+                    {isEnglish ? 'Back to email step' : 'Quay lại bước nhập email'}
                   </button>
                 </form>
               )}

@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaEnvelope, FaPhoneAlt, FaMapMarkerAlt, FaClock, FaCheckCircle } from 'react-icons/fa';
 import api from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const Contact = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const isEnglish = t('language') === 'English';
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -13,11 +16,11 @@ const Contact = () => {
 
   const validate = () => {
     const e = {};
-    if (!form.name.trim())    e.name    = 'Vui lòng nhập họ tên';
-    if (!form.email.trim())   e.email   = 'Vui lòng nhập email';
-    else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = 'Email không hợp lệ';
-    if (!form.subject.trim()) e.subject = 'Vui lòng nhập tiêu đề';
-    if (!form.message.trim()) e.message = 'Vui lòng nhập nội dung';
+    if (!form.name.trim())    e.name    = isEnglish ? 'Please enter your full name' : 'Vui lòng nhập họ tên';
+    if (!form.email.trim())   e.email   = isEnglish ? 'Please enter your email' : 'Vui lòng nhập email';
+    else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = isEnglish ? 'Invalid email address' : 'Email không hợp lệ';
+    if (!form.subject.trim()) e.subject = isEnglish ? 'Please enter a subject' : 'Vui lòng nhập tiêu đề';
+    if (!form.message.trim()) e.message = isEnglish ? 'Please enter your message' : 'Vui lòng nhập nội dung';
     return e;
   };
 
@@ -37,7 +40,7 @@ const Contact = () => {
       });
       setSent(true);
     } catch (err) {
-      const msg = err.response?.data?.message || 'Gửi thất bại. Vui lòng thử lại sau.';
+      const msg = err.response?.data?.message || (isEnglish ? 'Send failed. Please try again later.' : 'Gửi thất bại. Vui lòng thử lại sau.');
       setServerError(msg);
     } finally {
       setLoading(false);
@@ -59,10 +62,10 @@ const Contact = () => {
             onClick={() => navigate('/home')}
             className="flex items-center gap-2 text-sm text-slate-500 hover:text-emerald-600 transition font-medium"
           >
-            <FaArrowLeft size={13} /> Trang chủ
+            <FaArrowLeft size={13} /> {isEnglish ? 'Home' : 'Trang chủ'}
           </button>
           <span className="text-slate-200">|</span>
-          <span className="text-sm font-semibold text-slate-700">Liên hệ</span>
+          <span className="text-sm font-semibold text-slate-700">{isEnglish ? 'Contact' : 'Liên hệ'}</span>
         </div>
       </header>
 
@@ -70,14 +73,14 @@ const Contact = () => {
       <section className="bg-gradient-to-br from-slate-50 via-white to-emerald-50/40 py-16 px-5 sm:px-8">
         <div className="max-w-3xl mx-auto text-center">
           <span className="inline-block text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-widest mb-5">
-            Liên hệ
+            {isEnglish ? 'Contact' : 'Liên hệ'}
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 leading-tight mb-4">
-            Chúng tôi luôn sẵn sàng<br />
-            <span className="text-emerald-600">lắng nghe bạn</span>
+            {isEnglish ? 'We are always ready' : 'Chúng tôi luôn sẵn sàng'}<br />
+            <span className="text-emerald-600">{isEnglish ? 'to listen to you' : 'lắng nghe bạn'}</span>
           </h1>
           <p className="text-lg text-slate-500">
-            Có câu hỏi, góp ý hay cần hỗ trợ? Hãy gửi tin nhắn — chúng tôi sẽ phản hồi trong vòng 24 giờ.
+            {isEnglish ? 'Have a question, feedback, or need support? Send us a message and we will reply within 24 hours.' : 'Có câu hỏi, góp ý hay cần hỗ trợ? Hãy gửi tin nhắn — chúng tôi sẽ phản hồi trong vòng 24 giờ.'}
           </p>
         </div>
       </section>
@@ -89,13 +92,13 @@ const Contact = () => {
           {/* Left – Info */}
           <div className="md:col-span-2 space-y-6">
             <div>
-              <h2 className="text-lg font-extrabold text-slate-900 mb-5">Thông tin liên hệ</h2>
+              <h2 className="text-lg font-extrabold text-slate-900 mb-5">{isEnglish ? 'Contact Information' : 'Thông tin liên hệ'}</h2>
               <div className="space-y-4">
                 {[
                   { icon: <FaEnvelope className="text-emerald-600" size={16} />, label: 'Email', value: 'support@financemanager.vn', href: 'mailto:support@financemanager.vn' },
-                  { icon: <FaPhoneAlt className="text-emerald-600" size={16} />, label: 'Điện thoại', value: '1800 1234', href: 'tel:18001234' },
-                  { icon: <FaMapMarkerAlt className="text-emerald-600" size={16} />, label: 'Địa chỉ', value: 'TP. Hồ Chí Minh, Việt Nam', href: null },
-                  { icon: <FaClock className="text-emerald-600" size={16} />, label: 'Giờ làm việc', value: 'T2 – T6, 8:00 – 17:30', href: null },
+                  { icon: <FaPhoneAlt className="text-emerald-600" size={16} />, label: isEnglish ? 'Phone' : 'Điện thoại', value: '1800 1234', href: 'tel:18001234' },
+                  { icon: <FaMapMarkerAlt className="text-emerald-600" size={16} />, label: isEnglish ? 'Address' : 'Địa chỉ', value: isEnglish ? 'Ho Chi Minh City, Vietnam' : 'TP. Hồ Chí Minh, Việt Nam', href: null },
+                  { icon: <FaClock className="text-emerald-600" size={16} />, label: isEnglish ? 'Working hours' : 'Giờ làm việc', value: isEnglish ? 'Mon – Fri, 8:00 – 17:30' : 'T2 – T6, 8:00 – 17:30', href: null },
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-3">
                     <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -118,12 +121,12 @@ const Contact = () => {
 
             {/* FAQ shortcuts */}
             <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-              <h3 className="text-sm font-bold text-slate-800 mb-3">Câu hỏi thường gặp</h3>
+              <h3 className="text-sm font-bold text-slate-800 mb-3">{isEnglish ? 'Frequently Asked Questions' : 'Câu hỏi thường gặp'}</h3>
               <ul className="space-y-2">
                 {[
-                  'Làm sao để đặt lại mật khẩu?',
-                  'App có miễn phí không?',
-                  'Dữ liệu có được bảo mật không?',
+                  isEnglish ? 'How do I reset my password?' : 'Làm sao để đặt lại mật khẩu?',
+                  isEnglish ? 'Is the app free?' : 'App có miễn phí không?',
+                  isEnglish ? 'Is my data secure?' : 'Dữ liệu có được bảo mật không?',
                 ].map((q, i) => (
                   <li key={i} className="flex items-start gap-2 text-xs text-slate-500">
                     <span className="text-emerald-500 mt-0.5 flex-shrink-0">•</span> {q}
@@ -140,25 +143,25 @@ const Contact = () => {
                 <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-5">
                   <FaCheckCircle className="text-emerald-600" size={28} />
                 </div>
-                <h3 className="text-xl font-extrabold text-slate-900 mb-2">Đã gửi thành công!</h3>
+                <h3 className="text-xl font-extrabold text-slate-900 mb-2">{isEnglish ? 'Sent successfully!' : 'Đã gửi thành công!'}</h3>
                 <p className="text-slate-500 text-sm mb-6 max-w-xs">
-                  Cảm ơn bạn đã liên hệ. Chúng tôi sẽ phản hồi qua email trong vòng 24 giờ.
+                  {isEnglish ? 'Thank you for contacting us. We will reply by email within 24 hours.' : 'Cảm ơn bạn đã liên hệ. Chúng tôi sẽ phản hồi qua email trong vòng 24 giờ.'}
                 </p>
                 <button
                   onClick={() => { setSent(false); setServerError(''); setForm({ name: '', email: '', subject: '', message: '' }); }}
                   className="text-sm font-semibold text-emerald-600 hover:underline"
                 >
-                  Gửi tin nhắn khác
+                  {isEnglish ? 'Send another message' : 'Gửi tin nhắn khác'}
                 </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Họ và tên *</label>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">{isEnglish ? 'Full name *' : 'Họ và tên *'}</label>
                     <input
                       type="text"
-                      placeholder="Nguyễn Văn A"
+                      placeholder={isEnglish ? 'John Doe' : 'Nguyễn Văn A'}
                       value={form.name}
                       onChange={(e) => { setForm({ ...form, name: e.target.value }); setErrors({ ...errors, name: '' }); }}
                       className={inputCls('name')}
@@ -178,10 +181,10 @@ const Contact = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Tiêu đề *</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">{isEnglish ? 'Subject *' : 'Tiêu đề *'}</label>
                   <input
                     type="text"
-                    placeholder="Tôi cần hỗ trợ về..."
+                    placeholder={isEnglish ? 'I need support about...' : 'Tôi cần hỗ trợ về...'}
                     value={form.subject}
                     onChange={(e) => { setForm({ ...form, subject: e.target.value }); setErrors({ ...errors, subject: '' }); }}
                     className={inputCls('subject')}
@@ -189,10 +192,10 @@ const Contact = () => {
                   {errors.subject && <p className="text-xs text-red-500 mt-1">{errors.subject}</p>}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Nội dung *</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">{isEnglish ? 'Message *' : 'Nội dung *'}</label>
                   <textarea
                     rows={6}
-                    placeholder="Mô tả chi tiết vấn đề hoặc câu hỏi của bạn..."
+                    placeholder={isEnglish ? 'Describe your issue or question in detail...' : 'Mô tả chi tiết vấn đề hoặc câu hỏi của bạn...'}
                     value={form.message}
                     onChange={(e) => { setForm({ ...form, message: e.target.value }); setErrors({ ...errors, message: '' }); }}
                     className={`${inputCls('message')} resize-none`}
@@ -210,11 +213,11 @@ const Contact = () => {
                   className="w-full py-3 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition shadow-md disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
-                    <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Đang gửi...</>
-                  ) : 'Gửi tin nhắn'}
+                    <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> {isEnglish ? 'Sending...' : 'Đang gửi...'}</>
+                  ) : (isEnglish ? 'Send message' : 'Gửi tin nhắn')}
                 </button>
                 <p className="text-xs text-slate-400 text-center">
-                  Chúng tôi sẽ phản hồi trong vòng 24 giờ làm việc.
+                  {isEnglish ? 'We will respond within 24 business hours.' : 'Chúng tôi sẽ phản hồi trong vòng 24 giờ làm việc.'}
                 </p>
               </form>
             )}
@@ -224,9 +227,9 @@ const Contact = () => {
 
       {/* ── Footer nhỏ ── */}
       <footer className="py-6 px-5 text-center text-xs text-slate-400 border-t border-slate-100">
-        &copy; 2025 Finance Manager · <button onClick={() => navigate('/home')} className="hover:text-emerald-600 transition">Trang chủ</button>
-        {' · '}<button onClick={() => navigate('/about')} className="hover:text-emerald-600 transition">Về chúng tôi</button>
-        {' · '}<button onClick={() => navigate('/privacy')} className="hover:text-emerald-600 transition">Chính sách bảo mật</button>
+        &copy; 2025 Finance Manager · <button onClick={() => navigate('/home')} className="hover:text-emerald-600 transition">{isEnglish ? 'Home' : 'Trang chủ'}</button>
+        {' · '}<button onClick={() => navigate('/about')} className="hover:text-emerald-600 transition">{isEnglish ? 'About us' : 'Về chúng tôi'}</button>
+        {' · '}<button onClick={() => navigate('/privacy')} className="hover:text-emerald-600 transition">{isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}</button>
       </footer>
     </div>
   );

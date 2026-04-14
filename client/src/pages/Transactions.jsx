@@ -14,6 +14,7 @@ const Transactions = () => {
   const { user } = useAuth();
   const { transactions, pagination, loading, fetchTransactions, deleteTransaction } = useTransactions();
   const { t } = useLanguage();
+  const isEnglish = t('language') === 'English';
   const [showModal, setShowModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
@@ -94,7 +95,7 @@ const Transactions = () => {
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('vi-VN', {
+    return new Date(date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -107,7 +108,7 @@ const Transactions = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa giao dịch này?')) {
+    if (window.confirm(isEnglish ? 'Are you sure you want to delete this transaction?' : 'Bạn có chắc chắn muốn xóa giao dịch này?')) {
       await deleteTransaction(id);
       loadTransactions();
     }
@@ -152,8 +153,8 @@ const Transactions = () => {
     <div className={`tx-layout-grid ${viewMode === 'list' ? 'tx-layout-list' : 'tx-layout-calendar'}`}>
       <div className="tx-area-header flex justify-between items-center flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Giao dịch</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Quản lý các giao dịch thu chi</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{isEnglish ? 'Transactions' : 'Giao dịch'}</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">{isEnglish ? 'Manage your income and expense transactions' : 'Quản lý các giao dịch thu chi'}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           {/* View toggle */}
@@ -166,7 +167,7 @@ const Transactions = () => {
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
-              <FiList size={15} /> Danh sách
+              <FiList size={15} /> {isEnglish ? 'List' : 'Danh sách'}
             </button>
             <button
               onClick={() => switchViewMode('calendar')}
@@ -176,7 +177,7 @@ const Transactions = () => {
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
-              <FiCalendar size={15} /> Lịch
+              <FiCalendar size={15} /> {isEnglish ? 'Calendar' : 'Lịch'}
             </button>
           </div>
 
@@ -201,7 +202,7 @@ const Transactions = () => {
           <button
             onClick={() => setShowImportModal(true)}
             className="btn btn-secondary flex items-center gap-2"
-            title="Import từ CSV/Excel"
+            title={isEnglish ? 'Import from CSV/Excel' : 'Import từ CSV/Excel'}
           >
             <FiUpload size={16} /> Import
           </button>
@@ -209,7 +210,7 @@ const Transactions = () => {
             onClick={() => setShowModal(true)}
             className="hidden sm:inline-flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#00523d]"
           >
-            <FiPlus /> Thêm giao dịch
+            <FiPlus /> {isEnglish ? 'Add Transaction' : 'Thêm giao dịch'}
           </button>
         </div>
       </div>
@@ -233,15 +234,15 @@ const Transactions = () => {
       {viewMode === 'list' && (
       <div className="tx-area-summary grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-2xl border border-[#d5e3d6] dark:border-[#243126] bg-white/95 dark:bg-[#111111] p-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Thu nhập (trang hiện tại)</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{isEnglish ? 'Income (current page)' : 'Thu nhập (trang hiện tại)'}</p>
           <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(pageIncome)}</p>
         </div>
         <div className="rounded-2xl border border-[#d5e3d6] dark:border-[#243126] bg-white/95 dark:bg-[#111111] p-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Chi tiêu (trang hiện tại)</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{isEnglish ? 'Expense (current page)' : 'Chi tiêu (trang hiện tại)'}</p>
           <p className="text-lg font-bold text-red-600 dark:text-red-400">{formatCurrency(pageExpense)}</p>
         </div>
         <div className="rounded-2xl border border-[#d5e3d6] dark:border-[#243126] bg-white/95 dark:bg-[#111111] p-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Chênh lệch (trang hiện tại)</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{isEnglish ? 'Balance (current page)' : 'Chênh lệch (trang hiện tại)'}</p>
           <p className={`text-lg font-bold ${pageBalance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
             {formatCurrency(pageBalance)}
           </p>
@@ -255,12 +256,12 @@ const Transactions = () => {
         <div className="space-y-4">
           <div className="tx-filter-grid">
             <div className="tx-filter-search">
-              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">Tìm kiếm</label>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">{isEnglish ? 'Search' : 'Tìm kiếm'}</label>
               <div className="relative">
                 <FiFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Danh mục hoặc ghi chú..."
+                  placeholder={isEnglish ? 'Category or note...' : 'Danh mục hoặc ghi chú...'}
                   defaultValue={filter.searchText}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className="input pl-10 w-full"
@@ -269,29 +270,31 @@ const Transactions = () => {
             </div>
 
             <div className="tx-filter-type">
-              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">Loại giao dịch</label>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">{isEnglish ? 'Transaction Type' : 'Loại giao dịch'}</label>
               <select
                 value={filter.type}
                 onChange={(e) => handleFilterChange('type', e.target.value)}
                 className="input w-full"
               >
-                <option value="">Tất cả loại</option>
-                <option value="income">Thu nhập</option>
-                <option value="expense">Chi tiêu</option>
+                <option value="">{isEnglish ? 'All types' : 'Tất cả loại'}</option>
+                <option value="income">{isEnglish ? 'Income' : 'Thu nhập'}</option>
+                <option value="expense">{isEnglish ? 'Expense' : 'Chi tiêu'}</option>
               </select>
             </div>
 
             <div className="tx-filter-actions">
-              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">Hành động</label>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">{isEnglish ? 'Actions' : 'Hành động'}</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <button
                   onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                   className="btn btn-secondary w-full"
                 >
-                  {showAdvancedFilters ? 'Ẩn nâng cao' : 'Bộ lọc nâng cao'}
+                  {showAdvancedFilters
+                    ? (isEnglish ? 'Hide advanced' : 'Ẩn nâng cao')
+                    : (isEnglish ? 'Advanced filters' : 'Bộ lọc nâng cao')}
                 </button>
                 <button onClick={clearFilters} className="btn btn-secondary w-full">
-                  Xóa bộ lọc
+                  {isEnglish ? 'Clear filters' : 'Xóa bộ lọc'}
                 </button>
               </div>
             </div>
@@ -302,10 +305,10 @@ const Transactions = () => {
             <div className="tx-filter-advanced-grid pt-4 border-t border-gray-200 dark:border-gray-700">
               {/* Category text search */}
               <div className="tx-adv-category">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Danh mục</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{isEnglish ? 'Category' : 'Danh mục'}</label>
                 <input
                   type="text"
-                  placeholder="Nhập tên danh mục..."
+                  placeholder={isEnglish ? 'Enter category name...' : 'Nhập tên danh mục...'}
                   value={filter.category}
                   onChange={(e) => handleFilterChange('category', e.target.value)}
                   className="input w-full"
@@ -315,7 +318,7 @@ const Transactions = () => {
               {/* Date Range */}
               <div className="tx-adv-date">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Khoảng thời gian
+                  {isEnglish ? 'Date range' : 'Khoảng thời gian'}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -337,7 +340,7 @@ const Transactions = () => {
               {/* Amount Range */}
               <div className="tx-adv-amount">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Khoảng số tiền
+                  {isEnglish ? 'Amount range' : 'Khoảng số tiền'}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -345,7 +348,7 @@ const Transactions = () => {
                     value={filter.amountFrom}
                     onChange={(e) => handleFilterChange('amountFrom', e.target.value)}
                     className="input flex-1"
-                    placeholder="Từ"
+                    placeholder={isEnglish ? 'From' : 'Từ'}
                     min="0"
                   />
                   <span className="self-center text-gray-500">-</span>
@@ -354,7 +357,7 @@ const Transactions = () => {
                     value={filter.amountTo}
                     onChange={(e) => handleFilterChange('amountTo', e.target.value)}
                     className="input flex-1"
-                    placeholder="Đến"
+                    placeholder={isEnglish ? 'To' : 'Đến'}
                     min="0"
                   />
                 </div>
@@ -364,10 +367,10 @@ const Transactions = () => {
 
           {/* Results Count */}
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Hiển thị{' '}
+            {isEnglish ? 'Showing' : 'Hiển thị'}{' '}
             <span className="font-semibold">{transactions.length}</span> /{' '}
-            <span className="font-semibold">{pagination.total}</span> giao dịch
-            {loading && <span className="ml-2 text-xs text-gray-400">(đang tải...)</span>}
+            <span className="font-semibold">{pagination.total}</span> {isEnglish ? 'transactions' : 'giao dịch'}
+            {loading && <span className="ml-2 text-xs text-gray-400">{isEnglish ? '(loading...)' : '(đang tải...)'}</span>}
           </div>
         </div>
       </div>
@@ -382,12 +385,12 @@ const Transactions = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Ngày</th>
-                    <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Loại</th>
-                    <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Danh mục</th>
-                    <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Ghi chú</th>
-                    <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Số tiền</th>
-                    <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Thao tác</th>
+                    <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">{isEnglish ? 'Date' : 'Ngày'}</th>
+                    <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">{isEnglish ? 'Type' : 'Loại'}</th>
+                    <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">{isEnglish ? 'Category' : 'Danh mục'}</th>
+                    <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">{isEnglish ? 'Note' : 'Ghi chú'}</th>
+                    <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">{isEnglish ? 'Amount' : 'Số tiền'}</th>
+                    <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">{isEnglish ? 'Actions' : 'Thao tác'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -398,7 +401,9 @@ const Transactions = () => {
                       </td>
                       <td className="py-3 px-4">
                         <span className={transaction.type === 'income' ? 'badge-income' : 'badge-expense'}>
-                          {transaction.type === 'income' ? 'Thu nhập' : 'Chi tiêu'}
+                          {transaction.type === 'income'
+                            ? (isEnglish ? 'Income' : 'Thu nhập')
+                            : (isEnglish ? 'Expense' : 'Chi tiêu')}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{transaction.category}</td>
@@ -446,11 +451,13 @@ const Transactions = () => {
         ) : (
           <div className="text-center py-12">
             <p className="text-gray-500 dark:text-gray-400">
-              {loading ? 'Đang tải...' : 'Chưa có giao dịch nào'}
+              {loading
+                ? (isEnglish ? 'Loading...' : 'Đang tải...')
+                : (isEnglish ? 'No transactions yet' : 'Chưa có giao dịch nào')}
             </p>
             {!loading && (
               <button onClick={() => setShowModal(true)} className="btn btn-primary mt-4">
-                Thêm giao dịch đầu tiên
+                {isEnglish ? 'Add your first transaction' : 'Thêm giao dịch đầu tiên'}
               </button>
             )}
           </div>

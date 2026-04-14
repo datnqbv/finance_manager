@@ -13,6 +13,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { categories, fetchCategories } = useCategories();
   const { t } = useLanguage();
+  const isEnglish = t('language') === 'English';
   const navigate = useNavigate();
   const [summary, setSummary] = useState(null);
   const [filteredSummary, setFilteredSummary] = useState(null);
@@ -105,22 +106,22 @@ const Dashboard = () => {
     const lastMonthBalance = (lastMonthData.totalIncome || 0) - (lastMonthData.totalExpense || 0);
     const change = thisMonthBalance - lastMonthBalance;
     const percentChange = lastMonthBalance !== 0 ? ((change / Math.abs(lastMonthBalance)) * 100).toFixed(1) : (thisMonthBalance > 0 ? 100 : 0);
-    if (change > 0) return { message: `Tiết kiệm tốt hơn ${Math.abs(percentChange)}% so với tháng trước`, type: 'success' };
-    if (change < 0) return { message: `Tiết kiệm giảm ${Math.abs(percentChange)}% so với tháng trước`, type: 'warning' };
-    return { message: 'Tiết kiệm ổn định so với tháng trước', type: 'info' };
+    if (change > 0) return { message: isEnglish ? `Savings improved by ${Math.abs(percentChange)}% compared to last month` : `Tiết kiệm tốt hơn ${Math.abs(percentChange)}% so với tháng trước`, type: 'success' };
+    if (change < 0) return { message: isEnglish ? `Savings decreased by ${Math.abs(percentChange)}% compared to last month` : `Tiết kiệm giảm ${Math.abs(percentChange)}% so với tháng trước`, type: 'warning' };
+    return { message: isEnglish ? 'Savings are stable compared to last month' : 'Tiết kiệm ổn định so với tháng trước', type: 'info' };
   };
 
   const getBudgetAlert = () => {
     if (!filteredSummary || !filteredSummary.income) return null;
     const percentage = (filteredSummary.expense / filteredSummary.income) * 100;
-    if (percentage >= 90) return { message: `Bạn đã chi ${percentage.toFixed(0)}% thu nhập trong kỳ này — cần kiểm soát ngay!`, level: 'danger' };
-    if (percentage >= 80) return { message: `Bạn đã chi ${percentage.toFixed(0)}% thu nhập trong kỳ này — hãy cẩn thận hơn.`, level: 'warning' };
+    if (percentage >= 90) return { message: isEnglish ? `You spent ${percentage.toFixed(0)}% of your income this period - immediate control is needed!` : `Bạn đã chi ${percentage.toFixed(0)}% thu nhập trong kỳ này — cần kiểm soát ngay!`, level: 'danger' };
+    if (percentage >= 80) return { message: isEnglish ? `You spent ${percentage.toFixed(0)}% of your income this period - be more careful.` : `Bạn đã chi ${percentage.toFixed(0)}% thu nhập trong kỳ này — hãy cẩn thận hơn.`, level: 'warning' };
     return null;
   };
 
   const getSavingsGoal = () => {
     const activeGoals = goals.filter(g => !g.isAchieved);
-    if (activeGoals.length === 0) return { target: 0, current: filteredSummary?.balance || 0, percentage: 0, goalName: 'Chưa có mục tiêu', hasGoal: false };
+    if (activeGoals.length === 0) return { target: 0, current: filteredSummary?.balance || 0, percentage: 0, goalName: isEnglish ? 'No goals yet' : 'Chưa có mục tiêu', hasGoal: false };
     const sortedGoals = activeGoals.sort((a, b) => {
       const priorityOrder = { high: 3, medium: 2, low: 1 };
       if (priorityOrder[a.priority] !== priorityOrder[b.priority]) return priorityOrder[b.priority] - priorityOrder[a.priority];
@@ -136,18 +137,18 @@ const Dashboard = () => {
       month: `T${stat.month}`,
       [t('monthlyIncome')]: stat.totalIncome || 0,
       [t('monthlyExpense')]: stat.totalExpense || 0,
-      'Tiết kiệm': Math.max((stat.totalIncome || 0) - (stat.totalExpense || 0), 0)
+      [isEnglish ? 'Savings' : 'Tiết kiệm']: Math.max((stat.totalIncome || 0) - (stat.totalExpense || 0), 0)
     }));
   };
 
   const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899'];
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(amount);
+    return new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(amount);
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+    return new Date(date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit' });
   };
 
   // ── Custom Tooltip for Charts ──
@@ -306,8 +307,8 @@ const Dashboard = () => {
           <div className="xl:col-span-8 rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Biến động tài chính</h3>
-                <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{t('monthlyIncome')} {t('and')} {t('monthlyExpense')} trong 6 tháng qua</p>
+                <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Financial Trend' : 'Biến động tài chính'}</h3>
+                <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? `${t('monthlyIncome')} ${t('and')} ${t('monthlyExpense')} over the last 6 months` : `${t('monthlyIncome')} ${t('and')} ${t('monthlyExpense')} trong 6 tháng qua`}</p>
               </div>
               <div className="flex items-center gap-3 text-xs font-semibold text-[#5e6573] dark:text-[#a7afbc]">
                 <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#003d2d]" /> {t('monthlyIncome')}</span>
@@ -330,7 +331,7 @@ const Dashboard = () => {
           <div className="xl:col-span-4 rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{t('expenseForecast')}</h3>
-              <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">{t('currentExpense')} tới</span>
+              <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">{isEnglish ? `${t('currentExpense')} onward` : `${t('currentExpense')} tới`}</span>
             </div>
 
             <div className="mb-3 rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
@@ -343,11 +344,11 @@ const Dashboard = () => {
 
             <div className="mb-3 grid grid-cols-2 gap-2">
               <div className="rounded-xl bg-[#f7f9fc] p-2.5 dark:bg-[#232936]">
-                <p className="text-[11px] font-semibold text-[#667084] dark:text-[#a8b0be]">Kịch bản thấp</p>
+                <p className="text-[11px] font-semibold text-[#667084] dark:text-[#a8b0be]">{isEnglish ? 'Low scenario' : 'Kịch bản thấp'}</p>
                 <p className="mt-1 text-sm font-black text-[#1f2733] dark:text-[#e8edf4]">{formatCurrency(forecastLow)}</p>
               </div>
               <div className="rounded-xl bg-[#f7f9fc] p-2.5 dark:bg-[#232936]">
-                <p className="text-[11px] font-semibold text-[#667084] dark:text-[#a8b0be]">Kịch bản cao</p>
+                <p className="text-[11px] font-semibold text-[#667084] dark:text-[#a8b0be]">{isEnglish ? 'High scenario' : 'Kịch bản cao'}</p>
                 <p className="mt-1 text-sm font-black text-[#1f2733] dark:text-[#e8edf4]">{formatCurrency(forecastHigh)}</p>
               </div>
             </div>
@@ -359,8 +360,8 @@ const Dashboard = () => {
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="h-8 w-8 rounded-lg flex items-center justify-center font-bold bg-[#dce7f7] text-[#31557e] dark:bg-[#2a3a4f] dark:text-[#9fc4ef]">{idx + 1}</div>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-[#1f2733] dark:text-[#e8edf4]">{item.name || 'Chi tiêu khác'}</p>
-                        <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">Danh mục có rủi ro cao</p>
+                        <p className="truncate text-sm font-bold text-[#1f2733] dark:text-[#e8edf4]">{item.name || (isEnglish ? 'Other expense' : 'Chi tiêu khác')}</p>
+                        <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'High-risk category' : 'Danh mục có rủi ro cao'}</p>
                       </div>
                     </div>
                     <p className="text-sm font-black text-[#1a1f29] dark:text-[#eff2f6]">{formatCurrency(item.amount)}</p>
@@ -383,7 +384,7 @@ const Dashboard = () => {
                   </div>
                 </div>
               )) : (
-                <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Chưa đủ dữ liệu để dự báo chi tiêu.</p>
+                <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'Not enough data for expense forecast.' : 'Chưa đủ dữ liệu để dự báo chi tiêu.'}</p>
               )}
             </div>
           </div>
@@ -391,7 +392,7 @@ const Dashboard = () => {
 
         <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25]">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eceff4] px-5 py-4 dark:border-[#2b313d]">
-            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Giao dịch gần đây</h3>
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Recent Transactions' : 'Giao dịch gần đây'}</h3>
             <div className="flex items-center gap-2">
               {[
                 { key: 'all', label: t('all') },
@@ -417,21 +418,21 @@ const Dashboard = () => {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b border-[#eceff4] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:text-[#9fa7b4]">
-                  <th className="px-5 py-3">Mô tả</th>
+                  <th className="px-5 py-3">{isEnglish ? 'Description' : 'Mô tả'}</th>
                   <th className="px-5 py-3">{t('category')}</th>
                   <th className="px-5 py-3">{t('date')}</th>
                   <th className="px-5 py-3 text-right">{t('amount')}</th>
-                  <th className="px-5 py-3 text-right">Trạng thái</th>
+                  <th className="px-5 py-3 text-right">{isEnglish ? 'Status' : 'Trạng thái'}</th>
                 </tr>
               </thead>
               <tbody>
                 {recentTransactions.length > 0 ? recentTransactions.map((tx, idx) => {
-                  const status = idx % 3 === 2 ? 'Đang xử lý' : 'Hoàn tất';
+                  const status = idx % 3 === 2 ? (isEnglish ? 'Processing' : 'Đang xử lý') : (isEnglish ? 'Completed' : 'Hoàn tất');
                   return (
                     <tr key={tx._id || idx} className="border-b border-[#eef1f6] dark:border-[#2a303b]">
                       <td className="px-5 py-4">
                         <p className="font-bold text-[#1d2430] dark:text-[#eef1f5]">{tx.note || tx.category}</p>
-                        <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{tx.type === 'income' ? 'Giao dịch thu' : 'Giao dịch chi'}</p>
+                        <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{tx.type === 'income' ? (isEnglish ? 'Income transaction' : 'Giao dịch thu') : (isEnglish ? 'Expense transaction' : 'Giao dịch chi')}</p>
                       </td>
                       <td className="px-5 py-4 font-medium text-[#303846] dark:text-[#c9d1db]">{tx.category}</td>
                       <td className="px-5 py-4 text-[#6f7480] dark:text-[#a4acba]">{formatDate(tx.date)}</td>
@@ -439,7 +440,7 @@ const Dashboard = () => {
                         {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${status === 'Hoàn tất' ? 'bg-[#e6ecfa] text-[#6177a6] dark:bg-[#313b54] dark:text-[#a9bcdf]' : 'bg-[#f4ddd7] text-[#9a5f54] dark:bg-[#4a3330] dark:text-[#d7a59b]'}`}>
+                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${(isEnglish ? status === 'Completed' : status === 'Hoàn tất') ? 'bg-[#e6ecfa] text-[#6177a6] dark:bg-[#313b54] dark:text-[#a9bcdf]' : 'bg-[#f4ddd7] text-[#9a5f54] dark:bg-[#4a3330] dark:text-[#d7a59b]'}`}>
                           {status}
                         </span>
                       </td>
@@ -448,7 +449,7 @@ const Dashboard = () => {
                 }) : (
                   <tr>
                     <td colSpan={5} className="px-5 py-10 text-center text-sm text-[#6f7480] dark:text-[#a4acba]">
-                      Không có giao dịch phù hợp.
+                      {isEnglish ? 'No matching transactions.' : 'Không có giao dịch phù hợp.'}
                     </td>
                   </tr>
                 )}

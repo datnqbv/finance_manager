@@ -11,6 +11,7 @@ const Goals = () => {
   const ITEMS_PER_PAGE = 8;
   const { goals, goalStats, loading, createGoal, updateGoal, deleteGoal, addAmountToGoal } = useGoal();
   const { t } = useLanguage();
+  const isEnglish = t('language') === 'English';
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState(null);
   const [showAddAmount, setShowAddAmount] = useState(null);
@@ -37,7 +38,7 @@ const Goals = () => {
   };
 
   const handleDeleteGoal = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa mục tiêu này?')) {
+    if (window.confirm(isEnglish ? 'Are you sure you want to delete this goal?' : 'Bạn có chắc chắn muốn xóa mục tiêu này?')) {
       await deleteGoal(id);
     }
   };
@@ -45,7 +46,7 @@ const Goals = () => {
   const handleAddAmount = async (goalId) => {
     const amount = parseFloat(addAmountValue);
     if (isNaN(amount) || amount <= 0) {
-      alert('Vui lòng nhập số tiền hợp lệ');
+      alert(isEnglish ? 'Please enter a valid amount' : 'Vui lòng nhập số tiền hợp lệ');
       return;
     }
     const result = await addAmountToGoal(goalId, amount, addAmountNote.trim());
@@ -54,7 +55,7 @@ const Goals = () => {
       setAddAmountValue('');
       setAddAmountNote('');
       if (result.message && result.message.includes('achieved')) {
-        alert('🎉 ' + result.message);
+        alert((isEnglish ? '🎉 ' : '🎉 ') + result.message);
       }
     }
   };
@@ -70,7 +71,7 @@ const Goals = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
+    return new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', {
       style: 'currency',
       currency: 'VND'
     }).format(amount);
@@ -78,21 +79,21 @@ const Goals = () => {
 
   const getPriorityBadge = (priority) => {
     const badges = {
-      low:    { bg: 'bg-gray-100 dark:bg-[#2a2a2a]',   text: 'text-gray-500 dark:text-gray-400',   label: 'Thấp',      dot: '⚪' },
-      medium: { bg: 'bg-amber-50 dark:bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', label: 'Trung bình', dot: '🟡' },
-      high:   { bg: 'bg-red-50 dark:bg-red-500/10',    text: 'text-red-600 dark:text-red-400',     label: 'Cao',       dot: '🔴' },
+      low:    { bg: 'bg-gray-100 dark:bg-[#2a2a2a]',   text: 'text-gray-500 dark:text-gray-400',   label: isEnglish ? 'Low' : 'Thấp',      dot: '⚪' },
+      medium: { bg: 'bg-amber-50 dark:bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', label: isEnglish ? 'Medium' : 'Trung bình', dot: '🟡' },
+      high:   { bg: 'bg-red-50 dark:bg-red-500/10',    text: 'text-red-600 dark:text-red-400',     label: isEnglish ? 'High' : 'Cao',       dot: '🔴' },
     };
     return badges[priority] || badges.medium;
   };
 
   const getDaysRemaining = (deadline) => {
     const days = Math.ceil((new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24));
-    if (days < 0)  return { text: 'Quá hạn',       color: 'text-red-600 dark:text-red-400' };
-    if (days === 0) return { text: 'Hôm nay',       color: 'text-red-600 dark:text-red-400' };
-    if (days === 1) return { text: 'Còn 1 ngày',    color: 'text-amber-600 dark:text-amber-400' };
-    if (days <= 7)  return { text: `Còn ${days} ngày`, color: 'text-amber-600 dark:text-amber-400' };
-    if (days <= 30) return { text: `Còn ${days} ngày`, color: 'text-yellow-600 dark:text-yellow-400' };
-    return              { text: `Còn ${days} ngày`, color: 'text-emerald-600 dark:text-emerald-400' };
+    if (days < 0)  return { text: isEnglish ? 'Overdue' : 'Quá hạn',       color: 'text-red-600 dark:text-red-400' };
+    if (days === 0) return { text: isEnglish ? 'Today' : 'Hôm nay',       color: 'text-red-600 dark:text-red-400' };
+    if (days === 1) return { text: isEnglish ? '1 day left' : 'Còn 1 ngày',    color: 'text-amber-600 dark:text-amber-400' };
+    if (days <= 7)  return { text: isEnglish ? `${days} days left` : `Còn ${days} ngày`, color: 'text-amber-600 dark:text-amber-400' };
+    if (days <= 30) return { text: isEnglish ? `${days} days left` : `Còn ${days} ngày`, color: 'text-yellow-600 dark:text-yellow-400' };
+    return              { text: isEnglish ? `${days} days left` : `Còn ${days} ngày`, color: 'text-emerald-600 dark:text-emerald-400' };
   };
 
   const filteredGoals = goals.filter(goal => {
@@ -139,24 +140,24 @@ const Goals = () => {
           <div className="relative">
             <div className="flex items-center gap-2">
               <FiTarget size={18} className="text-[#b8e4d6]" />
-              <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">Mục tiêu tài chính</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">{isEnglish ? 'Financial Goals' : 'Mục tiêu tài chính'}</p>
             </div>
             <h1 className="mt-3 text-5xl font-black tracking-tight">{formatCurrency(totalTarget)}</h1>
             <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-[#d8fff2]">
-              {overallProgress.toFixed(1)}% tổng mục tiêu đã hoàn thành
+              {overallProgress.toFixed(1)}% {isEnglish ? 'of goals completed' : 'tổng mục tiêu đã hoàn thành'}
             </div>
 
             <div className="mt-8 grid grid-cols-1 gap-4 border-t border-[#1e6b57] pt-5 sm:grid-cols-3">
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Đang tích lũy</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Currently saved' : 'Đang tích lũy'}</p>
                 <p className="mt-1 text-2xl font-bold">{formatCurrency(totalCurrent)}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Còn thiếu</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Remaining' : 'Còn thiếu'}</p>
                 <p className="mt-1 text-2xl font-bold">{formatCurrency(Math.max(totalRemaining, 0))}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Hoàn thành</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Completed' : 'Hoàn thành'}</p>
                 <p className="mt-1 text-2xl font-bold">{achievedCount}/{goals.length}</p>
               </div>
             </div>
@@ -166,9 +167,9 @@ const Goals = () => {
         <div className="xl:col-span-4 space-y-4">
           <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">Tiến độ mục tiêu</h3>
+              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Goal Progress' : 'Tiến độ mục tiêu'}</h3>
               <button onClick={openCreateModal} className="text-xs font-semibold text-[#3a4a62] hover:underline dark:text-[#b9c3d0]">
-                Thêm mới
+                {isEnglish ? 'Add New' : 'Thêm mới'}
               </button>
             </div>
 
@@ -184,16 +185,16 @@ const Goals = () => {
                   </div>
                 </div>
               )) : (
-                <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Bạn chưa có mục tiêu nào.</p>
+                <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'You do not have any goals yet.' : 'Bạn chưa có mục tiêu nào.'}</p>
               )}
             </div>
 
             <div className="mt-4 rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
-              <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">Gợi ý thông minh</p>
+              <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{isEnglish ? 'Smart Suggestion' : 'Gợi ý thông minh'}</p>
               <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">
                 {activeCount > 0
-                  ? 'Ưu tiên nạp đều cho mục tiêu gần hạn để tăng tỷ lệ hoàn thành.'
-                  : 'Tuyệt vời! Bạn đã hoàn thành mọi mục tiêu hiện tại.'}
+                  ? (isEnglish ? 'Prioritize regular deposits for near-deadline goals to improve completion rate.' : 'Ưu tiên nạp đều cho mục tiêu gần hạn để tăng tỷ lệ hoàn thành.')
+                  : (isEnglish ? 'Great! You have completed all your current goals.' : 'Tuyệt vời! Bạn đã hoàn thành mọi mục tiêu hiện tại.')}
               </p>
             </div>
           </div>
@@ -204,10 +205,10 @@ const Goals = () => {
         <div className="xl:col-span-8 rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Biến động mục tiêu</h3>
-              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Đã đạt và còn lại theo từng mục tiêu</p>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Goal Trend' : 'Biến động mục tiêu'}</h3>
+              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'Reached vs remaining for each goal' : 'Đã đạt và còn lại theo từng mục tiêu'}</p>
             </div>
-            <div className="text-xs font-semibold text-[#5e6573] dark:text-[#a7afbc]">Top 6 mục tiêu</div>
+            <div className="text-xs font-semibold text-[#5e6573] dark:text-[#a7afbc]">{isEnglish ? 'Top 6 goals' : 'Top 6 mục tiêu'}</div>
           </div>
 
           {chartGoals.length > 0 ? (
@@ -231,15 +232,15 @@ const Goals = () => {
             </div>
           ) : (
             <div className="h-[220px] flex items-center justify-center text-sm text-[#6f7480] dark:text-[#a4acba]">
-              Chưa có dữ liệu mục tiêu.
+              {isEnglish ? 'No goal data yet.' : 'Chưa có dữ liệu mục tiêu.'}
             </div>
           )}
         </div>
 
         <div className="xl:col-span-4 rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Hạn sắp tới</h3>
-            <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">Lịch mục tiêu</span>
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Upcoming Deadlines' : 'Hạn sắp tới'}</h3>
+            <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">{isEnglish ? 'Goal timeline' : 'Lịch mục tiêu'}</span>
           </div>
 
           <div className="space-y-3">
@@ -260,7 +261,7 @@ const Goals = () => {
                 </div>
               );
             }) : (
-              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Không có mục tiêu đang chạy.</p>
+              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'No active goals.' : 'Không có mục tiêu đang chạy.'}</p>
             )}
           </div>
         </div>
@@ -268,12 +269,12 @@ const Goals = () => {
 
       <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eceff4] px-5 py-4 dark:border-[#2b313d]">
-          <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Danh sách mục tiêu</h3>
+          <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Goal List' : 'Danh sách mục tiêu'}</h3>
           <div className="flex items-center gap-2">
             {[
-              { label: `Tất cả (${goals.length})`, value: 'all' },
-              { label: `Đang thực hiện (${activeCount})`, value: 'active' },
-              { label: `Hoàn thành (${achievedCount})`, value: 'achieved' },
+              { label: `${isEnglish ? 'All' : 'Tất cả'} (${goals.length})`, value: 'all' },
+              { label: `${isEnglish ? 'Active' : 'Đang thực hiện'} (${activeCount})`, value: 'active' },
+              { label: `${isEnglish ? 'Completed' : 'Hoàn thành'} (${achievedCount})`, value: 'achieved' },
             ].map(f => (
               <button
                 key={f.value}
@@ -294,7 +295,7 @@ const Goals = () => {
               onClick={openCreateModal}
               className="ml-1 inline-flex items-center gap-1.5 rounded-xl bg-[#003d2d] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#00523d]"
             >
-              <FiPlus size={13} /> Tạo mục tiêu
+              <FiPlus size={13} /> {isEnglish ? 'Create Goal' : 'Tạo mục tiêu'}
             </button>
           </div>
         </div>
@@ -303,13 +304,13 @@ const Goals = () => {
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-[#eceff4] bg-[#f8f9fb] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:bg-[#232936] dark:text-[#9fa7b4]">
-                <th className="px-5 py-3">Mục tiêu</th>
-                <th className="px-5 py-3">Tiến độ</th>
-                <th className="px-5 py-3">Đã đạt</th>
-                <th className="px-5 py-3">Mục tiêu</th>
-                <th className="px-5 py-3">Hạn</th>
-                <th className="px-5 py-3">Trạng thái</th>
-                <th className="px-5 py-3 text-right">Thao tác</th>
+                <th className="px-5 py-3">{isEnglish ? 'Goal' : 'Mục tiêu'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Progress' : 'Tiến độ'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Saved' : 'Đã đạt'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Target' : 'Mục tiêu'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Deadline' : 'Hạn'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Status' : 'Trạng thái'}</th>
+                <th className="px-5 py-3 text-right">{isEnglish ? 'Actions' : 'Thao tác'}</th>
               </tr>
             </thead>
             <tbody>
@@ -327,7 +328,7 @@ const Goals = () => {
                           </div>
                           <div className="min-w-0">
                             <p className="truncate font-bold text-[#1d2430] dark:text-[#eef1f5]">{goal.name}</p>
-                            <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{goal.description || 'Mục tiêu tài chính cá nhân'}</p>
+                            <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{goal.description || (isEnglish ? 'Personal financial goal' : 'Mục tiêu tài chính cá nhân')}</p>
                           </div>
                         </div>
                       </td>
@@ -347,7 +348,7 @@ const Goals = () => {
                       <td className="px-5 py-4">
                         {goal.isAchieved ? (
                           <span className="rounded-full bg-[#e4f8ef] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#12724e] dark:bg-[#213c33] dark:text-[#80d6b4]">
-                            Hoàn thành
+                            {isEnglish ? 'Completed' : 'Hoàn thành'}
                           </span>
                         ) : (
                           <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${priority.bg} ${priority.text}`}>
@@ -364,7 +365,7 @@ const Goals = () => {
                                 setShowHistory(null);
                               }}
                               className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#e7f6ee] text-[#1f7d55] hover:bg-[#d7f0e4] dark:bg-[#204236] dark:text-[#8edbbb] dark:hover:bg-[#285344]"
-                              title="Nạp thêm"
+                              title={isEnglish ? 'Add amount' : 'Nạp thêm'}
                             >
                               <FiPlus size={14} />
                             </button>
@@ -376,7 +377,7 @@ const Goals = () => {
                                 setShowAddAmount(null);
                               }}
                               className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc] dark:hover:bg-[#364050]"
-                              title="Lịch sử"
+                              title={isEnglish ? 'History' : 'Lịch sử'}
                             >
                               <FiClock size={14} />
                             </button>
@@ -384,14 +385,14 @@ const Goals = () => {
                           <button
                             onClick={() => openEditModal(goal)}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc] dark:hover:bg-[#364050]"
-                            title="Chỉnh sửa"
+                            title={isEnglish ? 'Edit' : 'Chỉnh sửa'}
                           >
                             <FiEdit2 size={14} />
                           </button>
                           <button
                             onClick={() => handleDeleteGoal(goal._id)}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#f8eceb] text-[#a55d56] hover:bg-[#f4dedc] dark:bg-[#3b2a2c] dark:text-[#e0a29a] dark:hover:bg-[#4a3336]"
-                            title="Xóa"
+                            title={isEnglish ? 'Delete' : 'Xóa'}
                           >
                             <FiTrash2 size={14} />
                           </button>
@@ -407,7 +408,7 @@ const Goals = () => {
                               <CurrencyInput
                                 value={addAmountValue}
                                 onChange={v => setAddAmountValue(v)}
-                                placeholder="Số tiền nạp thêm"
+                                placeholder={isEnglish ? 'Additional amount' : 'Số tiền nạp thêm'}
                                 baseClass="w-full px-3 py-2 text-sm border border-gray-200 dark:border-[#334640] rounded-xl dark:bg-[#18231f] dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                               />
                             </div>
@@ -415,7 +416,7 @@ const Goals = () => {
                               type="text"
                               value={addAmountNote}
                               onChange={(e) => setAddAmountNote(e.target.value)}
-                              placeholder="Ghi chú (tùy chọn)..."
+                              placeholder={isEnglish ? 'Note (optional)...' : 'Ghi chú (tùy chọn)...'}
                               className="md:flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-[#334640] rounded-xl dark:bg-[#18231f] dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                             />
                             <div className="flex items-center gap-2">
@@ -423,13 +424,13 @@ const Goals = () => {
                                 onClick={() => handleAddAmount(goal._id)}
                                 className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors"
                               >
-                                Xác nhận
+                                {isEnglish ? 'Confirm' : 'Xác nhận'}
                               </button>
                               <button
                                 onClick={() => { setShowAddAmount(null); setAddAmountValue(''); setAddAmountNote(''); }}
                                 className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-400 px-3 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
                               >
-                                Hủy
+                                {isEnglish ? 'Cancel' : 'Hủy'}
                               </button>
                             </div>
                           </div>
@@ -448,7 +449,7 @@ const Goals = () => {
                                   {entry.note && <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{entry.note}</p>}
                                 </div>
                                 <p className="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5">
-                                  {new Date(entry.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                  {new Date(entry.date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                 </p>
                               </div>
                             ))}
@@ -460,12 +461,12 @@ const Goals = () => {
               }) : (
                 <tr>
                   <td colSpan={7} className="px-5 py-12 text-center">
-                    <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Không có mục tiêu phù hợp với bộ lọc hiện tại.</p>
+                    <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'No goals match the current filter.' : 'Không có mục tiêu phù hợp với bộ lọc hiện tại.'}</p>
                     <button
                       onClick={openCreateModal}
                       className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00523d]"
                     >
-                      <FiPlus size={14} /> Tạo mục tiêu đầu tiên
+                      <FiPlus size={14} /> {isEnglish ? 'Create your first goal' : 'Tạo mục tiêu đầu tiên'}
                     </button>
                   </td>
                 </tr>

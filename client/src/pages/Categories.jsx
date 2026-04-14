@@ -11,6 +11,7 @@ const Categories = () => {
   const ITEMS_PER_PAGE = 8;
   const { categories, loading, fetchCategories, createCategory, updateCategory, deleteCategory } = useCategories();
   const { t } = useLanguage();
+  const isEnglish = t('language') === 'English';
 
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -28,10 +29,10 @@ const Categories = () => {
 
   const handleDelete = async (category) => {
     if (category.isDefault) {
-      toast.warning('Không thể xóa danh mục mặc định');
+      toast.warning(isEnglish ? 'Default category cannot be deleted' : 'Không thể xóa danh mục mặc định');
       return;
     }
-    if (window.confirm(`Xóa danh mục "${category.name}"?`)) {
+    if (window.confirm(isEnglish ? `Delete category "${category.name}"?` : `Xóa danh mục "${category.name}"?`)) {
       try {
         await deleteCategory(category._id);
       } catch {}
@@ -69,7 +70,7 @@ const Categories = () => {
   const sortedCategories = [...filteredCategories].sort((a, b) => {
     const orderDiff = (a.order || 0) - (b.order || 0);
     if (orderDiff !== 0) return orderDiff;
-    return (a.name || '').localeCompare((b.name || ''), 'vi');
+    return (a.name || '').localeCompare((b.name || ''), isEnglish ? 'en' : 'vi');
   });
 
   const totalItems = sortedCategories.length;
@@ -101,24 +102,24 @@ const Categories = () => {
           <div className="relative">
             <div className="flex items-center gap-2">
               <FiTag size={18} className="text-[#b8e4d6]" />
-              <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">Quản lý danh mục</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">{isEnglish ? 'Category Management' : 'Quản lý danh mục'}</p>
             </div>
             <h1 className="mt-3 text-5xl font-black tracking-tight">{categories.length}</h1>
             <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-[#d8fff2]">
-              <FiLock size={12} /> {defaultCount} mặc định • {customCount} tùy chỉnh
+              <FiLock size={12} /> {defaultCount} {isEnglish ? 'default' : 'mặc định'} • {customCount} {isEnglish ? 'custom' : 'tùy chỉnh'}
             </div>
 
             <div className="mt-8 grid grid-cols-1 gap-4 border-t border-[#1e6b57] pt-5 sm:grid-cols-3">
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Danh mục thu nhập</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Income Categories' : 'Danh mục thu nhập'}</p>
                 <p className="mt-1 text-2xl font-bold">{allIncome.length}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Danh mục chi tiêu</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Expense Categories' : 'Danh mục chi tiêu'}</p>
                 <p className="mt-1 text-2xl font-bold">{allExpense.length}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Dùng cho cả hai</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Used for both' : 'Dùng cho cả hai'}</p>
                 <p className="mt-1 text-2xl font-bold">{bothType}</p>
               </div>
             </div>
@@ -128,20 +129,20 @@ const Categories = () => {
         <div className="xl:col-span-4 space-y-4">
           <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">Phân bổ danh mục</h3>
+              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Category Distribution' : 'Phân bổ danh mục'}</h3>
               <button
                 onClick={() => setShowModal(true)}
                 className="text-xs font-semibold text-[#3a4a62] hover:underline dark:text-[#b9c3d0]"
               >
-                Thêm mới
+                {isEnglish ? 'Add New' : 'Thêm mới'}
               </button>
             </div>
 
             <div className="space-y-3">
               {[
-                { label: 'Chỉ thu nhập', value: incomeOnly, color: 'bg-emerald-600 dark:bg-emerald-500' },
-                { label: 'Chỉ chi tiêu', value: expenseOnly, color: 'bg-red-500 dark:bg-red-400' },
-                { label: 'Cả hai', value: bothType, color: 'bg-blue-500 dark:bg-blue-400' },
+                { label: isEnglish ? 'Income only' : 'Chỉ thu nhập', value: incomeOnly, color: 'bg-emerald-600 dark:bg-emerald-500' },
+                { label: isEnglish ? 'Expense only' : 'Chỉ chi tiêu', value: expenseOnly, color: 'bg-red-500 dark:bg-red-400' },
+                { label: isEnglish ? 'Both' : 'Cả hai', value: bothType, color: 'bg-blue-500 dark:bg-blue-400' },
               ].map((item) => (
                 <div key={item.label}>
                   <div className="mb-1 flex items-center justify-between text-xs text-[#586074] dark:text-[#a9afbb]">
@@ -156,11 +157,11 @@ const Categories = () => {
             </div>
 
             <div className="mt-4 rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
-              <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">Gợi ý tối ưu</p>
+              <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{isEnglish ? 'Smart Suggestion' : 'Gợi ý tối ưu'}</p>
               <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">
                 {categories.length < 8
-                  ? 'Bạn có thể thêm danh mục chi tiết hơn để thống kê chính xác.'
-                  : 'Danh mục đang đủ tốt, hãy rà soát và gộp các mục trùng lặp.'}
+                  ? (isEnglish ? 'You can add more detailed categories for better analytics.' : 'Bạn có thể thêm danh mục chi tiết hơn để thống kê chính xác.')
+                  : (isEnglish ? 'Your categories are in good shape. Consider merging duplicates.' : 'Danh mục đang đủ tốt, hãy rà soát và gộp các mục trùng lặp.')}
               </p>
             </div>
           </div>
@@ -169,12 +170,12 @@ const Categories = () => {
 
       <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eceff4] px-5 py-4 dark:border-[#2b313d]">
-          <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Danh sách danh mục</h3>
+          <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Category List' : 'Danh sách danh mục'}</h3>
           <div className="flex items-center gap-2">
             {[
-              { label: `Tất cả (${categories.length})`, value: 'all' },
-              { label: `Thu nhập (${allIncome.length})`, value: 'income' },
-              { label: `Chi tiêu (${allExpense.length})`, value: 'expense' },
+              { label: `${isEnglish ? 'All' : 'Tất cả'} (${categories.length})`, value: 'all' },
+              { label: `${isEnglish ? 'Income' : 'Thu nhập'} (${allIncome.length})`, value: 'income' },
+              { label: `${isEnglish ? 'Expense' : 'Chi tiêu'} (${allExpense.length})`, value: 'expense' },
             ].map(f => (
               <button
                 key={f.value}
@@ -192,7 +193,7 @@ const Categories = () => {
               onClick={() => setShowModal(true)}
               className="ml-1 inline-flex items-center gap-1.5 rounded-xl bg-[#003d2d] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#00523d]"
             >
-              <FiPlus size={13} /> Thêm danh mục
+              <FiPlus size={13} /> {isEnglish ? 'Add Category' : 'Thêm danh mục'}
             </button>
           </div>
         </div>
@@ -201,12 +202,12 @@ const Categories = () => {
             <table className="min-w-full text-sm">
             <thead>
                 <tr className="border-b border-[#eceff4] bg-[#f8f9fb] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:bg-[#232936] dark:text-[#9fa7b4]">
-                <th className="px-5 py-3">Mô tả</th>
-                <th className="px-5 py-3">Loại</th>
-                <th className="px-5 py-3">Màu</th>
-                <th className="px-5 py-3">Thứ tự</th>
-                <th className="px-5 py-3">Trạng thái</th>
-                <th className="px-5 py-3 text-right">Thao tác</th>
+                <th className="px-5 py-3">{isEnglish ? 'Description' : 'Mô tả'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Type' : 'Loại'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Color' : 'Màu'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Order' : 'Thứ tự'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Status' : 'Trạng thái'}</th>
+                <th className="px-5 py-3 text-right">{isEnglish ? 'Actions' : 'Thao tác'}</th>
               </tr>
             </thead>
             <tbody>
@@ -219,7 +220,7 @@ const Categories = () => {
                       </div>
                       <div className="min-w-0">
                         <p className="truncate font-bold text-[#1d2430] dark:text-[#eef1f5]">{category.name}</p>
-                        <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">Mã: {category._id?.slice(-6)}</p>
+                        <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'Code' : 'Mã'}: {category._id?.slice(-6)}</p>
                       </div>
                     </div>
                   </td>
@@ -231,7 +232,7 @@ const Categories = () => {
                         ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
                         : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
                     }`}>
-                      {category.type === 'income' ? 'Thu nhập' : category.type === 'expense' ? 'Chi tiêu' : 'Cả hai'}
+                      {category.type === 'income' ? (isEnglish ? 'Income' : 'Thu nhập') : category.type === 'expense' ? (isEnglish ? 'Expense' : 'Chi tiêu') : (isEnglish ? 'Both' : 'Cả hai')}
                     </span>
                   </td>
                   <td className="px-5 py-4">
@@ -244,11 +245,11 @@ const Categories = () => {
                   <td className="px-5 py-4">
                     {category.isDefault ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-[#edf0f5] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#5b6474] dark:bg-[#313846] dark:text-[#bac4d3]">
-                        <FiLock size={10} /> Mặc định
+                        <FiLock size={10} /> {isEnglish ? 'Default' : 'Mặc định'}
                       </span>
                     ) : (
                       <span className="rounded-full bg-[#e4f8ef] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#12724e] dark:bg-[#213c33] dark:text-[#80d6b4]">
-                        Tùy chỉnh
+                        {isEnglish ? 'Custom' : 'Tùy chỉnh'}
                       </span>
                     )}
                   </td>
@@ -257,7 +258,7 @@ const Categories = () => {
                       <button
                         onClick={() => handleEdit(category)}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc] dark:hover:bg-[#364050]"
-                        title="Chỉnh sửa"
+                        title={isEnglish ? 'Edit' : 'Chỉnh sửa'}
                       >
                         <FiEdit2 size={14} />
                       </button>
@@ -265,7 +266,7 @@ const Categories = () => {
                         onClick={() => handleDelete(category)}
                         disabled={category.isDefault}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#f8eceb] text-[#a55d56] hover:bg-[#f4dedc] disabled:cursor-not-allowed disabled:opacity-40 dark:bg-[#3b2a2c] dark:text-[#e0a29a] dark:hover:bg-[#4a3336]"
-                        title={category.isDefault ? 'Không thể xóa danh mục mặc định' : 'Xóa'}
+                        title={category.isDefault ? (isEnglish ? 'Default category cannot be deleted' : 'Không thể xóa danh mục mặc định') : (isEnglish ? 'Delete' : 'Xóa')}
                       >
                         <FiTrash2 size={14} />
                       </button>
@@ -275,12 +276,12 @@ const Categories = () => {
               )) : (
                 <tr>
                   <td colSpan={6} className="px-5 py-12 text-center">
-                    <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Không có danh mục phù hợp với bộ lọc hiện tại.</p>
+                    <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'No categories match the current filter.' : 'Không có danh mục phù hợp với bộ lọc hiện tại.'}</p>
                     <button
                       onClick={() => setShowModal(true)}
                       className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00523d]"
                     >
-                      <FiPlus size={14} /> Thêm danh mục đầu tiên
+                      <FiPlus size={14} /> {isEnglish ? 'Add your first category' : 'Thêm danh mục đầu tiên'}
                     </button>
                   </td>
                 </tr>

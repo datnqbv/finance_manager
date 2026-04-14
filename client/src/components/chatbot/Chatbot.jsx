@@ -10,6 +10,7 @@ import { useBudgets } from '../../context/BudgetContext';
 import { useGoal } from '../../context/GoalContext';
 import { useDebt } from '../../context/DebtContext';
 import { useCategories } from '../../context/CategoryContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 const Chatbot = () => {
   const { user } = useAuth();
@@ -18,12 +19,16 @@ const Chatbot = () => {
   const { goals } = useGoal();
   const { debts, stats: debtStats } = useDebt();
   const { categories } = useCategories();
+  const { t } = useLanguage();
+  const isEnglish = t('language') === 'English';
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([
     {
       id: 1,
-      text: `Xin chào ${user?.name || 'bạn'}! 👋 Tôi là trợ lý tài chính AI của bạn. Tôi có thể giúp bạn:\n\n💰 Phân tích chi tiêu\n📊 Theo dõi ngân sách\n🎯 Đạt mục tiêu tiết kiệm\n💡 Tư vấn tài chính\n\nBạn cần hỗ trợ gì hôm nay?`,
+      text: isEnglish
+        ? `Hello ${user?.name || 'there'}! 👋 I am your AI financial assistant. I can help you with:\n\n💰 Spending analysis\n📊 Budget tracking\n🎯 Savings goals\n💡 Financial advice\n\nHow can I support you today?`
+        : `Xin chào ${user?.name || 'bạn'}! 👋 Tôi là trợ lý tài chính AI của bạn. Tôi có thể giúp bạn:\n\n💰 Phân tích chi tiêu\n📊 Theo dõi ngân sách\n🎯 Đạt mục tiêu tiết kiệm\n💡 Tư vấn tài chính\n\nBạn cần hỗ trợ gì hôm nay?`,
       isBot: true,
       timestamp: new Date()
     }
@@ -34,10 +39,10 @@ const Chatbot = () => {
 
   // Quick suggestions based on user context
   const suggestions = [
-    '💰 Chi tiêu của tôi thế nào?',
-    '📊 Ngân sách còn bao nhiêu?',
-    '🎯 Tiến độ mục tiêu',
-    '💡 Lời khuyên tiết kiệm'
+    isEnglish ? '💰 How is my spending?' : '💰 Chi tiêu của tôi thế nào?',
+    isEnglish ? '📊 How much budget is left?' : '📊 Ngân sách còn bao nhiêu?',
+    isEnglish ? '🎯 Goal progress' : '🎯 Tiến độ mục tiêu',
+    isEnglish ? '💡 Saving advice' : '💡 Lời khuyên tiết kiệm'
   ];
 
   const scrollToBottom = () => {
@@ -65,10 +70,11 @@ const Chatbot = () => {
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
       
-      // Helper function to get month name in Vietnamese
+      // Helper function to get month name based on language
       const getMonthName = (month) => {
-        const months = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-                        'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+        const months = isEnglish
+          ? ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+          : ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
         return months[month];
       };
       
@@ -185,7 +191,7 @@ const Chatbot = () => {
       
       const userContext = {
         userName: user?.name,
-        currentDate: now.toLocaleDateString('vi-VN'),
+        currentDate: now.toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN'),
         currentMonthName: getMonthName(currentMonth),
         currentYear: currentYear,
         
@@ -311,11 +317,13 @@ const Chatbot = () => {
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
-      toast.error('Không thể gửi tin nhắn. Vui lòng thử lại!');
+      toast.error(isEnglish ? 'Unable to send message. Please try again!' : 'Không thể gửi tin nhắn. Vui lòng thử lại!');
       
       const errorMessage = {
         id: Date.now() + 1,
-        text: 'Xin lỗi, tôi đang gặp sự cố kỹ thuật. Vui lòng thử lại sau nhé! 😊',
+        text: isEnglish
+          ? 'Sorry, I am having a technical issue. Please try again later! 😊'
+          : 'Xin lỗi, tôi đang gặp sự cố kỹ thuật. Vui lòng thử lại sau nhé! 😊',
         isBot: true,
         timestamp: new Date()
       };
@@ -367,7 +375,7 @@ const Chatbot = () => {
                 <h3 className="font-semibold text-lg">Finance Assistant</h3>
                 <p className="text-xs opacity-90 flex items-center gap-1">
                   <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                  Trực tuyến
+                  {isEnglish ? 'Online' : 'Trực tuyến'}
                 </p>
               </div>
             </div>
@@ -431,7 +439,7 @@ const Chatbot = () => {
                 {showSuggestions && messages.length === 1 && !isLoading && (
                   <div className="space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <p className="text-xs text-gray-500 dark:text-gray-400 font-medium px-2">
-                      💡 Gợi ý nhanh:
+                      {isEnglish ? '💡 Quick suggestions:' : '💡 Gợi ý nhanh:'}
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       {suggestions.map((suggestion, index) => (

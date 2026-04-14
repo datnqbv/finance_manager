@@ -16,6 +16,7 @@ const Debts = () => {
   const { user } = useAuth();
   const { debts, stats, loading, createDebt, updateDebt, deleteDebt, addPayment, settleDebt } = useDebt();
   const { t } = useLanguage();
+  const isEnglish = t('language') === 'English';
 
   const [showModal, setShowModal] = useState(false);
   const [editingDebt, setEditingDebt] = useState(null);
@@ -28,10 +29,10 @@ const Debts = () => {
   const [currentPage, setCurrentPage]     = useState(1);
 
   const fmt = (n) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(n);
+    new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(n);
 
   const fmtDate = (d) =>
-    d ? new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
+    d ? new Date(d).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
 
   const daysUntil = (d) => {
     if (!d) return null;
@@ -77,7 +78,7 @@ const Debts = () => {
   };
 
   const handleDelete = async (debt) => {
-    if (window.confirm(`Xóa khoản nợ "${debt.personName}"?`)) deleteDebt(debt._id);
+    if (window.confirm(isEnglish ? `Delete debt "${debt.personName}"?` : `Xóa khoản nợ "${debt.personName}"?`)) deleteDebt(debt._id);
   };
 
   const handlePay = async (id) => {
@@ -101,24 +102,24 @@ const Debts = () => {
           <div className="relative">
             <div className="flex items-center gap-2">
               <span className="text-[#b8e4d6]">🤝</span>
-              <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">Quản lý công nợ</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">{isEnglish ? 'Debt Management' : 'Quản lý công nợ'}</p>
             </div>
             <h1 className="mt-3 text-5xl font-black tracking-tight">{fmt(Math.abs(netBalance))}</h1>
             <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-[#d8fff2]">
-              <FiTrendingUp size={12} /> {netBalance >= 0 ? 'Vị thế dương' : 'Vị thế âm'} ({netBalance >= 0 ? 'Bạn đang được nợ nhiều hơn' : 'Bạn đang nợ nhiều hơn'})
+              <FiTrendingUp size={12} /> {netBalance >= 0 ? (isEnglish ? 'Positive position' : 'Vị thế dương') : (isEnglish ? 'Negative position' : 'Vị thế âm')} ({netBalance >= 0 ? (isEnglish ? 'Others owe you more' : 'Bạn đang được nợ nhiều hơn') : (isEnglish ? 'You owe more' : 'Bạn đang nợ nhiều hơn')})
             </div>
 
             <div className="mt-8 grid grid-cols-1 gap-4 border-t border-[#1e6b57] pt-5 sm:grid-cols-3">
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Người khác nợ tôi</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Others owe me' : 'Người khác nợ tôi'}</p>
                 <p className="mt-1 text-2xl font-bold">{fmt(totalLend)}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Tôi đang nợ</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'I owe others' : 'Tôi đang nợ'}</p>
                 <p className="mt-1 text-2xl font-bold">{fmt(totalBorrow)}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Đã tất toán</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Settled' : 'Đã tất toán'}</p>
                 <p className="mt-1 text-2xl font-bold">{settledCount}/{debts.length}</p>
               </div>
             </div>
@@ -128,9 +129,9 @@ const Debts = () => {
         <div className="xl:col-span-4 space-y-4">
           <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">Tiến độ trả nợ</h3>
+              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Repayment Progress' : 'Tiến độ trả nợ'}</h3>
               <button onClick={() => { setEditingDebt(null); setShowModal(true); }} className="text-xs font-semibold text-[#3a4a62] hover:underline dark:text-[#b9c3d0]">
-                Thêm mới
+                {isEnglish ? 'Add New' : 'Thêm mới'}
               </button>
             </div>
 
@@ -149,16 +150,16 @@ const Debts = () => {
                   </div>
                 );
               }) : (
-                <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Bạn chưa có khoản nợ nào.</p>
+                <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'You do not have any debts yet.' : 'Bạn chưa có khoản nợ nào.'}</p>
               )}
             </div>
 
             <div className="mt-4 rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
-              <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">Gợi ý thông minh</p>
+              <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{isEnglish ? 'Smart Suggestion' : 'Gợi ý thông minh'}</p>
               <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">
                 {activeDebts.length > 0
-                  ? 'Ưu tiên xử lý các khoản sắp đến hạn để tránh phát sinh quá hạn.'
-                  : 'Tuyệt vời! Bạn không có khoản nợ đang hoạt động.'}
+                  ? (isEnglish ? 'Prioritize near-due debts to avoid overdue charges.' : 'Ưu tiên xử lý các khoản sắp đến hạn để tránh phát sinh quá hạn.')
+                  : (isEnglish ? 'Great! You have no active debts.' : 'Tuyệt vời! Bạn không có khoản nợ đang hoạt động.')}
               </p>
             </div>
           </div>
@@ -169,10 +170,10 @@ const Debts = () => {
         <div className="xl:col-span-8 rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Biến động công nợ</h3>
-              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Đã thanh toán và còn lại theo từng khoản</p>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Debt Trend' : 'Biến động công nợ'}</h3>
+              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'Paid vs remaining for each debt' : 'Đã thanh toán và còn lại theo từng khoản'}</p>
             </div>
-            <div className="text-xs font-semibold text-[#5e6573] dark:text-[#a7afbc]">Top 6 khoản</div>
+            <div className="text-xs font-semibold text-[#5e6573] dark:text-[#a7afbc]">{isEnglish ? 'Top 6 items' : 'Top 6 khoản'}</div>
           </div>
 
           {chartDebts.length > 0 ? (
@@ -194,15 +195,15 @@ const Debts = () => {
             </div>
           ) : (
             <div className="h-[220px] flex items-center justify-center text-sm text-[#6f7480] dark:text-[#a4acba]">
-              Chưa có dữ liệu công nợ.
+              {isEnglish ? 'No debt data yet.' : 'Chưa có dữ liệu công nợ.'}
             </div>
           )}
         </div>
 
         <div className="xl:col-span-4 rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Khoản sắp tới hạn</h3>
-            <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">Lịch nợ</span>
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Upcoming Due Debts' : 'Khoản sắp tới hạn'}</h3>
+            <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">{isEnglish ? 'Debt schedule' : 'Lịch nợ'}</span>
           </div>
 
           <div className="space-y-3">
@@ -218,7 +219,7 @@ const Debts = () => {
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-[#1f2733] dark:text-[#e8edf4]">{debt.personName}</p>
                       <p className={`text-xs ${overdue ? 'text-red-600 dark:text-red-400' : 'text-[#6f7480] dark:text-[#a4acba]'}`}>
-                        {overdue ? `Quá hạn ${Math.abs(days)} ngày` : `Còn ${days} ngày`}
+                        {overdue ? (isEnglish ? `Overdue ${Math.abs(days)} days` : `Quá hạn ${Math.abs(days)} ngày`) : (isEnglish ? `${days} days left` : `Còn ${days} ngày`)}
                       </p>
                     </div>
                   </div>
@@ -226,7 +227,7 @@ const Debts = () => {
                 </div>
               );
             }) : (
-              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Không có khoản nào gần đến hạn.</p>
+              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'No debts are due soon.' : 'Không có khoản nào gần đến hạn.'}</p>
             )}
           </div>
         </div>
@@ -234,10 +235,10 @@ const Debts = () => {
 
       <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eceff4] px-5 py-4 dark:border-[#2b313d]">
-          <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Danh sách công nợ</h3>
+          <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Debt List' : 'Danh sách công nợ'}</h3>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2">
-              {[{ label: 'Tất cả', value: 'all' }, { label: 'Tôi cho vay', value: 'lend' }, { label: 'Tôi vay', value: 'borrow' }].map(f => (
+              {[{ label: isEnglish ? 'All' : 'Tất cả', value: 'all' }, { label: isEnglish ? 'I lend' : 'Tôi cho vay', value: 'lend' }, { label: isEnglish ? 'I borrow' : 'Tôi vay', value: 'borrow' }].map(f => (
                 <button
                   key={f.value}
                   onClick={() => {
@@ -253,7 +254,7 @@ const Debts = () => {
                   {f.label}
                 </button>
               ))}
-              {[{ label: 'Đang hoạt động', value: 'active' }, { label: 'Đã tất toán', value: 'settled' }, { label: 'Tất cả trạng thái', value: 'all' }].map(f => (
+              {[{ label: isEnglish ? 'Active' : 'Đang hoạt động', value: 'active' }, { label: isEnglish ? 'Settled' : 'Đã tất toán', value: 'settled' }, { label: isEnglish ? 'All statuses' : 'Tất cả trạng thái', value: 'all' }].map(f => (
                 <button
                   key={f.value}
                   onClick={() => {
@@ -274,7 +275,7 @@ const Debts = () => {
               onClick={() => { setEditingDebt(null); setShowModal(true); }}
               className="ml-1 inline-flex items-center gap-1.5 rounded-xl bg-[#003d2d] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#00523d]"
             >
-              <FiPlus size={13} /> Thêm khoản nợ
+              <FiPlus size={13} /> {isEnglish ? 'Add Debt' : 'Thêm khoản nợ'}
             </button>
           </div>
         </div>
@@ -283,14 +284,14 @@ const Debts = () => {
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-[#eceff4] bg-[#f8f9fb] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:bg-[#232936] dark:text-[#9fa7b4]">
-                <th className="px-5 py-3">Đối tượng</th>
-                <th className="px-5 py-3">Loại</th>
-                <th className="px-5 py-3">Còn lại</th>
-                <th className="px-5 py-3">Gốc</th>
-                <th className="px-5 py-3">Tiến độ</th>
-                <th className="px-5 py-3">Hạn</th>
-                <th className="px-5 py-3">Trạng thái</th>
-                <th className="px-5 py-3 text-right">Thao tác</th>
+                <th className="px-5 py-3">{isEnglish ? 'Person' : 'Đối tượng'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Type' : 'Loại'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Remaining' : 'Còn lại'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Original' : 'Gốc'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Progress' : 'Tiến độ'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Due' : 'Hạn'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Status' : 'Trạng thái'}</th>
+                <th className="px-5 py-3 text-right">{isEnglish ? 'Actions' : 'Thao tác'}</th>
               </tr>
             </thead>
             <tbody>
@@ -307,11 +308,11 @@ const Debts = () => {
                   <tr key={`row-${debt._id}`} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
                     <td className="px-5 py-4">
                       <p className="font-bold text-[#1d2430] dark:text-[#eef1f5]">{debt.personName}</p>
-                      <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{debt.description || 'Khoản vay mượn cá nhân'}</p>
+                      <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{debt.description || (isEnglish ? 'Personal debt record' : 'Khoản vay mượn cá nhân')}</p>
                     </td>
                     <td className="px-5 py-4">
                       <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${isLend ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'}`}>
-                        {isLend ? 'Cho vay' : 'Tôi vay'}
+                        {isLend ? (isEnglish ? 'Lend' : 'Cho vay') : (isEnglish ? 'Borrow' : 'Tôi vay')}
                       </span>
                     </td>
                     <td className={`px-5 py-4 font-semibold ${isLend ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>{fmt(debt.remainingAmount)}</td>
@@ -327,13 +328,13 @@ const Debts = () => {
                     <td className="px-5 py-4 text-xs font-semibold">
                       {debt.dueDate ? (
                         <span className={overdue ? 'text-red-600 dark:text-red-400' : 'text-[#6f7480] dark:text-[#a4acba]'}>
-                          {overdue ? `Quá hạn ${Math.abs(days)} ngày` : fmtDate(debt.dueDate)}
+                          {overdue ? (isEnglish ? `Overdue ${Math.abs(days)} days` : `Quá hạn ${Math.abs(days)} ngày`) : fmtDate(debt.dueDate)}
                         </span>
                       ) : <span className="text-[#6f7480] dark:text-[#a4acba]">—</span>}
                     </td>
                     <td className="px-5 py-4">
                       <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${isSettled ? 'bg-[#e4f8ef] text-[#12724e] dark:bg-[#213c33] dark:text-[#80d6b4]' : 'bg-[#fff4db] text-[#8a6a2f] dark:bg-[#3a3422] dark:text-[#f0d493]'}`}>
-                        {isSettled ? 'Tất toán' : 'Đang hoạt động'}
+                        {isSettled ? (isEnglish ? 'Settled' : 'Tất toán') : (isEnglish ? 'Active' : 'Đang hoạt động')}
                       </span>
                     </td>
                     <td className="px-5 py-4">
@@ -347,7 +348,7 @@ const Debts = () => {
                               setPayNote('');
                             }}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#e7f6ee] text-[#1f7d55] hover:bg-[#d7f0e4] dark:bg-[#204236] dark:text-[#8edbbb] dark:hover:bg-[#285344]"
-                            title="Ghi thanh toán"
+                            title={isEnglish ? 'Record payment' : 'Ghi thanh toán'}
                           >
                             <FiPlus size={14} />
                           </button>
@@ -359,7 +360,7 @@ const Debts = () => {
                               setPayingId(null);
                             }}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc] dark:hover:bg-[#364050]"
-                            title="Lịch sử"
+                            title={isEnglish ? 'History' : 'Lịch sử'}
                           >
                             <FiClock size={14} />
                           </button>
@@ -368,7 +369,7 @@ const Debts = () => {
                           <button
                             onClick={() => settleDebt(debt._id)}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#e6ecfa] text-[#6177a6] hover:bg-[#dce6fa] dark:bg-[#313b54] dark:text-[#a9bcdf] dark:hover:bg-[#39455f]"
-                            title="Tất toán"
+                            title={isEnglish ? 'Settle' : 'Tất toán'}
                           >
                             <FiCheck size={14} />
                           </button>
@@ -376,14 +377,14 @@ const Debts = () => {
                         <button
                           onClick={() => { setEditingDebt(debt); setShowModal(true); }}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc] dark:hover:bg-[#364050]"
-                          title="Chỉnh sửa"
+                          title={isEnglish ? 'Edit' : 'Chỉnh sửa'}
                         >
                           <FiEdit2 size={14} />
                         </button>
                         <button
                           onClick={() => handleDelete(debt)}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#f8eceb] text-[#a55d56] hover:bg-[#f4dedc] dark:bg-[#3b2a2c] dark:text-[#e0a29a] dark:hover:bg-[#4a3336]"
-                          title="Xóa"
+                          title={isEnglish ? 'Delete' : 'Xóa'}
                         >
                           <FiTrash2 size={14} />
                         </button>
@@ -399,7 +400,7 @@ const Debts = () => {
                             <CurrencyInput
                               value={payAmount}
                               onChange={v => setPayAmount(v)}
-                              placeholder="Số tiền"
+                              placeholder={isEnglish ? 'Amount' : 'Số tiền'}
                               baseClass="w-full px-3 py-2 text-sm border border-gray-200 dark:border-[#334640] rounded-xl dark:bg-[#18231f] dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                             />
                           </div>
@@ -407,12 +408,12 @@ const Debts = () => {
                             type="text"
                             value={payNote}
                             onChange={e => setPayNote(e.target.value)}
-                            placeholder="Ghi chú (tùy chọn)..."
+                            placeholder={isEnglish ? 'Note (optional)...' : 'Ghi chú (tùy chọn)...'}
                             className="md:flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-[#334640] rounded-xl dark:bg-[#18231f] dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                           />
                           <div className="flex items-center gap-2">
-                            <button onClick={() => handlePay(debt._id)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition">Xác nhận</button>
-                            <button onClick={() => { setPayingId(null); setPayAmount(''); setPayNote(''); }} className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 px-3 py-2 rounded-xl text-xs font-bold transition">Hủy</button>
+                            <button onClick={() => handlePay(debt._id)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition">{isEnglish ? 'Confirm' : 'Xác nhận'}</button>
+                            <button onClick={() => { setPayingId(null); setPayAmount(''); setPayNote(''); }} className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 px-3 py-2 rounded-xl text-xs font-bold transition">{isEnglish ? 'Cancel' : 'Hủy'}</button>
                           </div>
                         </div>
                       </td>
@@ -442,12 +443,12 @@ const Debts = () => {
               }) : (
                 <tr>
                   <td colSpan={8} className="px-5 py-12 text-center">
-                    <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Không có khoản nợ phù hợp với bộ lọc hiện tại.</p>
+                    <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'No debts match the current filter.' : 'Không có khoản nợ phù hợp với bộ lọc hiện tại.'}</p>
                     <button
                       onClick={() => { setEditingDebt(null); setShowModal(true); }}
                       className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00523d]"
                     >
-                      <FiPlus size={14} /> Thêm khoản đầu tiên
+                      <FiPlus size={14} /> {isEnglish ? 'Add your first debt' : 'Thêm khoản đầu tiên'}
                     </button>
                   </td>
                 </tr>

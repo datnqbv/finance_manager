@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { FiMail, FiLock, FiAlertCircle, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { t } = useLanguage();
+  const isEnglish = t('language') === 'English';
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -29,7 +32,7 @@ const Login = () => {
       navigate('/dashboard');
     } else {
       console.error('Login error:', result.message);
-      setError(result.message || 'Đăng nhập không thành công!');
+      setError(result.message || (isEnglish ? 'Login failed!' : 'Đăng nhập không thành công!'));
     }
   };
 
@@ -42,7 +45,7 @@ const Login = () => {
             className="inline-flex items-center gap-2 rounded-full border border-[#bfd2c2] bg-white/60 px-4 py-2 text-sm font-semibold text-[#4b5f4f] transition hover:bg-white"
           >
             <FiArrowLeft className="text-base" />
-            Quay lại trang chủ
+            {isEnglish ? 'Back to home' : 'Quay lại trang chủ'}
           </button>
         </div>
 
@@ -53,7 +56,7 @@ const Login = () => {
 
               <div className="mb-6">
                 <h1 className="text-2xl font-black leading-tight text-[#1f3022]">Welcome back</h1>
-                <p className="mt-2 text-sm text-[#687a6a]">Đăng nhập để tiếp tục quản lý chi tiêu.</p>
+                <p className="mt-2 text-sm text-[#687a6a]">{isEnglish ? 'Sign in to continue managing your expenses.' : 'Đăng nhập để tiếp tục quản lý chi tiêu.'}</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -86,13 +89,13 @@ const Login = () => {
                     onChange={handleChange}
                     required
                     className="w-full rounded-xl border border-[#dce7dc] bg-[#f8fbf7] py-3 pl-11 pr-11 text-sm text-[#273029] placeholder:text-[#98a999] focus:border-[#62af6f] focus:outline-none"
-                    placeholder="Mật khẩu"
+                    placeholder={isEnglish ? 'Password' : 'Mật khẩu'}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#809382] transition hover:bg-[#e8f3e8] hover:text-[#4d6b51]"
-                    aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                    aria-label={showPassword ? (isEnglish ? 'Hide password' : 'Ẩn mật khẩu') : (isEnglish ? 'Show password' : 'Hiện mật khẩu')}
                   >
                     {showPassword ? <FiEyeOff size={17} /> : <FiEye size={17} />}
                   </button>
@@ -100,7 +103,7 @@ const Login = () => {
 
                 <div className="flex justify-end pt-1">
                   <Link to="/forgot-password" className="text-xs font-semibold text-[#6f806f] hover:text-[#3f7848]">
-                    Quên mật khẩu?
+                    {isEnglish ? 'Forgot password?' : 'Quên mật khẩu?'}
                   </Link>
                 </div>
 
@@ -109,14 +112,14 @@ const Login = () => {
                   disabled={loading}
                   className="w-full rounded-xl bg-[#5d9f67] py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#4f8f5a] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {loading ? 'Đang đăng nhập...' : 'Sign in'}
+                  {loading ? (isEnglish ? 'Signing in...' : 'Đang đăng nhập...') : 'Sign in'}
                 </button>
               </form>
 
               <p className="mt-5 text-center text-xs text-[#748574]">
-                Chưa có tài khoản?{' '}
+                {isEnglish ? 'Do not have an account?' : 'Chưa có tài khoản?'}{' '}
                 <Link to="/register" className="font-bold text-[#1f3022] hover:text-[#3f7848]">
-                  Đăng ký ngay
+                  {isEnglish ? 'Sign up now' : 'Đăng ký ngay'}
                 </Link>
               </p>
             </div>

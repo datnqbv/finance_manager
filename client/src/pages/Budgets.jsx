@@ -12,6 +12,7 @@ const Budgets = () => {
   const { user } = useAuth();
   const { budgets, budgetStatus, alerts, loading, fetchBudgetOverview, createBudget, updateBudget, deleteBudget } = useBudgets();
   const { t } = useLanguage();
+  const isEnglish = t('language') === 'English';
 
   const [showModal, setShowModal] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);
@@ -23,7 +24,7 @@ const Budgets = () => {
   }, []);
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(amount);
+    return new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(amount);
   };
 
   const handleEdit = (budget) => {
@@ -32,7 +33,7 @@ const Budgets = () => {
   };
 
   const handleDelete = async (budget) => {
-    if (window.confirm(`Xóa ngân sách "${budget.categoryName || 'Tổng'}"?`)) {
+    if (window.confirm(isEnglish ? `Delete budget "${budget.categoryName || 'Total'}"?` : `Xóa ngân sách "${budget.categoryName || 'Tổng'}"?`)) {
       try { await deleteBudget(budget._id); } catch {}
     }
   };
@@ -49,12 +50,12 @@ const Budgets = () => {
 
   // Determine status level from percentage
   const getStatus = (pct) => {
-    if (pct >= 100) return { level: 'over',    bar: 'bg-red-500',   text: 'text-red-600 dark:text-red-400',   border: 'border-l-red-500',   bg: 'bg-red-50 dark:bg-red-500/10',   label: 'Vượt ngân sách' };
-    if (pct >= 80)  return { level: 'warning',  bar: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400', border: 'border-l-amber-500', bg: 'bg-amber-50 dark:bg-amber-500/10', label: 'Sắp vượt' };
-    return              { level: 'safe',    bar: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-l-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10', label: 'Ổn' };
+    if (pct >= 100) return { level: 'over',    bar: 'bg-red-500',   text: 'text-red-600 dark:text-red-400',   border: 'border-l-red-500',   bg: 'bg-red-50 dark:bg-red-500/10',   label: isEnglish ? 'Over budget' : 'Vượt ngân sách' };
+    if (pct >= 80)  return { level: 'warning',  bar: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400', border: 'border-l-amber-500', bg: 'bg-amber-50 dark:bg-amber-500/10', label: isEnglish ? 'Near limit' : 'Sắp vượt' };
+    return              { level: 'safe',    bar: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-l-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10', label: isEnglish ? 'Safe' : 'Ổn' };
   };
 
-  const periodLabel = (p) => p === 'monthly' ? 'Tháng' : p === 'weekly' ? 'Tuần' : 'Năm';
+  const periodLabel = (p) => p === 'monthly' ? (isEnglish ? 'Month' : 'Tháng') : p === 'weekly' ? (isEnglish ? 'Week' : 'Tuần') : (isEnglish ? 'Year' : 'Năm');
 
   if (loading && budgets.length === 0) {
     return <BudgetsSkeleton />;
@@ -94,25 +95,25 @@ const Budgets = () => {
           <div className="relative">
             <div className="flex items-center gap-2">
               <FiShield size={18} className="text-[#b8e4d6]" />
-              <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">Quản lý ngân sách</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">{isEnglish ? 'Budget Management' : 'Quản lý ngân sách'}</p>
             </div>
             <h1 className="mt-3 text-5xl font-black tracking-tight">{formatCurrency(totalBudget)}</h1>
             <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-[#d8fff2]">
-              <FiTrendingUp size={12} /> {spendPercent.toFixed(1)}% ngân sách đã sử dụng
+              <FiTrendingUp size={12} /> {spendPercent.toFixed(1)}% {isEnglish ? 'budget used' : 'ngân sách đã sử dụng'}
             </div>
 
             <div className="mt-8 grid grid-cols-1 gap-4 border-t border-[#1e6b57] pt-5 sm:grid-cols-3">
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Đã chi tiêu</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Spent' : 'Đã chi tiêu'}</p>
                 <p className="mt-1 text-2xl font-bold">{formatCurrency(totalSpending)}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Còn lại</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Remaining' : 'Còn lại'}</p>
                 <p className="mt-1 text-2xl font-bold">{formatCurrency(totalRemaining)}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Vượt ngân sách</p>
-                <p className="mt-1 text-2xl font-bold">{overCount} mục</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Over budget' : 'Vượt ngân sách'}</p>
+                <p className="mt-1 text-2xl font-bold">{overCount} {isEnglish ? 'items' : 'mục'}</p>
               </div>
             </div>
           </div>
@@ -121,9 +122,9 @@ const Budgets = () => {
         <div className="xl:col-span-4 space-y-4">
           <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">Tiến độ ngân sách</h3>
+              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Budget Progress' : 'Tiến độ ngân sách'}</h3>
               <button onClick={() => setShowModal(true)} className="text-xs font-semibold text-[#3a4a62] hover:underline dark:text-[#b9c3d0]">
-                Thêm mới
+                {isEnglish ? 'Add New' : 'Thêm mới'}
               </button>
             </div>
 
@@ -133,7 +134,7 @@ const Budgets = () => {
                 return (
                   <div key={budget._id}>
                     <div className="mb-1 flex items-center justify-between text-xs text-[#586074] dark:text-[#a9afbb]">
-                      <span className="font-semibold truncate pr-3">{budget.categoryName || 'Tổng chi tiêu'}</span>
+                      <span className="font-semibold truncate pr-3">{budget.categoryName || (isEnglish ? 'Total expense' : 'Tổng chi tiêu')}</span>
                       <span className="font-bold">{budget.percentage || 0}%</span>
                     </div>
                     <div className="h-2 rounded-full bg-[#e3e7ee] dark:bg-[#2d3340]">
@@ -142,16 +143,16 @@ const Budgets = () => {
                   </div>
                 );
               }) : (
-                <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Bạn chưa có ngân sách nào.</p>
+                <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'You do not have any budgets yet.' : 'Bạn chưa có ngân sách nào.'}</p>
               )}
             </div>
 
             <div className="mt-4 rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
-              <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">Gợi ý thông minh</p>
+              <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{isEnglish ? 'Smart Suggestion' : 'Gợi ý thông minh'}</p>
               <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">
                 {overCount > 0
-                  ? `Có ${overCount} ngân sách vượt mức, nên ưu tiên điều chỉnh ngay.`
-                  : 'Tình hình ổn định, bạn có thể cân nhắc tăng mục tiêu tiết kiệm.'}
+                  ? (isEnglish ? `${overCount} budgets are over limit. Prioritize adjustments now.` : `Có ${overCount} ngân sách vượt mức, nên ưu tiên điều chỉnh ngay.`)
+                  : (isEnglish ? 'Things are stable; consider increasing your savings target.' : 'Tình hình ổn định, bạn có thể cân nhắc tăng mục tiêu tiết kiệm.')}
               </p>
             </div>
           </div>
@@ -162,10 +163,10 @@ const Budgets = () => {
         <div className="xl:col-span-8 rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Biến động ngân sách</h3>
-              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">So sánh mức sử dụng theo từng danh mục</p>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Budget Trend' : 'Biến động ngân sách'}</h3>
+              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'Compare usage by category' : 'So sánh mức sử dụng theo từng danh mục'}</p>
             </div>
-            <div className="text-xs font-semibold text-[#5e6573] dark:text-[#a7afbc]">Top 6 danh mục</div>
+            <div className="text-xs font-semibold text-[#5e6573] dark:text-[#a7afbc]">{isEnglish ? 'Top 6 categories' : 'Top 6 danh mục'}</div>
           </div>
 
           {analysisBudgets.length > 0 ? (
@@ -181,7 +182,7 @@ const Budgets = () => {
                       <div className="w-4 rounded-t-md bg-[#b7c4d8]" style={{ height: `${remainingHeight}%` }} />
                     </div>
                     <p className="mt-2 truncate text-center text-[11px] font-semibold text-[#6a7280] dark:text-[#aeb5c2]">
-                      {budget.categoryName || 'Tổng'}
+                      {budget.categoryName || (isEnglish ? 'Total' : 'Tổng')}
                     </p>
                   </div>
                 );
@@ -189,15 +190,15 @@ const Budgets = () => {
             </div>
           ) : (
             <div className="h-[220px] flex items-center justify-center text-sm text-[#6f7480] dark:text-[#a4acba]">
-              Chưa có dữ liệu ngân sách.
+              {isEnglish ? 'No budget data yet.' : 'Chưa có dữ liệu ngân sách.'}
             </div>
           )}
         </div>
 
         <div className="xl:col-span-4 rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Cảnh báo gần đây</h3>
-            <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">{alerts.length} cảnh báo</span>
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Recent Alerts' : 'Cảnh báo gần đây'}</h3>
+            <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">{alerts.length} {isEnglish ? 'alerts' : 'cảnh báo'}</span>
           </div>
 
           <div className="space-y-3">
@@ -208,14 +209,14 @@ const Budgets = () => {
                     <FiAlertCircle size={14} />
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-[#1f2733] dark:text-[#e8edf4]">{alert.categoryName || 'Ngân sách tổng'}</p>
+                    <p className="truncate text-sm font-bold text-[#1f2733] dark:text-[#e8edf4]">{alert.categoryName || (isEnglish ? 'Total budget' : 'Ngân sách tổng')}</p>
                     <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{alert.message}</p>
                   </div>
                 </div>
                 <p className="text-sm font-black text-[#1a1f29] dark:text-[#eff2f6]">{alert.percentage}%</p>
               </div>
             )) : (
-              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Không có cảnh báo nào trong kỳ này.</p>
+              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'No alerts in this period.' : 'Không có cảnh báo nào trong kỳ này.'}</p>
             )}
           </div>
         </div>
@@ -223,13 +224,13 @@ const Budgets = () => {
 
       <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eceff4] px-5 py-4 dark:border-[#2b313d]">
-          <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Danh sách ngân sách</h3>
+          <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Budget List' : 'Danh sách ngân sách'}</h3>
           <div className="flex items-center gap-2">
             {[
-              { key: 'all', label: `Tất cả (${budgets.length})` },
-              { key: 'warning', label: 'Cảnh báo' },
-              { key: 'over', label: 'Vượt mức' },
-              { key: 'safe', label: 'An toàn' },
+              { key: 'all', label: `${isEnglish ? 'All' : 'Tất cả'} (${budgets.length})` },
+              { key: 'warning', label: isEnglish ? 'Warning' : 'Cảnh báo' },
+              { key: 'over', label: isEnglish ? 'Over limit' : 'Vượt mức' },
+              { key: 'safe', label: isEnglish ? 'Safe' : 'An toàn' },
             ].map((f) => (
               <button
                 key={f.key}
@@ -250,7 +251,7 @@ const Budgets = () => {
               onClick={() => setShowModal(true)}
               className="ml-1 inline-flex items-center gap-1.5 rounded-xl bg-[#003d2d] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#00523d]"
             >
-              <FiPlus size={13} /> Thêm ngân sách
+              <FiPlus size={13} /> {isEnglish ? 'Add Budget' : 'Thêm ngân sách'}
             </button>
           </div>
         </div>
@@ -259,13 +260,13 @@ const Budgets = () => {
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-[#eceff4] bg-[#f8f9fb] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:bg-[#232936] dark:text-[#9fa7b4]">
-                <th className="px-5 py-3">Mô tả</th>
-                <th className="px-5 py-3">Chu kỳ</th>
-                <th className="px-5 py-3">Đã chi</th>
-                <th className="px-5 py-3">Ngân sách</th>
-                <th className="px-5 py-3">Còn lại</th>
-                <th className="px-5 py-3">Trạng thái</th>
-                <th className="px-5 py-3 text-right">Thao tác</th>
+                <th className="px-5 py-3">{isEnglish ? 'Description' : 'Mô tả'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Period' : 'Chu kỳ'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Spent' : 'Đã chi'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Budget' : 'Ngân sách'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Remaining' : 'Còn lại'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Status' : 'Trạng thái'}</th>
+                <th className="px-5 py-3 text-right">{isEnglish ? 'Actions' : 'Thao tác'}</th>
               </tr>
             </thead>
             <tbody>
@@ -276,8 +277,8 @@ const Budgets = () => {
                 return (
                   <tr key={budget._id} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
                     <td className="px-5 py-4">
-                      <p className="font-bold text-[#1d2430] dark:text-[#eef1f5]">{budget.categoryName || 'Tổng chi tiêu'}</p>
-                      <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{budget.percentage}% đã sử dụng</p>
+                      <p className="font-bold text-[#1d2430] dark:text-[#eef1f5]">{budget.categoryName || (isEnglish ? 'Total expense' : 'Tổng chi tiêu')}</p>
+                      <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{budget.percentage}% {isEnglish ? 'used' : 'đã sử dụng'}</p>
                     </td>
                     <td className="px-5 py-4 font-semibold text-[#303846] dark:text-[#c9d1db]">{periodLabel(budget.period)}</td>
                     <td className="px-5 py-4 text-[#8a4340] dark:text-[#e4a5a0] font-semibold">{formatCurrency(budget.currentSpending)}</td>
@@ -295,14 +296,14 @@ const Budgets = () => {
                         <button
                           onClick={() => handleEdit(budget)}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc] dark:hover:bg-[#364050]"
-                          title="Chỉnh sửa"
+                          title={isEnglish ? 'Edit' : 'Chỉnh sửa'}
                         >
                           <FiEdit2 size={14} />
                         </button>
                         <button
                           onClick={() => handleDelete(budget)}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#f8eceb] text-[#a55d56] hover:bg-[#f4dedc] dark:bg-[#3b2a2c] dark:text-[#e0a29a] dark:hover:bg-[#4a3336]"
-                          title="Xóa"
+                          title={isEnglish ? 'Delete' : 'Xóa'}
                         >
                           <FiTrash2 size={14} />
                         </button>
@@ -313,12 +314,12 @@ const Budgets = () => {
               }) : (
                 <tr>
                   <td colSpan={7} className="px-5 py-12 text-center">
-                    <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Không có ngân sách phù hợp với bộ lọc hiện tại.</p>
+                    <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'No budgets match the current filter.' : 'Không có ngân sách phù hợp với bộ lọc hiện tại.'}</p>
                     <button
                       onClick={() => setShowModal(true)}
                       className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00523d]"
                     >
-                      <FiPlus size={14} /> Thêm ngân sách đầu tiên
+                      <FiPlus size={14} /> {isEnglish ? 'Add your first budget' : 'Thêm ngân sách đầu tiên'}
                     </button>
                   </td>
                 </tr>

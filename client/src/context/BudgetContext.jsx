@@ -18,6 +18,7 @@ export const BudgetProvider = ({ children }) => {
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState(null);
   const { user } = useAuth();
+  const isEnglish = localStorage.getItem('language') === 'en';
 
   // Auto-fetch on login
   useEffect(() => {
@@ -35,7 +36,7 @@ export const BudgetProvider = ({ children }) => {
       setBudgetStatus(d.status   || null);
       setAlerts(d.alerts         || []);
     } catch (err) {
-      const msg = err.response?.data?.message || 'Lỗi khi tải ngân sách';
+      const msg = err.response?.data?.message || (isEnglish ? 'Failed to load budgets' : 'Lỗi khi tải ngân sách');
       setError(msg);
       toast.error(msg);
     } finally {
@@ -53,10 +54,10 @@ export const BudgetProvider = ({ children }) => {
       setLoading(true);
       const data = await budgetService.createBudget(budgetData);
       await fetchBudgetOverview();
-      toast.success(data.message || 'Tạo ngân sách thành công');
+      toast.success(data.message || (isEnglish ? 'Budget created successfully' : 'Tạo ngân sách thành công'));
       return data.data;
     } catch (err) {
-      const msg = err.response?.data?.message || 'Lỗi khi tạo ngân sách';
+      const msg = err.response?.data?.message || (isEnglish ? 'Failed to create budget' : 'Lỗi khi tạo ngân sách');
       toast.error(msg); throw err;
     } finally {
       setLoading(false);
@@ -68,10 +69,10 @@ export const BudgetProvider = ({ children }) => {
       setLoading(true);
       const data = await budgetService.updateBudget(id, budgetData);
       await fetchBudgetOverview();
-      toast.success(data.message || 'Cập nhật ngân sách thành công');
+      toast.success(data.message || (isEnglish ? 'Budget updated successfully' : 'Cập nhật ngân sách thành công'));
       return data.data;
     } catch (err) {
-      const msg = err.response?.data?.message || 'Lỗi khi cập nhật ngân sách';
+      const msg = err.response?.data?.message || (isEnglish ? 'Failed to update budget' : 'Lỗi khi cập nhật ngân sách');
       toast.error(msg); throw err;
     } finally {
       setLoading(false);
@@ -83,9 +84,9 @@ export const BudgetProvider = ({ children }) => {
       setLoading(true);
       const data = await budgetService.deleteBudget(id);
       await fetchBudgetOverview();
-      toast.success(data.message || 'Xóa ngân sách thành công');
+      toast.success(data.message || (isEnglish ? 'Budget deleted successfully' : 'Xóa ngân sách thành công'));
     } catch (err) {
-      const msg = err.response?.data?.message || 'Lỗi khi xóa ngân sách';
+      const msg = err.response?.data?.message || (isEnglish ? 'Failed to delete budget' : 'Lỗi khi xóa ngân sách');
       toast.error(msg); throw err;
     } finally {
       setLoading(false);

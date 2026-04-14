@@ -15,6 +15,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const isEnglish = localStorage.getItem('language') === 'en';
 
   useEffect(() => {
     // Check if user is logged in on mount
@@ -31,10 +32,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await authService.login(credentials);
       setUser(data.data.user);
-      toast.success(data.message || 'Đăng nhập thành công!');
+      toast.success(data.message || (isEnglish ? 'Login successful!' : 'Đăng nhập thành công!'));
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Đăng nhập thất bại';
+      const message = error.response?.data?.message || (isEnglish ? 'Login failed' : 'Đăng nhập thất bại');
       toast.error(message);
       return { success: false, message };
     }
@@ -44,10 +45,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await authService.register(userData);
       setUser(data.data.user);
-      toast.success(data.message || 'Đăng ký thành công!');
+      toast.success(data.message || (isEnglish ? 'Registration successful!' : 'Đăng ký thành công!'));
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Đăng ký thất bại';
+      const message = error.response?.data?.message || (isEnglish ? 'Registration failed' : 'Đăng ký thất bại');
       toast.error(message);
       return { success: false, message };
     }
@@ -56,17 +57,17 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     await authService.logout();
     setUser(null);
-    toast.info('Đã đăng xuất');
+    toast.info(isEnglish ? 'Logged out' : 'Đã đăng xuất');
   };
 
   const updateProfile = async (userData) => {
     try {
       const data = await authService.updateProfile(userData);
       setUser(data.data.user);
-      toast.success(data.message || 'Cập nhật thành công!');
+      toast.success(data.message || (isEnglish ? 'Updated successfully!' : 'Cập nhật thành công!'));
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Cập nhật thất bại';
+      const message = error.response?.data?.message || (isEnglish ? 'Update failed' : 'Cập nhật thất bại');
       toast.error(message);
       return { success: false, message };
     }
@@ -75,10 +76,10 @@ export const AuthProvider = ({ children }) => {
   const changePassword = async (currentPassword, newPassword) => {
     try {
       const data = await authService.changePassword(currentPassword, newPassword);
-      toast.success(data.message || 'Đổi mật khẩu thành công!');
+      toast.success(data.message || (isEnglish ? 'Password changed successfully!' : 'Đổi mật khẩu thành công!'));
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Đổi mật khẩu thất bại';
+      const message = error.response?.data?.message || (isEnglish ? 'Password change failed' : 'Đổi mật khẩu thất bại');
       toast.error(message);
       return { success: false, message };
     }

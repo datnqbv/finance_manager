@@ -32,6 +32,7 @@ const TextInput = ({ icon: Icon, ...props }) => (
 const Profile = () => {
   const { user, updateProfile, changePassword } = useAuth();
   const { t } = useLanguage();
+  const isEnglish = t('language') === 'English';
 
   // ── Profile form state
   const [profileForm, setProfileForm] = useState({
@@ -49,7 +50,7 @@ const Profile = () => {
   const [showPw, setShowPw]     = useState({ current: false, next: false, confirm: false });
 
   const fmt = (n) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(n || 0);
+    new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(n || 0);
 
   const initials = (user?.name || 'U').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
@@ -57,8 +58,8 @@ const Profile = () => {
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error('Ảnh không được vượt quá 5MB'); return; }
-    if (!file.type.startsWith('image/')) { toast.error('Vui lòng chọn file hình ảnh'); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error(isEnglish ? 'Image size must not exceed 5MB' : 'Ảnh không được vượt quá 5MB'); return; }
+    if (!file.type.startsWith('image/')) { toast.error(isEnglish ? 'Please choose an image file' : 'Vui lòng chọn file hình ảnh'); return; }
 
     setAvatarFile(file);
     const reader = new FileReader();
@@ -94,11 +95,11 @@ const Profile = () => {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (pwForm.next !== pwForm.confirm) {
-      toast.error('Mật khẩu xác nhận không khớp');
+      toast.error(isEnglish ? 'Password confirmation does not match' : 'Mật khẩu xác nhận không khớp');
       return;
     }
     if (pwForm.next.length < 6) {
-      toast.error('Mật khẩu mới phải có ít nhất 6 ký tự');
+      toast.error(isEnglish ? 'New password must have at least 6 characters' : 'Mật khẩu mới phải có ít nhất 6 ký tự');
       return;
     }
     setSavingPw(true);
@@ -134,7 +135,7 @@ const Profile = () => {
       {/* ── Header ── */}
       <div className="flex items-center gap-2">
         <FiUser className="text-gray-500 dark:text-gray-400" size={20}/>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Tài khoản</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">{isEnglish ? 'Account' : 'Tài khoản'}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -165,17 +166,17 @@ const Profile = () => {
 
             {avatarFile && (
               <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full">
-                Ảnh mới chờ lưu
+                {isEnglish ? 'New avatar pending save' : 'Ảnh mới chờ lưu'}
               </p>
             )}
 
             <div className="w-full mt-4 pt-4 border-t border-gray-100 dark:border-[#222222] space-y-2.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-400 dark:text-gray-500">Ngân sách/tháng</span>
+                <span className="text-gray-400 dark:text-gray-500">{isEnglish ? 'Budget/month' : 'Ngân sách/tháng'}</span>
                 <span className="font-bold text-emerald-600 dark:text-emerald-400">{fmt(user?.budget)}</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-400 dark:text-gray-500">Đơn vị tiền tệ</span>
+                <span className="text-gray-400 dark:text-gray-500">{isEnglish ? 'Currency' : 'Đơn vị tiền tệ'}</span>
                 <span className="font-bold text-gray-700 dark:text-gray-200">{user?.currency || 'VND'}</span>
               </div>
             </div>
@@ -185,7 +186,7 @@ const Profile = () => {
           <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-blue-500"/>
-              <h3 className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Thông tin tài khoản</h3>
+              <h3 className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide">{isEnglish ? 'Account Information' : 'Thông tin tài khoản'}</h3>
             </div>
             <div className="space-y-2 text-xs">
               <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
@@ -194,7 +195,7 @@ const Profile = () => {
               </div>
               <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                 <FiShield size={12}/>
-                <span>Tài khoản đã xác thực</span>
+                <span>{isEnglish ? 'Verified account' : 'Tài khoản đã xác thực'}</span>
               </div>
             </div>
           </div>
@@ -207,11 +208,11 @@ const Profile = () => {
           <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-5">
               <div className="w-1 h-4 rounded-full bg-emerald-500"/>
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Chỉnh sửa thông tin</h3>
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">{isEnglish ? 'Edit Profile' : 'Chỉnh sửa thông tin'}</h3>
             </div>
 
             <form onSubmit={handleSaveProfile} className="space-y-4">
-              <Field label="Họ và tên">
+              <Field label={isEnglish ? 'Full name' : 'Họ và tên'}>
                 <TextInput
                   icon={FiUser}
                   type="text"
@@ -219,16 +220,16 @@ const Profile = () => {
                   value={profileForm.name}
                   onChange={e => setProfileForm(p => ({ ...p, name: e.target.value }))}
                   required
-                  placeholder="Nguyễn Văn A"
+                  placeholder={isEnglish ? 'John Doe' : 'Nguyễn Văn A'}
                 />
               </Field>
 
-              <Field label="Email" hint="Email không thể thay đổi">
+              <Field label="Email" hint={isEnglish ? 'Email cannot be changed' : 'Email không thể thay đổi'}>
                 <TextInput icon={FiMail} type="email" value={user?.email} disabled/>
               </Field>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Ngân sách hàng tháng" hint="Giới hạn chi tiêu tháng">
+                <Field label={isEnglish ? 'Monthly budget' : 'Ngân sách hàng tháng'} hint={isEnglish ? 'Monthly spending limit' : 'Giới hạn chi tiêu tháng'}>
                   <TextInput
                     icon={FiDollarSign}
                     type="number"
@@ -241,13 +242,13 @@ const Profile = () => {
                   />
                 </Field>
 
-                <Field label="Đơn vị tiền tệ">
+                <Field label={isEnglish ? 'Currency' : 'Đơn vị tiền tệ'}>
                   <select
                     value={profileForm.currency}
                     onChange={e => setProfileForm(p => ({ ...p, currency: e.target.value }))}
                     className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
                   >
-                    <option value="VND">Việt Nam Đồng (₫)</option>
+                    <option value="VND">{isEnglish ? 'Vietnam Dong (₫)' : 'Việt Nam Đồng (₫)'}</option>
                     <option value="USD">US Dollar ($)</option>
                     <option value="EUR">Euro (€)</option>
                   </select>
@@ -258,7 +259,7 @@ const Profile = () => {
                 <button type="submit" disabled={savingProfile}
                   className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors">
                   <FiSave size={14}/>
-                  {savingProfile ? 'Đang lưu...' : 'Lưu thay đổi'}
+                  {savingProfile ? (isEnglish ? 'Saving...' : 'Đang lưu...') : (isEnglish ? 'Save changes' : 'Lưu thay đổi')}
                 </button>
               </div>
             </form>
@@ -268,20 +269,20 @@ const Profile = () => {
           <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-5">
               <div className="w-1 h-4 rounded-full bg-purple-500"/>
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Đổi mật khẩu</h3>
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">{isEnglish ? 'Change Password' : 'Đổi mật khẩu'}</h3>
             </div>
 
             <form onSubmit={handleChangePassword} className="space-y-4">
-              <Field label="Mật khẩu hiện tại">
-                <PwInput field="current" placeholder="Nhập mật khẩu hiện tại"/>
+              <Field label={isEnglish ? 'Current password' : 'Mật khẩu hiện tại'}>
+                <PwInput field="current" placeholder={isEnglish ? 'Enter current password' : 'Nhập mật khẩu hiện tại'}/>
               </Field>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Mật khẩu mới" hint="Tối thiểu 6 ký tự">
-                  <PwInput field="next" placeholder="Mật khẩu mới"/>
+                <Field label={isEnglish ? 'New password' : 'Mật khẩu mới'} hint={isEnglish ? 'Minimum 6 characters' : 'Tối thiểu 6 ký tự'}>
+                  <PwInput field="next" placeholder={isEnglish ? 'New password' : 'Mật khẩu mới'}/>
                 </Field>
-                <Field label="Xác nhận mật khẩu mới">
-                  <PwInput field="confirm" placeholder="Nhập lại mật khẩu mới"/>
+                <Field label={isEnglish ? 'Confirm new password' : 'Xác nhận mật khẩu mới'}>
+                  <PwInput field="confirm" placeholder={isEnglish ? 'Re-enter new password' : 'Nhập lại mật khẩu mới'}/>
                 </Field>
               </div>
 
@@ -291,7 +292,7 @@ const Profile = () => {
                     ? 'text-emerald-600 dark:text-emerald-400'
                     : 'text-red-500'
                 }`}>
-                  {pwForm.next === pwForm.confirm ? '✓ Mật khẩu khớp' : '✗ Mật khẩu không khớp'}
+                  {pwForm.next === pwForm.confirm ? (isEnglish ? '✓ Passwords match' : '✓ Mật khẩu khớp') : (isEnglish ? '✗ Passwords do not match' : '✗ Mật khẩu không khớp')}
                 </p>
               )}
 
@@ -300,7 +301,7 @@ const Profile = () => {
                   disabled={savingPw || !pwForm.current || !pwForm.next || !pwForm.confirm}
                   className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors">
                   <FiLock size={14}/>
-                  {savingPw ? 'Đang đổi...' : 'Đổi mật khẩu'}
+                  {savingPw ? (isEnglish ? 'Updating...' : 'Đang đổi...') : (isEnglish ? 'Change password' : 'Đổi mật khẩu')}
                 </button>
               </div>
             </form>

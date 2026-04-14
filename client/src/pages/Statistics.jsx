@@ -12,6 +12,7 @@ import {
   FiInfo, FiMinus, FiZap
 } from 'react-icons/fi';
 import { StatisticsPageSkeleton } from '../components/LoadingSkeleton';
+import { useLanguage } from '../context/LanguageContext';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -31,19 +32,21 @@ const ChartTip = ({ active, payload, label, fmt }) => {
   );
 };
 
-const TrendBadge = ({ trend }) => {
-  if (trend === 'increasing') return <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-red-500"><FiTrendingUp size={10}/> Tăng</span>;
-  if (trend === 'decreasing') return <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-emerald-500"><FiTrendingDown size={10}/> Giảm</span>;
-  return <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-gray-400"><FiMinus size={10}/> Ổn định</span>;
+const TrendBadge = ({ trend, isEnglish }) => {
+  if (trend === 'increasing') return <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-red-500"><FiTrendingUp size={10}/> {isEnglish ? 'Up' : 'Tăng'}</span>;
+  if (trend === 'decreasing') return <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-emerald-500"><FiTrendingDown size={10}/> {isEnglish ? 'Down' : 'Giảm'}</span>;
+  return <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-gray-400"><FiMinus size={10}/> {isEnglish ? 'Stable' : 'Ổn định'}</span>;
 };
 
-const ConfidenceBadge = ({ confidence }) => {
+const ConfidenceBadge = ({ confidence, isEnglish }) => {
   const map = {
     high: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
     medium: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',
     low: 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400',
   };
-  const labels = { high: 'Tin cậy cao', medium: 'Trung bình', low: 'Thấp' };
+  const labels = isEnglish
+    ? { high: 'High confidence', medium: 'Medium', low: 'Low' }
+    : { high: 'Tin cậy cao', medium: 'Trung bình', low: 'Thấp' };
   return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${map[confidence] || map.low}`}>{labels[confidence] || confidence}</span>;
 };
 
@@ -67,6 +70,8 @@ const KpiCard = ({ label, value, sub, border, icon, valueColor, loading }) => (
 
 const Statistics = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
+  const isEnglish = t('language') === 'English';
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear]   = useState(new Date().getFullYear());
@@ -83,8 +88,8 @@ const Statistics = () => {
   const monthBundleCacheRef = useRef(new Map());
 
   const fmt = useCallback((n) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(n || 0),
-  [user]);
+    new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(n || 0),
+  [user, isEnglish]);
 
   const fmtShort = useCallback((n) => {
     if (Math.abs(n) >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + 'T';
@@ -290,12 +295,12 @@ const Statistics = () => {
   };
 
   const TABS = [
-    { key: 'overview',  label: 'Tổng quan',   icon: <FiBarChart2 size={13}/> },
-    { key: 'compare',   label: 'So sánh',     icon: <FiActivity size={13}/> },
-    { key: 'forecast',  label: 'Dự báo AI',   icon: <FiTarget size={13}/> },
-    { key: 'trends',    label: 'Xu hướng',    icon: <FiTrendingUp size={13}/> },
-    { key: 'daily',     label: 'Theo ngày',   icon: <FiCalendar size={13}/> },
-    { key: 'ai',        label: 'Nhận xét AI', icon: <FiZap size={13}/> },
+    { key: 'overview',  label: isEnglish ? 'Overview' : 'Tổng quan',   icon: <FiBarChart2 size={13}/> },
+    { key: 'compare',   label: isEnglish ? 'Compare' : 'So sánh',     icon: <FiActivity size={13}/> },
+    { key: 'forecast',  label: isEnglish ? 'AI Forecast' : 'Dự báo AI',   icon: <FiTarget size={13}/> },
+    { key: 'trends',    label: isEnglish ? 'Trends' : 'Xu hướng',    icon: <FiTrendingUp size={13}/> },
+    { key: 'daily',     label: isEnglish ? 'Daily' : 'Theo ngày',   icon: <FiCalendar size={13}/> },
+    { key: 'ai',        label: isEnglish ? 'AI Insights' : 'Nhận xét AI', icon: <FiZap size={13}/> },
   ];
 
   const TAB_ACTIVE = 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-sm';
@@ -317,11 +322,11 @@ const Statistics = () => {
         <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">Tổng quan theo kỳ</h3>
-              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">Theo dõi hiệu suất tài chính theo tháng và năm</p>
+              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Period Overview' : 'Tổng quan theo kỳ'}</h3>
+              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'Track your financial performance by month and year' : 'Theo dõi hiệu suất tài chính theo tháng và năm'}</p>
             </div>
             <div className="rounded-full bg-[#eef2f7] px-3 py-1 text-xs font-semibold text-[#435066] dark:bg-[#2a3341] dark:text-[#c7d1df]">
-              Tỷ lệ tiết kiệm: {overviewSavingRate.toFixed(1)}%
+              {isEnglish ? 'Savings rate' : 'Tỷ lệ tiết kiệm'}: {overviewSavingRate.toFixed(1)}%
             </div>
           </div>
 
@@ -335,7 +340,7 @@ const Statistics = () => {
                       ? 'bg-white dark:bg-[#303746] text-[#1f2733] dark:text-[#f1f4f8] shadow-sm'
                       : 'text-[#7f8795] dark:text-[#9ba3b2] hover:text-[#2d3645] dark:hover:text-[#e5eaf1]'
                   }`}
-                >T{m}</button>
+                >{isEnglish ? `M${m}` : `T${m}`}</button>
               ))}
             </div>
             <div className="flex items-center bg-[#f4f7fb] dark:bg-[#222935] p-1 rounded-xl gap-0.5">
@@ -355,21 +360,21 @@ const Statistics = () => {
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Thu nhập</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Income' : 'Thu nhập'}</p>
             <p className="mt-2 text-2xl font-black text-[#159b63] dark:text-[#58d49f]">{fmt(overviewIncome)}</p>
           </div>
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Chi tiêu</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Expense' : 'Chi tiêu'}</p>
             <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">{fmt(overviewExpense)}</p>
           </div>
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Tiết kiệm ròng</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Net savings' : 'Tiết kiệm ròng'}</p>
             <p className={`mt-2 text-2xl font-black ${overviewSaving >= 0 ? 'text-[#2e67da] dark:text-[#8eb2ff]' : 'text-[#c0701c] dark:text-[#f2ba76]'}`}>
               {fmt(overviewSaving)}
             </p>
           </div>
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Giao dịch</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Transactions' : 'Giao dịch'}</p>
             <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{monthly?.totalTransactions ?? 0}</p>
           </div>
         </div>
@@ -378,7 +383,7 @@ const Statistics = () => {
           <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-blue-500"/>
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Tỷ lệ chi tiêu theo danh mục</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Expense Share by Category' : 'Tỷ lệ chi tiêu theo danh mục'}</h3>
             </div>
             {pieData.length > 0 ? (
               <ResponsiveContainer width="100%" height={220}>
@@ -390,14 +395,14 @@ const Statistics = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[220px] flex items-center justify-center text-sm text-[#6f7480] dark:text-[#a4acba]">Chưa có dữ liệu</div>
+              <div className="h-[220px] flex items-center justify-center text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'No data yet' : 'Chưa có dữ liệu'}</div>
             )}
           </div>
 
           <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-red-500"/>
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Top danh mục chi tiêu</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Top Expense Categories' : 'Top danh mục chi tiêu'}</h3>
             </div>
             <div className="space-y-2.5">
               {topExpCats.map((c, i) => (
@@ -412,7 +417,7 @@ const Statistics = () => {
                   </div>
                 </div>
               ))}
-              {topExpCats.length === 0 && <p className="text-sm text-[#6f7480] dark:text-[#a4acba] py-8 text-center">Chưa có dữ liệu</p>}
+              {topExpCats.length === 0 && <p className="text-sm text-[#6f7480] dark:text-[#a4acba] py-8 text-center">{isEnglish ? 'No data yet' : 'Chưa có dữ liệu'}</p>}
             </div>
           </div>
         </div>
@@ -421,17 +426,17 @@ const Statistics = () => {
           <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-purple-500"/>
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Thu/Chi theo danh mục</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Income/Expense by Category' : 'Thu/Chi theo danh mục'}</h3>
             </div>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={catStats.slice(0,8).map(c => ({ name: c._id, 'Thu nhập': c.totalIncome||0, 'Chi tiêu': c.totalExpense||0 }))} margin={{left: 0, right: 0}}>
+              <BarChart data={catStats.slice(0,8).map(c => ({ name: c._id, [isEnglish ? 'Income' : 'Thu nhập']: c.totalIncome||0, [isEnglish ? 'Expense' : 'Chi tiêu']: c.totalExpense||0 }))} margin={{left: 0, right: 0}}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" className="dark:stroke-[#222]"/>
                 <XAxis dataKey="name" tick={{fontSize:10}} interval={0} angle={-30} textAnchor="end" height={50}/>
                 <YAxis tickFormatter={fmtShort} tick={{fontSize:10}} width={45}/>
                 <Tooltip content={<ChartTip fmt={fmt}/>}/>
                 <Legend wrapperStyle={{fontSize:11}}/>
-                <Bar dataKey="Thu nhập" fill="#10b981" radius={[3,3,0,0]}/>
-                <Bar dataKey="Chi tiêu" fill="#ef4444" radius={[3,3,0,0]}/>
+                <Bar dataKey={isEnglish ? 'Income' : 'Thu nhập'} fill="#10b981" radius={[3,3,0,0]}/>
+                <Bar dataKey={isEnglish ? 'Expense' : 'Chi tiêu'} fill="#ef4444" radius={[3,3,0,0]}/>
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -445,25 +450,25 @@ const Statistics = () => {
     <div className="space-y-5">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Tổng thu (6 tháng)</p>
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total income (6 months)' : 'Tổng thu (6 tháng)'}</p>
           <p className="mt-2 text-2xl font-black text-[#159b63] dark:text-[#58d49f]">
             {fmt(compare.reduce((s,m)=>s+(m.totalIncome||0),0))}
           </p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Tổng chi (6 tháng)</p>
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total expense (6 months)' : 'Tổng chi (6 tháng)'}</p>
           <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">
             {fmt(compare.reduce((s,m)=>s+(m.totalExpense||0),0))}
           </p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">TB thu/tháng</p>
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg income/month' : 'TB thu/tháng'}</p>
           <p className="mt-2 text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff]">
             {fmt(compare.length ? compare.reduce((s,m)=>s+(m.totalIncome||0),0)/compare.length : 0)}
           </p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">TB chi/tháng</p>
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg expense/month' : 'TB chi/tháng'}</p>
           <p className="mt-2 text-2xl font-black text-[#c0701c] dark:text-[#f2ba76]">
             {fmt(compare.length ? compare.reduce((s,m)=>s+(m.totalExpense||0),0)/compare.length : 0)}
           </p>
@@ -473,33 +478,33 @@ const Statistics = () => {
       <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-1 h-4 rounded-full bg-blue-500"/>
-          <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">So sánh thu/chi 6 tháng gần nhất</h3>
+          <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Income vs Expense (Last 6 Months)' : 'So sánh thu/chi 6 tháng gần nhất'}</h3>
         </div>
         {compare.length > 0 ? (
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={compare.map(m=>({ name:`T${m.month}/${String(m.year).slice(2)}`, 'Thu nhập': m.totalIncome||0, 'Chi tiêu': m.totalExpense||0 }))}>
+            <BarChart data={compare.map(m=>({ name:`${isEnglish ? 'M' : 'T'}${m.month}/${String(m.year).slice(2)}`, [isEnglish ? 'Income' : 'Thu nhập']: m.totalIncome||0, [isEnglish ? 'Expense' : 'Chi tiêu']: m.totalExpense||0 }))}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" className="dark:stroke-[#222]"/>
               <XAxis dataKey="name" tick={{fontSize:11}}/>
               <YAxis tickFormatter={fmtShort} tick={{fontSize:10}} width={48}/>
               <Tooltip content={<ChartTip fmt={fmt}/>}/>
               <Legend wrapperStyle={{fontSize:11}}/>
-              <Bar dataKey="Thu nhập" fill="#10b981" radius={[4,4,0,0]}/>
-              <Bar dataKey="Chi tiêu" fill="#ef4444" radius={[4,4,0,0]}/>
+              <Bar dataKey={isEnglish ? 'Income' : 'Thu nhập'} fill="#10b981" radius={[4,4,0,0]}/>
+              <Bar dataKey={isEnglish ? 'Expense' : 'Chi tiêu'} fill="#ef4444" radius={[4,4,0,0]}/>
             </BarChart>
           </ResponsiveContainer>
-        ) : <div className="h-[260px] flex items-center justify-center text-sm text-[#6f7480] dark:text-[#a4acba]">Chưa có dữ liệu</div>}
+        ) : <div className="h-[260px] flex items-center justify-center text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'No data yet' : 'Chưa có dữ liệu'}</div>}
       </div>
 
       {compare.length > 0 && (
         <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] overflow-hidden">
           <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
-            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Chi tiết theo tháng</h3>
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Monthly Details' : 'Chi tiết theo tháng'}</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead className="bg-[#f8f9fb] dark:bg-[#232936]">
                 <tr>
-                  {['Tháng','Thu nhập','Chi tiêu','Tiết kiệm','Tỷ lệ tiết kiệm','Tăng trưởng chi'].map(h => (
+                  {[(isEnglish ? 'Month' : 'Tháng'),(isEnglish ? 'Income' : 'Thu nhập'),(isEnglish ? 'Expense' : 'Chi tiêu'),(isEnglish ? 'Savings' : 'Tiết kiệm'),(isEnglish ? 'Savings rate' : 'Tỷ lệ tiết kiệm'),(isEnglish ? 'Expense growth' : 'Tăng trưởng chi')].map(h => (
                     <th key={h} className="px-4 py-2.5 text-left font-semibold text-[#7a808c] dark:text-[#9fa7b4]">{h}</th>
                   ))}
                 </tr>
@@ -512,7 +517,7 @@ const Statistics = () => {
                   const growth  = prev?.totalExpense ? (((m.totalExpense - prev.totalExpense)/prev.totalExpense)*100).toFixed(1) : '—';
                   return (
                     <tr key={i} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
-                      <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">T{m.month}/{m.year}</td>
+                      <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">{isEnglish ? 'M' : 'T'}{m.month}/{m.year}</td>
                       <td className="px-4 py-2.5 text-emerald-600 dark:text-emerald-400 font-medium">{fmt(m.totalIncome)}</td>
                       <td className="px-4 py-2.5 text-red-600 dark:text-red-400 font-medium">{fmt(m.totalExpense)}</td>
                       <td className={`px-4 py-2.5 font-bold ${savings >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-orange-600 dark:text-orange-400'}`}>{fmt(savings)}</td>
@@ -535,43 +540,43 @@ const Statistics = () => {
   const ForecastTab = () => {
     const f = forecast;
     const histData = compare.map(m => ({
-      name: `T${m.month}/${String(m.year).slice(2)}`,
-      'Chi tiêu thực': m.totalExpense || 0,
-      'Thu nhập thực': m.totalIncome  || 0,
+      name: `${isEnglish ? 'M' : 'T'}${m.month}/${String(m.year).slice(2)}`,
+      [isEnglish ? 'Actual expense' : 'Chi tiêu thực']: m.totalExpense || 0,
+      [isEnglish ? 'Actual income' : 'Thu nhập thực']: m.totalIncome  || 0,
     }));
     const nextLabel = (() => {
       const d = new Date(); d.setMonth(d.getMonth() + 1);
-      return `T${d.getMonth()+1}/${String(d.getFullYear()).slice(2)}`;
+      return `${isEnglish ? 'M' : 'T'}${d.getMonth()+1}/${String(d.getFullYear()).slice(2)}`;
     })();
     const chartData = [
       ...histData,
-      { name: nextLabel, 'Dự báo chi': f?.nextMonthExpense||0, 'Dự báo thu': f?.nextMonthIncome||0, isDashed: true },
+      { name: nextLabel, [isEnglish ? 'Forecast expense' : 'Dự báo chi']: f?.nextMonthExpense||0, [isEnglish ? 'Forecast income' : 'Dự báo thu']: f?.nextMonthIncome||0, isDashed: true },
     ];
 
     const catForecastList = f?.byCategory ? Object.entries(f.byCategory).slice(0,8) : [];
     const confidenceMap = {
-      high: 'Tin cậy cao',
-      medium: 'Trung bình',
-      low: 'Thấp',
+      high: isEnglish ? 'High confidence' : 'Tin cậy cao',
+      medium: isEnglish ? 'Medium' : 'Trung bình',
+      low: isEnglish ? 'Low' : 'Thấp',
     };
 
     return (
       <div className="space-y-5">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Dự báo chi tiêu</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Expense forecast' : 'Dự báo chi tiêu'}</p>
             <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">{fmt(f?.nextMonthExpense)}</p>
           </div>
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Dự báo thu nhập</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Income forecast' : 'Dự báo thu nhập'}</p>
             <p className="mt-2 text-2xl font-black text-[#159b63] dark:text-[#58d49f]">{fmt(f?.nextMonthIncome)}</p>
           </div>
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Dự báo tiết kiệm</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Savings forecast' : 'Dự báo tiết kiệm'}</p>
             <p className="mt-2 text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff]">{fmt(f?.nextMonthSavings)}</p>
           </div>
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Độ tin cậy mô hình</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Model confidence' : 'Độ tin cậy mô hình'}</p>
             <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{confidenceMap[f?.confidence] || '—'}</p>
           </div>
         </div>
@@ -581,16 +586,16 @@ const Statistics = () => {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <div className="w-1 h-4 rounded-full bg-purple-500"/>
-                <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Mô hình dự báo ML</h3>
+                <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'ML Forecast Model' : 'Mô hình dự báo ML'}</h3>
               </div>
               <div className="flex items-center gap-2">
-                <ConfidenceBadge confidence={f.confidence}/>
+                <ConfidenceBadge confidence={f.confidence} isEnglish={isEnglish}/>
                 <span className="text-xs text-gray-400 dark:text-gray-500">R²: {((f.r2Expense||0)*100).toFixed(0)}%</span>
               </div>
             </div>
             <div className="flex gap-4 text-xs text-gray-500 dark:text-gray-400 mb-3 flex-wrap">
-              <span>Dự báo chi: <span className="font-semibold text-red-500">{fmt(f.nextMonthExpense)}</span></span>
-              <span>Khoảng tin cậy: <span className="font-semibold text-gray-700 dark:text-gray-300">{fmt(f.marginLow)} – {fmt(f.marginHigh)}</span></span>
+              <span>{isEnglish ? 'Expense forecast' : 'Dự báo chi'}: <span className="font-semibold text-red-500">{fmt(f.nextMonthExpense)}</span></span>
+              <span>{isEnglish ? 'Confidence range' : 'Khoảng tin cậy'}: <span className="font-semibold text-gray-700 dark:text-gray-300">{fmt(f.marginLow)} – {fmt(f.marginHigh)}</span></span>
             </div>
             <ResponsiveContainer width="100%" height={230}>
               <AreaChart data={chartData}>
@@ -609,11 +614,11 @@ const Statistics = () => {
                 <YAxis tickFormatter={fmtShort} tick={{fontSize:10}} width={48}/>
                 <Tooltip content={<ChartTip fmt={fmt}/>}/>
                 <Legend wrapperStyle={{fontSize:11}}/>
-                <ReferenceLine x={nextLabel} stroke="#8b5cf6" strokeDasharray="4 2" label={{value:'Dự báo', fontSize:10, fill:'#8b5cf6'}}/>
-                <Area type="monotone" dataKey="Thu nhập thực" stroke="#10b981" fill="url(#gInc)" strokeWidth={2}/>
-                <Area type="monotone" dataKey="Chi tiêu thực" stroke="#ef4444" fill="url(#gExp)" strokeWidth={2}/>
-                <Bar dataKey="Dự báo chi" fill="#ef444466" radius={[4,4,0,0]}/>
-                <Bar dataKey="Dự báo thu" fill="#10b98166" radius={[4,4,0,0]}/>
+                <ReferenceLine x={nextLabel} stroke="#8b5cf6" strokeDasharray="4 2" label={{value: isEnglish ? 'Forecast' : 'Dự báo', fontSize:10, fill:'#8b5cf6'}}/>
+                <Area type="monotone" dataKey={isEnglish ? 'Actual income' : 'Thu nhập thực'} stroke="#10b981" fill="url(#gInc)" strokeWidth={2}/>
+                <Area type="monotone" dataKey={isEnglish ? 'Actual expense' : 'Chi tiêu thực'} stroke="#ef4444" fill="url(#gExp)" strokeWidth={2}/>
+                <Bar dataKey={isEnglish ? 'Forecast expense' : 'Dự báo chi'} fill="#ef444466" radius={[4,4,0,0]}/>
+                <Bar dataKey={isEnglish ? 'Forecast income' : 'Dự báo thu'} fill="#10b98166" radius={[4,4,0,0]}/>
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -622,13 +627,13 @@ const Statistics = () => {
         {catForecastList.length > 0 && (
           <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] overflow-hidden">
             <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Dự báo chi tiêu theo danh mục</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Category Expense Forecast' : 'Dự báo chi tiêu theo danh mục'}</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead className="bg-[#f8f9fb] dark:bg-[#232936]">
                   <tr>
-                    {['Danh mục','Trung bình/tháng','Dự báo tháng tới','Xu hướng','Độ tin cậy'].map(h => (
+                    {[(isEnglish ? 'Category' : 'Danh mục'),(isEnglish ? 'Average/month' : 'Trung bình/tháng'),(isEnglish ? 'Next month forecast' : 'Dự báo tháng tới'),(isEnglish ? 'Trend' : 'Xu hướng'),(isEnglish ? 'Confidence' : 'Độ tin cậy')].map(h => (
                       <th key={h} className="px-4 py-2.5 text-left font-semibold text-[#7a808c] dark:text-[#9fa7b4]">{h}</th>
                     ))}
                   </tr>
@@ -639,8 +644,8 @@ const Statistics = () => {
                       <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">{cat}</td>
                       <td className="px-4 py-2.5 text-gray-600 dark:text-gray-300">{fmt(d.average)}</td>
                       <td className="px-4 py-2.5 font-bold text-red-600 dark:text-red-400">{fmt(d.forecast)}</td>
-                      <td className="px-4 py-2.5"><TrendBadge trend={d.trend}/></td>
-                      <td className="px-4 py-2.5"><ConfidenceBadge confidence={d.r2 > 0.7 ? 'high' : d.r2 > 0.4 ? 'medium' : 'low'}/></td>
+                      <td className="px-4 py-2.5"><TrendBadge trend={d.trend} isEnglish={isEnglish}/></td>
+                      <td className="px-4 py-2.5"><ConfidenceBadge confidence={d.r2 > 0.7 ? 'high' : d.r2 > 0.4 ? 'medium' : 'low'} isEnglish={isEnglish}/></td>
                     </tr>
                   ))}
                 </tbody>
@@ -660,19 +665,19 @@ const Statistics = () => {
       <div className="space-y-5">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">TB Thu/tháng</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg income/month' : 'TB Thu/tháng'}</p>
             <p className="mt-2 text-2xl font-black text-[#159b63] dark:text-[#58d49f]">{fmt(t?.averageIncome)}</p>
           </div>
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">TB Chi/tháng</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg expense/month' : 'TB Chi/tháng'}</p>
             <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">{fmt(t?.averageExpense)}</p>
           </div>
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">TB Tiết kiệm</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg savings' : 'TB Tiết kiệm'}</p>
             <p className="mt-2 text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff]">{fmt(t?.averageSavings)}</p>
           </div>
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Xu hướng chi</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Expense trend' : 'Xu hướng chi'}</p>
             <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{t?.overallTrend || '—'}</p>
           </div>
         </div>
@@ -681,12 +686,12 @@ const Statistics = () => {
           <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-blue-500"/>
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Xu hướng thu/chi/tiết kiệm 12 tháng</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? '12-Month Income/Expense/Savings Trend' : 'Xu hướng thu/chi/tiết kiệm 12 tháng'}</h3>
             </div>
             <ResponsiveContainer width="100%" height={250}>
               <AreaChart data={trendData.map(d => ({
-                name: `T${d.month}/${String(d.year).slice(2)}`,
-                'Thu nhập': d.income||0, 'Chi tiêu': d.expense||0, 'Tiết kiệm': d.savings||0
+                name: `${isEnglish ? 'M' : 'T'}${d.month}/${String(d.year).slice(2)}`,
+                [isEnglish ? 'Income' : 'Thu nhập']: d.income||0, [isEnglish ? 'Expense' : 'Chi tiêu']: d.expense||0, [isEnglish ? 'Savings' : 'Tiết kiệm']: d.savings||0
               }))}>
                 <defs>
                   <linearGradient id="gI" x1="0" y1="0" x2="0" y2="1">
@@ -704,9 +709,9 @@ const Statistics = () => {
                 <YAxis tickFormatter={fmtShort} tick={{fontSize:9}} width={45}/>
                 <Tooltip content={<ChartTip fmt={fmt}/>}/>
                 <Legend wrapperStyle={{fontSize:11}}/>
-                <Area type="monotone" dataKey="Thu nhập" stroke="#10b981" fill="url(#gI)" strokeWidth={2} dot={false}/>
-                <Area type="monotone" dataKey="Chi tiêu"  stroke="#ef4444" fill="url(#gE)" strokeWidth={2} dot={false}/>
-                <Area type="monotone" dataKey="Tiết kiệm" stroke="#3b82f6" fill="url(#gS)" strokeWidth={2} dot={false}/>
+                <Area type="monotone" dataKey={isEnglish ? 'Income' : 'Thu nhập'} stroke="#10b981" fill="url(#gI)" strokeWidth={2} dot={false}/>
+                <Area type="monotone" dataKey={isEnglish ? 'Expense' : 'Chi tiêu'}  stroke="#ef4444" fill="url(#gE)" strokeWidth={2} dot={false}/>
+                <Area type="monotone" dataKey={isEnglish ? 'Savings' : 'Tiết kiệm'} stroke="#3b82f6" fill="url(#gS)" strokeWidth={2} dot={false}/>
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -715,13 +720,13 @@ const Statistics = () => {
         {trendData.length > 0 && (
           <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] overflow-hidden">
             <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Chi tiết theo tháng</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Monthly Details' : 'Chi tiết theo tháng'}</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead className="bg-[#f8f9fb] dark:bg-[#232936]">
                   <tr>
-                    {['Tháng','Thu nhập','Chi tiêu','Tiết kiệm','Tỷ lệ tiết kiệm'].map(h => (
+                    {[(isEnglish ? 'Month' : 'Tháng'),(isEnglish ? 'Income' : 'Thu nhập'),(isEnglish ? 'Expense' : 'Chi tiêu'),(isEnglish ? 'Savings' : 'Tiết kiệm'),(isEnglish ? 'Savings rate' : 'Tỷ lệ tiết kiệm')].map(h => (
                       <th key={h} className="px-4 py-2.5 text-left font-semibold text-[#7a808c] dark:text-[#9fa7b4]">{h}</th>
                     ))}
                   </tr>
@@ -731,7 +736,7 @@ const Statistics = () => {
                     const rate = d.income ? ((d.savings/d.income)*100) : 0;
                     return (
                       <tr key={i} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
-                        <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">T{d.month}/{d.year}</td>
+                        <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">{isEnglish ? 'M' : 'T'}{d.month}/{d.year}</td>
                         <td className="px-4 py-2.5 text-emerald-600 dark:text-emerald-400 font-medium">{fmt(d.income)}</td>
                         <td className="px-4 py-2.5 text-red-600 dark:text-red-400 font-medium">{fmt(d.expense)}</td>
                         <td className={`px-4 py-2.5 font-bold ${d.savings >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-orange-600 dark:text-orange-400'}`}>{fmt(d.savings)}</td>
@@ -772,27 +777,27 @@ const Statistics = () => {
                 ? 'bg-white dark:bg-[#303746] text-[#1f2733] dark:text-[#f1f4f8] shadow-sm'
                 : 'text-[#7f8795] dark:text-[#9ba3b2] hover:text-[#2d3645] dark:hover:text-[#e5eaf1]'
             }`}
-          >{d} ngày</button>
+          >{d} {isEnglish ? 'days' : 'ngày'}</button>
         ))}
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Tổng thu giai đoạn</p>
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total income in period' : 'Tổng thu giai đoạn'}</p>
           <p className="mt-2 text-2xl font-black text-[#159b63] dark:text-[#58d49f]">{fmt(dailyIncomeTotal)}</p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Tổng chi giai đoạn</p>
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total expense in period' : 'Tổng chi giai đoạn'}</p>
           <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">{fmt(dailyExpenseTotal)}</p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Cân bằng ròng</p>
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Net balance' : 'Cân bằng ròng'}</p>
           <p className={`mt-2 text-2xl font-black ${dailyIncomeTotal - dailyExpenseTotal >= 0 ? 'text-[#2e67da] dark:text-[#8eb2ff]' : 'text-[#c0701c] dark:text-[#f2ba76]'}`}>
             {fmt(dailyIncomeTotal - dailyExpenseTotal)}
           </p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Số giao dịch</p>
+          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Transactions count' : 'Số giao dịch'}</p>
           <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{dailyTxTotal}</p>
         </div>
       </div>
@@ -802,33 +807,33 @@ const Statistics = () => {
           <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-emerald-500"/>
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Thu/chi theo ngày</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Daily Income/Expense' : 'Thu/chi theo ngày'}</h3>
             </div>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={daily.map(d => ({
-                name: new Date(d.date).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'}),
-                'Thu nhập': d.income||0, 'Chi tiêu': d.expense||0
+                name: new Date(d.date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN',{day:'2-digit',month:'2-digit'}),
+                [isEnglish ? 'Income' : 'Thu nhập']: d.income||0, [isEnglish ? 'Expense' : 'Chi tiêu']: d.expense||0
               }))}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" className="dark:stroke-[#222]"/>
                 <XAxis dataKey="name" tick={{fontSize:9}} interval={Math.floor(daily.length/7)}/>
                 <YAxis tickFormatter={fmtShort} tick={{fontSize:9}} width={45}/>
                 <Tooltip content={<ChartTip fmt={fmt}/>}/>
                 <Legend wrapperStyle={{fontSize:11}}/>
-                <Bar dataKey="Thu nhập" fill="#10b981" radius={[3,3,0,0]}/>
-                <Bar dataKey="Chi tiêu" fill="#ef4444" radius={[3,3,0,0]}/>
+                <Bar dataKey={isEnglish ? 'Income' : 'Thu nhập'} fill="#10b981" radius={[3,3,0,0]}/>
+                <Bar dataKey={isEnglish ? 'Expense' : 'Chi tiêu'} fill="#ef4444" radius={[3,3,0,0]}/>
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] overflow-hidden">
             <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Chi tiết theo ngày</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Daily Details' : 'Chi tiết theo ngày'}</h3>
             </div>
             <div className="overflow-x-auto max-h-80 overflow-y-auto">
               <table className="w-full text-xs">
                 <thead className="bg-[#f8f9fb] dark:bg-[#232936] sticky top-0">
                   <tr>
-                    {['Ngày','Thu nhập','Chi tiêu','Số giao dịch'].map(h => (
+                    {[(isEnglish ? 'Date' : 'Ngày'),(isEnglish ? 'Income' : 'Thu nhập'),(isEnglish ? 'Expense' : 'Chi tiêu'),(isEnglish ? 'Transactions' : 'Số giao dịch')].map(h => (
                       <th key={h} className="px-4 py-2.5 text-left font-semibold text-[#7a808c] dark:text-[#9fa7b4]">{h}</th>
                     ))}
                   </tr>
@@ -837,7 +842,7 @@ const Statistics = () => {
                   {[...daily].reverse().map((d, i) => (
                     <tr key={i} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
                       <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">
-                        {new Date(d.date).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'})}
+                        {new Date(d.date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'})}
                       </td>
                       <td className="px-4 py-2.5 text-emerald-600 dark:text-emerald-400 font-medium">{fmt(d.income)}</td>
                       <td className="px-4 py-2.5 text-red-600 dark:text-red-400 font-medium">{fmt(d.expense)}</td>
@@ -850,7 +855,7 @@ const Statistics = () => {
           </div>
         </>
       ) : (
-        <div className="text-center py-16 text-sm text-[#6f7480] dark:text-[#a4acba]">Chưa có dữ liệu trong khoảng thời gian này</div>
+        <div className="text-center py-16 text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'No data in this time range' : 'Chưa có dữ liệu trong khoảng thời gian này'}</div>
       )}
     </div>
     );
@@ -859,7 +864,7 @@ const Statistics = () => {
   // ── AI Insights tab ──────────────────────────────────────────────────────
   const AITab = () => {
     const ai = aiInsights;
-    if (!ai) return <div className="text-center py-16 text-sm text-[#6f7480] dark:text-[#a4acba]">Đang tải nhận xét AI...</div>;
+    if (!ai) return <div className="text-center py-16 text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'Loading AI insights...' : 'Đang tải nhận xét AI...'}</div>;
 
     const score = ai.healthScore || 0;
     const scoreColor = score >= 70 ? 'text-emerald-600 dark:text-emerald-400' : score >= 40 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
@@ -878,19 +883,19 @@ const Statistics = () => {
       <div className="space-y-5">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Điểm sức khỏe</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Health score' : 'Điểm sức khỏe'}</p>
             <p className={`mt-2 text-2xl font-black ${scoreColor}`}>{score}/100</p>
           </div>
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Tỷ lệ tiết kiệm TB</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg savings rate' : 'Tỷ lệ tiết kiệm TB'}</p>
             <p className="mt-2 text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff]">{ai.savingsRate?.toFixed(1) || 0}%</p>
           </div>
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Khuyến nghị AI</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'AI recommendations' : 'Khuyến nghị AI'}</p>
             <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{recommendationsCount}</p>
           </div>
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">Bất thường</p>
+            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Anomalies' : 'Bất thường'}</p>
             <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">{anomaliesCount}</p>
           </div>
         </div>
@@ -899,7 +904,7 @@ const Statistics = () => {
         <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-1 h-4 rounded-full bg-purple-500"/>
-            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Điểm sức khỏe tài chính</h3>
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Financial Health Score' : 'Điểm sức khỏe tài chính'}</h3>
           </div>
           <div className="flex items-center gap-6">
             <div className="text-center">
@@ -911,21 +916,21 @@ const Statistics = () => {
                 <div className={`h-full rounded-full transition-all duration-1000 ${scoreBarColor}`} style={{width:`${score}%`}}/>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {score >= 70 ? 'Tài chính của bạn đang rất tốt! Tiếp tục duy trì nhé.'
-                 : score >= 40 ? 'Tài chính ở mức trung bình. Hãy xem các gợi ý bên dưới.'
-                 : 'Tài chính cần được cải thiện. Hãy chú ý đến các cảnh báo.'}
+                {score >= 70 ? (isEnglish ? 'Your finances are in great shape. Keep it up.' : 'Tài chính của bạn đang rất tốt! Tiếp tục duy trì nhé.')
+                 : score >= 40 ? (isEnglish ? 'Your finances are average. Check suggestions below.' : 'Tài chính ở mức trung bình. Hãy xem các gợi ý bên dưới.')
+                 : (isEnglish ? 'Your finances need improvement. Pay attention to warnings.' : 'Tài chính cần được cải thiện. Hãy chú ý đến các cảnh báo.')}
               </p>
               <div className="grid grid-cols-3 gap-2 mt-3 text-xs text-center">
                 <div className="bg-[#f7f9fc] dark:bg-[#232936] rounded-lg py-2">
-                  <p className="text-gray-400 dark:text-gray-500 mb-0.5">Tỷ lệ TK</p>
+                  <p className="text-gray-400 dark:text-gray-500 mb-0.5">{isEnglish ? 'Savings rate' : 'Tỷ lệ TK'}</p>
                   <p className="font-bold text-gray-700 dark:text-gray-200">{ai.savingsRate?.toFixed(1) || 0}%</p>
                 </div>
                 <div className="bg-[#f7f9fc] dark:bg-[#232936] rounded-lg py-2">
-                  <p className="text-gray-400 dark:text-gray-500 mb-0.5">Tháng tốt nhất</p>
+                  <p className="text-gray-400 dark:text-gray-500 mb-0.5">{isEnglish ? 'Best month' : 'Tháng tốt nhất'}</p>
                   <p className="font-bold text-emerald-600 dark:text-emerald-400">{ai.bestMonth?.name || '—'}</p>
                 </div>
                 <div className="bg-[#f7f9fc] dark:bg-[#232936] rounded-lg py-2">
-                  <p className="text-gray-400 dark:text-gray-500 mb-0.5">Tháng khó nhất</p>
+                  <p className="text-gray-400 dark:text-gray-500 mb-0.5">{isEnglish ? 'Hardest month' : 'Tháng khó nhất'}</p>
                   <p className="font-bold text-red-600 dark:text-red-400">{ai.worstMonth?.name || '—'}</p>
                 </div>
               </div>
@@ -936,7 +941,7 @@ const Statistics = () => {
         {/* Recommendations */}
         {ai.recommendations?.length > 0 && (
           <div className="space-y-2">
-            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5] px-1">Gợi ý từ AI</h3>
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5] px-1">{isEnglish ? 'AI Recommendations' : 'Gợi ý từ AI'}</h3>
             {ai.recommendations.map((r, i) => (
               <div key={i} className={`flex items-start gap-3 px-4 py-3 rounded-xl border text-sm ${recColors[r.type] || recColors.info}`}>
                 <span className="flex-shrink-0 mt-0.5">{recIcons[r.type] || recIcons.info}</span>
@@ -951,14 +956,14 @@ const Statistics = () => {
           <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-red-500"/>
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Giao dịch bất thường phát hiện</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Detected Anomalous Transactions' : 'Giao dịch bất thường phát hiện'}</h3>
             </div>
             <div className="space-y-2">
               {ai.anomalies.map((a, i) => (
                 <div key={i} className="flex items-center justify-between px-3 py-2.5 bg-red-50 dark:bg-red-500/10 rounded-xl border border-red-100 dark:border-red-500/20">
                   <div>
                     <p className="text-xs font-semibold text-red-700 dark:text-red-400">{a.month || a.period}</p>
-                    <p className="text-xs text-red-600 dark:text-red-400">Chi vượt TB: +{a.deviation?.toFixed(1) || 0}%</p>
+                    <p className="text-xs text-red-600 dark:text-red-400">{isEnglish ? 'Above avg expense' : 'Chi vượt TB'}: +{a.deviation?.toFixed(1) || 0}%</p>
                   </div>
                   <span className="text-sm font-black text-red-600 dark:text-red-400">{fmt(a.expense || a.amount)}</span>
                 </div>
@@ -971,14 +976,14 @@ const Statistics = () => {
         {ai.categoryTrends?.length > 0 && (
           <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] overflow-hidden">
             <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">Xu hướng danh mục đáng chú ý</h3>
+              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Notable Category Trends' : 'Xu hướng danh mục đáng chú ý'}</h3>
             </div>
             <div className="divide-y divide-[#eef1f6] dark:divide-[#2a303b]">
               {ai.categoryTrends.map((c, i) => (
                 <div key={i} className="flex items-center justify-between px-4 py-3 hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
                   <div>
                     <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">{c.category}</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500">3 tháng gần: {fmt(c.recent)} vs trước: {fmt(c.prior)}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">{isEnglish ? 'Recent 3 months' : '3 tháng gần'}: {fmt(c.recent)} {isEnglish ? 'vs previous' : 'vs trước'}: {fmt(c.prior)}</p>
                   </div>
                   <span className={`text-sm font-black ${c.change > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
                     {c.change > 0 ? '+' : ''}{c.change?.toFixed(1)}%
@@ -1002,7 +1007,7 @@ const Statistics = () => {
   const healthScore = aiInsights?.healthScore || 0;
   const monthTopCategory = [...catStats]
     .sort((a, b) => (b.totalExpense || 0) - (a.totalExpense || 0))[0];
-  const periodLabel = `Tháng ${selectedMonth}/${selectedYear}`;
+  const periodLabel = isEnglish ? `Month ${selectedMonth}/${selectedYear}` : `Tháng ${selectedMonth}/${selectedYear}`;
 
   return (
     <div className="space-y-5">
@@ -1012,25 +1017,25 @@ const Statistics = () => {
           <div className="relative">
             <div className="flex items-center gap-2">
               <FiBarChart2 size={18} className="text-[#b8e4d6]" />
-              <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">Bảng điều khiển thống kê</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">{isEnglish ? 'Statistics Dashboard' : 'Bảng điều khiển thống kê'}</p>
             </div>
             <h1 className="mt-3 text-5xl font-black tracking-tight">{fmt(currentBalance)}</h1>
             <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-[#d8fff2]">
               <FiZap size={12} />
-              {periodLabel} • Tỷ lệ tiết kiệm {savingRate.toFixed(1)}%
+              {periodLabel} • {isEnglish ? 'Savings rate' : 'Tỷ lệ tiết kiệm'} {savingRate.toFixed(1)}%
             </div>
 
             <div className="mt-8 grid grid-cols-1 gap-4 border-t border-[#1e6b57] pt-5 sm:grid-cols-3">
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Tổng thu</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Total income' : 'Tổng thu'}</p>
                 <p className="mt-1 text-2xl font-bold">{fmt(currentIncome)}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Tổng chi</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Total expense' : 'Tổng chi'}</p>
                 <p className="mt-1 text-2xl font-bold">{fmt(currentExpense)}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">Số giao dịch</p>
+                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Transactions' : 'Số giao dịch'}</p>
                 <p className="mt-1 text-2xl font-bold">{monthly?.totalTransactions ?? 0}</p>
               </div>
             </div>
@@ -1040,14 +1045,14 @@ const Statistics = () => {
         <div className="xl:col-span-4 space-y-4">
           <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">Chỉ số AI</h3>
+              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'AI Metrics' : 'Chỉ số AI'}</h3>
               <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">ML-powered</span>
             </div>
 
             <div className="space-y-3">
               <div>
                 <div className="mb-1 flex items-center justify-between text-xs text-[#586074] dark:text-[#a9afbb]">
-                  <span className="font-semibold">Điểm sức khỏe tài chính</span>
+                  <span className="font-semibold">{isEnglish ? 'Financial health score' : 'Điểm sức khỏe tài chính'}</span>
                   <span className="font-bold">{healthScore}/100</span>
                 </div>
                 <div className="h-2 rounded-full bg-[#e3e7ee] dark:bg-[#2d3340] overflow-hidden">
@@ -1059,9 +1064,9 @@ const Statistics = () => {
               </div>
 
               <div className="rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
-                <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">Danh mục chi cao nhất</p>
+                <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{isEnglish ? 'Top expense category' : 'Danh mục chi cao nhất'}</p>
                 <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">
-                  {monthTopCategory ? `${monthTopCategory._id}: ${fmt(monthTopCategory.totalExpense)}` : 'Chưa có dữ liệu danh mục'}
+                  {monthTopCategory ? `${monthTopCategory._id}: ${fmt(monthTopCategory.totalExpense)}` : (isEnglish ? 'No category data yet' : 'Chưa có dữ liệu danh mục')}
                 </p>
               </div>
             </div>

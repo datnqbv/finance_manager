@@ -16,6 +16,7 @@ export const DebtProvider = ({ children }) => {
   const [stats, setStats]   = useState(null);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const isEnglish = localStorage.getItem('language') === 'en';
 
   const fetchDebts = async (params = {}) => {
     if (!user) return;
@@ -35,11 +36,11 @@ export const DebtProvider = ({ children }) => {
     try {
       const res = await debtService.createDebt(data);
       setDebts(prev => [res.data, ...prev]);
-      toast.success('Đã tạo khoản nợ');
+      toast.success(isEnglish ? 'Debt created' : 'Đã tạo khoản nợ');
       await refreshStats();
       return { success: true, data: res.data };
     } catch (err) {
-      const msg = err.response?.data?.message || 'Lỗi tạo khoản nợ';
+      const msg = err.response?.data?.message || (isEnglish ? 'Failed to create debt' : 'Lỗi tạo khoản nợ');
       toast.error(msg);
       return { success: false, message: msg };
     }
@@ -49,11 +50,11 @@ export const DebtProvider = ({ children }) => {
     try {
       const res = await debtService.updateDebt(id, data);
       setDebts(prev => prev.map(d => d._id === id ? res.data : d));
-      toast.success('Đã cập nhật');
+      toast.success(isEnglish ? 'Updated successfully' : 'Đã cập nhật');
       await refreshStats();
       return { success: true, data: res.data };
     } catch (err) {
-      const msg = err.response?.data?.message || 'Lỗi cập nhật';
+      const msg = err.response?.data?.message || (isEnglish ? 'Update failed' : 'Lỗi cập nhật');
       toast.error(msg);
       return { success: false, message: msg };
     }
@@ -63,11 +64,11 @@ export const DebtProvider = ({ children }) => {
     try {
       await debtService.deleteDebt(id);
       setDebts(prev => prev.filter(d => d._id !== id));
-      toast.success('Đã xóa khoản nợ');
+      toast.success(isEnglish ? 'Debt deleted' : 'Đã xóa khoản nợ');
       await refreshStats();
       return { success: true };
     } catch (err) {
-      toast.error('Lỗi khi xóa');
+      toast.error(isEnglish ? 'Delete failed' : 'Lỗi khi xóa');
       return { success: false };
     }
   };
@@ -76,11 +77,11 @@ export const DebtProvider = ({ children }) => {
     try {
       const res = await debtService.addPayment(id, amount, note);
       setDebts(prev => prev.map(d => d._id === id ? res.data : d));
-      toast.success(res.message || 'Đã ghi nhận thanh toán');
+      toast.success(res.message || (isEnglish ? 'Payment recorded' : 'Đã ghi nhận thanh toán'));
       await refreshStats();
       return { success: true, data: res.data, message: res.message };
     } catch (err) {
-      const msg = err.response?.data?.message || 'Lỗi';
+      const msg = err.response?.data?.message || (isEnglish ? 'An error occurred' : 'Lỗi');
       toast.error(msg);
       return { success: false };
     }
@@ -90,11 +91,11 @@ export const DebtProvider = ({ children }) => {
     try {
       const res = await debtService.settleDebt(id);
       setDebts(prev => prev.map(d => d._id === id ? res.data : d));
-      toast.success('Đã tất toán khoản nợ ✅');
+      toast.success(isEnglish ? 'Debt settled ✅' : 'Đã tất toán khoản nợ ✅');
       await refreshStats();
       return { success: true };
     } catch (err) {
-      toast.error('Lỗi');
+      toast.error(isEnglish ? 'An error occurred' : 'Lỗi');
       return { success: false };
     }
   };

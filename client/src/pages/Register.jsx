@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { FiMail, FiLock, FiUser, FiAlertCircle, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const { t } = useLanguage();
+  const isEnglish = t('language') === 'English';
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,12 +29,12 @@ const Register = () => {
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp!');
+      setError(isEnglish ? 'Password confirmation does not match!' : 'Mật khẩu xác nhận không khớp!');
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Mật khẩu phải có ít nhất 6 ký tự!');
+      setError(isEnglish ? 'Password must have at least 6 characters!' : 'Mật khẩu phải có ít nhất 6 ký tự!');
       return;
     }
 
@@ -47,7 +50,7 @@ const Register = () => {
       navigate('/dashboard');
     } else {
       console.error('Register error:', result.message);
-      setError(result.message || 'Email hoặc mật khẩu không đúng!');
+      setError(result.message || (isEnglish ? 'Email or password is invalid!' : 'Email hoặc mật khẩu không đúng!'));
     }
   };
 
@@ -60,7 +63,7 @@ const Register = () => {
             className="inline-flex items-center gap-2 rounded-full border border-[#bfd2c2] bg-white/60 px-4 py-2 text-sm font-semibold text-[#4b5f4f] transition hover:bg-white"
           >
             <FiArrowLeft className="text-base" />
-            Quay lại trang chủ
+            {isEnglish ? 'Back to home' : 'Quay lại trang chủ'}
           </button>
         </div>
 
@@ -71,7 +74,7 @@ const Register = () => {
 
               <div className="mb-6">
                 <h1 className="text-2xl font-black leading-tight text-[#1f3022]">Create account</h1>
-                <p className="mt-2 text-sm text-[#687a6a]">Bắt đầu quản lý tài chính với một tài khoản mới.</p>
+                <p className="mt-2 text-sm text-[#687a6a]">{isEnglish ? 'Start managing your finance with a new account.' : 'Bắt đầu quản lý tài chính với một tài khoản mới.'}</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -91,7 +94,7 @@ const Register = () => {
                     onChange={handleChange}
                     required
                     className="w-full rounded-xl border border-[#dce7dc] bg-[#f8fbf7] py-3 pl-11 pr-4 text-sm text-[#273029] placeholder:text-[#98a999] focus:border-[#62af6f] focus:outline-none"
-                    placeholder="Tên người dùng"
+                    placeholder={isEnglish ? 'Username' : 'Tên người dùng'}
                   />
                 </div>
 
@@ -118,13 +121,13 @@ const Register = () => {
                     required
                     minLength={6}
                     className="w-full rounded-xl border border-[#dce7dc] bg-[#f8fbf7] py-3 pl-11 pr-11 text-sm text-[#273029] placeholder:text-[#98a999] focus:border-[#62af6f] focus:outline-none"
-                    placeholder="Mật khẩu (tối thiểu 6 ký tự)"
+                    placeholder={isEnglish ? 'Password (minimum 6 characters)' : 'Mật khẩu (tối thiểu 6 ký tự)'}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#809382] transition hover:bg-[#e8f3e8] hover:text-[#4d6b51]"
-                    aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                    aria-label={showPassword ? (isEnglish ? 'Hide password' : 'Ẩn mật khẩu') : (isEnglish ? 'Show password' : 'Hiện mật khẩu')}
                   >
                     {showPassword ? <FiEyeOff size={17} /> : <FiEye size={17} />}
                   </button>
@@ -139,13 +142,13 @@ const Register = () => {
                     onChange={handleChange}
                     required
                     className="w-full rounded-xl border border-[#dce7dc] bg-[#f8fbf7] py-3 pl-11 pr-11 text-sm text-[#273029] placeholder:text-[#98a999] focus:border-[#62af6f] focus:outline-none"
-                    placeholder="Xác nhận mật khẩu"
+                    placeholder={isEnglish ? 'Confirm password' : 'Xác nhận mật khẩu'}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((prev) => !prev)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#809382] transition hover:bg-[#e8f3e8] hover:text-[#4d6b51]"
-                    aria-label={showConfirmPassword ? 'Ẩn xác nhận mật khẩu' : 'Hiện xác nhận mật khẩu'}
+                    aria-label={showConfirmPassword ? (isEnglish ? 'Hide confirm password' : 'Ẩn xác nhận mật khẩu') : (isEnglish ? 'Show confirm password' : 'Hiện xác nhận mật khẩu')}
                   >
                     {showConfirmPassword ? <FiEyeOff size={17} /> : <FiEye size={17} />}
                   </button>
@@ -156,14 +159,14 @@ const Register = () => {
                   disabled={loading}
                   className="w-full rounded-xl bg-[#5d9f67] py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#4f8f5a] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {loading ? 'Đang tạo tài khoản...' : 'Đăng ký'}
+                  {loading ? (isEnglish ? 'Creating account...' : 'Đang tạo tài khoản...') : (isEnglish ? 'Sign up' : 'Đăng ký')}
                 </button>
               </form>
 
               <p className="mt-5 text-center text-xs text-[#748574]">
-                Đã có tài khoản?{' '}
+                {isEnglish ? 'Already have an account?' : 'Đã có tài khoản?'}{' '}
                 <Link to="/login" className="font-bold text-[#1f3022] hover:text-[#3f7848]">
-                  Đăng nhập
+                  {isEnglish ? 'Sign in' : 'Đăng nhập'}
                 </Link>
               </p>
             </div>

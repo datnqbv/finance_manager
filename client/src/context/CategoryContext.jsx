@@ -16,6 +16,7 @@ export const CategoryProvider = ({ children }) => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const isEnglish = localStorage.getItem('language') === 'en';
 
   // Fetch categories
   const fetchCategories = async () => {
@@ -25,7 +26,7 @@ export const CategoryProvider = ({ children }) => {
       const data = await categoryService.getCategories();
       setCategories(data.data || []);
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Lỗi khi tải danh mục';
+      const errorMessage = err.response?.data?.message || (isEnglish ? 'Failed to load categories' : 'Lỗi khi tải danh mục');
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -39,10 +40,10 @@ export const CategoryProvider = ({ children }) => {
       setLoading(true);
       const data = await categoryService.createCategory(categoryData);
       setCategories([...categories, data.data]);
-      toast.success(data.message || 'Tạo danh mục thành công');
+      toast.success(data.message || (isEnglish ? 'Category created successfully' : 'Tạo danh mục thành công'));
       return data.data;
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Lỗi khi tạo danh mục';
+      const errorMessage = err.response?.data?.message || (isEnglish ? 'Failed to create category' : 'Lỗi khi tạo danh mục');
       toast.error(errorMessage);
       throw err;
     } finally {
@@ -56,10 +57,10 @@ export const CategoryProvider = ({ children }) => {
       setLoading(true);
       const data = await categoryService.updateCategory(id, categoryData);
       setCategories(categories.map(cat => cat._id === id ? data.data : cat));
-      toast.success(data.message || 'Cập nhật danh mục thành công');
+      toast.success(data.message || (isEnglish ? 'Category updated successfully' : 'Cập nhật danh mục thành công'));
       return data.data;
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Lỗi khi cập nhật danh mục';
+      const errorMessage = err.response?.data?.message || (isEnglish ? 'Failed to update category' : 'Lỗi khi cập nhật danh mục');
       toast.error(errorMessage);
       throw err;
     } finally {
@@ -73,9 +74,9 @@ export const CategoryProvider = ({ children }) => {
       setLoading(true);
       const data = await categoryService.deleteCategory(id);
       setCategories(categories.filter(cat => cat._id !== id));
-      toast.success(data.message || 'Xóa danh mục thành công');
+      toast.success(data.message || (isEnglish ? 'Category deleted successfully' : 'Xóa danh mục thành công'));
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Lỗi khi xóa danh mục';
+      const errorMessage = err.response?.data?.message || (isEnglish ? 'Failed to delete category' : 'Lỗi khi xóa danh mục');
       toast.error(errorMessage);
       throw err;
     } finally {
@@ -89,9 +90,9 @@ export const CategoryProvider = ({ children }) => {
       setLoading(true);
       const data = await categoryService.mergeCategories(sourceId, targetId);
       setCategories(categories.filter(cat => cat._id !== sourceId));
-      toast.success(data.message || 'Gộp danh mục thành công');
+      toast.success(data.message || (isEnglish ? 'Categories merged successfully' : 'Gộp danh mục thành công'));
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Lỗi khi gộp danh mục';
+      const errorMessage = err.response?.data?.message || (isEnglish ? 'Failed to merge categories' : 'Lỗi khi gộp danh mục');
       toast.error(errorMessage);
       throw err;
     } finally {
@@ -104,9 +105,9 @@ export const CategoryProvider = ({ children }) => {
     try {
       await categoryService.reorderCategories(reorderedCategories);
       setCategories(reorderedCategories);
-      toast.success('Sắp xếp danh mục thành công');
+      toast.success(isEnglish ? 'Categories reordered successfully' : 'Sắp xếp danh mục thành công');
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Lỗi khi sắp xếp danh mục';
+      const errorMessage = err.response?.data?.message || (isEnglish ? 'Failed to reorder categories' : 'Lỗi khi sắp xếp danh mục');
       toast.error(errorMessage);
       throw err;
     }
