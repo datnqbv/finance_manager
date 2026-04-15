@@ -100,9 +100,4 @@ export const statsService = {
     });
     return response.data;
   },
-
-  // Phân tích AI: điểm sức khỏe tài chính, phát hiện bất thường, gợi ý
-  getAIInsights: async () => {
-    return cachedGet('/stats/ai-insights', '/stats/ai-insights');
-  },
 };

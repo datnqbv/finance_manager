@@ -323,10 +323,30 @@ Bạn có thể hỏi tôi về:
 
 Hãy hỏi tôi bất cứ điều gì! 🚀`;
 
+const buildFallbackMessage = (message, context) => {
+    const q = String(message || '').toLowerCase();
+    const income = Number(context?.thisMonth?.income || 0);
+    const expense = Number(context?.thisMonth?.expense || 0);
+    const balance = income - expense;
+
+    if (q.includes('chi') || q.includes('spend') || q.includes('expense')) {
+        return `Tạm thời AI online đang gián đoạn, nhưng mình vẫn có thể hỗ trợ nhanh từ dữ liệu hiện có.\n\nTháng này bạn đã chi khoảng ${expense.toLocaleString('vi-VN')} VND và thu ${income.toLocaleString('vi-VN')} VND.\n\nBạn có muốn mình gợi ý 3 cách cắt giảm chi tiêu theo mức hiện tại không?`;
+    }
+
+    if (q.includes('ngân sách') || q.includes('budget')) {
+        return `Hiện AI đang tạm gián đoạn, nhưng bạn vẫn có thể kiểm tra nhanh ở trang Ngân sách.\n\nTình hình tháng này: Thu ${income.toLocaleString('vi-VN')} VND, Chi ${expense.toLocaleString('vi-VN')} VND, Chênh lệch ${balance.toLocaleString('vi-VN')} VND.\n\nMình có thể hướng dẫn bạn đặt lại ngân sách theo 50/30/20 nếu cần.`;
+    }
+
+    return 'Dịch vụ AI đang tạm thời quá tải hoặc chưa cấu hình đầy đủ. Bạn vẫn có thể sử dụng đầy đủ các chức năng quản lý giao dịch, ngân sách, mục tiêu và thống kê trong ứng dụng. Hãy thử lại sau ít phút nhé.';
+};
+
 // Gửi tin nhắn tới Gemini Flash API
 export const sendMessage = async (req, res, next) => {
+    let message;
+    let context;
+
     try {
-        const { message, context } = req.body;
+        ({ message, context } = req.body || {});
 
         if (!message) {
             return res.status(400).json({
@@ -338,9 +358,11 @@ export const sendMessage = async (req, res, next) => {
         const apiKey = process.env.GEMINI_API_KEY;
         
         if (!apiKey) {
-            return res.status(500).json({
-                success: false,
-                error: 'API key chưa được cấu hình. Vui lòng thêm GEMINI_API_KEY vào file .env'
+            return res.status(200).json({
+                success: true,
+                message: buildFallbackMessage(message, context),
+                role: 'Finance Assistant',
+                fallback: true
             });
         }
 
@@ -547,13 +569,18 @@ ${message}
 - Kết thúc bằng câu hỏi hoặc lời mời hành động
 - Sử dụng emoji phù hợp (nhưng không quá nhiều)`;
 
+        const MAX_PROMPT_CHARS = 14000;
+        const safePrompt = fullPrompt.length > MAX_PROMPT_CHARS
+            ? `${fullPrompt.slice(0, MAX_PROMPT_CHARS)}\n\n[Context truncated for size]`
+            : fullPrompt;
+
         // Gọi Gemini 2.5 Flash API
         const response = await axios.post(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
             {
                 contents: [{
                     parts: [{
-                        text: fullPrompt
+                        text: safePrompt
                     }]
                 }],
                 generationConfig: {
@@ -611,9 +638,11 @@ ${message}
             });
         }
 
-        res.status(500).json({
-            success: false,
-            error: 'Có lỗi xảy ra. Vui lòng thử lại sau nhé! 😊',
+        res.status(200).json({
+            success: true,
+            message: buildFallbackMessage(message, context),
+            role: 'Finance Assistant',
+            fallback: true,
             details: error.response?.data?.error?.message || error.message
         });
     }

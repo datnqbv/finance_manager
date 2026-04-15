@@ -8,8 +8,7 @@ import {
 } from 'recharts';
 import {
   FiBarChart2, FiTrendingUp, FiTrendingDown, FiActivity,
-  FiCalendar, FiTarget, FiAlertCircle, FiCheckCircle,
-  FiInfo, FiMinus, FiZap
+  FiCalendar, FiTarget, FiMinus, FiZap
 } from 'react-icons/fi';
 import { StatisticsPageSkeleton } from '../components/LoadingSkeleton';
 import { useLanguage } from '../context/LanguageContext';
@@ -84,7 +83,6 @@ const Statistics = () => {
   const [forecast,   setForecast]   = useState(null);
   const [trends,     setTrends]     = useState(null);
   const [daily,      setDaily]      = useState([]);
-  const [aiInsights, setAiInsights] = useState(null);
   const monthBundleCacheRef = useRef(new Map());
 
   const fmt = useCallback((n) =>
@@ -252,33 +250,6 @@ const Statistics = () => {
     return () => controller.abort();
   }, [selectedYear, selectedMonth, fetchMonthBundle, getMonthKey, applyMonthBundle, prefetchMonth]);
 
-  useEffect(() => {
-    const loadAiInsights = async () => {
-      try {
-        const ai = await statsService.getAIInsights();
-        const aid = ai?.data;
-        if (aid) {
-          setAiInsights({
-            ...aid,
-            savingsRate: aid.avgSavingsRate || 0,
-            categoryTrends: (aid.categoryTrends || []).map(c => ({
-              category: c.category,
-              recent: c.recentAvg || 0,
-              prior: c.priorAvg || 0,
-              change: c.changePercent || 0,
-            })),
-            bestMonth: aid.bestMonth ? { name: aid.bestMonth.label } : null,
-            worstMonth: aid.worstMonth ? { name: aid.worstMonth.label } : null,
-          });
-        }
-      } catch {
-        setAiInsights(null);
-      }
-    };
-
-    loadAiInsights();
-  }, []);
-
   const reloadDaily = useCallback(async (days) => {
     const end   = new Date().toISOString().split('T')[0];
     const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
@@ -300,7 +271,6 @@ const Statistics = () => {
     { key: 'forecast',  label: isEnglish ? 'AI Forecast' : 'Dự báo AI',   icon: <FiTarget size={13}/> },
     { key: 'trends',    label: isEnglish ? 'Trends' : 'Xu hướng',    icon: <FiTrendingUp size={13}/> },
     { key: 'daily',     label: isEnglish ? 'Daily' : 'Theo ngày',   icon: <FiCalendar size={13}/> },
-    { key: 'ai',        label: isEnglish ? 'AI Insights' : 'Nhận xét AI', icon: <FiZap size={13}/> },
   ];
 
   const TAB_ACTIVE = 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-sm';
@@ -861,142 +831,6 @@ const Statistics = () => {
     );
   };
 
-  // ── AI Insights tab ──────────────────────────────────────────────────────
-  const AITab = () => {
-    const ai = aiInsights;
-    if (!ai) return <div className="text-center py-16 text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'Loading AI insights...' : 'Đang tải nhận xét AI...'}</div>;
-
-    const score = ai.healthScore || 0;
-    const scoreColor = score >= 70 ? 'text-emerald-600 dark:text-emerald-400' : score >= 40 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
-    const scoreBarColor = score >= 70 ? 'bg-emerald-500' : score >= 40 ? 'bg-amber-500' : 'bg-red-500';
-    const recIcons = { success: <FiCheckCircle size={14}/>, warning: <FiAlertCircle size={14}/>, error: <FiAlertCircle size={14}/>, info: <FiInfo size={14}/> };
-    const recColors = {
-      success: 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-400',
-      warning: 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-400',
-      error:   'bg-red-50 border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-400',
-      info:    'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-400',
-    };
-    const recommendationsCount = ai.recommendations?.length || 0;
-    const anomaliesCount = ai.anomalies?.length || 0;
-
-    return (
-      <div className="space-y-5">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Health score' : 'Điểm sức khỏe'}</p>
-            <p className={`mt-2 text-2xl font-black ${scoreColor}`}>{score}/100</p>
-          </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg savings rate' : 'Tỷ lệ tiết kiệm TB'}</p>
-            <p className="mt-2 text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff]">{ai.savingsRate?.toFixed(1) || 0}%</p>
-          </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'AI recommendations' : 'Khuyến nghị AI'}</p>
-            <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{recommendationsCount}</p>
-          </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Anomalies' : 'Bất thường'}</p>
-            <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">{anomaliesCount}</p>
-          </div>
-        </div>
-
-        {/* Health score */}
-        <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-1 h-4 rounded-full bg-purple-500"/>
-            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Financial Health Score' : 'Điểm sức khỏe tài chính'}</h3>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="text-center">
-              <p className={`text-6xl font-black ${scoreColor}`}>{score}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">/ 100</p>
-            </div>
-            <div className="flex-1">
-              <div className="h-4 bg-gray-100 dark:bg-[#2a2a2a] rounded-full overflow-hidden mb-2">
-                <div className={`h-full rounded-full transition-all duration-1000 ${scoreBarColor}`} style={{width:`${score}%`}}/>
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {score >= 70 ? (isEnglish ? 'Your finances are in great shape. Keep it up.' : 'Tài chính của bạn đang rất tốt! Tiếp tục duy trì nhé.')
-                 : score >= 40 ? (isEnglish ? 'Your finances are average. Check suggestions below.' : 'Tài chính ở mức trung bình. Hãy xem các gợi ý bên dưới.')
-                 : (isEnglish ? 'Your finances need improvement. Pay attention to warnings.' : 'Tài chính cần được cải thiện. Hãy chú ý đến các cảnh báo.')}
-              </p>
-              <div className="grid grid-cols-3 gap-2 mt-3 text-xs text-center">
-                <div className="bg-[#f7f9fc] dark:bg-[#232936] rounded-lg py-2">
-                  <p className="text-gray-400 dark:text-gray-500 mb-0.5">{isEnglish ? 'Savings rate' : 'Tỷ lệ TK'}</p>
-                  <p className="font-bold text-gray-700 dark:text-gray-200">{ai.savingsRate?.toFixed(1) || 0}%</p>
-                </div>
-                <div className="bg-[#f7f9fc] dark:bg-[#232936] rounded-lg py-2">
-                  <p className="text-gray-400 dark:text-gray-500 mb-0.5">{isEnglish ? 'Best month' : 'Tháng tốt nhất'}</p>
-                  <p className="font-bold text-emerald-600 dark:text-emerald-400">{ai.bestMonth?.name || '—'}</p>
-                </div>
-                <div className="bg-[#f7f9fc] dark:bg-[#232936] rounded-lg py-2">
-                  <p className="text-gray-400 dark:text-gray-500 mb-0.5">{isEnglish ? 'Hardest month' : 'Tháng khó nhất'}</p>
-                  <p className="font-bold text-red-600 dark:text-red-400">{ai.worstMonth?.name || '—'}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recommendations */}
-        {ai.recommendations?.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5] px-1">{isEnglish ? 'AI Recommendations' : 'Gợi ý từ AI'}</h3>
-            {ai.recommendations.map((r, i) => (
-              <div key={i} className={`flex items-start gap-3 px-4 py-3 rounded-xl border text-sm ${recColors[r.type] || recColors.info}`}>
-                <span className="flex-shrink-0 mt-0.5">{recIcons[r.type] || recIcons.info}</span>
-                <span>{r.message}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Anomalies */}
-        {ai.anomalies?.length > 0 && (
-          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-1 h-4 rounded-full bg-red-500"/>
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Detected Anomalous Transactions' : 'Giao dịch bất thường phát hiện'}</h3>
-            </div>
-            <div className="space-y-2">
-              {ai.anomalies.map((a, i) => (
-                <div key={i} className="flex items-center justify-between px-3 py-2.5 bg-red-50 dark:bg-red-500/10 rounded-xl border border-red-100 dark:border-red-500/20">
-                  <div>
-                    <p className="text-xs font-semibold text-red-700 dark:text-red-400">{a.month || a.period}</p>
-                    <p className="text-xs text-red-600 dark:text-red-400">{isEnglish ? 'Above avg expense' : 'Chi vượt TB'}: +{a.deviation?.toFixed(1) || 0}%</p>
-                  </div>
-                  <span className="text-sm font-black text-red-600 dark:text-red-400">{fmt(a.expense || a.amount)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Category trends */}
-        {ai.categoryTrends?.length > 0 && (
-          <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] overflow-hidden">
-            <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Notable Category Trends' : 'Xu hướng danh mục đáng chú ý'}</h3>
-            </div>
-            <div className="divide-y divide-[#eef1f6] dark:divide-[#2a303b]">
-              {ai.categoryTrends.map((c, i) => (
-                <div key={i} className="flex items-center justify-between px-4 py-3 hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">{c.category}</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500">{isEnglish ? 'Recent 3 months' : '3 tháng gần'}: {fmt(c.recent)} {isEnglish ? 'vs previous' : 'vs trước'}: {fmt(c.prior)}</p>
-                  </div>
-                  <span className={`text-sm font-black ${c.change > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                    {c.change > 0 ? '+' : ''}{c.change?.toFixed(1)}%
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   // ── Render ────────────────────────────────────────────────────────────────
   if (loading && !monthly) return <StatisticsPageSkeleton />;
 
@@ -1004,7 +838,6 @@ const Statistics = () => {
   const currentExpense = monthly?.totalExpense || 0;
   const currentBalance = currentIncome - currentExpense;
   const savingRate = currentIncome > 0 ? Math.max(((currentBalance / currentIncome) * 100), 0) : 0;
-  const healthScore = aiInsights?.healthScore || 0;
   const monthTopCategory = [...catStats]
     .sort((a, b) => (b.totalExpense || 0) - (a.totalExpense || 0))[0];
   const periodLabel = isEnglish ? `Month ${selectedMonth}/${selectedYear}` : `Tháng ${selectedMonth}/${selectedYear}`;
@@ -1045,22 +878,21 @@ const Statistics = () => {
         <div className="xl:col-span-4 space-y-4">
           <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'AI Metrics' : 'Chỉ số AI'}</h3>
-              <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">ML-powered</span>
+              <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Key Metrics' : 'Chỉ số nổi bật'}</h3>
+              <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">{periodLabel}</span>
             </div>
 
             <div className="space-y-3">
-              <div>
-                <div className="mb-1 flex items-center justify-between text-xs text-[#586074] dark:text-[#a9afbb]">
-                  <span className="font-semibold">{isEnglish ? 'Financial health score' : 'Điểm sức khỏe tài chính'}</span>
-                  <span className="font-bold">{healthScore}/100</span>
-                </div>
-                <div className="h-2 rounded-full bg-[#e3e7ee] dark:bg-[#2d3340] overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${healthScore >= 70 ? 'bg-[#2f8e6f]' : healthScore >= 40 ? 'bg-[#d29b2a]' : 'bg-[#c24b4b]'}`}
-                    style={{ width: `${Math.max(0, Math.min(healthScore, 100))}%` }}
-                  />
-                </div>
+              <div className="rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
+                <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{isEnglish ? 'Savings rate' : 'Tỷ lệ tiết kiệm'}</p>
+                <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">{savingRate.toFixed(1)}%</p>
+              </div>
+
+              <div className="rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
+                <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{isEnglish ? 'Income - Expense' : 'Thu nhập - Chi tiêu'}</p>
+                <p className={`mt-1 text-sm font-semibold ${currentBalance >= 0 ? 'text-[#2f8e6f] dark:text-[#8dd5bd]' : 'text-[#b54747] dark:text-[#f3a5a5]'}`}>
+                  {fmt(currentBalance)}
+                </p>
               </div>
 
               <div className="rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
@@ -1099,7 +931,6 @@ const Statistics = () => {
       {activeTab === 'forecast'  && <ForecastTab/>}
       {activeTab === 'trends'    && <TrendsTab/>}
       {activeTab === 'daily'     && <DailyTab/>}
-      {activeTab === 'ai'        && <AITab/>}
     </div>
   );
 };

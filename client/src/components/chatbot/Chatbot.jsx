@@ -202,7 +202,7 @@ const Chatbot = () => {
         balance: totalIncome - totalExpense,
         
         // Last 6 months statistics (for historical queries)
-        last6Months: last6MonthsStats,
+        last6Months: last6MonthsStats.slice(0, 6),
         
         // This month stats
         thisMonth: {
@@ -240,16 +240,8 @@ const Chatbot = () => {
           average: c.total / c.count
         })),
         
-        // All categories spending
-        allCategoriesSpending: Object.entries(categorySpending).map(([category, data]) => ({
-          category,
-          total: data.total,
-          count: data.count,
-          recentTransactions: data.transactions.slice(0, 3)
-        })),
-        
         // Recent transactions
-        recentTransactions: recentTransactions.map(t => ({
+        recentTransactions: recentTransactions.slice(0, 5).map(t => ({
           type: t.type,
           category: t.category,
           amount: t.amount,
@@ -353,8 +345,8 @@ const Chatbot = () => {
       )}
 
       {isOpen && (
-        <div className={`fixed bottom-6 right-6 w-[420px] bg-white dark:bg-gray-900 
-                      rounded-2xl shadow-2xl flex flex-col z-50 border border-gray-200 dark:border-gray-700
+        <div className={`fixed bottom-6 right-6 w-[420px] bg-white dark:bg-[#151a18] 
+                      rounded-2xl shadow-2xl flex flex-col z-50 border border-[#d3e1da] dark:border-[#31453d]
                       transition-all duration-300 ${
                         isMinimized ? 'h-16' : 'h-[650px]'
                       }`}>
@@ -406,8 +398,8 @@ const Chatbot = () => {
           {/* Messages */}
           {!isMinimized && (
             <>
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50 to-white 
-                            dark:from-gray-800 dark:to-gray-900">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-[#f4faf7] to-white 
+                            dark:from-[#1a231f] dark:to-[#151a18]">
                 {messages.map((message) => (
                   <Message key={message.id} message={message} isBot={message.isBot} user={user} />
                 ))}
@@ -420,8 +412,8 @@ const Chatbot = () => {
                       <FiMessageCircle size={16} />
                     </div>
                     <div className="flex-1">
-                      <div className="inline-block bg-white dark:bg-gray-700 px-5 py-3 rounded-2xl shadow-md 
-                                    border border-gray-100 dark:border-gray-600">
+                      <div className="inline-block bg-white dark:bg-[#1f2c27] px-5 py-3 rounded-2xl shadow-md 
+                                    border border-[#dbe8e1] dark:border-[#2d4138]">
                         <div className="flex gap-1.5">
                           <div className="w-2.5 h-2.5 bg-[#003d2d] rounded-full animate-bounce"
                                style={{ animationDelay: '0ms' }}></div>
@@ -446,9 +438,9 @@ const Chatbot = () => {
                         <button
                           key={index}
                           onClick={() => handleSuggestionClick(suggestion)}
-                          className="px-3 py-2 text-sm bg-white dark:bg-gray-700 border-2 border-gray-200 
-                                   dark:border-gray-600 rounded-xl hover:border-[#003d2d]
-                                   hover:bg-[#f0faf8] dark:hover:bg-gray-600 transition-all
+                          className="px-3 py-2 text-sm bg-white dark:bg-[#1e2a25] border-2 border-[#dbe8e1] 
+                                   dark:border-[#32473e] rounded-xl hover:border-[#00523d]
+                                   hover:bg-[#edf7f2] dark:hover:bg-[#23332d] transition-all
                                    text-gray-700 dark:text-gray-300 text-left font-medium
                                    hover:shadow-md hover:scale-105"
                         >

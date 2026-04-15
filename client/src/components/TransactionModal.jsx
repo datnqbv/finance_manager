@@ -47,12 +47,14 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    
+
     // Reset category when type changes
     if (name === 'type') {
-      setFormData({ ...formData, type: value, category: '' });
+      setFormData((prev) => ({ ...prev, type: value, category: '' }));
+      return;
     }
+
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Get categories for current type
@@ -86,33 +88,33 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-[2px]">
+      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-[#2a2a2a] dark:bg-[#111111]">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 dark:border-[#2a2a2a] dark:bg-[#111111]">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             {transaction ? 'Chỉnh sửa giao dịch' : 'Thêm giao dịch mới'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+            className="rounded-lg p-2 transition hover:bg-gray-100 dark:hover:bg-[#222222]"
           >
-            <FiX size={20} className="text-gray-700 dark:text-gray-300" />
+            <FiX size={22} className="text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5 p-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Loại giao dịch
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1 dark:bg-[#1f242f]">
               <button
                 type="button"
                 onClick={() => handleChange({ target: { name: 'type', value: 'income' } })}
-                className={`py-3 rounded-lg font-medium transition ${
+                className={`rounded-lg py-2.5 text-sm font-semibold transition-all ${
                   formData.type === 'income'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-[#2a3140]'
                 }`}
               >
                 Thu nhập
@@ -120,10 +122,10 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
               <button
                 type="button"
                 onClick={() => handleChange({ target: { name: 'type', value: 'expense' } })}
-                className={`py-3 rounded-lg font-medium transition ${
+                className={`rounded-lg py-2.5 text-sm font-semibold transition-all ${
                   formData.type === 'expense'
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    ? 'bg-rose-600 text-white shadow-sm'
+                    : 'text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-[#2a3140]'
                 }`}
               >
                 Chi tiêu
@@ -159,7 +161,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                 value={formData.category}
                 onChange={handleChange}
                 required
-                className="input"
+                className="input w-full"
               >
                 <option value="">Chọn danh mục</option>
                 {availableCategories.map((cat) => (
@@ -192,7 +194,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
               value={formData.date}
               onChange={handleChange}
               required
-              className="input"
+              className="input w-full"
             />
           </div>
 
@@ -205,12 +207,12 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
               value={formData.note}
               onChange={handleChange}
               rows="3"
-              className="input"
+              className="input w-full resize-none"
               placeholder="Thêm ghi chú (tùy chọn)"
             />
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 border-t border-gray-200 pt-4 dark:border-[#2a2a2a]">
             <button
               type="button"
               onClick={onClose}

@@ -1,6 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-const LanguageContext = createContext();
+const LanguageContext = createContext({
+  language: 'vi',
+  setLanguage: () => {},
+  t: (key, fallback) => fallback || key,
+});
 
 const messages = {
   vi: {
@@ -190,7 +194,6 @@ const messages = {
     forecastTab: 'Dự báo',
     trendsTab: 'Xu hướng',
     dailyTab: 'Theo ngày',
-    aiTab: 'Nhận xét AI',
     totalIncome: 'Tổng thu nhập',
     totalExpense: 'Tổng chi tiêu',
     netSavings: 'Tiết kiệm ròng',
@@ -410,7 +413,6 @@ const messages = {
     forecastTab: 'Forecast',
     trendsTab: 'Trends',
     dailyTab: 'Daily',
-    aiTab: 'AI insights',
     totalIncome: 'Total income',
     totalExpense: 'Total expense',
     netSavings: 'Net savings',
@@ -462,9 +464,5 @@ export const LanguageProvider = ({ children }) => {
 };
 
 export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error('useLanguage must be used within LanguageProvider');
-  }
-  return context;
+  return useContext(LanguageContext);
 };

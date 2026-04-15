@@ -2,52 +2,48 @@ import Transaction from '../models/Transaction.model.js';
 import Goal from '../models/Goal.model.js';
 import mongoose from 'mongoose';
 
-// ─── ML Helpers ─────────────────────────────────────────────────────────────
+// ─── Forecast Helpers (Simple Models) ───────────────────────────────────────
 
-/**
- * Weighted linear regression with exponential decay weights.
- * More recent data points receive higher weight (weight = e^(α·i)).
- * Returns slope, intercept and coefficient of determination (R²).
- */
-function weightedLinearRegression(data, alpha = 0.3) {
-  const n = data.length;
-  if (n === 0) return { slope: 0, intercept: 0, r2: 0 };
-  if (n === 1) return { slope: 0, intercept: data[0], r2: 1 };
-
-  const weights = data.map((_, i) => Math.exp(alpha * i));
-  const W = weights.reduce((a, b) => a + b, 0);
-
-  let wxSum = 0, wySum = 0;
-  data.forEach((y, i) => { wxSum += weights[i] * i; wySum += weights[i] * y; });
-  const xBar = wxSum / W;
-  const yBar = wySum / W;
-
-  let sxy = 0, sxx = 0;
-  data.forEach((y, i) => {
-    sxy += weights[i] * (i - xBar) * (y - yBar);
-    sxx += weights[i] * (i - xBar) * (i - xBar);
-  });
-
-  const slope = sxx !== 0 ? sxy / sxx : 0;
-  const intercept = yBar - slope * xBar;
-
-  let ssTot = 0, ssRes = 0;
-  data.forEach((y, i) => {
-    const predicted = slope * i + intercept;
-    ssTot += weights[i] * (y - yBar) ** 2;
-    ssRes += weights[i] * (y - predicted) ** 2;
-  });
-  const r2 = ssTot > 0 ? Math.max(0, 1 - ssRes / ssTot) : 0;
-
-  return { slope, intercept, r2 };
+/** Single Exponential Smoothing (SES) one-step-ahead forecast */
+function singleExponentialSmoothing(data, alpha = 0.4) {
+  if (!Array.isArray(data) || data.length === 0) return 0;
+  let level = data[0] ?? 0;
+  for (let i = 1; i < data.length; i++) {
+    level = alpha * (data[i] ?? 0) + (1 - alpha) * level;
+  }
+  return Math.max(0, level);
 }
 
-/** Standard deviation of an array */
-function stddev(arr) {
-  if (arr.length < 2) return 0;
-  const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
-  const variance = arr.reduce((s, v) => s + (v - mean) ** 2, 0) / arr.length;
-  return Math.sqrt(variance);
+/** Simple Moving Average (SMA) using the latest `windowSize` points */
+function simpleMovingAverage(data, windowSize = 3) {
+  if (!Array.isArray(data) || data.length === 0) return 0;
+  const size = Math.max(1, Math.min(windowSize, data.length));
+  const slice = data.slice(-size);
+  return slice.reduce((sum, v) => sum + (v ?? 0), 0) / size;
+}
+
+/**
+ * Lightweight consistency score in [0, 1] based on one-step SES errors.
+ * Kept for backward-compatible response fields `r2Expense` / `r2Income`.
+ */
+function smoothingConsistencyScore(data, alpha = 0.4) {
+  if (!Array.isArray(data) || data.length < 2) return 1;
+
+  let level = data[0] ?? 0;
+  let absErrSum = 0;
+  for (let i = 1; i < data.length; i++) {
+    const actual = data[i] ?? 0;
+    const predicted = level;
+    absErrSum += Math.abs(actual - predicted);
+    level = alpha * actual + (1 - alpha) * level;
+  }
+
+  const mean = data.reduce((sum, v) => sum + (v ?? 0), 0) / data.length;
+  if (mean <= 0) return 0;
+
+  const mae = absErrSum / (data.length - 1);
+  const normalizedError = mae / mean;
+  return Math.max(0, Math.min(1, 1 - normalizedError));
 }
 
 // @desc    Get monthly statistics
@@ -250,13 +246,13 @@ export const compareStats = async (req, res) => {
   }
 };
 
-// @desc    Forecast next month using weighted linear regression (ML)
+// @desc    Forecast next month using SES (overall) + SMA (by category)
 // @route   GET /api/stats/forecast
 // @access  Private
 export const forecastSpending = async (req, res) => {
   try {
     const { months = 6, refYear, refMonth } = req.query;
-    const n   = parseInt(months);
+    const n   = Math.max(1, parseInt(months, 10) || 6);
     const userId = new mongoose.Types.ObjectId(req.user.id);
     const now = (refYear && refMonth)
       ? new Date(parseInt(refYear), parseInt(refMonth) - 1, 1)
@@ -311,28 +307,44 @@ export const forecastSpending = async (req, res) => {
       labels.push(`${d.getMonth() + 1}/${d.getFullYear()}`);
     }
 
-    const expReg = weightedLinearRegression(expenseHistory);
-    const incReg = weightedLinearRegression(incomeHistory);
-    //logic du dự báo: nếu dự báo âm thì dùng trung bình, nếu r2 thấp thì cảnh báo độ tin cậy, nếu slope cao thì cảnh báo xu hướng tăng mạnh
-    const forecastExpense = Math.round(Math.max(0, expReg.slope * n + expReg.intercept));
-    const forecastIncome  = Math.round(Math.max(0, incReg.slope * n + incReg.intercept));
+    const sesAlpha = 0.4;
+    const smaWindow = Math.min(3, n);
+
     const avgExpense = Math.round(expenseHistory.reduce((a, b) => a + b, 0) / n);
     const avgIncome  = Math.round(incomeHistory.reduce((a, b) => a + b, 0) / n);
 
-    const r2Avg      = (expReg.r2 + incReg.r2) / 2;
-    const confidence = r2Avg > 0.7 ? 'high' : r2Avg > 0.4 ? 'medium' : 'low';
+    const forecastExpense = Math.round(singleExponentialSmoothing(expenseHistory, sesAlpha));
+    const forecastIncome  = Math.round(singleExponentialSmoothing(incomeHistory, sesAlpha));
 
-    const expenseTrend = expReg.slope >  avgExpense * 0.02 ? 'increasing'
-                       : expReg.slope < -avgExpense * 0.02 ? 'decreasing'
-                       : 'stable';
-    const incomeTrend  = incReg.slope >  avgIncome  * 0.02 ? 'increasing'
-                       : incReg.slope < -avgIncome  * 0.02 ? 'decreasing'
-                       : 'stable';
-
-    const residuals   = expenseHistory.map((y, i) => y - (expReg.slope * i + expReg.intercept));
-    const stdResidual = stddev(residuals);
     const finalFcstExp = forecastExpense > 0 ? forecastExpense : avgExpense;
     const finalFcstInc = forecastIncome  > 0 ? forecastIncome  : avgIncome;
+
+    const expenseRecentAvg = simpleMovingAverage(expenseHistory, smaWindow);
+    const expensePastAvg = expenseHistory.length > smaWindow
+      ? (expenseHistory.slice(0, -smaWindow).reduce((a, b) => a + b, 0) / Math.max(1, expenseHistory.length - smaWindow))
+      : expenseRecentAvg;
+    const incomeRecentAvg = simpleMovingAverage(incomeHistory, smaWindow);
+    const incomePastAvg = incomeHistory.length > smaWindow
+      ? (incomeHistory.slice(0, -smaWindow).reduce((a, b) => a + b, 0) / Math.max(1, incomeHistory.length - smaWindow))
+      : incomeRecentAvg;
+
+    const expenseDelta = expenseRecentAvg - expensePastAvg;
+    const incomeDelta  = incomeRecentAvg - incomePastAvg;
+    const expenseTrend = expenseDelta > avgExpense * 0.02 ? 'increasing'
+                       : expenseDelta < -avgExpense * 0.02 ? 'decreasing'
+                       : 'stable';
+    const incomeTrend  = incomeDelta > avgIncome * 0.02 ? 'increasing'
+                       : incomeDelta < -avgIncome * 0.02 ? 'decreasing'
+                       : 'stable';
+
+    const r2ExpenseScore = smoothingConsistencyScore(expenseHistory, sesAlpha);
+    const r2IncomeScore  = smoothingConsistencyScore(incomeHistory, sesAlpha);
+    const r2Avg = (r2ExpenseScore + r2IncomeScore) / 2;
+    const confidence = r2Avg > 0.7 ? 'high' : r2Avg > 0.4 ? 'medium' : 'low';
+
+    // Keep scenario margins simple and explicit as requested: ±10% around SES forecast.
+    const marginLow  = Math.round(Math.max(0, finalFcstExp * 0.9));
+    const marginHigh = Math.round(finalFcstExp * 1.1);
 
     // Category-level forecasts — all data already in catMap
     const categoryForecasts = {};
@@ -343,17 +355,20 @@ export const forecastSpending = async (req, res) => {
         const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
         catHistory.push(monthData[key] ?? 0);
       }
-      const catReg  = weightedLinearRegression(catHistory);
       const catAvg  = catHistory.reduce((a, b) => a + b, 0) / catHistory.length;
-      const catFcst = Math.round(Math.max(0, catReg.slope * n + catReg.intercept));
-      const catTrend = catReg.slope >  catAvg * 0.03 ? 'increasing'
-                     : catReg.slope < -catAvg * 0.03 ? 'decreasing'
+      const catFcst = Math.round(simpleMovingAverage(catHistory, smaWindow));
+      const catRecentAvg = simpleMovingAverage(catHistory, smaWindow);
+      const catPastAvg = catHistory.length > smaWindow
+        ? (catHistory.slice(0, -smaWindow).reduce((a, b) => a + b, 0) / Math.max(1, catHistory.length - smaWindow))
+        : catRecentAvg;
+      const catTrend = (catRecentAvg - catPastAvg) > catAvg * 0.03 ? 'increasing'
+                     : (catRecentAvg - catPastAvg) < -catAvg * 0.03 ? 'decreasing'
                      : 'stable';
       categoryForecasts[category] = {
         forecast:  catFcst || Math.round(catAvg),
         average:   Math.round(catAvg),
         trend:     catTrend,
-        r2:        +catReg.r2.toFixed(2)
+        r2:        +smoothingConsistencyScore(catHistory, sesAlpha).toFixed(2)
       };
     }
 
@@ -372,10 +387,10 @@ export const forecastSpending = async (req, res) => {
           expenseTrend,
           incomeTrend,
           confidence,
-          r2Expense:  +expReg.r2.toFixed(2),
-          r2Income:   +incReg.r2.toFixed(2),
-          marginLow:  Math.round(Math.max(0, finalFcstExp - stdResidual)),
-          marginHigh: Math.round(finalFcstExp + stdResidual),
+          r2Expense:  +r2ExpenseScore.toFixed(2),
+          r2Income:   +r2IncomeScore.toFixed(2),
+          marginLow,
+          marginHigh,
         },
         byCategory:    categoryForecasts,
         basedOnMonths: n

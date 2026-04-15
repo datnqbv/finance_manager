@@ -25,6 +25,7 @@ const Dashboard = () => {
   const [timeFilter, setTimeFilter] = useState('month');
   const [dailyFluctuation, setDailyFluctuation] = useState([]);
   const [txFilter, setTxFilter] = useState('all');
+  const [forecastData, setForecastData] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -63,9 +64,16 @@ const Dashboard = () => {
     try {
       const { startDate, endDate } = getDateRange();
 
-      // Single API call replaces 9+ separate requests
-      const response = await statsService.getDashboard(startDate, endDate);
-      const data = response.data;
+      const [dashboardResult, forecastResult] = await Promise.allSettled([
+        statsService.getDashboard(startDate, endDate),
+        statsService.forecastSpending(6),
+      ]);
+
+      if (dashboardResult.status !== 'fulfilled') {
+        throw dashboardResult.reason;
+      }
+
+      const data = dashboardResult.value.data;
 
       setSummary(data.summary);
       setFilteredSummary(data.filteredSummary);
@@ -74,6 +82,12 @@ const Dashboard = () => {
       setLastMonthCategoryStats(data.lastMonthCategoryStats || []);
       setDailyFluctuation(data.dailyFluctuation || []);
       setGoals(Array.isArray(data.goals) ? data.goals : []);
+
+      if (forecastResult.status === 'fulfilled') {
+        setForecastData(forecastResult.value?.data || null);
+      } else {
+        setForecastData(null);
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -199,30 +213,20 @@ const Dashboard = () => {
     return true;
   });
 
-  const currentExpense = filteredSummary?.expense || 0;
-  const recentExpenseSeries = monthlyStats
-    .slice(-4)
-    .map((item) => item.totalExpense || 0)
-    .filter((value) => value > 0);
-  const averageRecentExpense = recentExpenseSeries.length > 0
-    ? recentExpenseSeries.reduce((sum, value) => sum + value, 0) / recentExpenseSeries.length
-    : currentExpense;
-  const latestExpense = monthlyStats[monthlyStats.length - 1]?.totalExpense || currentExpense;
-  const previousExpense = monthlyStats[monthlyStats.length - 2]?.totalExpense || latestExpense;
-  const trendRate = previousExpense > 0 ? (latestExpense - previousExpense) / previousExpense : 0;
-  const forecastExpense = Math.max(averageRecentExpense * (1 + trendRate * 0.35), 0);
-  const forecastLow = forecastExpense * 0.9;
-  const forecastHigh = forecastExpense * 1.1;
+  const currentExpense = filteredSummary?.expense || monthlyStats[monthlyStats.length - 1]?.totalExpense || 0;
+  const forecastExpense = forecastData?.forecast?.nextMonthExpense || 0;
+  const forecastLow = forecastData?.forecast?.marginLow ?? (forecastExpense * 0.9);
+  const forecastHigh = forecastData?.forecast?.marginHigh ?? (forecastExpense * 1.1);
   const forecastDelta = forecastExpense - currentExpense;
   const forecastDeltaPct = currentExpense > 0 ? (forecastDelta / currentExpense) * 100 : 0;
-  const topForecastCategories = [...categoryStats]
-    .filter((item) => (item.totalExpense || 0) > 0)
-    .sort((a, b) => (b.totalExpense || 0) - (a.totalExpense || 0))
+  const topForecastCategories = Object.entries(forecastData?.byCategory || {})
+    .map(([name, item]) => ({
+      name,
+      amount: item?.forecast || 0,
+    }))
+    .filter((item) => item.amount > 0)
+    .sort((a, b) => b.amount - a.amount)
     .slice(0, 3)
-    .map((item) => ({
-      name: item.category,
-      amount: item.totalExpense || 0,
-    }));
   const topForecastTotal = topForecastCategories.reduce((sum, item) => sum + item.amount, 0);
 
   if (loading) return <PageTransition><DashboardSkeleton /></PageTransition>;

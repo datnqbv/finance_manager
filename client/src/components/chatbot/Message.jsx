@@ -20,7 +20,7 @@ const ChatMessage = ({ message, isBot, user }) => {
       <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center overflow-hidden 
                     shadow-md ${
         isBot 
-          ? 'bg-gradient-to-br from-primary-500 via-primary-600 to-purple-600 text-white' 
+          ? 'bg-gradient-to-br from-[#00523d] to-[#003d2d] text-white' 
           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
       }`}>
         {isBot ? (
@@ -28,7 +28,7 @@ const ChatMessage = ({ message, isBot, user }) => {
         ) : user?.avatar ? (
           <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary-500 via-primary-600 to-purple-600 
+          <div className="w-full h-full bg-gradient-to-br from-[#0a684e] to-[#00523d] 
                         flex items-center justify-center text-white font-bold text-sm">
             {user?.name?.charAt(0).toUpperCase() || 'U'}
           </div>
@@ -39,7 +39,7 @@ const ChatMessage = ({ message, isBot, user }) => {
                        transition-all hover:shadow-lg ${
           isBot
             ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 border border-gray-100 dark:border-gray-600'
-            : 'bg-gradient-to-r from-primary-500 to-primary-600 text-white'
+            : 'bg-gradient-to-r from-[#00523d] to-[#003d2d] text-white'
         }`}>
           <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
             {formatMessage(message.text)}
