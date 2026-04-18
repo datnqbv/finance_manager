@@ -61,7 +61,6 @@ export const register = async (req, res) => {
     // Save refresh token to DB
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
-               role: user.role,
 
     // Gửi email chào mừng (không chờ, chạy background)
     sendWelcomeEmail(user.email, user.name).catch(err => 
@@ -133,7 +132,6 @@ export const login = async (req, res) => {
     const refreshToken = generateRefreshToken(user._id);
 
     // Save refresh token to DB
-                   role: user.role,
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 
@@ -370,7 +368,6 @@ export const resetPassword = async (req, res) => {
     }
 
     // Update password
-                   role: user.role,
     user.password = newPassword;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;

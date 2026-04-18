@@ -32,9 +32,7 @@ const userSchema = new mongoose.Schema({
   },
   googleId: {
     type: String,
-    unique: true,
-    sparse: true, // Allow null values for non-Google users
-    default: null
+    default: undefined
   },
   budget: {
     type: Number,
@@ -69,6 +67,15 @@ const userSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Enforce unique Google IDs only when googleId is actually present as a string.
+userSchema.index(
+  { googleId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { googleId: { $type: 'string' } }
+  }
+);
 
 // Mã hóa password trước khi lưu (chỉ khi password được modify)
 userSchema.pre('save', async function(next) {

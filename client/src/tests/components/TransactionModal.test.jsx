@@ -86,13 +86,13 @@ describe('TransactionModal — tạo mới', () => {
   it('Mặc định chọn loại "Chi tiêu"', () => {
     renderModal();
     // Type selector dùng 2 button: "Thu nhập" và "Chi tiêu"
-    // Mặc định formData.type = 'expense' → button "Chi tiêu" phải có class active (bg-red-600)
+    // Mặc định formData.type = 'expense' → button "Chi tiêu" phải có style active
     const expenseBtn = screen.getAllByRole('button').find(b =>
       b.textContent.trim() === 'Chi tiêu'
     );
     expect(expenseBtn).toBeDefined();
-    // Button active có class bg-red-600 (không phải bg-gray-100)
-    expect(expenseBtn.className).toContain('bg-red');
+    expect(expenseBtn.className).toContain('bg-rose-600');
+    expect(expenseBtn.className).toContain('text-white');
   });
 
   it('Có nút đóng modal', () => {
