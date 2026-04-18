@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { FiMail, FiLock, FiUser, FiAlertCircle, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const { t, language } = useLanguage();
   const isEnglish = language === 'en';
   const [formData, setFormData] = useState({
@@ -52,6 +53,23 @@ const Register = () => {
       console.error('Register error:', result.message);
       setError(result.message || (isEnglish ? 'Email or password is invalid!' : 'Email hoặc mật khẩu không đúng!'));
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError('');
+    setLoading(true);
+    const result = await googleLogin(credentialResponse.credential);
+    setLoading(false);
+
+    if (result.success) {
+      navigate('/dashboard');
+    } else {
+      setError(result.message || (isEnglish ? 'Google sign up failed!' : 'Đăng ký Google không thành công!'));
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError(isEnglish ? 'Google sign up failed' : 'Đăng ký Google không thành công');
   };
 
   return (
@@ -162,6 +180,30 @@ const Register = () => {
                   {loading ? (isEnglish ? 'Creating account...' : 'Đang tạo tài khoản...') : (isEnglish ? 'Sign up' : 'Đăng ký')}
                 </button>
               </form>
+
+              <div className="mt-4">
+                <div className="relative mb-3">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-[#dce7dc]" />
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-white px-2 text-[#98a999]">
+                      {isEnglish ? 'Or continue with' : 'Hoặc tiếp tục với'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex justify-center">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    type="standard"
+                    theme="light"
+                    size="large"
+                    text="signup"
+                  />
+                </div>
+              </div>
 
               <p className="mt-5 text-center text-xs text-[#748574]">
                 {isEnglish ? 'Already have an account?' : 'Đã có tài khoản?'}{' '}

@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.model.js';
 import Category from '../models/Category.model.js';
 import { sendResetPasswordEmail, sendWelcomeEmail } from '../utils/sendEmail.js';
@@ -445,5 +446,107 @@ export const logoutHandler = async (req, res) => {
     res.json({ success: true, message: 'Đăng xuất thành công' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Google OAuth Login
+// @route   POST /api/auth/google
+// @access  Public
+export const googleLogin = async (req, res) => {
+  try {
+    const { googleToken } = req.body;
+
+    if (!googleToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google token không được cung cấp'
+      });
+    }
+
+    // Verify google token
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    let googleData;
+
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken: googleToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      googleData = ticket.getPayload();
+    } catch (error) {
+      console.error('Google token verification failed:', error);
+      return res.status(401).json({
+        success: false,
+        message: 'Google token không hợp lệ'
+      });
+    }
+
+    const { sub: googleId, email, name, picture } = googleData;
+
+    // Check if user exists by googleId
+    let user = await User.findOne({ googleId });
+
+    if (!user) {
+      // Check if user exists by email (to link accounts)
+      user = await User.findOne({ email });
+
+      if (!user) {
+        // Create new user
+        user = await User.create({
+          name,
+          email,
+          googleId,
+          avatar: picture || null,
+          password: null // No password for Google SSO
+        });
+
+        // Create default categories for the new user
+        try {
+          await Category.createDefaultCategories(user._id);
+        } catch (err) {
+          console.error('Failed to create default categories:', err);
+        }
+
+        // Send welcome email
+        sendWelcomeEmail(user.email, user.name).catch(err => 
+          console.error('Failed to send welcome email:', err)
+        );
+      } else {
+        // Link existing account with Google
+        user.googleId = googleId;
+        await user.save();
+      }
+    }
+
+    // Generate tokens
+    const token = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    // Save refresh token to DB
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      success: true,
+      message: 'Đăng nhập bằng Google thành công',
+      data: {
+        token,
+        refreshToken,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          budget: user.budget,
+          currency: user.currency,
+          avatar: user.avatar
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Lỗi đăng nhập với Google'
+    });
   }
 };

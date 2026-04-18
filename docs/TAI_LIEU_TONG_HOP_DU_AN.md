@@ -69,7 +69,7 @@ Thành phần chính:
 
 ## 3.3 `server/` dùng để làm gì?
 
-- Chứa API, xác thực, nghiệp vụ, truy vấn DB, cron job, email, chatbot, import dữ liệu.
+- Chứa API, xác thực, nghiệp vụ, truy vấn DB, cron job, email, import dữ liệu.
 
 Thành phần chính:
 - `src/index.js`: entrypoint runtime, connect DB, start cron, serve static frontend, listen port
@@ -112,7 +112,7 @@ Thành phần chính:
   - Nếu chưa: chuyển `/home`
 
 - `client/src/components/Layout.jsx`
-  - Khung chính cho trang private: sidebar, header, notifications, chatbot
+  - Khung chính cho trang private: sidebar, header, notifications
   - Gọi API notification service để lấy/đánh dấu thông báo
 
 ## 4.2 Context layer (state + nghiệp vụ client)
@@ -178,9 +178,6 @@ Thành phần chính:
 
 - `client/src/services/search.service.js`
   - `/search`, `/search/advanced`, `/search/suggestions`
-
-- `client/src/services/chat.service.js`
-  - `/chat/message`
 
 ## 4.4 Pages
 
@@ -251,9 +248,6 @@ Mối quan hệ:
 
 - `import.routes.js` -> `import.controller.js`
   - upload file + import transactions + template
-
-- `chat.routes.js` -> `chat.controller.js`
-  - gửi câu hỏi tới Gemini API
 
 - `contact.routes.js` -> `contact.controller.js`
   - gửi form liên hệ public (không cần login)
@@ -368,9 +362,8 @@ Các pattern đang dùng thực tế:
 2. Search toàn cục đa module với aggregate (`server/src/controllers/search.controller.js`)
 3. Dashboard tổng hợp và nhiều endpoint thống kê (`server/src/controllers/stats.controller.js`)
 4. Import CSV/XLSX và normalize dữ liệu (`server/src/controllers/import.controller.js`)
-5. Chatbot AI tích hợp Gemini (`server/src/controllers/chat.controller.js`)
-6. Hệ thống notification backend + hiển thị realtime polling ở Layout
-7. Build backend thành file `.exe` cho Windows (`build-exe.bat`, script `build:exe`)
+5. Hệ thống notification backend + hiển thị realtime polling ở Layout
+6. Build backend thành file `.exe` cho Windows (`build-exe.bat`, script `build:exe`)
 
 ---
 

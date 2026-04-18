@@ -31,7 +31,6 @@ import GlobalSearch from './GlobalSearch';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getNotifications, markAsRead as markNotificationAsRead, markAllAsRead as markAllNotificationsAsRead } from '../services/notification.service';
-import Chatbot from './chatbot/Chatbot';
 
 
 
@@ -648,9 +647,6 @@ const Layout = ({ children }) => {
         </main>
       </div>
       
-      {/* AI Chatbot - Fixed position */}
-      <Chatbot />
-
       {/* Modal thêm giao dịch nhanh */}
       <TransactionModal
         isOpen={showQuickAdd}

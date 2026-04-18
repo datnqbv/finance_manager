@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { FiMail, FiLock, FiAlertCircle, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const { t, language } = useLanguage();
   const isEnglish = language === 'en';
   const [formData, setFormData] = useState({
@@ -34,6 +35,23 @@ const Login = () => {
       console.error('Login error:', result.message);
       setError(result.message || (isEnglish ? 'Login failed!' : 'Đăng nhập không thành công!'));
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError('');
+    setLoading(true);
+    const result = await googleLogin(credentialResponse.credential);
+    setLoading(false);
+
+    if (result.success) {
+      navigate('/dashboard');
+    } else {
+      setError(result.message || (isEnglish ? 'Google login failed!' : 'Đăng nhập Google không thành công!'));
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError(isEnglish ? 'Google login failed' : 'Đăng nhập Google không thành công');
   };
 
   return (
@@ -115,6 +133,30 @@ const Login = () => {
                   {loading ? (isEnglish ? 'Signing in...' : 'Đang đăng nhập...') : 'Sign in'}
                 </button>
               </form>
+
+              <div className="mt-4">
+                <div className="relative mb-3">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-[#dce7dc]" />
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-white px-2 text-[#98a999]">
+                      {isEnglish ? 'Or continue with' : 'Hoặc tiếp tục với'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex justify-center">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    type="standard"
+                    theme="light"
+                    size="large"
+                    text="signin"
+                  />
+                </div>
+              </div>
 
               <p className="mt-5 text-center text-xs text-[#748574]">
                 {isEnglish ? 'Do not have an account?' : 'Chưa có tài khoản?'}{' '}

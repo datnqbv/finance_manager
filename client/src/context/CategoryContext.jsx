@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import * as categoryService from '../services/category.service';
+import { useAuth } from './AuthContext';
 import { toast } from 'react-toastify';
 
 const CategoryContext = createContext();
@@ -16,7 +17,18 @@ export const CategoryProvider = ({ children }) => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { user } = useAuth();
   const isEnglish = localStorage.getItem('language') === 'en';
+
+  useEffect(() => {
+    if (user) {
+      fetchCategories();
+      return;
+    }
+
+    setCategories([]);
+    setError(null);
+  }, [user]);
 
   // Fetch categories
   const fetchCategories = async () => {

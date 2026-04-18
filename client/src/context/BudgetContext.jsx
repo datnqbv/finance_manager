@@ -22,7 +22,15 @@ export const BudgetProvider = ({ children }) => {
 
   // Auto-fetch on login
   useEffect(() => {
-    if (user) fetchBudgetOverview();
+    if (user) {
+      fetchBudgetOverview();
+      return;
+    }
+
+    setBudgets([]);
+    setBudgetStatus(null);
+    setAlerts([]);
+    setError(null);
   }, [user]);
 
   // ── Single combined fetch: replaces fetchBudgets + fetchBudgetStatus + fetchAlerts ──

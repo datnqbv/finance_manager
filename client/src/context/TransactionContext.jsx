@@ -1,5 +1,7 @@
-import { createContext, useState, useContext } from 'react';
+import { createContext, useState, useContext, useEffect } from 'react';
 import { transactionService } from '../services/transaction.service';
+import { useAuth } from './AuthContext';
+import { clearStatsCache } from '../services/stats.service';
 import { toast } from 'react-toastify';
 
 const TransactionContext = createContext();
@@ -19,6 +21,13 @@ export const TransactionProvider = ({ children }) => {
   const [transactions, setTransactions] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, page: 1, totalPages: 1 });
   const [loading, setLoading] = useState(false);
+  const [revision, setRevision] = useState(0);
+  const { user } = useAuth();
+
+  const invalidateTransactionStats = () => {
+    clearStatsCache();
+    setRevision((current) => current + 1);
+  };
 
   const fetchTransactions = async (params = {}) => {
     setLoading(true);
@@ -44,6 +53,7 @@ export const TransactionProvider = ({ children }) => {
     try {
       const data = await transactionService.createTransaction(transactionData);
       setTransactions([data.data, ...transactions]);
+      invalidateTransactionStats();
       toast.success(data.message || 'Thêm giao dịch thành công!');
       return { success: true, data: data.data };
     } catch (error) {
@@ -59,6 +69,7 @@ export const TransactionProvider = ({ children }) => {
       setTransactions(
         transactions.map((t) => (t._id === id ? data.data : t))
       );
+      invalidateTransactionStats();
       toast.success(data.message || 'Cập nhật thành công!');
       return { success: true, data: data.data };
     } catch (error) {
@@ -72,6 +83,7 @@ export const TransactionProvider = ({ children }) => {
     try {
       const data = await transactionService.deleteTransaction(id);
       setTransactions(transactions.filter((t) => t._id !== id));
+      invalidateTransactionStats();
       toast.success(data.message || 'Xóa thành công!');
       return { success: true };
     } catch (error) {
@@ -85,11 +97,20 @@ export const TransactionProvider = ({ children }) => {
     transactions,
     pagination,
     loading,
+    revision,
     fetchTransactions,
     createTransaction,
     updateTransaction,
     deleteTransaction,
   };
+
+  useEffect(() => {
+    if (user) return;
+
+    setTransactions([]);
+    setPagination({ total: 0, page: 1, totalPages: 1 });
+    setLoading(false);
+  }, [user]);
 
   return (
     <TransactionContext.Provider value={value}>

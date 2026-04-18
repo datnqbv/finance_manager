@@ -21,9 +21,15 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Vui lòng nhập mật khẩu'],
     minlength: [6, 'Mật khẩu phải có ít nhất 6 ký tự'],
-    select: false // Không trả về password khi query
+    select: false, // Không trả về password khi query
+    default: null // Optional for Google SSO users
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true, // Allow null values for non-Google users
+    default: null
   },
   budget: {
     type: Number,
@@ -59,10 +65,10 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Mã hóa password trước khi lưu
+// Mã hóa password trước khi lưu (chỉ khi password được modify)
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
-    return next(); // ← return để dừng thực thi, không hash lại password
+  if (!this.isModified('password') || !this.password) {
+    return next();
   }
   
   const salt = await bcrypt.genSalt(10);

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { statsService } from '../services/stats.service';
 import { FiTrendingUp, FiDollarSign, FiActivity, FiAlertTriangle, FiTarget, FiSun, FiMoon, FiClock, FiList, FiArrowUpRight, FiArrowDownRight, FiPlus, FiPieChart } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
+import { useTransactions } from '../context/TransactionContext';
 import { useCategories } from '../context/CategoryContext';
 import { useLanguage } from '../context/LanguageContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, ComposedChart, Line } from 'recharts';
@@ -11,6 +12,7 @@ import { DashboardSkeleton } from '../components/LoadingSkeleton';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { revision: transactionRevision } = useTransactions();
   const { categories, fetchCategories } = useCategories();
   const { t, language } = useLanguage();
   const isEnglish = language === 'en';
@@ -30,7 +32,7 @@ const Dashboard = () => {
   useEffect(() => {
     fetchData();
     fetchCategories();
-  }, [timeFilter]);
+  }, [timeFilter, user?.id, transactionRevision]);
 
   const getDateRange = () => {
     const now = new Date();
@@ -61,6 +63,14 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setSummary(null);
+    setFilteredSummary(null);
+    setMonthlyStats([]);
+    setCategoryStats([]);
+    setLastMonthCategoryStats([]);
+    setDailyFluctuation([]);
+    setGoals([]);
+    setForecastData(null);
     try {
       const { startDate, endDate } = getDateRange();
 

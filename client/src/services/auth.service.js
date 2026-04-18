@@ -58,6 +58,18 @@ export const authService = {
     return response.data;
   },
 
+  googleLogin: async (googleToken) => {
+    const response = await api.post('/auth/google', { googleToken });
+    if (response.data.success) {
+      localStorage.setItem('token', response.data.data.token);
+      if (response.data.data.refreshToken) {
+        localStorage.setItem('refreshToken', response.data.data.refreshToken);
+      }
+      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+    }
+    return response.data;
+  },
+
   getCurrentUser: () => {
     const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;

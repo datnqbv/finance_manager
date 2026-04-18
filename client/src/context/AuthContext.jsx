@@ -1,5 +1,6 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import { authService } from '../services/auth.service';
+import { clearStatsCache } from '../services/stats.service';
 import { toast } from 'react-toastify';
 
 const AuthContext = createContext();
@@ -30,6 +31,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
+      clearStatsCache();
       const data = await authService.login(credentials);
       setUser(data.data.user);
       toast.success(data.message || (isEnglish ? 'Login successful!' : 'Đăng nhập thành công!'));
@@ -43,6 +45,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
+      clearStatsCache();
       const data = await authService.register(userData);
       setUser(data.data.user);
       toast.success(data.message || (isEnglish ? 'Registration successful!' : 'Đăng ký thành công!'));
@@ -55,6 +58,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    clearStatsCache();
     await authService.logout();
     setUser(null);
     toast.info(isEnglish ? 'Logged out' : 'Đã đăng xuất');
@@ -85,6 +89,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleLogin = async (googleToken) => {
+    try {
+      clearStatsCache();
+      const data = await authService.googleLogin(googleToken);
+      setUser(data.data.user);
+      toast.success(data.message || (isEnglish ? 'Login with Google successful!' : 'Đăng nhập bằng Google thành công!'));
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || (isEnglish ? 'Google login failed' : 'Đăng nhập bằng Google thất bại');
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
   const value = {
     user,
     login,
@@ -92,6 +110,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateProfile,
     changePassword,
+    googleLogin,
     isAuthenticated: !!user,
     loading,
   };

@@ -108,8 +108,15 @@ export const DebtProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (user) fetchDebts();
-    else { setDebts([]); setStats(null); }
+    if (user) {
+      setDebts([]);
+      setStats(null);
+      fetchDebts();
+      return;
+    }
+
+    setDebts([]);
+    setStats(null);
   }, [user]);
 
   return (

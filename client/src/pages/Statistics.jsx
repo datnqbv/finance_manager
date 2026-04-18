@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { statsService } from '../services/stats.service';
 import { useAuth } from '../context/AuthContext';
+import { useTransactions } from '../context/TransactionContext';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -69,6 +70,7 @@ const KpiCard = ({ label, value, sub, border, icon, valueColor, loading }) => (
 
 const Statistics = () => {
   const { user } = useAuth();
+  const { revision: transactionRevision } = useTransactions();
   const { t, language } = useLanguage();
   const isEnglish = language === 'en';
   const [activeTab, setActiveTab] = useState('overview');
@@ -209,6 +211,8 @@ const Statistics = () => {
   }, [fetchMonthBundle, getMonthKey]);
 
   useEffect(() => {
+    monthBundleCacheRef.current.clear();
+
     const controller = new AbortController();
     const currentKey = getMonthKey(selectedYear, selectedMonth);
     const cached = monthBundleCacheRef.current.get(currentKey);
@@ -248,7 +252,7 @@ const Statistics = () => {
 
     load();
     return () => controller.abort();
-  }, [selectedYear, selectedMonth, fetchMonthBundle, getMonthKey, applyMonthBundle, prefetchMonth]);
+  }, [selectedYear, selectedMonth, transactionRevision, user?.id, fetchMonthBundle, getMonthKey, applyMonthBundle, prefetchMonth]);
 
   const reloadDaily = useCallback(async (days) => {
     const end   = new Date().toISOString().split('T')[0];
@@ -274,6 +278,10 @@ const Statistics = () => {
   ];
 
   const TAB_ACTIVE = 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-sm';
+  useEffect(() => {
+    monthBundleCacheRef.current.clear();
+  }, [user?.id, transactionRevision]);
+
 
   // ── Overview tab ─────────────────────────────────────────────────────────
   const OverviewTab = () => {

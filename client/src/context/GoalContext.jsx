@@ -129,6 +129,8 @@ export const GoalProvider = ({ children }) => {
   // Load goals when user changes
   useEffect(() => {
     if (user) {
+      setGoals([]);
+      setGoalStats(null);
       fetchGoals();
       fetchGoalStats();
     } else {
