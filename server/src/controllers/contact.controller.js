@@ -72,3 +72,110 @@ export const submitContact = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Đã xảy ra lỗi. Vui lòng thử lại sau.' });
   }
 };
+
+export const getContactMessages = async (req, res) => {
+  try {
+    const {
+      status,
+      search,
+      page = 1,
+      limit = 20,
+      sortBy = 'createdAt',
+      order = 'desc'
+    } = req.query;
+
+    const query = {};
+    if (status && ['new', 'read', 'replied'].includes(status)) {
+      query.status = status;
+    }
+
+    if (search?.trim()) {
+      const pattern = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { name: pattern },
+        { email: pattern },
+        { subject: pattern },
+        { message: pattern },
+      ];
+    }
+
+    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+    const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+    const skip = (pageNum - 1) * limitNum;
+    const sortOrder = order === 'asc' ? 1 : -1;
+    const allowedSortFields = ['createdAt', 'updatedAt', 'status', 'email'];
+    const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+
+    const [items, total, statusStats] = await Promise.all([
+      ContactMessage.find(query).sort({ [sortField]: sortOrder }).skip(skip).limit(limitNum).lean(),
+      ContactMessage.countDocuments(query),
+      ContactMessage.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+    ]);
+
+    const summary = { new: 0, read: 0, replied: 0 };
+    statusStats.forEach((entry) => {
+      if (summary[entry._id] !== undefined) summary[entry._id] = entry.count;
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        items,
+        pagination: {
+          total,
+          page: pageNum,
+          limit: limitNum,
+          totalPages: Math.max(Math.ceil(total / limitNum), 1),
+        },
+        summary,
+      }
+    });
+  } catch (error) {
+    console.error('❌ getContactMessages error:', error);
+    return res.status(500).json({ success: false, message: 'Đã xảy ra lỗi. Vui lòng thử lại sau.' });
+  }
+};
+
+export const updateContactMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, adminNote } = req.body;
+    const updateData = {};
+
+    if (status !== undefined) {
+      if (!['new', 'read', 'replied'].includes(status)) {
+        return res.status(400).json({ success: false, message: 'Trạng thái không hợp lệ' });
+      }
+      updateData.status = status;
+    }
+
+    if (adminNote !== undefined) {
+      updateData.adminNote = String(adminNote).trim();
+    }
+
+    const item = await ContactMessage.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy liên hệ' });
+    }
+
+    return res.json({ success: true, message: 'Cập nhật liên hệ thành công', data: item });
+  } catch (error) {
+    console.error('❌ updateContactMessage error:', error);
+    return res.status(500).json({ success: false, message: 'Đã xảy ra lỗi. Vui lòng thử lại sau.' });
+  }
+};
+
+export const deleteContactMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const item = await ContactMessage.findByIdAndDelete(id);
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy liên hệ' });
+    }
+
+    return res.json({ success: true, message: 'Xóa liên hệ thành công' });
+  } catch (error) {
+    console.error('❌ deleteContactMessage error:', error);
+    return res.status(500).json({ success: false, message: 'Đã xảy ra lỗi. Vui lòng thử lại sau.' });
+  }
+};

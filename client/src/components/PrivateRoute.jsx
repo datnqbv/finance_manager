@@ -2,8 +2,8 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Layout from './Layout';
 
-const PrivateRoute = () => {
-  const { isAuthenticated, loading } = useAuth();
+const PrivateRoute = ({ requiredRole }) => {
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
     return (
@@ -11,6 +11,10 @@ const PrivateRoute = () => {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
+  }
+
+  if (requiredRole && user?.role !== requiredRole) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return isAuthenticated ? (

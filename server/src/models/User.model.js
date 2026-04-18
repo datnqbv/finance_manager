@@ -19,6 +19,11 @@ const userSchema = new mongoose.Schema({
       'Email không hợp lệ'
     ]
   },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
+  },
   password: {
     type: String,
     minlength: [6, 'Mật khẩu phải có ít nhất 6 ký tự'],

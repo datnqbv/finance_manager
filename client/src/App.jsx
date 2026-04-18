@@ -27,6 +27,9 @@ import Budgets from './pages/Budgets';
 import Goals from './pages/Goals';
 import Debts from './pages/Debts';
 import Profile from './pages/Profile';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminContacts from './pages/AdminContacts';
+import AdminUsers from './pages/AdminUsers';
 
 // hàm App chính của ứng dụng
 function App() {
@@ -75,6 +78,13 @@ function App() {
               </Route>
               <Route path="/profile" element={<PrivateRoute />}> 
                 <Route index element={<Profile />} /> 
+              </Route>
+
+              <Route path="/admin" element={<PrivateRoute requiredRole="admin" />}>
+                <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="contacts" element={<AdminContacts />} />
+                <Route path="users" element={<AdminUsers />} />
               </Route>
               
               <Route path="*" element={<Navigate to="/" replace />} /> 

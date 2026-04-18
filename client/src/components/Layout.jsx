@@ -23,6 +23,7 @@ import {
   FiTarget,
   FiUsers,
   FiShield,
+  FiChevronDown,
   FiHelpCircle
 } from 'react-icons/fi';
 import { useEffect } from 'react';
@@ -49,6 +50,7 @@ const Layout = ({ children }) => {
   const [showNotifications, setShowNotifications] = useState(false); // Trạng thái hiển thị thông báo
   const [notifications, setNotifications] = useState([]); // Danh sách thông báo
   const [unreadCount, setUnreadCount] = useState(0); // Số thông báo chưa đọc
+  const [showAdminMenu, setShowAdminMenu] = useState(false); // Trạng thái hiển thị submenu admin
   
   // Fetch notifications from API
   useEffect(() => {
@@ -71,6 +73,12 @@ const Layout = ({ children }) => {
     
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/admin')) {
+      setShowAdminMenu(true);
+    }
+  }, [location.pathname]);
   
   const markAsRead = async (id) => { // Đánh dấu một thông báo là đã đọc
     try {
@@ -111,6 +119,18 @@ const Layout = ({ children }) => {
     { path: '/statistics', icon: FiBarChart2, label: isEnglish ? 'Statistics' : 'Thống kê', isImg: false },
     { path: '/profile', icon: FiUser, label: isEnglish ? 'Account' : 'Tài khoản', isImg: false },
   ];
+
+  const adminMenuItems = [
+    { path: '/admin/dashboard', icon: FiShield, label: isEnglish ? 'Admin dashboard' : 'Dashboard admin' },
+    { path: '/admin/contacts', icon: FiUsers, label: isEnglish ? 'Contact admin' : 'Contact admin' },
+    { path: '/admin/users', icon: FiSettings, label: isEnglish ? 'Auth admin' : 'Auth admin' },
+  ];
+
+  const currentPageLabel =
+    menuItems.find((item) => item.path === location.pathname)?.label ||
+    adminMenuItems.find((item) => item.path === location.pathname)?.label ||
+    (location.pathname.startsWith('/admin') ? 'Admin' : null) ||
+    (isEnglish ? 'Overview' : 'Tổng quan');
 
   // Xử lý đăng xuất
   const handleLogout = () => {
@@ -250,6 +270,52 @@ const Layout = ({ children }) => {
                 </button>
               </div>
             </div>
+
+            {user?.role === 'admin' && (
+              <div className="mt-3 overflow-hidden rounded-xl border border-[#d8dce2] bg-white shadow-sm dark:border-[#323844] dark:bg-[#20242e]">
+                <button
+                  type="button"
+                  onClick={() => setShowAdminMenu((prev) => !prev)}
+                  className="flex w-full items-center justify-between px-3 py-3 text-left"
+                >
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77808f] dark:text-[#8d94a1]">
+                      Admin
+                    </p>
+                    <p className="text-sm font-semibold text-[#2d323b] dark:text-[#eceef2]">
+                      {isEnglish ? 'Admin tools' : 'Công cụ quản trị'}
+                    </p>
+                  </div>
+                  <FiChevronDown
+                    size={16}
+                    className={`text-[#6a727f] transition-transform duration-200 dark:text-[#a0a5ad] ${showAdminMenu ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                {showAdminMenu && (
+                  <div className="border-t border-[#e3e7ee] px-2 py-2 dark:border-[#2d323c]">
+                    {adminMenuItems.map((item) => {
+                      const isActive = location.pathname === item.path;
+
+                      return (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${isActive
+                            ? 'bg-[#eef6f2] text-[#1f5d45] dark:bg-[#273332] dark:text-[#b9e4d2]'
+                            : 'text-[#4f5662] hover:bg-[#f2f4f7] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:text-[#d5d9e0]'
+                          }`}
+                        >
+                          <item.icon size={18} />
+                          <span className="font-medium">{item.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </aside>
@@ -272,7 +338,7 @@ const Layout = ({ children }) => {
               {/* Left: Page title for mobile */}
               <div className="lg:hidden min-w-[120px]">
                 <h2 className="text-lg font-semibold text-[#1f2328] dark:text-[#eceef2]">
-                  {menuItems.find(item => item.path === location.pathname)?.label || (isEnglish ? 'Overview' : 'Tổng quan')}
+                  {currentPageLabel}
                 </h2>
               </div>
 
@@ -280,7 +346,7 @@ const Layout = ({ children }) => {
                 <span>{isEnglish ? 'Home' : 'Trang chủ'}</span>
                 <span>/</span>
                 <span className="font-semibold text-[#22262c] dark:text-[#eceef2]">
-                  {menuItems.find(item => item.path === location.pathname)?.label || (isEnglish ? 'Overview' : 'Tổng quan')}
+                  {currentPageLabel}
                 </span>
               </div>
 

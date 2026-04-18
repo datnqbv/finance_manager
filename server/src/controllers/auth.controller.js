@@ -61,6 +61,7 @@ export const register = async (req, res) => {
     // Save refresh token to DB
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
+               role: user.role,
 
     // Gửi email chào mừng (không chờ, chạy background)
     sendWelcomeEmail(user.email, user.name).catch(err => 
@@ -77,6 +78,7 @@ export const register = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
+          role: user.role,
           budget: user.budget,
           currency: user.currency,
           avatar: user.avatar
@@ -131,6 +133,7 @@ export const login = async (req, res) => {
     const refreshToken = generateRefreshToken(user._id);
 
     // Save refresh token to DB
+                   role: user.role,
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 
@@ -144,6 +147,7 @@ export const login = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
+          role: user.role,
           budget: user.budget,
           currency: user.currency,
           avatar: user.avatar
@@ -172,6 +176,7 @@ export const getMe = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
+          role: user.role,
           budget: user.budget,
           currency: user.currency,
           avatar: user.avatar
@@ -219,6 +224,7 @@ export const updateProfile = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
+          role: user.role,
           budget: user.budget,
           currency: user.currency,
           avatar: user.avatar
@@ -364,6 +370,7 @@ export const resetPassword = async (req, res) => {
     }
 
     // Update password
+                   role: user.role,
     user.password = newPassword;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
@@ -386,6 +393,7 @@ export const resetPassword = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
+          role: user.role,
           budget: user.budget,
           currency: user.currency,
           avatar: user.avatar
@@ -452,6 +460,7 @@ export const logoutHandler = async (req, res) => {
 // @desc    Google OAuth Login
 // @route   POST /api/auth/google
 // @access  Public
+// Hàm này để xử lý đăng nhập bằng Google OAuth. Nó nhận token từ client, xác thực với Google, sau đó tạo hoặc tìm người dùng trong DB, và cuối cùng trả về token JWT cho client. Nếu người dùng mới được tạo, nó cũng sẽ tạo các danh mục mặc định và gửi email chào mừng.
 export const googleLogin = async (req, res) => {
   try {
     const { googleToken } = req.body;
@@ -536,6 +545,7 @@ export const googleLogin = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
+          role: user.role,
           budget: user.budget,
           currency: user.currency,
           avatar: user.avatar
