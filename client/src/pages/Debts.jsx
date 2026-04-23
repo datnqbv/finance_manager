@@ -39,6 +39,8 @@ const Debts = () => {
     return Math.ceil((new Date(d) - new Date()) / 86400000);
   };
 
+  const paidPct = (d) => (d.amount || 0) === 0 ? 100 : Math.round((((d.amount || 0) - (d.remainingAmount || 0)) / d.amount) * 100);
+
   const filtered = debts.filter(d => {
     if (filterType !== 'all'   && d.type   !== filterType)   return false;
     if (filterStatus !== 'all' && d.status !== filterStatus) return false;
@@ -87,8 +89,6 @@ const Debts = () => {
     const res = await addPayment(id, amount, payNote.trim());
     if (res.success) { setPayingId(null); setPayAmount(''); setPayNote(''); }
   };
-
-  const paidPct = (d) => d.amount === 0 ? 100 : Math.round(((d.amount - d.remainingAmount) / d.amount) * 100);
 
   if (loading && debts.length === 0) {
     return <DebtsSkeleton />;

@@ -61,6 +61,35 @@ const Dashboard = () => {
     return { startDate: startDate.toISOString(), endDate: endDate.toISOString() };
   };
 
+  const getPeriodScopeLabel = () => {
+    switch (timeFilter) {
+      case 'today':
+        return isEnglish ? 'Today only' : 'Chỉ hôm nay';
+      case 'week':
+        return isEnglish ? 'This week' : 'Tuần này';
+      case 'year':
+        return isEnglish ? 'This year' : 'Năm nay';
+      case 'month':
+      default:
+        return isEnglish ? 'This month' : 'Tháng này';
+    }
+  };
+
+  const getRangeText = () => {
+    const { startDate, endDate } = getDateRange();
+    const start = new Date(startDate).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    const end = new Date(endDate).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    return `${start} - ${end}`;
+  };
+
   const fetchData = async () => {
     setLoading(true);
     setSummary(null);
@@ -254,6 +283,17 @@ const Dashboard = () => {
                 <FiTrendingUp size={12} />
                 {monthChange >= 0 ? '+' : ''}{monthChange.toFixed(1)}% {t('monthlyComparison')}
               </div>
+              <div className="mt-3 inline-flex flex-wrap items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-medium text-[#d8fff2]">
+                <span className="font-semibold uppercase tracking-[0.18em] text-[#9ed3c3]">{isEnglish ? 'Data scope' : 'Phạm vi dữ liệu'}</span>
+                <span>{getPeriodScopeLabel()}</span>
+                <span className="opacity-70">|</span>
+                <span>{getRangeText()}</span>
+              </div>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#d4efe7]">
+                {isEnglish
+                  ? 'The dashboard summary only changes when new transactions fall inside the selected time filter.'
+                  : 'Tổng quan chỉ thay đổi khi giao dịch mới nằm trong đúng khoảng thời gian đang chọn.'}
+              </p>
 
               <div className="mt-8 grid grid-cols-1 gap-4 border-t border-[#1e6b57] pt-5 sm:grid-cols-3">
                 <div>

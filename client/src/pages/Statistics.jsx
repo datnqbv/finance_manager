@@ -165,7 +165,13 @@ const Statistics = () => {
 
     if (f.status === 'fulfilled') {
       const fd = f.value?.data;
-      bundle.forecast = fd ? { ...fd.forecast, byCategory: fd.byCategory } : null;
+      bundle.forecast = fd ? {
+        ...fd.forecast,
+        byCategory: fd.byCategory,
+        basedOnMonths: fd.basedOnMonths,
+        referenceYear: year,
+        referenceMonth: month,
+      } : null;
     }
 
     if (t.status === 'fulfilled') {
@@ -523,9 +529,11 @@ const Statistics = () => {
       [isEnglish ? 'Actual income' : 'Thu nhập thực']: m.totalIncome  || 0,
     }));
     const nextLabel = (() => {
-      const d = new Date(); d.setMonth(d.getMonth() + 1);
+      const d = new Date(selectedYear, selectedMonth, 1);
       return `${isEnglish ? 'M' : 'T'}${d.getMonth()+1}/${String(d.getFullYear()).slice(2)}`;
     })();
+    const forecastWindow = f?.basedOnMonths || 6;
+    const referenceLabel = `${isEnglish ? 'M' : 'T'}${selectedMonth}/${String(selectedYear).slice(2)}`;
     const chartData = [
       ...histData,
       { name: nextLabel, [isEnglish ? 'Forecast expense' : 'Dự báo chi']: f?.nextMonthExpense||0, [isEnglish ? 'Forecast income' : 'Dự báo thu']: f?.nextMonthIncome||0, isDashed: true },
@@ -558,6 +566,40 @@ const Statistics = () => {
             <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{confidenceMap[f?.confidence] || '—'}</p>
           </div>
         </div>
+
+        {f && (
+          <div className="rounded-xl border border-[#e8edf5] bg-[#f8fbff] p-4 shadow-sm dark:border-[#263043] dark:bg-[#141821]">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-4xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6c7890] dark:text-[#8b95a8]">
+                  {isEnglish ? 'Forecast basis' : 'Cơ sở dự báo'}
+                </p>
+                <h4 className="mt-1 text-lg font-bold text-[#18202f] dark:text-[#eef3fb]">
+                  {isEnglish ? 'This forecast is built from monthly spending history' : 'Dự báo này được xây từ dữ liệu thu/chi theo tháng'}
+                </h4>
+                <p className="mt-2 text-sm leading-6 text-[#4f5c72] dark:text-[#aab3c3]">
+                  {isEnglish
+                    ? `The model uses the last ${forecastWindow} months of monthly totals, anchored to ${referenceLabel}. Overall cash flow uses SES, while category forecasts use moving average.`
+                    : `Mô hình lấy ${forecastWindow} tháng gần nhất của tổng thu/chi theo tháng, neo theo ${referenceLabel}. Phần tổng thể dùng SES, còn dự báo theo danh mục dùng trung bình trượt.`}
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:min-w-[360px]">
+                <div className="rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-[#1c2230]">
+                  <p className="text-[11px] uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Time unit' : 'Đơn vị thời gian'}</p>
+                  <p className="mt-1 text-sm font-semibold text-[#18202f] dark:text-[#eef3fb]">{isEnglish ? 'Monthly' : 'Theo tháng'}</p>
+                </div>
+                <div className="rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-[#1c2230]">
+                  <p className="text-[11px] uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Window' : 'Cửa sổ dữ liệu'}</p>
+                  <p className="mt-1 text-sm font-semibold text-[#18202f] dark:text-[#eef3fb]">{forecastWindow} {isEnglish ? 'months' : 'tháng'}</p>
+                </div>
+                <div className="rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-[#1c2230]">
+                  <p className="text-[11px] uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Reference month' : 'Tháng tham chiếu'}</p>
+                  <p className="mt-1 text-sm font-semibold text-[#18202f] dark:text-[#eef3fb]">{referenceLabel}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {f && (
           <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
