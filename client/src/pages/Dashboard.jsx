@@ -10,6 +10,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import PageTransition from '../components/PageTransition';
 import { DashboardSkeleton } from '../components/LoadingSkeleton';
 
+// dùng cho dashboard, hiển thị tổng quan về tài chính, biểu đồ thống kê, mục tiêu tiết kiệm, dự báo chi tiêu và các thông tin liên quan khác để giúp người dùng có cái nhìn tổng thể về tình hình tài chính của mình trong khoảng thời gian đã chọn
 const Dashboard = () => {
   const { user } = useAuth();
   const { revision: transactionRevision } = useTransactions();
@@ -33,7 +34,8 @@ const Dashboard = () => {
     fetchData();
     fetchCategories();
   }, [timeFilter, user?.id, transactionRevision]);
-
+  
+  // hàm dùng để tính toán phạm vi ngày tháng dựa trên bộ lọc thời gian đã chọn, trả về đối tượng chứa startDate và endDate dưới dạng chuỗi ISO, giúp xác định khoảng thời gian mà dashboard sẽ hiển thị dữ liệu
   const getDateRange = () => {
     const now = new Date();
     let startDate, endDate;
@@ -60,7 +62,7 @@ const Dashboard = () => {
     }
     return { startDate: startDate.toISOString(), endDate: endDate.toISOString() };
   };
-
+  // hàm dùng để tạo ra một chuỗi văn bản mô tả phạm vi ngày tháng đang được hiển thị trên dashboard, dựa trên bộ lọc thời gian đã chọn, giúp người dùng dễ dàng nhận biết khoảng thời gian mà các số liệu đang phản ánh
   const getPeriodScopeLabel = () => {
     switch (timeFilter) {
       case 'today':
@@ -74,7 +76,7 @@ const Dashboard = () => {
         return isEnglish ? 'This month' : 'Tháng này';
     }
   };
-
+  // hàm dùng để tạo ra một chuỗi văn bản mô tả phạm vi ngày tháng đang được hiển thị trên dashboard, dựa trên bộ lọc thời gian đã chọn, giúp người dùng dễ dàng nhận biết khoảng thời gian mà các số liệu đang phản ánh
   const getRangeText = () => {
     const { startDate, endDate } = getDateRange();
     const start = new Date(startDate).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', {
@@ -89,7 +91,7 @@ const Dashboard = () => {
     });
     return `${start} - ${end}`;
   };
-
+  // hàm dùng để lấy dữ liệu từ server thông qua statsService, xử lý kết quả trả về và cập nhật các state tương ứng để hiển thị trên dashboard, đồng thời xử lý lỗi nếu có và đảm bảo rằng trạng thái loading được cập nhật chính xác
   const fetchData = async () => {
     setLoading(true);
     setSummary(null);
@@ -133,14 +135,14 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
-
+  // hàm dùng để tạo ra một lời chào thân thiện và phù hợp với thời điểm trong ngày, kết hợp với biểu tượng trực quan để tạo cảm giác gần gũi và cá nhân hóa cho người dùng khi họ truy cập vào dashboard, giúp tăng sự tương tác và trải nghiệm người dùng
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return { text: t('goodMorning'), icon: <FiSun className="text-amber-500" size={22} /> };
     if (hour < 18) return { text: t('goodAfternoon'), icon: <FiClock className="text-orange-500" size={22} /> };
     return { text: t('goodEvening'), icon: <FiMoon className="text-indigo-500" size={22} /> };
   };
-
+  // dùng để tạo ra một cái nhìn tổng quan về phạm vi dữ liệu đang hiển thị trên dashboard, dựa trên bộ lọc thời gian đã chọn, giúp người dùng hiểu rõ hơn về khoảng thời gian mà các số liệu đang phản ánh
   const getTimeFilterLabel = () => {
     switch (timeFilter) {
       case 'today': return t('today');
@@ -149,7 +151,7 @@ const Dashboard = () => {
       default: return t('thisMonth');
     }
   };
-
+  // hàm dùng để tạo ra một cái nhìn sâu sắc về tài chính dựa trên sự thay đổi số dư giữa tháng này và tháng trước, tính toán phần trăm thay đổi và đưa ra thông điệp phù hợp để khuyến khích người dùng cải thiện thói quen chi tiêu hoặc duy trì sự ổn định
   const getAIInsight = () => {
     if (timeFilter !== 'month' || !monthlyStats || monthlyStats.length < 2) return null;
     const thisMonthData = monthlyStats[monthlyStats.length - 1];
@@ -163,7 +165,7 @@ const Dashboard = () => {
     if (change < 0) return { message: isEnglish ? `Savings decreased by ${Math.abs(percentChange)}% compared to last month` : `Tiết kiệm giảm ${Math.abs(percentChange)}% so với tháng trước`, type: 'warning' };
     return { message: isEnglish ? 'Savings are stable compared to last month' : 'Tiết kiệm ổn định so với tháng trước', type: 'info' };
   };
-
+  // dùng để xác định cảnh báo ngân sách dựa trên tỷ lệ chi tiêu so với thu nhập trong kỳ đã chọn, nếu chi tiêu vượt quá 80% thu nhập sẽ hiển thị cảnh báo với mức độ khác nhau tùy theo tỷ lệ  
   const getBudgetAlert = () => {
     if (!filteredSummary || !filteredSummary.income) return null;
     const percentage = (filteredSummary.expense / filteredSummary.income) * 100;
@@ -171,7 +173,7 @@ const Dashboard = () => {
     if (percentage >= 80) return { message: isEnglish ? `You spent ${percentage.toFixed(0)}% of your income this period - be more careful.` : `Bạn đã chi ${percentage.toFixed(0)}% thu nhập trong kỳ này — hãy cẩn thận hơn.`, level: 'warning' };
     return null;
   };
-
+  // hàm dùng để xác định mục tiêu tiết kiệm chính dựa trên các mục tiêu đang hoạt động, sắp xếp theo độ ưu tiên và thời hạn, sau đó tính toán phần trăm hoàn thành và các thông tin liên quan để hiển thị trên dashboard
   const getSavingsGoal = () => {
     const activeGoals = goals.filter(g => !g.isAchieved);
     if (activeGoals.length === 0) return { target: 0, current: filteredSummary?.balance || 0, percentage: 0, goalName: isEnglish ? 'No goals yet' : 'Chưa có mục tiêu', hasGoal: false };
@@ -184,7 +186,7 @@ const Dashboard = () => {
     const percentage = Math.min((primaryGoal.currentAmount / primaryGoal.targetAmount) * 100, 100);
     return { target: primaryGoal.targetAmount, current: primaryGoal.currentAmount, percentage: percentage.toFixed(1), goalName: primaryGoal.name, icon: primaryGoal.icon || '🎯', deadline: primaryGoal.deadline, daysRemaining: primaryGoal.daysRemaining, hasGoal: true, totalGoals: activeGoals.length };
   };
-
+  // hàm dùng để chuẩn bị dữ liệu cho biểu đồ cột, tính toán số tiền thu nhập, chi tiêu và tiết kiệm hàng tháng trong 6 tháng qua 
   const getChartData = () => {
     return monthlyStats.map(stat => ({
       month: `T${stat.month}`,
@@ -195,11 +197,11 @@ const Dashboard = () => {
   };
 
   const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899'];
-
+  // hàm dùng để định dạng số tiền thành chuỗi có định dạng tiền tệ phù hợp với ngôn ngữ và loại tiền tệ của người dùng, giúp hiển thị các số liệu tài chính một cách rõ ràng và dễ hiểu trên dashboard
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(amount);
   };
-
+  
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit' });
   };
@@ -222,7 +224,8 @@ const Dashboard = () => {
       </div>
     );
   };
-
+  
+  // hàm dùng để tạo ra một chuỗi văn bản mô tả phạm vi ngày tháng đang được hiển thị trên dashboard, dựa trên bộ lọc thời gian đã chọn, giúp người dùng dễ dàng nhận biết khoảng thời gian mà các số liệu đang phản ánh
   const greeting = getGreeting();
   const budgetAlert = getBudgetAlert();
   const savingsGoal = getSavingsGoal();
@@ -235,7 +238,7 @@ const Dashboard = () => {
       ...goal,
       progress: goal.targetAmount > 0 ? Math.min((goal.currentAmount / goal.targetAmount) * 100, 100) : 0,
     }));
-
+  // hàm dùng để tính toán sự thay đổi số dư giữa tháng này và tháng trước, trả về phần trăm thay đổi để hiển thị trên dashboard  
   const monthChange = (() => {
     if (!monthlyStats || monthlyStats.length < 2) return 0;
     const thisMonth = monthlyStats[monthlyStats.length - 1];
@@ -245,13 +248,13 @@ const Dashboard = () => {
     if (!prevBalance) return thisBalance > 0 ? 100 : 0;
     return ((thisBalance - prevBalance) / Math.abs(prevBalance)) * 100;
   })();
-
+  // hàm dùng để lọc các giao dịch gần đây dựa trên loại giao dịch đã chọn (tất cả, thu nhập hoặc chi tiêu), giúp người dùng dễ dàng xem xét các giao dịch cụ thể trong khoảng thời gian đã chọn trên dashboard   
   const recentTransactions = (filteredSummary?.recentTransactions || []).filter((tx) => {
     if (txFilter === 'income') return tx.type === 'income';
     if (txFilter === 'expense') return tx.type === 'expense';
     return true;
   });
-
+  // hàm dùng để tính toán dự báo chi tiêu cho tháng tiếp theo dựa trên dữ liệu lịch sử, đồng thời xác định các danh mục chi tiêu hàng đầu và phần trăm thay đổi so với tháng hiện tại, giúp người dùng có cái nhìn về xu hướng chi tiêu sắp tới và có thể điều chỉnh kế hoạch tài chính của mình cho phù hợp trên dashboard
   const currentExpense = filteredSummary?.expense || monthlyStats[monthlyStats.length - 1]?.totalExpense || 0;
   const forecastExpense = forecastData?.forecast?.nextMonthExpense || 0;
   const forecastLow = forecastData?.forecast?.marginLow ?? (forecastExpense * 0.9);
@@ -267,7 +270,7 @@ const Dashboard = () => {
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 3)
   const topForecastTotal = topForecastCategories.reduce((sum, item) => sum + item.amount, 0);
-
+  // điều kiện để hiển thị skeleton loading khi đang tải dữ liệu, giúp cải thiện trải nghiệm người dùng bằng cách cung cấp phản hồi trực quan trong khi chờ đợi dữ liệu được tải về và xử lý trên dashboard 
   if (loading) return <PageTransition><DashboardSkeleton /></PageTransition>;
 
   return (

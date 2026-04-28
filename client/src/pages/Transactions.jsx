@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import CurrencyInput from '../components/CurrencyInput';
 import { useTransactions } from '../context/TransactionContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -37,6 +38,16 @@ const Transactions = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const searchDebounceRef = useRef(null);
+  const advDebounceRef = useRef(null);
+
+  // Local state cho advanced filter inputs (để tránh re-render khi gõ)
+  const [advLocal, setAdvLocal] = useState({
+    category: '',
+    dateFrom: '',
+    dateTo: '',
+    amountFrom: '',
+    amountTo: '',
+  });
 
   // Gọi API mỗi khi filter / page / viewMode / calendarMonth thay đổi
   const loadTransactions = useCallback(() => {
@@ -78,7 +89,7 @@ const Transactions = () => {
     setViewMode(mode);
   };
 
-  // Debounce cho search text
+  // Debounce cho ô tìm kiếm chính (400ms)
   const handleSearchChange = (value) => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     searchDebounceRef.current = setTimeout(() => {
@@ -87,13 +98,24 @@ const Transactions = () => {
     }, 400);
   };
 
+  // Xử lý thay đổi advanced filter với debounce 500ms để tránh reset trang khi đang gõ
+  const handleAdvLocalChange = (key, value) => {
+    setAdvLocal(prev => ({ ...prev, [key]: value }));
+    if (advDebounceRef.current) clearTimeout(advDebounceRef.current);
+    advDebounceRef.current = setTimeout(() => {
+      setFilter(prev => ({ ...prev, [key]: value }));
+      setCurrentPage(1);
+    }, 500);
+  };
+
+  // format dữ liệu tiền
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: user?.currency || 'VND',
     }).format(amount);
   };
-
+  // format số
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', {
       day: '2-digit',
@@ -106,37 +128,37 @@ const Transactions = () => {
     setEditingTransaction(transaction);
     setShowModal(true);
   };
-
+  // hàm xác nhận muốn xóa hay không
   const handleDelete = async (id) => {
     if (window.confirm(isEnglish ? 'Are you sure you want to delete this transaction?' : 'Bạn có chắc chắn muốn xóa giao dịch này?')) {
       await deleteTransaction(id);
       loadTransactions();
     }
   };
-
   const handleModalClose = () => {
     setShowModal(false);
     setEditingTransaction(null);
     loadTransactions();
   };
-
+  // Xóa toàn bộ bộ lọc (cả filter state lẫn local advanced state)
   const clearFilters = () => {
     setFilter({ type: '', category: '', searchText: '', dateFrom: '', dateTo: '', amountFrom: '', amountTo: '' });
+    setAdvLocal({ category: '', dateFrom: '', dateTo: '', amountFrom: '', amountTo: '' });
     setCurrentPage(1);
   };
-
+  // hàm dùng cho thay đổi filter type (select) — reset page ngay vì không cần debounce
   const handleFilterChange = (key, value) => {
     setFilter(prev => ({ ...prev, [key]: value }));
     setCurrentPage(1);
   };
 
   const goToPage = (page) => setCurrentPage(Math.max(1, Math.min(page, pagination.totalPages)));
-
+// hàm dùng cho thay đổi số lượng mục hiển thị trên mỗi trang, đồng thời reset về trang đầu tiên để đảm bảo người dùng luôn bắt đầu xem danh sách giao dịch từ đầu khi thay đổi số lượng mục hiển thị trên trang giao dịch. Điều này giúp cải thiện trải nghiệm người dùng bằng cách tránh việc hiển thị một trang trống hoặc không hợp lý sau khi thay đổi số lượng mục hiển thị.  
   const handleItemsPerPageChange = (value) => {
     setItemsPerPage(value);
     setCurrentPage(1);
   };
-
+  // Hàm dùng cho xuất dữ liệu giao dịch hiện tại ra file PDF, giúp người dùng có thể lưu trữ hoặc chia sẻ thông tin giao dịch của mình một cách dễ dàng và thuận tiện trên trang giao dịch. Khi người dùng nhấn nút xuất PDF, hàm này sẽ được gọi để tạo file PDF chứa danh sách các giao dịch hiện tại và cung cấp tùy chọn tải xuống cho người dùng.
   const pageIncome = transactions
     .filter((t) => t.type === 'income')
     .reduce((sum, t) => sum + (t.amount || 0), 0);
@@ -309,8 +331,8 @@ const Transactions = () => {
                 <input
                   type="text"
                   placeholder={isEnglish ? 'Enter category name...' : 'Nhập tên danh mục...'}
-                  value={filter.category}
-                  onChange={(e) => handleFilterChange('category', e.target.value)}
+                  value={advLocal.category}
+                  onChange={(e) => handleAdvLocalChange('category', e.target.value)}
                   className="input w-full"
                 />
               </div>
@@ -320,45 +342,43 @@ const Transactions = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {isEnglish ? 'Date range' : 'Khoảng thời gian'}
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <input
                     type="date"
-                    value={filter.dateFrom}
-                    onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-                    className="input flex-1"
+                    value={advLocal.dateFrom}
+                    onChange={(e) => handleAdvLocalChange('dateFrom', e.target.value)}
+                    className="input"
+                    style={{ minWidth: '145px', flex: '1 1 145px' }}
                   />
-                  <span className="self-center text-gray-500">-</span>
+                  <span className="self-center text-gray-500 shrink-0">-</span>
                   <input
                     type="date"
-                    value={filter.dateTo}
-                    onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-                    className="input flex-1"
+                    value={advLocal.dateTo}
+                    onChange={(e) => handleAdvLocalChange('dateTo', e.target.value)}
+                    className="input"
+                    style={{ minWidth: '145px', flex: '1 1 145px' }}
                   />
                 </div>
               </div>
 
-              {/* Amount Range */}
+              {/* Amount Range — dùng CurrencyInput để hiển thị định dạng 1.111.111đ */}
               <div className="tx-adv-amount">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {isEnglish ? 'Amount range' : 'Khoảng số tiền'}
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    value={filter.amountFrom}
-                    onChange={(e) => handleFilterChange('amountFrom', e.target.value)}
-                    className="input flex-1"
+                <div className="flex items-center gap-2 min-w-0">
+                  <CurrencyInput
+                    value={advLocal.amountFrom}
+                    onChange={(val) => handleAdvLocalChange('amountFrom', val)}
                     placeholder={isEnglish ? 'From' : 'Từ'}
-                    min="0"
+                    className="flex-1 min-w-0"
                   />
-                  <span className="self-center text-gray-500">-</span>
-                  <input
-                    type="number"
-                    value={filter.amountTo}
-                    onChange={(e) => handleFilterChange('amountTo', e.target.value)}
-                    className="input flex-1"
+                  <span className="self-center text-gray-500 shrink-0">-</span>
+                  <CurrencyInput
+                    value={advLocal.amountTo}
+                    onChange={(val) => handleAdvLocalChange('amountTo', val)}
                     placeholder={isEnglish ? 'To' : 'Đến'}
-                    min="0"
+                    className="flex-1 min-w-0"
                   />
                 </div>
               </div>

@@ -6,7 +6,7 @@ import CategoryModal from '../components/CategoryModal';
 import Pagination from '../components/Pagination';
 import { toast } from 'react-toastify';
 import { CategoriesSkeleton } from '../components/LoadingSkeleton';
-
+// hàm dùng cho việc tải lại danh sách danh mục sau khi thực hiện các thao tác thêm, sửa hoặc xóa danh mục trên trang quản lý danh mục. Khi người dùng thực hiện một trong các thao tác này, hàm fetchCategories sẽ được gọi để lấy lại dữ liệu danh mục mới nhất từ server và cập nhật giao diện người dùng với thông tin mới nhất về các danh mục có sẵn. Điều này giúp đảm bảo rằng người dùng luôn thấy dữ liệu chính xác và có thể tiếp tục quản lý các danh mục của mình một cách hiệu quả sau khi thực hiện các thao tác thêm, sửa hoặc xóa. 
 const Categories = () => {
   const ITEMS_PER_PAGE = 8;
   const { categories, loading, fetchCategories, createCategory, updateCategory, deleteCategory } = useCategories();
@@ -51,7 +51,7 @@ const Categories = () => {
 
   const allIncome = categories.filter(c => c.type === 'income' || c.type === 'both');
   const allExpense = categories.filter(c => c.type === 'expense' || c.type === 'both');
-
+// hàm tìm kiếm 
   const filteredCategories = categories.filter(cat => {
     if (filterType === 'all') return true;
     if (filterType === 'income') return cat.type === 'income' || cat.type === 'both';
@@ -66,7 +66,7 @@ const Categories = () => {
   const customCount = categories.length - defaultCount;
 
   const pct = (value) => (categories.length > 0 ? (value / categories.length) * 100 : 0);
-
+  // Sắp xếp danh mục theo thứ tự tùy chỉnh (order) và sau đó theo tên để đảm bảo rằng các danh mục được hiển thị theo thứ tự mong muốn của người dùng, đồng thời giúp người dùng dễ dàng tìm thấy danh mục mình cần trong danh sách danh mục trên trang quản lý danh mục. Việc sắp xếp này giúp cải thiện trải nghiệm người dùng bằng cách tổ chức các danh mục một cách hợp lý và dễ dàng truy cập.   
   const sortedCategories = [...filteredCategories].sort((a, b) => {
     const orderDiff = (a.order || 0) - (b.order || 0);
     if (orderDiff !== 0) return orderDiff;
@@ -159,7 +159,7 @@ const Categories = () => {
             <div className="mt-4 rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
               <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{isEnglish ? 'Smart Suggestion' : 'Gợi ý tối ưu'}</p>
               <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">
-                {categories.length < 8
+                {categories.length < 8 
                   ? (isEnglish ? 'You can add more detailed categories for better analytics.' : 'Bạn có thể thêm danh mục chi tiết hơn để thống kê chính xác.')
                   : (isEnglish ? 'Your categories are in good shape. Consider merging duplicates.' : 'Danh mục đang đủ tốt, hãy rà soát và gộp các mục trùng lặp.')}
               </p>

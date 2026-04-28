@@ -275,6 +275,15 @@ const Statistics = () => {
     reloadDaily(days);
   };
 
+  // Khi chuyển sang tab daily, tự động load đúng theo dailyRange (mặc định 30 ngày gần nhất)
+  // thay vì hiển thị data của tháng đang chọn
+  const handleTabChange = (key) => {
+    setActiveTab(key);
+    if (key === 'daily') {
+      reloadDaily(dailyRange);
+    }
+  };
+
   const TABS = [
     { key: 'overview',  label: isEnglish ? 'Overview' : 'Tổng quan',   icon: <FiBarChart2 size={13}/> },
     { key: 'compare',   label: isEnglish ? 'Compare' : 'So sánh',     icon: <FiActivity size={13}/> },
@@ -786,19 +795,29 @@ const Statistics = () => {
     const dailyExpenseTotal = daily.reduce((sum, item) => sum + (item.expense || 0), 0);
     const dailyTxTotal = daily.reduce((sum, item) => sum + (item.count || 0), 0);
 
+    // Tính ngày bắt đầu và kết thúc để hiển thị
+    const endDate = new Date();
+    const startDate = new Date(Date.now() - dailyRange * 86400000);
+    const fmtDay = (d) => d.toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
     return (
     <div className="space-y-5">
-      <div className="flex items-center bg-[#f4f7fb] dark:bg-[#222935] p-1 rounded-xl gap-0.5 w-fit">
-        {[7, 14, 30].map(d => (
-          <button key={d}
-            onClick={() => handleDailyRange(d)}
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              dailyRange === d
-                ? 'bg-white dark:bg-[#303746] text-[#1f2733] dark:text-[#f1f4f8] shadow-sm'
-                : 'text-[#7f8795] dark:text-[#9ba3b2] hover:text-[#2d3645] dark:hover:text-[#e5eaf1]'
-            }`}
-          >{d} {isEnglish ? 'days' : 'ngày'}</button>
-        ))}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center bg-[#f4f7fb] dark:bg-[#222935] p-1 rounded-xl gap-0.5">
+          {[7, 14, 30].map(d => (
+            <button key={d}
+              onClick={() => handleDailyRange(d)}
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                dailyRange === d
+                  ? 'bg-white dark:bg-[#303746] text-[#1f2733] dark:text-[#f1f4f8] shadow-sm'
+                  : 'text-[#7f8795] dark:text-[#9ba3b2] hover:text-[#2d3645] dark:hover:text-[#e5eaf1]'
+              }`}
+            >{d} {isEnglish ? 'days' : 'ngày'}</button>
+          ))}
+        </div>
+        <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">
+          {isEnglish ? 'Period' : 'Giai đoạn'}: <span className="font-semibold text-[#1f2733] dark:text-[#e8edf4]">{fmtDay(startDate)} – {fmtDay(endDate)}</span>
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -961,7 +980,7 @@ const Statistics = () => {
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
           {TABS.map(t => (
             <button key={t.key}
-              onClick={() => setActiveTab(t.key)}
+            onClick={() => handleTabChange(t.key)}
               className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
                 activeTab === t.key
                   ? TAB_ACTIVE

@@ -142,7 +142,7 @@ export const getTransactions = async (req, res) => {
     const query = { userId: req.user.id };
 
     if (type) query.type = type;
-    if (category) query.category = category;
+    if (category) query.category = { $regex: category, $options: 'i' };
     if (startDate || endDate) {
       query.date = {};
       if (startDate) query.date.$gte = new Date(startDate);

@@ -48,7 +48,8 @@ const Budgets = () => {
     else await createBudget(formData);
   };
 
-  // Determine status level from percentage
+  // hàm dùng để đóng modal sau khi thêm/sửa ngân sách, đồng thời reset trạng thái chỉnh sửa và tải lại danh sách ngân sách để cập nhật thông tin mới nhất trên trang ngân sách. Điều này giúp đảm bảo rằng người dùng luôn thấy dữ liệu chính xác và có thể tiếp tục quản lý các ngân sách của mình một cách hiệu quả sau khi thực hiện các thao tác thêm hoặc chỉnh sửa.
+  // đồng thời thông báo thành công hoặc lỗi cho người dùng sau khi thực hiện thao tác lưu ngân sách mới hoặc cập nhật ngân sách hiện có trên trang ngân sách. Điều này giúp cải thiện trải nghiệm người dùng bằng cách cung cấp phản hồi rõ ràng về kết quả của hành động của họ, giúp họ hiểu rằng thao tác đã được thực hiện thành công hoặc nếu có lỗi xảy ra, họ sẽ biết để có thể thử lại hoặc điều chỉnh thông tin nhập vào cho phù hợp. 
   const getStatus = (pct) => {
     if (pct >= 100) return { level: 'over',    bar: 'bg-red-500',   text: 'text-red-600 dark:text-red-400',   border: 'border-l-red-500',   bg: 'bg-red-50 dark:bg-red-500/10',   label: isEnglish ? 'Over budget' : 'Vượt ngân sách' };
     if (pct >= 80)  return { level: 'warning',  bar: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400', border: 'border-l-amber-500', bg: 'bg-amber-50 dark:bg-amber-500/10', label: isEnglish ? 'Near limit' : 'Sắp vượt' };
