@@ -173,67 +173,72 @@ const Transactions = () => {
 
   return (
     <div className={`tx-layout-grid ${viewMode === 'list' ? 'tx-layout-list' : 'tx-layout-calendar'}`}>
-      <div className="tx-area-header flex justify-between items-center flex-wrap gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{isEnglish ? 'Transactions' : 'Giao dịch'}</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">{isEnglish ? 'Manage your income and expense transactions' : 'Quản lý các giao dịch thu chi'}</p>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          {/* View toggle */}
-          <div className="flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5">
-            <button
-              onClick={() => switchViewMode('list')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                viewMode === 'list'
-                  ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-              }`}
-            >
-              <FiList size={15} /> {isEnglish ? 'List' : 'Danh sách'}
-            </button>
-            <button
-              onClick={() => switchViewMode('calendar')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                viewMode === 'calendar'
-                  ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-              }`}
-            >
-              <FiCalendar size={15} /> {isEnglish ? 'Calendar' : 'Lịch'}
-            </button>
+      <div className="tx-area-header">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{isEnglish ? 'Transactions' : 'Giao dịch'}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">{isEnglish ? 'Manage your income and expense transactions' : 'Quản lý các giao dịch thu chi'}</p>
           </div>
+          <div className="tx-header-actions flex gap-2 flex-wrap">
+            {/* View toggle */}
+            <div className="tx-view-toggle flex items-center bg-gray-100 dark:bg-[#1a1a1a] p-1 rounded-xl gap-0.5">
+              <button
+                onClick={() => switchViewMode('list')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  viewMode === 'list'
+                    ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                }`}
+              >
+                <FiList size={15} /> {isEnglish ? 'List' : 'Danh sách'}
+              </button>
+              <button
+                onClick={() => switchViewMode('calendar')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  viewMode === 'calendar'
+                    ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                }`}
+              >
+                <FiCalendar size={15} /> {isEnglish ? 'Calendar' : 'Lịch'}
+              </button>
+            </div>
 
-          <div className="relative group">
+            {/* Export buttons */}
+            <div className="tx-export-group flex gap-2">
+              <button
+                onClick={() => exportToPDF(transactions, user)}
+                className="btn btn-secondary flex items-center gap-2"
+                disabled={transactions.length === 0}
+              >
+                <FiDownload /> PDF
+              </button>
+              <button
+                onClick={() => exportToExcel(transactions, user)}
+                className="btn btn-secondary flex items-center gap-2"
+                disabled={transactions.length === 0}
+              >
+                <FiDownload /> Excel
+              </button>
+            </div>
+
+            {/* Import */}
             <button
-              onClick={() => exportToPDF(transactions, user)}
+              onClick={() => setShowImportModal(true)}
               className="btn btn-secondary flex items-center gap-2"
-              disabled={transactions.length === 0}
+              title={isEnglish ? 'Import from CSV/Excel' : 'Import từ CSV/Excel'}
             >
-              <FiDownload /> PDF
+              <FiUpload size={16} /> Import
+            </button>
+
+            {/* Add Transaction — hiển thị trên mọi màn hình */}
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#00523d] w-full sm:w-auto justify-center"
+            >
+              <FiPlus /> {isEnglish ? 'Add' : 'Thêm mới'}
             </button>
           </div>
-          <div className="relative group">
-            <button
-              onClick={() => exportToExcel(transactions, user)}
-              className="btn btn-secondary flex items-center gap-2"
-              disabled={transactions.length === 0}
-            >
-              <FiDownload /> Excel
-            </button>
-          </div>
-          <button
-            onClick={() => setShowImportModal(true)}
-            className="btn btn-secondary flex items-center gap-2"
-            title={isEnglish ? 'Import from CSV/Excel' : 'Import từ CSV/Excel'}
-          >
-            <FiUpload size={16} /> Import
-          </button>
-          <button
-            onClick={() => setShowModal(true)}
-            className="hidden sm:inline-flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#00523d]"
-          >
-            <FiPlus /> {isEnglish ? 'Add Transaction' : 'Thêm giao dịch'}
-          </button>
         </div>
       </div>
 

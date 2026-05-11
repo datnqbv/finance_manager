@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGoal } from '../context/GoalContext';
 import { useLanguage } from '../context/LanguageContext';
 import GoalModal from '../components/GoalModal';
@@ -9,7 +9,7 @@ import Pagination from '../components/Pagination';
 
 const Goals = () => {
   const ITEMS_PER_PAGE = 8;
-  const { goals, goalStats, loading, createGoal, updateGoal, deleteGoal, addAmountToGoal } = useGoal();
+  const { goals, goalStats, loading, fetchGoals, fetchGoalStats, createGoal, updateGoal, deleteGoal, addAmountToGoal } = useGoal();
   const { t, language } = useLanguage();
   const isEnglish = language === 'en';
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,6 +20,11 @@ const Goals = () => {
   const [showHistory, setShowHistory] = useState(null); // goal._id
   const [filter, setFilter] = useState('all'); // all, active, achieved
   const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    fetchGoals();
+    fetchGoalStats();
+  }, []);
 
   const handleCreateGoal = async (goalData) => {
     const result = await createGoal(goalData);

@@ -18,15 +18,75 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const isEnglish = localStorage.getItem('language') === 'en';
 
-  useEffect(() => {
-    // Check if user is logged in on mount
-    const token = localStorage.getItem('token');
-    const savedUser = authService.getCurrentUser();
-    
-    if (token && savedUser) {
-      setUser(savedUser);
+  const parseJwtPayload = (token) => {
+    try {
+      const base64 = token.split('.')[1];
+      const normalized = base64.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+      return JSON.parse(atob(padded));
+    } catch (_) {
+      return null;
     }
-    setLoading(false);
+  };
+
+  const isTokenExpired = (token) => {
+    const payload = parseJwtPayload(token);
+    if (!payload?.exp) return true;
+    return Date.now() >= payload.exp * 1000;
+  };
+
+  useEffect(() => {
+    let active = true;
+
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('token');
+      const refreshToken = localStorage.getItem('refreshToken');
+      const savedUser = authService.getCurrentUser();
+
+      if (!token || !savedUser) {
+        if (active) {
+          setUser(null);
+          setLoading(false);
+        }
+        return;
+      }
+
+      if (isTokenExpired(token) && refreshToken) {
+        try {
+          const data = await authService.refreshAccessToken(refreshToken);
+          localStorage.setItem('token', data.data.token);
+        } catch (_) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          if (active) {
+            setUser(null);
+            setLoading(false);
+          }
+          return;
+        }
+      } else if (isTokenExpired(token)) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        if (active) {
+          setUser(null);
+          setLoading(false);
+        }
+        return;
+      }
+
+      if (active) {
+        setUser(savedUser);
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const login = async (credentials) => {
@@ -114,6 +174,14 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user,
     loading,
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0a]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -1,6 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
 import debtService from '../services/debt.service';
-import { useAuth } from './AuthContext';
 import { toast } from 'react-toastify';
 
 const DebtContext = createContext();
@@ -15,11 +14,9 @@ export const DebtProvider = ({ children }) => {
   const [debts, setDebts]   = useState([]);
   const [stats, setStats]   = useState(null);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
   const isEnglish = localStorage.getItem('language') === 'en';
 
   const fetchDebts = async (params = {}) => {
-    if (!user) return;
     try {
       setLoading(true);
       const res = await debtService.getDebts(params);
@@ -106,18 +103,6 @@ export const DebtProvider = ({ children }) => {
       setStats(res.stats || null);
     } catch {}
   };
-
-  useEffect(() => {
-    if (user) {
-      setDebts([]);
-      setStats(null);
-      fetchDebts();
-      return;
-    }
-
-    setDebts([]);
-    setStats(null);
-  }, [user]);
 
   return (
     <DebtContext.Provider value={{ debts, stats, loading, fetchDebts, createDebt, updateDebt, deleteDebt, addPayment, settleDebt }}>

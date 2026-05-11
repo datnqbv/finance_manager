@@ -5,12 +5,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import TransactionModal from './TransactionModal';
 import { FiPlus } from 'react-icons/fi';
-import { 
-  FiHome,  
+import {
+  FiHome,
   FiBarChart2,
   FiFolder,
   FiDollarSign,
-  FiUser, 
+  FiUser,
   FiLogOut,
   FiMenu,
   FiX,
@@ -24,7 +24,8 @@ import {
   FiUsers,
   FiShield,
   FiChevronDown,
-  FiHelpCircle
+  FiHelpCircle,
+  FiSearch
 } from 'react-icons/fi';
 import { useEffect } from 'react';
 import DarkModeToggle from './DarkModeToggle';
@@ -51,7 +52,8 @@ const Layout = ({ children }) => {
   const [notifications, setNotifications] = useState([]); // Danh sách thông báo
   const [unreadCount, setUnreadCount] = useState(0); // Số thông báo chưa đọc
   const [showAdminMenu, setShowAdminMenu] = useState(false); // Trạng thái hiển thị submenu admin
-  
+  const [showMobileSearch, setShowMobileSearch] = useState(false); // Trạng thái hiển thị search overlay mobile
+
   // Fetch notifications from API
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -67,10 +69,10 @@ const Layout = ({ children }) => {
     };
 
     fetchNotifications();
-    
+
     // Refresh notifications every 1 second
     const interval = setInterval(fetchNotifications, 1 * 1000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -79,14 +81,14 @@ const Layout = ({ children }) => {
       setShowAdminMenu(true);
     }
   }, [location.pathname]);
-  
+
   const markAsRead = async (id) => { // Đánh dấu một thông báo là đã đọc
     try {
       // Gọi API để đánh dấu đã đọc
       await markNotificationAsRead(id);
-      
+
       // Cập nhật UI
-      setNotifications(notifications.map(n => 
+      setNotifications(notifications.map(n =>
         n.id === id ? { ...n, read: true } : n
       ));
       setUnreadCount(prev => Math.max(0, prev - 1));
@@ -99,7 +101,7 @@ const Layout = ({ children }) => {
     try {
       // Gọi API để đánh dấu tất cả đã đọc
       await markAllNotificationsAsRead();
-      
+
       // Cập nhật UI
       setNotifications(notifications.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
@@ -107,7 +109,7 @@ const Layout = ({ children }) => {
       console.error('Error marking all as read:', error);
     }
   };
-  
+
   // Định nghĩa các mục trong sidebar
   const menuItems = [
     { path: '/dashboard', icon: FiHome, label: isEnglish ? 'Overview' : 'Tổng quan', isImg: false },
@@ -144,19 +146,7 @@ const Layout = ({ children }) => {
       className="min-h-screen flex bg-[#f3f4f6] dark:bg-[#111216]"
       style={{ fontFamily: "'Manrope', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}
     >
-      {/* Mobile menu button */}
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white dark:bg-[#1b1c20] 
-                   border border-[#cfd2d8] dark:border-[#32353d] shadow-sm
-                   hover:bg-[#f5f8fc] dark:hover:bg-[#242730] transition-colors duration-200"
-      >
-        {sidebarOpen ? (
-          <FiX size={24} className="text-gray-700 dark:text-white" />
-        ) : (
-          <FiMenu size={24} className="text-gray-700 dark:text-white" />
-        )}
-      </button>
+      {/* Mobile menu button nằm trong header — xem header bên dưới */}
 
       {/* Sidebar */}
       <aside
@@ -171,19 +161,19 @@ const Layout = ({ children }) => {
             <div className="rounded-xl border border-[#d8dce2] bg-[#f1f3f5] p-3 dark:border-[#323844] dark:bg-[#242936]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-[#d9efe4] dark:bg-[#244236] flex items-center justify-center text-2xl">
-                <img
-                  src="/icons/money-bag.png"
-                  alt="Finance Manager Logo"
-                  className="w-6 h-6 object-contain"
-                />
-              </div>
+                  <img
+                    src="/icons/money-bag.png"
+                    alt="Finance Manager Logo"
+                    className="w-6 h-6 object-contain"
+                  />
+                </div>
                 <div>
-                <h1 className="text-[1.05rem] leading-5 font-bold text-[#1f2328] dark:text-[#eceef2]">
-                  Curator Pro
-                </h1>
-                <p className="text-[11px] text-[#6a727f] dark:text-[#a0a5ad]">
-                  {isEnglish ? 'Priority banking' : 'Ngân hàng ưu tiên'}
-                </p>
+                  <h1 className="text-[1.05rem] leading-5 font-bold text-[#1f2328] dark:text-[#eceef2]">
+                    Curator Pro
+                  </h1>
+                  <p className="text-[11px] text-[#6a727f] dark:text-[#a0a5ad]">
+                    {isEnglish ? 'Priority banking' : 'Ngân hàng ưu tiên'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -195,10 +185,10 @@ const Layout = ({ children }) => {
               to="/home"
               className="flex items-center gap-2.5 rounded-xl border border-[#d7dce4] bg-white px-3 py-2.5 text-sm text-[#4f5662] transition-colors hover:bg-[#edf5f0] hover:text-[#1f5d45] dark:border-[#333844] dark:bg-[#22252d] dark:text-[#a8adb6] dark:hover:bg-[#273332] dark:hover:text-[#9fd7be] group"
             >
-              <svg 
-                className="w-5 h-5 group-hover:scale-110 transition-transform" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className="w-5 h-5 group-hover:scale-110 transition-transform"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -305,7 +295,7 @@ const Layout = ({ children }) => {
                           className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${isActive
                             ? 'bg-[#eef6f2] text-[#1f5d45] dark:bg-[#273332] dark:text-[#b9e4d2]'
                             : 'text-[#4f5662] hover:bg-[#f2f4f7] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:text-[#d5d9e0]'
-                          }`}
+                            }`}
                         >
                           <item.icon size={18} />
                           <span className="font-medium">{item.label}</span>
@@ -334,33 +324,53 @@ const Layout = ({ children }) => {
         {/* Header */}
         <header className="bg-[#f8fafb] dark:bg-[#191d24] border-b border-[#d8dce2] dark:border-[#2f343e] sticky top-0 z-30">
           <div className="px-4 lg:px-6 py-3">
-            <div className="flex items-center justify-between gap-4">
-              {/* Left: Page title for mobile */}
-              <div className="lg:hidden min-w-[120px]">
-                <h2 className="text-lg font-semibold text-[#1f2328] dark:text-[#eceef2]">
-                  {currentPageLabel}
-                </h2>
+            <div className="flex items-center gap-3">
+
+              {/* Hamburger — nằm trong header flow trên mobile */}
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="lg:hidden flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-md bg-white dark:bg-[#1b1c20]
+                           border border-[#cfd2d8] dark:border-[#32353d] shadow-sm
+                           hover:bg-[#f5f8fc] dark:hover:bg-[#242730] transition-colors duration-200"
+              >
+                {sidebarOpen ? (
+                  <FiX size={20} className="text-gray-700 dark:text-white" />
+                ) : (
+                  <FiMenu size={20} className="text-gray-700 dark:text-white" />
+                )}
+              </button>
+
+              {/* Tiêu đề trang (mobile) / breadcrumb (desktop) */}
+              <div className="flex-1 min-w-0">
+                <div className="lg:hidden">
+                  <h2 className="text-base font-semibold text-[#1f2328] dark:text-[#eceef2] truncate">
+                    {currentPageLabel}
+                  </h2>
+                </div>
+                <div className="hidden lg:flex items-center gap-2 text-sm text-[#6d717a] dark:text-[#9ea3ad]">
+                  <span>{isEnglish ? 'Home' : 'Trang chủ'}</span>
+                  <span>/</span>
+                  <span className="font-semibold text-[#22262c] dark:text-[#eceef2]">{currentPageLabel}</span>
+                </div>
               </div>
 
-              <div className="hidden lg:flex items-center gap-2 text-sm text-[#6d717a] dark:text-[#9ea3ad]">
-                <span>{isEnglish ? 'Home' : 'Trang chủ'}</span>
-                <span>/</span>
-                <span className="font-semibold text-[#22262c] dark:text-[#eceef2]">
-                  {currentPageLabel}
-                </span>
-              </div>
-
-              {/* Center: Global Search */}
+              {/* Global Search — chỉ hiện trên desktop */}
               <div className="hidden lg:block flex-1 max-w-2xl">
                 <GlobalSearch />
               </div>
 
               {/* Right: Actions */}
-              <div className="flex items-center gap-3">
-                {/* Mobile search button */}
-                <div className="lg:hidden">
-                  <GlobalSearch />
-                </div>
+              <div className="flex items-center gap-2">
+                {/* Mobile: icon search button — bấm mở overlay */}
+                <button
+                  onClick={() => setShowMobileSearch(true)}
+                  className="lg:hidden flex items-center justify-center w-9 h-9 rounded-md bg-white dark:bg-[#242730]
+                             hover:bg-[#eef4fb] dark:hover:bg-[#2b2f39]
+                             border border-[#d3d7df] dark:border-[#353943]
+                             transition-colors duration-200"
+                >
+                  <FiSearch size={18} className="text-gray-700 dark:text-gray-300" />
+                </button>
 
                 {/* Dark Mode Toggle */}
                 <div className="hidden">
@@ -369,7 +379,7 @@ const Layout = ({ children }) => {
 
                 {/* Notifications */}
                 <div className="relative">
-                  <button 
+                  <button
                     onClick={() => setShowNotifications(!showNotifications)}
                     className="p-2 rounded-md bg-white dark:bg-[#242730] 
                                      hover:bg-[#eef4fb] dark:hover:bg-[#2b2f39] 
@@ -426,13 +436,13 @@ const Layout = ({ children }) => {
                                                 ${notification.type === 'warning' ? 'bg-yellow-100 dark:bg-yellow-500/10' : ''}
                                                 ${notification.type === 'success' ? 'bg-green-100 dark:bg-green-500/10' : ''}
                                                 ${notification.type === 'info' ? 'bg-blue-100 dark:bg-blue-500/10' : ''}`}>
-                                    <FiAlertCircle 
+                                    <FiAlertCircle
                                       className={`
                                         ${notification.type === 'warning' ? 'text-yellow-600 dark:text-yellow-400' : ''}
                                         ${notification.type === 'success' ? 'text-green-600 dark:text-green-400' : ''}
                                         ${notification.type === 'info' ? 'text-blue-600 dark:text-blue-400' : ''}
-                                      `} 
-                                      size={20} 
+                                      `}
+                                      size={20}
                                     />
                                   </div>
                                   <div className="flex-1 min-w-0">
@@ -493,8 +503,8 @@ const Layout = ({ children }) => {
                              transition-colors duration-200"
                   >
                     {user?.avatar ? (
-                      <img 
-                        src={user.avatar} 
+                      <img
+                        src={user.avatar}
                         alt={user.name}
                         className="w-8 h-8 rounded-full object-cover shadow-lg"
                       />
@@ -613,22 +623,20 @@ const Layout = ({ children }) => {
                             <div className="grid grid-cols-2 gap-3">
                               <button
                                 onClick={() => setLanguage('vi')}
-                                className={`rounded-xl border px-3 py-3 text-left transition-colors ${
-                                  language === 'vi'
+                                className={`rounded-xl border px-3 py-3 text-left transition-colors ${language === 'vi'
                                     ? 'border-[#2f8e6f] bg-[#e9f7f1] text-[#0d3a2d] dark:border-[#58c39e] dark:bg-[#1f3a32] dark:text-[#bcebd9]'
                                     : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-[#2a2a2a] dark:bg-[#171717] dark:text-gray-300 dark:hover:bg-[#1f1f1f]'
-                                }`}
+                                  }`}
                               >
                                 <p className="text-sm font-semibold">Tiếng Việt</p>
                                 <p className="text-xs opacity-75">VI</p>
                               </button>
                               <button
                                 onClick={() => setLanguage('en')}
-                                className={`rounded-xl border px-3 py-3 text-left transition-colors ${
-                                  language === 'en'
+                                className={`rounded-xl border px-3 py-3 text-left transition-colors ${language === 'en'
                                     ? 'border-[#2f8e6f] bg-[#e9f7f1] text-[#0d3a2d] dark:border-[#58c39e] dark:bg-[#1f3a32] dark:text-[#bcebd9]'
                                     : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-[#2a2a2a] dark:bg-[#171717] dark:text-gray-300 dark:hover:bg-[#1f1f1f]'
-                                }`}
+                                  }`}
                               >
                                 <p className="text-sm font-semibold">English</p>
                                 <p className="text-xs opacity-75">EN</p>
@@ -712,15 +720,39 @@ const Layout = ({ children }) => {
           </div>
         </main>
       </div>
-      
+
       {/* Modal thêm giao dịch nhanh */}
       <TransactionModal
         isOpen={showQuickAdd}
         transaction={null}
         onClose={() => setShowQuickAdd(false)}
       />
+
+      {/* Mobile Search Overlay */}
+      {showMobileSearch && (
+        <>
+          <div
+            className="lg:hidden fixed inset-0 bg-black/50 z-50"
+            onClick={() => setShowMobileSearch(false)}
+          />
+          <div className="lg:hidden fixed top-0 left-0 right-0 z-[51] bg-[#f8fafb] dark:bg-[#191d24] border-b border-[#d8dce2] dark:border-[#2f343e] p-3 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <GlobalSearch />
+              </div>
+              <button
+                onClick={() => setShowMobileSearch(false)}
+                className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-md bg-gray-100 dark:bg-[#242730] text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2b2f39] transition-colors"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
 
 export default Layout;
+

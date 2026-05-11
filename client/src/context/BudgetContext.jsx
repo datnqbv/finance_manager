@@ -1,7 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
 import * as budgetService from '../services/budget.service';
 import { toast } from 'react-toastify';
-import { useAuth } from './AuthContext';
 
 const BudgetContext = createContext();
 
@@ -17,21 +16,7 @@ export const BudgetProvider = ({ children }) => {
   const [alerts, setAlerts]             = useState([]);
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState(null);
-  const { user } = useAuth();
   const isEnglish = localStorage.getItem('language') === 'en';
-
-  // Auto-fetch on login
-  useEffect(() => {
-    if (user) {
-      fetchBudgetOverview();
-      return;
-    }
-
-    setBudgets([]);
-    setBudgetStatus(null);
-    setAlerts([]);
-    setError(null);
-  }, [user]);
 
   // ── Single combined fetch: replaces fetchBudgets + fetchBudgetStatus + fetchAlerts ──
   const fetchBudgetOverview = async () => {

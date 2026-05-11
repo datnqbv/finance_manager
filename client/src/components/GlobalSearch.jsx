@@ -35,31 +35,31 @@ const GlobalSearch = () => {
     if (!text || !query) return false;
     text = text.toLowerCase();
     query = query.toLowerCase();
-    
+
     // Exact match
     if (text.includes(query)) return true;
-    
+
     // Remove Vietnamese accents for better matching
     const removeAccents = (str) => {
       return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     };
-    
+
     const normalizedText = removeAccents(text);
     const normalizedQuery = removeAccents(query);
-    
+
     if (normalizedText.includes(normalizedQuery)) return true;
-    
+
     // Fuzzy matching - allow 1-2 character differences
     let queryIndex = 0;
     let matchCount = 0;
-    
+
     for (let i = 0; i < normalizedText.length && queryIndex < normalizedQuery.length; i++) {
       if (normalizedText[i] === normalizedQuery[queryIndex]) {
         matchCount++;
         queryIndex++;
       }
     }
-    
+
     // If matched at least 70% of the query characters
     return matchCount / normalizedQuery.length >= 0.7;
   };
@@ -67,13 +67,13 @@ const GlobalSearch = () => {
   // Highlight matching text
   const highlightText = (text, query) => {
     if (!text || !query) return text;
-    
+
     const lowerText = text.toLowerCase();
     const lowerQuery = query.toLowerCase();
     const index = lowerText.indexOf(lowerQuery);
-    
+
     if (index === -1) return text;
-    
+
     return (
       <>
         {text.substring(0, index)}
@@ -115,7 +115,7 @@ const GlobalSearch = () => {
     ];
 
     const pageResults = pages
-      .filter(p => 
+      .filter(p =>
         fuzzyMatch(p.title, lowerQuery) ||
         p.keywords.some(k => fuzzyMatch(k, lowerQuery))
       )
@@ -134,32 +134,32 @@ const GlobalSearch = () => {
       .map(t => {
         const categoryLower = (t.category || '').toLowerCase();
         const noteLower = (t.note || '').toLowerCase();
-        
+
         let score = 0;
-        
+
         // Exact match (highest priority)
         if (categoryLower === lowerQuery) score += 100;
         else if (noteLower === lowerQuery) score += 90;
-        
+
         // Starts with (high priority)
         else if (categoryLower.startsWith(lowerQuery)) score += 80;
         else if (noteLower.startsWith(lowerQuery)) score += 70;
-        
+
         // Contains (medium priority)
         else if (categoryLower.includes(lowerQuery)) score += 50;
         else if (noteLower.includes(lowerQuery)) score += 40;
-        
+
         // Fuzzy match (lower priority)
         else if (fuzzyMatch(t.category, lowerQuery)) score += 20;
         else if (fuzzyMatch(t.note, lowerQuery)) score += 15;
-        
+
         // Amount match
         if (t.amount?.toString().includes(lowerQuery)) score += 10;
-        
+
         // Type match
         if (t.type === 'income' && (fuzzyMatch('thu nhập', lowerQuery) || fuzzyMatch('income', lowerQuery))) score += 5;
         if (t.type === 'expense' && (fuzzyMatch('chi tiêu', lowerQuery) || fuzzyMatch('expense', lowerQuery))) score += 5;
-        
+
         return {
           ...t,
           relevanceScore: score
@@ -185,15 +185,15 @@ const GlobalSearch = () => {
       .map(c => {
         const nameLower = (c.name || '').toLowerCase();
         let score = 0;
-        
+
         if (nameLower === lowerQuery) score += 100;
         else if (nameLower.startsWith(lowerQuery)) score += 80;
         else if (nameLower.includes(lowerQuery)) score += 50;
         else if (fuzzyMatch(c.name, lowerQuery)) score += 20;
-        
+
         if (c.type === 'income' && fuzzyMatch('thu nhập', lowerQuery)) score += 5;
         if (c.type === 'expense' && fuzzyMatch('chi tiêu', lowerQuery)) score += 5;
-        
+
         return { ...c, relevanceScore: score };
       })
       .filter(c => c.relevanceScore > 0)
@@ -211,11 +211,11 @@ const GlobalSearch = () => {
       }));
 
     // Search in budgets
-    const isBudgetKeyword = fuzzyMatch('ngân sách', lowerQuery) || 
-                            fuzzyMatch('budget', lowerQuery) ||
-                            fuzzyMatch('chi tiêu', lowerQuery) ||
-                            fuzzyMatch('tổng chi', lowerQuery);
-    
+    const isBudgetKeyword = fuzzyMatch('ngân sách', lowerQuery) ||
+      fuzzyMatch('budget', lowerQuery) ||
+      fuzzyMatch('chi tiêu', lowerQuery) ||
+      fuzzyMatch('tổng chi', lowerQuery);
+
     const budgetResults = (budgets || [])
       .filter(b => {
         if (isBudgetKeyword) return true;
@@ -237,13 +237,13 @@ const GlobalSearch = () => {
 
     // Search in goals
     const isGoalKeyword = fuzzyMatch('mục tiêu', lowerQuery) || fuzzyMatch('goal', lowerQuery);
-    
+
     const goalResults = (goals || [])
       .filter(g => {
         if (isGoalKeyword) return true;
         const nameMatch = fuzzyMatch(g.name, lowerQuery);
-        const amountMatch = g.targetAmount?.toString().includes(lowerQuery) || 
-                           g.currentAmount?.toString().includes(lowerQuery);
+        const amountMatch = g.targetAmount?.toString().includes(lowerQuery) ||
+          g.currentAmount?.toString().includes(lowerQuery);
         const statusMatch = fuzzyMatch(g.status, lowerQuery);
         return nameMatch || amountMatch || statusMatch;
       })
@@ -265,16 +265,16 @@ const GlobalSearch = () => {
       ...budgetResults,
       ...goalResults
     ];
-    
+
     // Sort all results by relevance score
     allResults.sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
-    
+
     // Pages always at top if matched
     const finalResults = [
       ...pageResults,
       ...allResults.slice(0, 15) // Limit total results
     ];
-    
+
     console.log('Search Results:', {
       pages: pageResults.length,
       transactions: transactionResults.length,
@@ -283,7 +283,7 @@ const GlobalSearch = () => {
       goals: goalResults.length,
       total: finalResults.length
     });
-    
+
     setSearchResults(finalResults);
   }, [transactions, categories, budgets, goals]);
 

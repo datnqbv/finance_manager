@@ -1,6 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
 import goalService from '../services/goal.service';
-import { useAuth } from './AuthContext';
 import { toast } from 'react-toastify';
 
 const GoalContext = createContext();
@@ -18,13 +17,10 @@ export const GoalProvider = ({ children }) => {
   const [goalStats, setGoalStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { user } = useAuth();
   const isEnglish = localStorage.getItem('language') === 'en';
 
   // Fetch all goals
   const fetchGoals = async () => {
-    if (!user) return;
-    
     try {
       setLoading(true);
       setError(null);
@@ -40,8 +36,6 @@ export const GoalProvider = ({ children }) => {
 
   // Fetch goal statistics
   const fetchGoalStats = async () => {
-    if (!user) return;
-    
     try {
       const data = await goalService.getGoalStats();
       setGoalStats(data.data);
@@ -125,19 +119,6 @@ export const GoalProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
-  // Load goals when user changes
-  useEffect(() => {
-    if (user) {
-      setGoals([]);
-      setGoalStats(null);
-      fetchGoals();
-      fetchGoalStats();
-    } else {
-      setGoals([]);
-      setGoalStats(null);
-    }
-  }, [user]);
 
   const value = {
     goals,

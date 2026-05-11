@@ -990,11 +990,8 @@ const Landing = () => {
         {/* ══════════ CTA ══════════ */}
         <section
           className="relative py-24 px-5 sm:px-8 overflow-hidden bg-emerald-600"
-          onMouseMove={handleCtaWaveMove}
-          onMouseEnter={handleCtaWaveMove}
-          onMouseLeave={handleCtaWaveLeave}
         >
-          <div ref={ctaWaveLayerRef} className="cta-wave-surface">
+          <div ref={ctaWaveLayerRef} className="cta-wave-surface" style={{ '--wave-x': '50%', '--wave-y': '50%' }}>
             <span className="cta-wave-ripple r1" />
             <span className="cta-wave-ripple r2" />
             <span className="cta-wave-ripple r3" />

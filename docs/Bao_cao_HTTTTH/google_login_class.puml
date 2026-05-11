@@ -1,0 +1,62 @@
+@startuml
+
+class GiaoDienDangNhap {
+  +dăngNhapEmail(email, password)
+  +dăngNhapGoogle()
+}
+
+class DichVuXacThuc {
+  +guiYeuCauEmail(email, password)
+  +guiYeuCauGoogle(idToken)
+}
+
+class ControllerXacThuc {
+  +dăngNhapEmail(req)
+  +dăngNhapGoogle(req)
+}
+
+class KiemTra {
+  +kiemTraMatKhau(plain, hashed)
+  +xacThucGoogle(idToken)
+}
+
+class NguoiDung {
+  +id
+  +email
+  +matKhau
+  +googleId
+  +timTheoEmail(email)
+  +timTheoGoogleId(googleId)
+  +taoMoi(attrs)
+}
+
+class DichVuToken {
+  +taoAccessToken(userId)
+  +taoRefreshToken(userId)
+}
+
+class CSDuLieu {
+  +truy-van(sql)
+  +luu(data)
+}
+
+' Luồng Email/Password
+GiaoDienDangNhap --> DichVuXacThuc : dăngNhapEmail()
+DichVuXacThuc --> ControllerXacThuc : POST /api/auth/login
+ControllerXacThuc --> KiemTra : kiemTraMatKhau()
+ControllerXacThuc --> NguoiDung : timTheoEmail()
+NguoiDung --> CSDuLieu : truy vấn
+  
+' Luồng Google
+GiaoDienDangNhap --> DichVuXacThuc : dăngNhapGoogle()
+DichVuXacThuc --> ControllerXacThuc : POST /api/auth/google
+ControllerXacThuc --> KiemTra : xacThucGoogle()
+ControllerXacThuc --> NguoiDung : timTheoGoogleId()
+NguoiDung --> CSDuLieu : tạo/lưu user
+
+' Luồng chung
+ControllerXacThuc --> DichVuToken : tao token
+DichVuToken --> CSDuLieu : luu refreshToken
+DichVuToken --> GiaoDienDangNhap : trả token
+
+@enduml

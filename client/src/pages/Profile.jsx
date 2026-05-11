@@ -110,24 +110,6 @@ const Profile = () => {
 
   const togglePw = (field) => setShowPw(prev => ({ ...prev, [field]: !prev[field] }));
 
-  // ── Password field helper
-  const PwInput = ({ field, placeholder }) => (
-    <div className="relative">
-      <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14}/>
-      <input
-        type={showPw[field] ? 'text' : 'password'}
-        value={pwForm[field]}
-        onChange={e => setPwForm(p => ({ ...p, [field]: e.target.value }))}
-        placeholder={placeholder}
-        required
-        className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition pl-9 pr-10 py-2.5"
-      />
-      <button type="button" onClick={() => togglePw(field)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
-        {showPw[field] ? <FiEyeOff size={14}/> : <FiEye size={14}/>}
-      </button>
-    </div>
-  );
 
   return (
     <div className="space-y-5">
@@ -274,15 +256,57 @@ const Profile = () => {
 
             <form onSubmit={handleChangePassword} className="space-y-4">
               <Field label={isEnglish ? 'Current password' : 'Mật khẩu hiện tại'}>
-                <PwInput field="current" placeholder={isEnglish ? 'Enter current password' : 'Nhập mật khẩu hiện tại'}/>
+                <div className="relative">
+                  <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14}/>
+                  <input
+                    type={showPw.current ? 'text' : 'password'}
+                    value={pwForm.current}
+                    onChange={e => setPwForm(p => ({ ...p, current: e.target.value }))}
+                    placeholder={isEnglish ? 'Enter current password' : 'Nhập mật khẩu hiện tại'}
+                    required
+                    className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition pl-9 pr-10 py-2.5"
+                  />
+                  <button type="button" onClick={() => togglePw('current')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                    {showPw.current ? <FiEyeOff size={14}/> : <FiEye size={14}/>}
+                  </button>
+                </div>
               </Field>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label={isEnglish ? 'New password' : 'Mật khẩu mới'} hint={isEnglish ? 'Minimum 6 characters' : 'Tối thiểu 6 ký tự'}>
-                  <PwInput field="next" placeholder={isEnglish ? 'New password' : 'Mật khẩu mới'}/>
+                  <div className="relative">
+                    <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14}/>
+                    <input
+                      type={showPw.next ? 'text' : 'password'}
+                      value={pwForm.next}
+                      onChange={e => setPwForm(p => ({ ...p, next: e.target.value }))}
+                      placeholder={isEnglish ? 'New password' : 'Mật khẩu mới'}
+                      required
+                      className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition pl-9 pr-10 py-2.5"
+                    />
+                    <button type="button" onClick={() => togglePw('next')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                      {showPw.next ? <FiEyeOff size={14}/> : <FiEye size={14}/>}
+                    </button>
+                  </div>
                 </Field>
                 <Field label={isEnglish ? 'Confirm new password' : 'Xác nhận mật khẩu mới'}>
-                  <PwInput field="confirm" placeholder={isEnglish ? 'Re-enter new password' : 'Nhập lại mật khẩu mới'}/>
+                  <div className="relative">
+                    <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14}/>
+                    <input
+                      type={showPw.confirm ? 'text' : 'password'}
+                      value={pwForm.confirm}
+                      onChange={e => setPwForm(p => ({ ...p, confirm: e.target.value }))}
+                      placeholder={isEnglish ? 'Re-enter new password' : 'Nhập lại mật khẩu mới'}
+                      required
+                      className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition pl-9 pr-10 py-2.5"
+                    />
+                    <button type="button" onClick={() => togglePw('confirm')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                      {showPw.confirm ? <FiEyeOff size={14}/> : <FiEye size={14}/>}
+                    </button>
+                  </div>
                 </Field>
               </div>
 

@@ -25,7 +25,9 @@ export const protect = async (req, res, next) => {
 
       next();
     } catch (error) {
-      console.error('Auth middleware error:', error.message);
+      if (error.name !== 'TokenExpiredError' && error.name !== 'JsonWebTokenError') {
+        console.error('Auth middleware error:', error.message);
+      }
       return res.status(401).json({
         success: false,
         message: 'Token không hợp lệ hoặc đã hết hạn'

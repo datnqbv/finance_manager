@@ -369,6 +369,7 @@ button {
 .tx-layout-list {
   grid-template-areas:
     'header'
+    'summary'
     'filters'
     'table';
   grid-template-columns: minmax(0, 1fr);
@@ -456,6 +457,38 @@ button {
       'category date'
       'amount amount';
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/* Mobile: gom các nút header thành hàng ngang có scroll */
+@media (max-width: 767px) {
+  .tx-header-actions {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .tx-header-actions .btn,
+  .tx-header-actions button {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+  }
+
+  .tx-view-toggle {
+    width: 100%;
+  }
+
+  .tx-export-group {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .tx-export-group .btn {
+    flex: 1;
   }
 }
 

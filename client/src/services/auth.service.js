@@ -1,4 +1,7 @@
+import axios from 'axios';
 import api from './api';
+
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const authService = {
   register: async (userData) => {
@@ -38,6 +41,11 @@ export const authService = {
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
     }
+  },
+
+  refreshAccessToken: async (refreshToken) => {
+    const response = await axios.post(`${API_URL}/auth/refresh-token`, { refreshToken });
+    return response.data;
   },
 
   getMe: async () => {

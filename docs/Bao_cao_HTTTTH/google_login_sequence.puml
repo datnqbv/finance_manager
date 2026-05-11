@@ -1,0 +1,18 @@
+@startuml
+actor Client
+participant Google
+participant Server
+participant DB
+
+Client -> Client: Truy cập trang đăng nhập
+Client -> Client: Nhập email và mật khẩu (hoặc chọn Google)
+Client -> Server: Gửi thông tin đăng nhập\n(POST /api/auth/login hoặc /api/auth/google)
+Server -> Google: Xác thực id_token (nếu Google)
+Server -> DB: Kiểm tra/tìm hoặc tạo user
+DB --> Server: Kết quả
+Server -> Server: Tạo access + refresh token
+Server --> Client: Trả { token, refreshToken, user }
+Client -> Client: Lưu token vào localStorage
+Client -> Client: Chuyển đến /dashboard
+
+@enduml

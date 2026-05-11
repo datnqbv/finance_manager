@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDebt } from '../context/DebtContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -14,7 +14,7 @@ import Pagination from '../components/Pagination';
 const Debts = () => {
   const ITEMS_PER_PAGE = 8;
   const { user } = useAuth();
-  const { debts, stats, loading, createDebt, updateDebt, deleteDebt, addPayment, settleDebt } = useDebt();
+  const { debts, stats, loading, fetchDebts, createDebt, updateDebt, deleteDebt, addPayment, settleDebt } = useDebt();
   const { t, language } = useLanguage();
   const isEnglish = language === 'en';
 
@@ -27,6 +27,10 @@ const Debts = () => {
   const [payAmount, setPayAmount]         = useState('');
   const [payNote, setPayNote]             = useState('');
   const [currentPage, setCurrentPage]     = useState(1);
+
+  useEffect(() => {
+    fetchDebts();
+  }, []);
 
   const fmt = (n) =>
     new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(n);

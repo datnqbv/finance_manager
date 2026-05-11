@@ -1,0 +1,39 @@
+@startuml
+|Client|
+start
+:Người dùng truy cập trang đăng nhập;
+if (Chọn phương thức đăng nhập?) then (Email/mật khẩu)
+  :Nhập email và mật khẩu;
+  :Gửi thông tin đăng nhập tới server (`POST /api/auth/login`);
+
+  |Server|
+  :Kiểm tra thông tin tài khoản;
+  if (Hợp lệ?) then (có)
+    :Tạo access + refresh token;
+    :Trả về token và thông tin user;
+  else (không)
+    :Trả lỗi xác thực;
+    stop
+  endif
+
+else (Google)
+  :Người dùng bấm "Đăng nhập bằng Google";
+  :Nhận `id_token` từ Google;
+  :Gửi `id_token` tới server (`POST /api/auth/google`);
+
+  |Server|
+  :Xác thực `id_token` với Google;
+  if (Hợp lệ?) then (có)
+    :Tìm hoặc tạo user;
+    :Tạo access + refresh token;
+    :Trả về token và thông tin user;
+  else (không)
+    :Trả lỗi 401;
+    stop
+  endif
+endif
+
+|Client|
+:Lưu token; chuyển tới `/dashboard`;
+stop
+@enduml

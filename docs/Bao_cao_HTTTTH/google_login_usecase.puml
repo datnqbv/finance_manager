@@ -1,0 +1,20 @@
+@startuml
+left to right direction
+actor "Người dùng" as User
+
+rectangle "Hệ thống quản lý chi tiêu cá nhân" {
+  (Truy cập trang đăng nhập) as UC_AccessLogin
+  (Đăng nhập) as UC_Login
+  (Nhập email và mật khẩu) as UC_EnterCredentials
+  (Đăng nhập bằng Google) as UC_GoogleLogin
+}
+
+User --> UC_AccessLogin
+User --> UC_Login
+User --> UC_GoogleLogin
+
+UC_Login ..> UC_AccessLogin : <<include>>
+UC_Login ..> UC_EnterCredentials : <<include>>
+UC_GoogleLogin ..> UC_Login : <<extend>>
+
+@enduml
