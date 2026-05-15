@@ -320,7 +320,7 @@ const Layout = ({ children }) => {
       )}
 
       {/* Main content wrapper */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col">
         {/* Header */}
         <header className="bg-[#f8fafb] dark:bg-[#191d24] border-b border-[#d8dce2] dark:border-[#2f343e] sticky top-0 z-30">
           <div className="px-4 lg:px-6 py-3">

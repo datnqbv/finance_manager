@@ -619,7 +619,6 @@ const Statistics = () => {
               </div>
               <div className="flex items-center gap-2">
                 <ConfidenceBadge confidence={f.confidence} isEnglish={isEnglish}/>
-                <span className="text-xs text-gray-400 dark:text-gray-500">R²: {((f.r2Expense||0)*100).toFixed(0)}%</span>
               </div>
             </div>
             <div className="flex gap-4 text-xs text-gray-500 dark:text-gray-400 mb-3 flex-wrap">

@@ -5,8 +5,11 @@ import mongoose from 'mongoose';
 
 // ── Inline checkAlerts helper (works on .lean() objects) ─────────────────────
 const checkAlertsInline = (alertThresholds, notificationEnabled, currentSpending, effectiveAmount) => {
+  // lấy phần trăm ngân sách đã đạt được dựa trên số tiền đã chi tiêu và số tiền hiệu quả của ngân sách (bao gồm cả phần rollover nếu có), sau đó so sánh với các ngưỡng cảnh báo đã định nghĩa để xác định những cảnh báo nào đã được kích hoạt, giúp người dùng nhanh chóng nhận biết những ngân sách nào đang có nguy cơ bị vượt hoặc đã vượt mức, từ đó có thể điều chỉnh kế hoạch chi tiêu kịp thời để tránh rủi ro tài chính.
   const pct = effectiveAmount > 0 ? (currentSpending / effectiveAmount) * 100 : 0;
+  // lấy ngưỡng cảnh báo từ ngân sách hoặc sử dụng mặc định nếu không có, sau đó lọc ra những ngưỡng nào đã bị vượt qua dựa trên phần trăm đã đạt được và trạng thái kích hoạt thông báo, giúp người dùng nhanh chóng nhận biết những ngân sách nào đang có nguy cơ bị vượt hoặc đã vượt mức, từ đó có thể điều chỉnh kế hoạch chi tiêu kịp thời để tránh rủi ro tài chính.
   const thresholds = alertThresholds?.length ? alertThresholds : [80, 100, 120];
+  // lấy danh sách các cảnh báo đã được kích hoạt dựa trên phần trăm đã đạt được và trạng thái kích hoạt thông báo, giúp người dùng nhanh chóng nhận biết những ngân sách nào đang có nguy cơ bị vượt hoặc đã vượt mức, từ đó có thể điều chỉnh kế hoạch chi tiêu kịp thời để tránh rủi ro tài chính.
   const triggered  = thresholds.filter(t => pct >= t && notificationEnabled !== false);
   return { percentage: Math.round(pct), triggeredAlerts: triggered, isOverBudget: pct > 100 };
 };
@@ -134,15 +137,16 @@ export const getBudgets = async (req, res) => {
 
     const budgets = await Budget.find({ userId, isActive: true }).sort({ categoryName: 1 }).lean();
 
-    // ── Rollover: batch by period, 1 aggregation per period type ─────────────
+    // ── Rollover: Cái này là  ─────────────
     const rolloverTargets = budgets.filter(b =>
       b.rolloverEnabled && b.lastRolloverMonth !== currentPeriodKey(b.period, now)
     );
-
+    // nếu có ngân sách nào bật tính năng rollover và chưa được cập nhật cho kỳ hiện tại, thì sẽ thực hiện tính toán số tiền thừa hoặc thiếu từ kỳ trước và cập nhật vào trường rolloverAmount của ngân sách đó, 
+    // giúp người dùng có cái nhìn chính xác hơn về số tiền còn lại trong ngân sách hiện tại sau khi đã tính đến phần dư hoặc thiếu từ kỳ trước, từ đó có thể điều chỉnh kế hoạch chi tiêu kịp thời để tránh rủi ro tài chính.
     if (rolloverTargets.length > 0) {
       const byPeriod = {};
       rolloverTargets.forEach(b => { (byPeriod[b.period] ??= []).push(b); });
-
+      // nhóm các ngân sách cần rollover theo kỳ (tuần/tháng/năm) để tối ưu việc truy vấn tổng chi tiêu của kỳ đó, tránh phải thực hiện nhiều truy vấn cho từng ngân sách riêng lẻ, từ đó cải thiện hiệu suất của API khi có nhiều ngân sách cần rollover cùng lúc.
       const rolloverWrites = [];
       await Promise.all(Object.entries(byPeriod).map(async ([period, pBudgets]) => {
         const lastRange = getLastPeriodRange(period, now);
@@ -153,7 +157,8 @@ export const getBudgets = async (req, res) => {
         const catSpend   = {};
         let   totalSpend = 0;
         agg.forEach(r => { catSpend[r._id] = r.total; totalSpend += r.total; });
-
+        // tính toán số tiền thừa hoặc thiếu từ kỳ trước cho từng ngân sách cần rollover dựa trên tổng chi tiêu của kỳ đó, sau đó chuẩn bị các cập nhật để ghi vào cơ sở dữ liệu, giúp người dùng có cái nhìn chính xác hơn về số tiền còn lại trong ngân sách hiện tại sau khi đã tính đến phần dư hoặc thiếu từ kỳ trước, từ đó có thể điều chỉnh kế hoạch chi tiêu kịp thời để tránh rủi ro tài chính.
+        // tính bằng cách lấy số tiền đã chi tiêu của kỳ trước (theo danh mục nếu có, hoặc tổng nếu là ngân sách tổng) và so sánh với số tiền của ngân sách cộng với phần rolloverAmount từ kỳ trước (nếu có), phần chênh lệch sẽ được ghi vào trường rolloverAmount để cộng vào ngân sách của kỳ hiện tại, giúp người dùng có cái nhìn chính xác hơn về số tiền còn lại trong ngân sách hiện tại sau khi đã tính đến phần dư hoặc thiếu từ kỳ trước, từ đó có thể điều chỉnh kế hoạch chi tiêu kịp thời để tránh rủi ro tài chính.
         const periodKey = currentPeriodKey(period, now);
         pBudgets.forEach(b => {
           const lastSpending  = b.categoryName ? (catSpend[b.categoryName] ?? 0) : totalSpend;
@@ -385,6 +390,7 @@ export const deleteBudget = async (req, res) => {
 // @desc    Get budget status/overview
 // @route   GET /api/budgets/status
 // @access  Private
+// lấy trạng thái của tất cả ngân sách hiện tại bao gồm số tiền đã chi, còn lại, phần trăm đã đạt được và các cảnh báo nếu có, giúp người dùng nhanh chóng đánh giá tình hình ngân sách của họ và nhận biết những ngân sách nào đang có nguy cơ bị vượt hoặc đã vượt mức, từ đó có thể điều chỉnh kế hoạch chi tiêu kịp thời để tránh rủi ro tài chính.
 export const getBudgetStatus = async (req, res) => {
   try {
     const userId  = req.user._id;
@@ -422,6 +428,8 @@ export const getBudgetStatus = async (req, res) => {
 // @desc    Check and get triggered alerts
 // @route   GET /api/budgets/alerts
 // @access  Private
+// Lấy danh sách các cảnh báo đã kích hoạt dựa trên các ngân sách hiện tại và mức chi tiêu,
+//  giúp người dùng nhanh chóng nhận biết những ngân sách nào đang có nguy cơ bị vượt hoặc đã vượt mức, từ đó có thể điều chỉnh kế hoạch chi tiêu kịp thời để tránh rủi ro tài chính.
 export const getAlerts = async (req, res) => {
   try {
     const userId  = req.user._id;
@@ -455,6 +463,7 @@ export const getAlerts = async (req, res) => {
 // @desc    Combined budgets + status + alerts in one call
 // @route   GET /api/budgets/overview
 // @access  Private
+// lấy tổng quan ngân sách bao gồm danh sách ngân sách, trạng thái hiện tại (đã chi bao nhiêu, còn lại bao nhiêu, đã đạt được bao nhiêu phần trăm) và các cảnh báo đã kích hoạt nếu có, giúp người dùng có cái nhìn tổng thể về tình hình ngân sách của họ trong một lần gọi API duy nhất, từ đó dễ dàng theo dõi và quản lý tài chính cá nhân hiệu quả hơn.
 export const getBudgetOverview = async (req, res) => {
   try {
     const userId = req.user._id;

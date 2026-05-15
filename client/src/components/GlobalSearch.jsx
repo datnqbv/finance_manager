@@ -5,6 +5,9 @@ import { useTransactions } from '../context/TransactionContext';
 import { useCategories } from '../context/CategoryContext';
 import { useBudgets } from '../context/BudgetContext';
 import { useGoal } from '../context/GoalContext';
+import { useDebt } from '../context/DebtContext';
+import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const GlobalSearch = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,10 +16,14 @@ const GlobalSearch = () => {
   const navigate = useNavigate();
   const searchRef = useRef(null);
   const debounceTimer = useRef(null);
+  const { user } = useAuth();
+  const { language } = useLanguage();
+  const isEnglish = language === 'en';
   const { transactions } = useTransactions();
   const { categories } = useCategories();
   const { budgets } = useBudgets();
   const { goals } = useGoal();
+  const { debts, fetchDebts } = useDebt();
 
   // Close search when clicking outside
   useEffect(() => {
@@ -29,6 +36,12 @@ const GlobalSearch = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!debts || debts.length === 0) {
+      fetchDebts().catch(() => {});
+    }
+  }, [debts, fetchDebts]);
 
   // Fuzzy search helper - tìm kiếm gần đúng
   const fuzzyMatch = (text, query) => {
@@ -101,6 +114,7 @@ const GlobalSearch = () => {
     console.log('Goals:', goals?.length || 0, goals);
     console.log('Transactions:', transactions?.length || 0);
     console.log('Categories:', categories?.length || 0);
+    console.log('Debts:', debts?.length || 0);
     console.log('===========================');
 
     // Add page shortcuts (highest priority)
@@ -110,6 +124,7 @@ const GlobalSearch = () => {
       { title: 'Danh mục', path: '/categories', icon: '📁', keywords: ['categories', 'danh mục', 'danh muc', 'category'] },
       { title: 'Ngân sách', path: '/budgets', icon: '💰', keywords: ['budgets', 'ngân sách', 'ngan sach', 'budget'] },
       { title: 'Mục tiêu', path: '/goals', icon: '🎯', keywords: ['goals', 'mục tiêu', 'muc tieu', 'target'] },
+      { title: 'Quản lý nợ', path: '/debts', icon: '🤝', keywords: ['debts', 'nợ', 'no', 'vay', 'borrow', 'lend', 'quản lý nợ', 'quan ly no'] },
       { title: 'Thống kê', path: '/statistics', icon: '📊', keywords: ['statistics', 'thống kê', 'thong ke', 'stats', 'chart'] },
       { title: 'Tài khoản', path: '/profile', icon: '👤', keywords: ['profile', 'tài khoản', 'tai khoan', 'account'] },
     ];
@@ -258,12 +273,61 @@ const GlobalSearch = () => {
         matchText: g.name
       }));
 
+    const isDebtKeyword = fuzzyMatch('nợ', lowerQuery) ||
+      fuzzyMatch('debt', lowerQuery) ||
+      fuzzyMatch('quản lý nợ', lowerQuery) ||
+      fuzzyMatch('vay', lowerQuery) ||
+      fuzzyMatch('borrow', lowerQuery) ||
+      fuzzyMatch('lend', lowerQuery);
+
+    const debtResults = (debts || [])
+      .map((debt) => {
+        const nameLower = (debt.personName || '').toLowerCase();
+        const descriptionLower = (debt.description || '').toLowerCase();
+        let score = 0;
+
+        if (nameLower === lowerQuery) score += 100;
+        else if (descriptionLower === lowerQuery) score += 90;
+        else if (nameLower.startsWith(lowerQuery)) score += 80;
+        else if (descriptionLower.startsWith(lowerQuery)) score += 70;
+        else if (nameLower.includes(lowerQuery)) score += 50;
+        else if (descriptionLower.includes(lowerQuery)) score += 40;
+        else if (fuzzyMatch(debt.personName, lowerQuery)) score += 20;
+        else if (fuzzyMatch(debt.description, lowerQuery)) score += 15;
+
+        if (debt.amount?.toString().includes(lowerQuery) || debt.remainingAmount?.toString().includes(lowerQuery)) score += 10;
+        if (debt.type === 'lend' && isDebtKeyword) score += 5;
+        if (debt.type === 'borrow' && isDebtKeyword) score += 5;
+        if (debt.status === 'settled' && fuzzyMatch('đã tất toán', lowerQuery)) score += 5;
+        if (debt.status === 'active' && fuzzyMatch('đang hoạt động', lowerQuery)) score += 5;
+
+        return {
+          ...debt,
+          relevanceScore: score
+        };
+      })
+      .filter(debt => debt.relevanceScore > 0)
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+      .slice(0, isDebtKeyword ? 5 : 3)
+      .map(debt => ({
+        type: 'debt',
+        id: debt._id,
+        title: debt.personName,
+        subtitle: `${debt.type === 'lend' ? 'Họ nợ tôi' : 'Tôi nợ họ'} - ${new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(debt.remainingAmount ?? debt.amount ?? 0)}`,
+        path: '/debts',
+        icon: debt.status === 'settled' ? '✅' : debt.type === 'lend' ? '🤝' : '💸',
+        matchText: `${debt.personName} ${debt.description || ''}`.trim(),
+        relevanceScore: debt.relevanceScore,
+        date: debt.dueDate ? new Date(debt.dueDate).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN') : undefined,
+      }));
+
     // Combine results and sort by relevance score
     const allResults = [
       ...transactionResults,
       ...categoryResults,
       ...budgetResults,
-      ...goalResults
+      ...goalResults,
+      ...debtResults
     ];
 
     // Sort all results by relevance score
@@ -281,11 +345,12 @@ const GlobalSearch = () => {
       categories: categoryResults.length,
       budgets: budgetResults.length,
       goals: goalResults.length,
+      debts: debtResults.length,
       total: finalResults.length
     });
 
     setSearchResults(finalResults);
-  }, [transactions, categories, budgets, goals]);
+  }, [transactions, categories, budgets, goals, debts, user?.currency, isEnglish]);
 
   // Debounced search with useEffect
   useEffect(() => {
@@ -375,12 +440,14 @@ const GlobalSearch = () => {
                         ${result.type === 'category' ? 'bg-orange-100 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400' : ''}
                         ${result.type === 'budget' ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400' : ''}
                         ${result.type === 'goal' ? 'bg-pink-100 dark:bg-pink-500/10 text-pink-700 dark:text-pink-400' : ''}
+                        ${result.type === 'debt' ? 'bg-teal-100 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400' : ''}
                       `}>
                         {result.type === 'page' && 'Trang'}
                         {result.type === 'transaction' && 'Giao dịch'}
                         {result.type === 'category' && 'Danh mục'}
                         {result.type === 'budget' && 'Ngân sách'}
                         {result.type === 'goal' && 'Mục tiêu'}
+                        {result.type === 'debt' && 'Nợ'}
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
@@ -405,7 +472,7 @@ const GlobalSearch = () => {
                 Không tìm thấy kết quả cho "{searchQuery}"
               </p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                Thử tìm: giao dịch, danh mục, ngân sách, mục tiêu...
+                Thử tìm: giao dịch, danh mục, ngân sách, mục tiêu, nợ...
               </p>
             </div>
           )}

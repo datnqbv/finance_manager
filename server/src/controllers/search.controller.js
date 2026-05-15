@@ -3,12 +3,13 @@ import Transaction from '../models/Transaction.model.js';
 import Category from '../models/Category.model.js';
 import Budget from '../models/Budget.model.js';
 import Goal from '../models/Goal.model.js';
+import Debt from '../models/Debt.model.js';
 
 /**
  * @desc    Global search sử dụng MongoDB Aggregation Pipeline
  * @route   GET /api/search
  * @access  Private
- * @query   q (search query), type (optional: transaction|category|budget|goal|all)
+ * @query   q (search query), type (optional: transaction|category|budget|goal|debt|all)
  */
 export const globalSearch = async (req, res) => {
   try {
@@ -23,6 +24,7 @@ export const globalSearch = async (req, res) => {
           categories: [],
           budgets: [],
           goals: [],
+          debts: [],
           total: 0
         }
       });
@@ -203,6 +205,67 @@ export const globalSearch = async (req, res) => {
         },
         {
           $limit: parseInt(limit)
+        }
+      ]);
+    }
+    // 5. SEARCH DEBTS
+    if (type === 'all' || type === 'debt') {
+      const parsedAmount = parseFloat(searchQuery);
+      const isAmountQuery = !Number.isNaN(parsedAmount);
+
+      results.debts = await Debt.aggregate([
+        {
+          $match: {
+            userId: req.user._id,
+            $or: [
+              { personName: { $regex: searchRegex } },
+              { description: { $regex: searchRegex } },
+              ...(isAmountQuery ? [{ amount: { $eq: parsedAmount } }, { remainingAmount: { $eq: parsedAmount } }] : [])
+            ]
+          }
+        },
+        {
+          $addFields: {
+            relevanceScore: {
+              $add: [
+                { $cond: [{ $eq: ['$personName', searchQuery] }, 10, 0] },
+                { $cond: [{ $regexMatch: { input: '$personName', regex: searchRegex } }, 5, 0] },
+                { $cond: [{ $regexMatch: { input: '$description', regex: searchRegex } }, 3, 0] },
+                ...(isAmountQuery ? [
+                  { $cond: [{ $eq: ['$amount', parsedAmount] }, 2, 0] },
+                  { $cond: [{ $eq: ['$remainingAmount', parsedAmount] }, 2, 0] }
+                ] : []),
+                { $cond: [{ $eq: ['$type', 'lend'] }, 1, 0] }
+              ]
+            },
+            dueDateFormatted: {
+              $cond: [
+                { $ifNull: ['$dueDate', false] },
+                { $dateToString: { format: '%d/%m/%Y', date: '$dueDate' } },
+                null
+              ]
+            }
+          }
+        },
+        {
+          $sort: { relevanceScore: -1, createdAt: -1 }
+        },
+        {
+          $limit: parseInt(limit)
+        },
+        {
+          $project: {
+            type: 1,
+            personName: 1,
+            amount: 1,
+            remainingAmount: 1,
+            description: 1,
+            dueDate: 1,
+            dueDateFormatted: 1,
+            status: 1,
+            relevanceScore: 1,
+            createdAt: 1
+          }
         }
       ]);
     }

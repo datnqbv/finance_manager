@@ -42,7 +42,8 @@ const Debts = () => {
     if (!d) return null;
     return Math.ceil((new Date(d) - new Date()) / 86400000);
   };
-
+  
+  // lấy phần trăm đã trả của khoản nợ dựa trên số tiền đã trả (tổng số tiền trừ đi số tiền còn lại) chia cho tổng số tiền của khoản nợ, giúp người dùng dễ dàng theo dõi tiến độ trả nợ của từng khoản và ưu tiên xử lý những khoản có tiến độ đã trả gần hoàn thành hoặc có số tiền lớn để quản lý công nợ hiệu quả hơn. Nếu tổng số tiền của khoản nợ là 0, hàm sẽ trả về 100% để tránh lỗi chia cho 0 và biểu thị rằng khoản nợ đã được thanh toán đầy đủ.
   const paidPct = (d) => (d.amount || 0) === 0 ? 100 : Math.round((((d.amount || 0) - (d.remainingAmount || 0)) / d.amount) * 100);
 
   const filtered = debts.filter(d => {
@@ -64,7 +65,7 @@ const Debts = () => {
   const totalBorrow = stats?.totalBorrow ?? debts.filter(d => d.type === 'borrow').reduce((s, d) => s + (d.remainingAmount || 0), 0);
   const netBalance = totalLend - totalBorrow;
   const settledCount = debts.filter(d => d.status === 'settled').length;
-
+  // dùng cho phần tiến độ trả nợ và biểu đồ biến động công nợ, ưu tiên hiển thị những khoản có số tiền lớn hoặc tiến độ đã trả gần hoàn thành để người dùng dễ dàng theo dõi và quản lý các khoản nợ quan trọng nhất của họ. Đồng thời, phần lịch nợ sẽ ưu tiên hiển thị những khoản sắp đến hạn để người dùng có thể chủ động trong việc thanh toán và tránh phát sinh quá hạn. 
   const topProgressDebts = [...activeDebts]
     .sort((a, b) => paidPct(b) - paidPct(a))
     .slice(0, 3);
@@ -77,7 +78,7 @@ const Debts = () => {
   const chartDebts = [...activeDebts]
     .sort((a, b) => (b.amount || 0) - (a.amount || 0))
     .slice(0, 6);
-
+  // xác nhận tất toán khoản nợ với người dùng trước khi gọi API để cập nhật trạng thái của khoản nợ thành "settled", giúp người dùng tránh được những thao tác nhầm lẫn có thể dẫn đến việc đánh dấu một khoản nợ chưa được thanh toán là đã tất toán, từ đó đảm bảo tính chính xác của dữ liệu công nợ và hỗ trợ quản lý tài chính cá nhân hiệu quả hơn.  
   const handleSave = async (data) => {
     if (editingDebt) return updateDebt(editingDebt._id, data);
     return createDebt(data);
@@ -86,7 +87,7 @@ const Debts = () => {
   const handleDelete = async (debt) => {
     if (window.confirm(isEnglish ? `Delete debt "${debt.personName}"?` : `Xóa khoản nợ "${debt.personName}"?`)) deleteDebt(debt._id);
   };
-
+  // xác nhận tất toán khoản nợ với người dùng trước khi gọi API để cập nhật trạng thái của khoản nợ thành "settled", giúp người dùng tránh được những thao tác nhầm lẫn có thể dẫn đến việc đánh dấu một khoản nợ chưa được thanh toán là đã tất toán, từ đó đảm bảo tính chính xác của dữ liệu công nợ và hỗ trợ quản lý tài chính cá nhân hiệu quả hơn.
   const handlePay = async (id) => {
     const amount = parseFloat(payAmount);
     if (!amount || amount <= 0) return;

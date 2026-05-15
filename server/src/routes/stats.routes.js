@@ -9,7 +9,7 @@ import {
   getTopCategories,
   getDailyStats,
   getWeeklyStats,
-  getAIInsights,
+  // getAIInsights,  // DISABLED - Not used by client
   getDashboard
 } from '../controllers/stats.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
@@ -29,6 +29,6 @@ router.get('/trends', analyzeTrends);
 router.get('/top-categories', getTopCategories);
 router.get('/daily', getDailyStats);
 router.get('/weekly', getWeeklyStats);
-router.get('/ai-insights', getAIInsights);
+// router.get('/ai-insights', getAIInsights);  // DISABLED - Not used by client
 
 export default router;

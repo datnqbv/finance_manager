@@ -70,7 +70,9 @@ const parseDate = (val) => {
 };
 
 /**
- * Parse rows from CSV buffer
+ * Parse rows from CSV buffer , chuyển đổi từ buffer sang string, loại bỏ BOM nếu có, sau đó dùng csv-parse để chuyển thành mảng đối tượng. 
+ * csv-parse sẽ tự động lấy dòng đầu tiên làm header và map các cột tương ứng. Các tùy chọn như trim và skip_empty_lines giúp làm sạch dữ liệu đầu vào. 
+ * Nếu có lỗi trong quá trình đọc file, sẽ ném lỗi để controller xử lý.
  */
 const parseCsv = (buffer) => {
   const content = buffer.toString('utf-8').replace(/^\uFEFF/, ''); // strip BOM
@@ -83,7 +85,8 @@ const parseCsv = (buffer) => {
 };
 
 /**
- * Parse rows from Excel buffer
+ * Parse rows from Excel buffer , chuyển đổi từ buffer sang workbook bằng thư viện xlsx, sau đó lấy sheet đầu tiên và chuyển thành mảng đối tượng. 
+ * Tùy chọn cellDates:true giúp giữ nguyên định dạng ngày tháng nếu có trong file Excel. Nếu có lỗi trong quá trình đọc file, sẽ ném lỗi để controller xử lý.
  */
 const parseExcel = (buffer) => {
   const wb = XLSX.read(buffer, { type: 'buffer', cellDates: true });

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiMail, FiKey, FiLock, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 import axios from 'axios';
@@ -21,12 +21,25 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [generatedToken, setGeneratedToken] = useState('');
 
+  useEffect(() => {
+    if (step === 2) {
+      // Ensure step-2 sensitive fields never carry stale values.
+      setResetToken('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
+    }
+  }, [step]);
+
   const handleRequestReset = async (e) => {
     e.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
+    setEmail(normalizedEmail);
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
+      const response = await axios.post(`${API_URL}/auth/forgot-password`, { email: normalizedEmail });
       
       if (response.data.success) {
         // Nếu demo mode (email chưa cấu hình), hiển thị mã
@@ -46,6 +59,13 @@ const ForgotPassword = () => {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedResetToken = resetToken.trim();
+
+    if (normalizedResetToken.length < 6) {
+      toast.error(isEnglish ? 'Verification code must have at least 6 characters!' : 'Mã xác thực phải có ít nhất 6 ký tự!');
+      return;
+    }
 
     if (newPassword !== confirmPassword) {
       toast.error(isEnglish ? 'Password confirmation does not match!' : 'Mật khẩu xác nhận không khớp!');
@@ -61,8 +81,8 @@ const ForgotPassword = () => {
 
     try {
       const response = await axios.post(`${API_URL}/auth/reset-password`, {
-        email,
-        resetToken,
+        email: normalizedEmail,
+        resetToken: normalizedResetToken,
         newPassword,
       });
 
@@ -118,13 +138,14 @@ const ForgotPassword = () => {
               </div>
 
               {step === 1 ? (
-                <form onSubmit={handleRequestReset} className="space-y-4">
+                <form onSubmit={handleRequestReset} autoComplete="off" className="space-y-4">
                   <div className="relative">
                     <FiMail className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#93a494]" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      autoComplete="email"
                       required
                       className="w-full rounded-xl border border-[#dce7dc] bg-[#f8fbf7] py-3 pl-11 pr-4 text-sm text-[#273029] placeholder:text-[#98a999] focus:border-[#62af6f] focus:outline-none"
                       placeholder="Email"
@@ -140,7 +161,9 @@ const ForgotPassword = () => {
                   </button>
                 </form>
               ) : (
-                <form onSubmit={handleResetPassword} className="space-y-4">
+                <form onSubmit={handleResetPassword} autoComplete="off" className="space-y-4">
+                  <input type="text" name="fake-username" autoComplete="username" className="hidden" tabIndex={-1} aria-hidden="true" />
+                  <input type="password" name="fake-password" autoComplete="current-password" className="hidden" tabIndex={-1} aria-hidden="true" />
                   {generatedToken ? (
                     <div className="rounded-xl border border-[#b9dabc] bg-[#eff8ef] p-4">
                         <p className="text-xs font-semibold uppercase tracking-wide text-[#4d6d51]">{isEnglish ? 'Demo verification code' : 'Mã xác thực demo'}</p>
@@ -157,10 +180,16 @@ const ForgotPassword = () => {
                     <FiKey className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#93a494]" />
                     <input
                       type="text"
+                      name="reset-otp"
                       value={resetToken}
-                      onChange={(e) => setResetToken(e.target.value)}
+                      onChange={(e) => setResetToken(e.target.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 6))}
                       required
                       maxLength={6}
+                      inputMode="text"
+                      autoComplete="one-time-code"
+                      autoCorrect="off"
+                      autoCapitalize="none"
+                      spellCheck={false}
                       className="w-full rounded-xl border border-[#dce7dc] bg-[#f8fbf7] py-3 pl-11 pr-4 text-center text-xl font-extrabold tracking-[0.25em] text-[#273029] placeholder:text-[#98a999] focus:border-[#62af6f] focus:outline-none"
                       placeholder="000000"
                     />
@@ -170,8 +199,10 @@ const ForgotPassword = () => {
                     <FiLock className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#93a494]" />
                     <input
                       type={showNewPassword ? 'text' : 'password'}
+                      name="new-password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
+                      autoComplete="new-password"
                       required
                       minLength={6}
                       className="w-full rounded-xl border border-[#dce7dc] bg-[#f8fbf7] py-3 pl-11 pr-11 text-sm text-[#273029] placeholder:text-[#98a999] focus:border-[#62af6f] focus:outline-none"
@@ -191,8 +222,10 @@ const ForgotPassword = () => {
                     <FiLock className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#93a494]" />
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
+                      name="confirm-new-password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
+                      autoComplete="new-password"
                       required
                       className="w-full rounded-xl border border-[#dce7dc] bg-[#f8fbf7] py-3 pl-11 pr-11 text-sm text-[#273029] placeholder:text-[#98a999] focus:border-[#62af6f] focus:outline-none"
                       placeholder={isEnglish ? 'Confirm password' : 'Xác nhận mật khẩu'}

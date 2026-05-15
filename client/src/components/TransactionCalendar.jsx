@@ -55,7 +55,7 @@ const TransactionCalendar = ({
 
   const today = new Date();
   const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
+  // dùng để xác định ngày hiện tại và áp dụng kiểu dáng đặc biệt cho ô ngày đó trên lịch, giúp người dùng dễ dàng nhận biết ngày hôm nay trong giao diện lịch, từ đó thuận tiện hơn trong việc theo dõi và quản lý các giao dịch tài chính hàng ngày.
   const prevMonth = () => {
     if (month === 1) onMonthChange(year - 1, 12);
     else             onMonthChange(year, month - 1);
@@ -68,7 +68,7 @@ const TransactionCalendar = ({
     onMonthChange(today.getFullYear(), today.getMonth() + 1);
   };
 
-  // Summary for selected day
+  // chọn một ngày cụ thể để xem chi tiết giao dịch của ngày đó, giúp người dùng có cái nhìn chi tiết về thu/chi trong ngày, từ đó dễ dàng theo dõi và điều chỉnh kế hoạch tài chính hàng ngày. 
   const selectedDayTxs = selectedDay ? (byDay[selectedDay] || []) : [];
   const selectedIncome  = selectedDayTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const selectedExpense = selectedDayTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
