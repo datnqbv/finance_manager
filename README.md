@@ -10,73 +10,102 @@ README này được viết theo hướng nhà tuyển dụng có thể đọc n
 - Giải pháp: ứng dụng hỗ trợ quản lý giao dịch, mục tiêu tiết kiệm, khoản nợ, thống kê biểu đồ, tìm kiếm toàn cục và xuất báo cáo.
 - Giá trị kỹ thuật: kiến trúc tách `client/server`, REST API, xác thực JWT + refresh token, có kiểm thử cho cả frontend và backend.
 
-## 2) Chức năng chính
+# Hướng Dẫn Chạy Dự Án
 
-### Quản lý tài chính cốt lõi
-- Quản lý giao dịch thu/chi: thêm, sửa, xóa, lọc, tìm kiếm, phân trang.
-- Quản lý danh mục: icon, màu sắc, tùy biến theo ngữ cảnh chi tiêu.
-- Quản lý ngân sách: theo danh mục/tổng thể, cảnh báo ngưỡng, theo dõi tiến độ.
-- Quản lý mục tiêu: tạo mục tiêu tiết kiệm, nạp thêm tiền, theo dõi hạn và tiến độ.
-- Quản lý khoản nợ: theo dõi và cập nhật trạng thái nợ.
+Tài liệu này hướng dẫn cách chạy dự án **Personal Finance Manager / Quản lý chi tiêu** trên máy local, bao gồm cấu hình môi trường, chạy frontend, backend và cách build file `.exe` trên Windows nếu cần.
 
-### Phân tích và năng suất
-- Dashboard tổng quan (thu, chi, số dư, xu hướng).
-- Biểu đồ theo thời gian và theo danh mục (`Recharts`, `Chart.js`).
-- Tìm kiếm toàn cục (multi-module search).
-- Xuất dữ liệu/báo cáo: PDF và Excel (`jspdf`, `xlsx`).
-- Hỗ trợ đa tiền tệ, dark/light mode, responsive.
+## 1. Yêu cầu trước khi chạy
 
-### Bảo mật và độ tin cậy
-- Đăng ký/đăng nhập, hồ sơ cá nhân, quên mật khẩu qua email.
-- JWT access token + refresh token, protected routes.
-- Mã hóa mật khẩu bằng `bcryptjs`.
-- Rate limit, validate request, xử lý lỗi tập trung.
+Trước khi bắt đầu, hãy đảm bảo máy của bạn đã có:
 
-## 3) Kiến trúc và phạm vi
+- `Node.js` phiên bản LTS trở lên.
+- `npm` đi kèm với Node.js.
+- `MongoDB` đang chạy local hoặc một chuỗi kết nối MongoDB Atlas hợp lệ.
+- Tài khoản Google và `Google OAuth Client ID` nếu muốn dùng đăng nhập Google.
+- Tài khoản email Gmail và `App Password` nếu muốn dùng chức năng gửi mail.
 
-### Kiến trúc
-- Frontend: React SPA (`client/`) sử dụng Context API + service layer.
-- Backend: Node.js/Express (`server/`) theo hướng MVC + middleware.
-- Cơ sở dữ liệu: MongoDB với Mongoose.
+### 2. Tạo file môi trường cho backend
 
-### Các module API chính
-- `auth`, `transactions`, `categories`, `budgets`, `goals`
-- `debts`, `notifications`, `stats`, `search`, `import`, `chat`, `contact`
+Trong thư mục `server`, tạo file `.env` dựa trên nội dung mẫu và điền giá trị thật của bạn.
 
-## 4) Công nghệ sử dụng
+Các biến quan trọng:
 
-### Frontend
-- `React 18`, `Vite`, `TailwindCSS`, `React Router v6`
-- `Axios`, `React Context API`
-- `Recharts`, `Chart.js`, `react-chartjs-2`
-- `Framer Motion`, `GSAP`
-- `React Toastify`, `React Icons`
-- `jsPDF`, `jspdf-autotable`, `xlsx`
-- Kiểm thử: `Vitest`, `Testing Library`
+- `NODE_ENV`: chế độ chạy, thường là `development` khi dev.
+- `PORT`: cổng backend, mặc định là `5000`.
+- `MONGODB_URI`: chuỗi kết nối MongoDB.
+- `JWT_SECRET`: secret dùng để ký access token.
+- `JWT_REFRESH_SECRET`: secret riêng cho refresh token, có thể dùng giá trị khác `JWT_SECRET`.
+- `GOOGLE_CLIENT_ID`: client ID dùng cho xác thực Google.
+- `EMAIL_USER`: địa chỉ Gmail dùng để gửi email.
+- `EMAIL_PASS`: `App Password` của Gmail, không phải mật khẩu đăng nhập thông thường.
 
-### Backend
-- `Node.js`, `Express`, `MongoDB`, `Mongoose`
-- `jsonwebtoken`, `bcryptjs`, `express-validator`
-- `express-rate-limit`, `cors`, `dotenv`
-- `multer` (upload), `nodemailer` (email)
-- Import dữ liệu: `csv-parse`, `xlsx`
-- Kiểm thử: `Jest`, `Supertest`, `mongodb-memory-server`
+### 2.2. Cấu hình cho frontend
 
-### Tooling
-- Lint: `ESLint`
-- Build executable backend trên Windows: `esbuild` + `pkg`
+Frontend đọc biến môi trường bằng `VITE_...`.
 
-## 5) Demo giao diện (screenshots)
+Các biến quan trọng:
 
-Tất cả ảnh demo được lấy trực tiếp từ thư mục `assets/Screenshot/`:
+- `VITE_API_URL`: URL backend API, ví dụ `http://localhost:5000/api`.
+- `VITE_GOOGLE_CLIENT_ID`: Google client ID dùng ở phía trình duyệt.
 
-| Xem trước 1 | Xem trước 2 |
-| --- | --- |
-| ![Landing Page](assets/Screenshot/LandingPage.png) | ![Dashboard](assets/Screenshot/dashboard.png) |
-| ![Transactions](assets/Screenshot/transaction.png) | ![Categories](assets/Screenshot/categories.png) |
-| ![Budgets](assets/Screenshot/Budget.png) | ![Goals](assets/Screenshot/goal.png) |
-| ![Debts](assets/Screenshot/Debts.png) | ![Statistics](assets/Screenshot/statistics.png) |
-| ![Profile](assets/Screenshot/user.png) |  |
+### 2.3. Ví dụ nhanh
+
+```env
+NODE_ENV=development
+PORT=5000
+MONGODB_URI=mongodb+srv://np21062004_db_user:
+JWT_SECRET=replace-with-a-long-random-secret
+JWT_REFRESH_SECRET=replace-with-a-different-long-random-secret
+GOOGLE_CLIENT_ID=replace-with-your-google-oauth-client-id.apps.googleusercontent.com
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-gmail-app-password
+
+VITE_API_URL=http://localhost:5000/api
+VITE_GOOGLE_CLIENT_ID=replace-with-your-google-oauth-client-id.apps.googleusercontent.com
+```
+
+## 3. Cài đặt dependencies
+
+Dự án tách thành hai phần nên cần cài đặt riêng:
+
+### 3.1. Frontend
+
+```bash
+cd client
+npm install
+```
+
+### 3.2. Backend
+
+```bash
+cd server
+npm install
+```
+
+## 4. Chạy dự án ở môi trường phát triển
+
+### 4.1. Chạy backend
+
+Mở terminal tại thư mục `server` và chạy:
+
+```bash
+npm run dev
+```
+
+Backend mặc định sẽ chạy ở `http://localhost:5000` nếu bạn giữ nguyên `PORT=5000`.
+
+### 4.2. Chạy frontend
+
+Mở terminal khác tại thư mục `client` và chạy:
+
+```bash
+npm run dev
+```
+
+
+
+
+
 
 
 
