@@ -469,7 +469,7 @@ export const googleLogin = async (req, res) => {
       });
     }
 
-    // Verify google token
+    // Tạo client OAuth2 để xác thực token với Google
     const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
     let googleData;
 
@@ -486,7 +486,7 @@ export const googleLogin = async (req, res) => {
         message: 'Google token không hợp lệ'
       });
     }
-
+    // Bóc tách thông tin cần thiết từ token (googleId, email, name, picture)
     const { sub: googleId, email, name, picture } = googleData;
 
     // Check if user exists by googleId

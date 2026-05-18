@@ -348,6 +348,8 @@ export const forecastSpending = async (req, res) => {
      // Giữ nguyên logic đơn giản về margin ±10% quanh forecast SES, nhưng đổi tên thành marginLow/marginHigh để rõ ràng hơn.
     const finalFcstExp = forecastExpense > 0 ? forecastExpense : avgExpense;
     const finalFcstInc = forecastIncome > 0 ? forecastIncome : avgIncome;
+    
+    
     // Đánh giá xu hướng dựa trên sự thay đổi giữa recent average (SMA) và historical average, với ngưỡng 2% để xác định tăng/giảm/ổn định.
     const expenseRecentAvg = simpleMovingAverage(expenseHistory, smaWindow);
     const expensePastAvg = expenseHistory.length > smaWindow
@@ -378,6 +380,9 @@ export const forecastSpending = async (req, res) => {
     const marginLow = Math.round(Math.max(0, finalFcstExp * 0.9));
     const marginHigh = Math.round(finalFcstExp * 1.1);
 
+    
+    
+    
     // Dự báo chi tiêu theo category bằng cách sử dụng SMA trên lịch sử chi tiêu của từng category. 
     const categoryForecasts = {};
     for (const [category, monthData] of Object.entries(catMap)) {

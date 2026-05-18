@@ -22,27 +22,27 @@ const Budgets = () => {
   useEffect(() => {
     fetchBudgetOverview();
   }, []);
-
+  // hàm formatCurrency được sử dụng để định dạng số tiền theo định dạng tiền tệ của người dùng, giúp hiển thị số tiền một cách dễ đọc và phù hợp với ngôn ngữ và đơn vị tiền tệ mà người dùng đang sử dụng trong ứng dụng quản lý chi tiêu cá nhân. Điều này cải thiện trải nghiệm người dùng bằng cách cung cấp thông tin tài chính rõ ràng và dễ hiểu, giúp họ quản lý ngân sách và chi tiêu hiệu quả hơn.
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(amount);
   };
-
+  // hàm getStatus được sử dụng để xác định trạng thái của một ngân sách dựa trên phần trăm đã sử dụng, giúp người dùng nhanh chóng nhận biết tình trạng ngân sách của mình (vượt mức, cảnh báo hoặc an toàn) thông qua các chỉ báo màu sắc và nhãn tương ứng, từ đó hỗ trợ họ trong việc quản lý và điều chỉnh chi tiêu một cách hiệu quả hơn.
   const handleEdit = (budget) => {
     setEditingBudget(budget);
     setShowModal(true);
   };
-
+  // hàm handleDelete được sử dụng để xử lý việc xóa một ngân sách khi người dùng nhấn nút xóa, nó sẽ hiển thị một hộp thoại xác nhận để đảm bảo rằng người dùng thực sự muốn xóa ngân sách đó, giúp tránh những thao tác nhầm lẫn có thể dẫn đến việc mất dữ liệu quan trọng. Nếu người dùng xác nhận, hàm sẽ gọi API deleteBudget để xóa ngân sách khỏi hệ thống và cập nhật lại danh sách ngân sách trên giao diện người dùng.
   const handleDelete = async (budget) => {
     if (window.confirm(isEnglish ? `Delete budget "${budget.categoryName || 'Total'}"?` : `Xóa ngân sách "${budget.categoryName || 'Tổng'}"?`)) {
       try { await deleteBudget(budget._id); } catch {}
     }
   };
-
+  // hàm handleSave được sử dụng để xử lý việc lưu một ngân sách mới hoặc cập nhật một ngân sách hiện có khi người dùng hoàn thành việc nhập thông tin trong modal, nó sẽ kiểm tra xem đang ở chế độ chỉnh sửa hay tạo mới và gọi API tương ứng (updateBudget hoặc createBudget) để lưu dữ liệu vào hệ thống, sau đó đóng modal và tải lại danh sách ngân sách để cập nhật thông tin mới nhất trên trang ngân sách, giúp người dùng quản lý các ngân sách của mình một cách hiệu quả sau khi thực hiện các thao tác thêm hoặc chỉnh sửa.
   const handleModalClose = () => {
     setShowModal(false);
     setEditingBudget(null);
   };
-
+  // hàm handleSave được sử dụng để xử lý việc lưu một ngân sách mới hoặc cập nhật một ngân sách hiện có khi người dùng hoàn thành việc nhập thông tin trong modal, nó sẽ kiểm tra xem đang ở chế độ chỉnh sửa hay tạo mới và gọi API tương ứng (updateBudget hoặc createBudget) để lưu dữ liệu vào hệ thống, sau đó đóng modal và tải lại danh sách ngân sách để cập nhật thông tin mới nhất trên trang ngân sách, giúp người dùng quản lý các ngân sách của mình một cách hiệu quả sau khi thực hiện các thao tác thêm hoặc chỉnh sửa. Đồng thời, hàm này cũng sẽ hiển thị thông báo thành công hoặc lỗi cho người dùng sau khi thực hiện thao tác lưu ngân sách mới hoặc cập nhật ngân sách hiện có trên trang ngân sách, giúp cải thiện trải nghiệm người dùng bằng cách cung cấp phản hồi rõ ràng về kết quả của hành động của họ, giúp họ hiểu rằng thao tác đã được thực hiện thành công hoặc nếu có lỗi xảy ra, họ sẽ biết để có thể thử lại hoặc điều chỉnh thông tin nhập vào cho phù hợp.
   const handleSave = async (formData) => {
     if (editingBudget) await updateBudget(editingBudget._id, formData);
     else await createBudget(formData);
@@ -63,7 +63,7 @@ const Budgets = () => {
   }
 
   const overCount = budgetStatus?.summary?.overBudgetCount || 0;
-
+  // tính toán tổng ngân sách, tổng chi tiêu và tổng còn lại dựa trên dữ liệu ngân sách hiện có, giúp người dùng có cái nhìn tổng quan về tình hình tài chính của mình trong kỳ ngân sách hiện tại. Điều này hỗ trợ họ trong việc quản lý và điều chỉnh chi tiêu một cách hiệu quả hơn để đạt được mục tiêu tài chính cá nhân của mình. 
   const totalBudget = budgetStatus?.summary?.totalBudget || budgets.reduce((sum, b) => sum + (b.effectiveAmount ?? b.amount ?? 0), 0);
   const totalSpending = budgetStatus?.summary?.totalSpending || budgets.reduce((sum, b) => sum + (b.currentSpending || 0), 0);
   const totalRemaining = budgetStatus?.summary?.totalRemaining ?? (totalBudget - totalSpending);
@@ -72,7 +72,7 @@ const Budgets = () => {
   const sortedByRisk = [...budgets].sort((a, b) => (b.percentage || 0) - (a.percentage || 0));
   const progressBudgets = sortedByRisk.slice(0, 3);
   const analysisBudgets = sortedByRisk.slice(0, 6);
-
+  // ưu tiên hiển thị những ngân sách có phần trăm đã sử dụng cao nhất để người dùng dễ dàng nhận biết và quản lý những ngân sách đang có nguy cơ vượt mức, từ đó giúp họ có thể điều chỉnh chi tiêu kịp thời và hiệu quả hơn. Đồng thời, phần biến động ngân sách sẽ ưu tiên hiển thị những ngân sách có số tiền lớn hoặc phần trăm đã sử dụng cao để người dùng dễ dàng theo dõi và quản lý các ngân sách quan trọng nhất của họ.
   const filteredBudgets = budgets.filter((budget) => {
     if (budgetFilter === 'over') return budget.percentage >= 100;
     if (budgetFilter === 'warning') return budget.percentage >= 80 && budget.percentage < 100;

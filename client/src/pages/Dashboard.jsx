@@ -104,7 +104,7 @@ const Dashboard = () => {
     setForecastData(null);
     try {
       const { startDate, endDate } = getDateRange();
-
+      // gọi song song cả hai API để lấy dữ liệu dashboard và dự báo chi tiêu, sử dụng Promise.allSettled để đảm bảo rằng chúng ta có thể xử lý kết quả của từng API một cách độc lập và tránh bị lỗi toàn bộ nếu một trong hai API gặp sự cốt
       const [dashboardResult, forecastResult] = await Promise.allSettled([
         statsService.getDashboard(startDate, endDate),
         statsService.forecastSpending(6),

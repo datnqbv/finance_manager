@@ -118,7 +118,7 @@ const Goals = () => {
   if (loading && goals.length === 0) {
     return <GoalsSkeleton />;
   }
-
+  // tiến độ chung: tổng mục tiêu, đã đạt, còn thiếu, % hoàn thành
   const activeCount   = goals.filter(g => !g.isAchieved).length;
   const achievedCount = goals.filter(g => g.isAchieved).length;
   const totalTarget = goals.reduce((sum, g) => sum + (g.targetAmount || 0), 0);

@@ -69,12 +69,12 @@ const Debts = () => {
   const topProgressDebts = [...activeDebts]
     .sort((a, b) => paidPct(b) - paidPct(a))
     .slice(0, 3);
-
+  // ưu tiên hiển thị những khoản nợ sắp đến hạn để người dùng có thể chủ động trong việc thanh toán và tránh phát sinh quá hạn. Đồng thời, phần tiến độ trả nợ và biểu đồ biến động công nợ sẽ ưu tiên hiển thị những khoản có số tiền lớn hoặc tiến độ đã trả gần hoàn thành để người dùng dễ dàng theo dõi và quản lý các khoản nợ quan trọng nhất của họ.
   const dueSoonDebts = [...activeDebts]
     .filter(d => d.dueDate)
     .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
     .slice(0, 3);
-
+  // ưu tiên hiển thị những khoản nợ có số tiền lớn để người dùng dễ dàng theo dõi và quản lý các khoản nợ quan trọng nhất của họ. Đồng thời, phần lịch nợ sẽ ưu tiên hiển thị những khoản sắp đến hạn để người dùng có thể chủ động trong việc thanh toán và tránh phát sinh quá hạn. Phần tiến độ trả nợ sẽ ưu tiên hiển thị những khoản có tiến độ đã trả gần hoàn thành để người dùng dễ dàng theo dõi và quản lý các khoản nợ quan trọng nhất của họ.
   const chartDebts = [...activeDebts]
     .sort((a, b) => (b.amount || 0) - (a.amount || 0))
     .slice(0, 6);
@@ -83,7 +83,7 @@ const Debts = () => {
     if (editingDebt) return updateDebt(editingDebt._id, data);
     return createDebt(data);
   };
-
+  // xác nhận xóa khoản nợ với người dùng trước khi gọi API để xóa khoản nợ đó, giúp người dùng tránh được những thao tác nhầm lẫn có thể dẫn đến việc xóa một khoản nợ quan trọng mà họ chưa muốn xóa, từ đó đảm bảo tính chính xác của dữ liệu công nợ và hỗ trợ quản lý tài chính cá nhân hiệu quả hơn.
   const handleDelete = async (debt) => {
     if (window.confirm(isEnglish ? `Delete debt "${debt.personName}"?` : `Xóa khoản nợ "${debt.personName}"?`)) deleteDebt(debt._id);
   };

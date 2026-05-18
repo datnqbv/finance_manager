@@ -40,7 +40,7 @@ export const globalSearch = async (req, res) => {
     if (type === 'all' || type === 'transaction') {
       results.transactions = await Transaction.aggregate([
         {
-          // Stage 1: Match user và basic search
+          // Stage 1: nhóm các transaction của user và lọc theo truy vấn tìm kiếm
           $match: {
             userId: req.user._id,
             $or: [
@@ -51,7 +51,7 @@ export const globalSearch = async (req, res) => {
           }
         },
         {
-          // Stage 2: Add computed fields
+          // Stage 2: thêm trường relevanceScore dựa trên mức độ phù hợp của kết quả với truy vấn tìm kiếm
           $addFields: {
             relevanceScore: {
               $add: [
@@ -71,15 +71,15 @@ export const globalSearch = async (req, res) => {
           }
         },
         {
-          // Stage 3: Sort by relevance then date
+          // Stage 3: sắp xếp kết quả theo relevanceScore giảm dần, sau đó theo date giảm dần
           $sort: { relevanceScore: -1, date: -1 }
         },
         {
-          // Stage 4: Limit results
+          // Stage 4: Limit kết quả trả về
           $limit: parseInt(limit)
         },
         {
-          // Stage 5: Project only needed fields
+          // Stage 5: Chọn trường cần thiết để trả về
           $project: {
             type: 1,
             category: 1,
