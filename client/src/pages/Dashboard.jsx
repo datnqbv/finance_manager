@@ -397,6 +397,9 @@ const Dashboard = () => {
               <p className={`mt-1 text-xs font-semibold ${forecastDelta > 0 ? 'text-[#b54747] dark:text-[#f3a5a5]' : 'text-[#2f8e6f] dark:text-[#8dd5bd]'}`}>
                 {forecastDelta > 0 ? '+' : ''}{forecastDeltaPct.toFixed(1)}% {t('monthlyComparison')}
               </p>
+              <p className="mt-2 text-[11px] font-semibold text-[#667084] dark:text-[#8da3b8]">
+                {isEnglish ? 'Confidence: ' : 'Độ tin cậy: '}<span className="text-[#003d2d] dark:text-[#5fb89d] font-black">{forecastData?.forecast?.confidencePercent || 0}%</span>
+              </p>
             </div>
 
             <div className="mb-3 grid grid-cols-2 gap-2">

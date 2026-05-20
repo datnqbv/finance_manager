@@ -572,7 +572,7 @@ const Statistics = () => {
           </div>
           <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
             <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Model confidence' : 'Độ tin cậy mô hình'}</p>
-            <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{confidenceMap[f?.confidence] || '—'}</p>
+            <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{f?.confidencePercent !== undefined ? `${f.confidencePercent}%` : (confidenceMap[f?.confidence] || '—')}</p>
           </div>
         </div>
 
@@ -588,8 +588,8 @@ const Statistics = () => {
                 </h4>
                 <p className="mt-2 text-sm leading-6 text-[#4f5c72] dark:text-[#aab3c3]">
                   {isEnglish
-                    ? `The model uses the last ${forecastWindow} months of monthly totals, anchored to ${referenceLabel}. Overall cash flow uses SES, while category forecasts use moving average.`
-                    : `Mô hình lấy ${forecastWindow} tháng gần nhất của tổng thu/chi theo tháng, neo theo ${referenceLabel}. Phần tổng thể dùng SES, còn dự báo theo danh mục dùng trung bình trượt.`}
+                    ? `The model uses XGBoost-style Weighted Ensemble Gradient Boosting (6 weak learners) on the last ${forecastWindow} months of monthly totals, anchored to ${referenceLabel}. Both overall and category forecasts use the same ensemble approach with cross-validation quality scoring. Model accuracy: ${f?.confidencePercent || 0}%.`
+                    : `Mô hình dùng XGBoost-style Weighted Ensemble Gradient Boosting (6 weak learners) trên ${forecastWindow} tháng gần nhất của tổng thu/chi theo tháng, neo theo ${referenceLabel}. Cả dự báo tổng thể và theo danh mục đều dùng cùng phương pháp ensemble với cross-validation. Độ chính xác mô hình: ${f?.confidencePercent || 0}%.`}
                 </p>
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:min-w-[360px]">
@@ -604,6 +604,10 @@ const Statistics = () => {
                 <div className="rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-[#1c2230]">
                   <p className="text-[11px] uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Reference month' : 'Tháng tham chiếu'}</p>
                   <p className="mt-1 text-sm font-semibold text-[#18202f] dark:text-[#eef3fb]">{referenceLabel}</p>
+                                <div className="rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-[#1c2230]">
+                                  <p className="text-[11px] uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Model accuracy' : 'Độ chính xác mô hình'}</p>
+                                  <p className="mt-1 text-sm font-semibold text-[#003d2d] dark:text-[#5fb89d]">{f?.confidencePercent || 0}%</p>
+                                </div>
                 </div>
               </div>
             </div>

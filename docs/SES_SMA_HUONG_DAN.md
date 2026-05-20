@@ -1,6 +1,8 @@
 # Hướng dẫn ngắn: Single Exponential Smoothing (SES) và Simple Moving Average (SMA)
 
-Tài liệu này tóm tắt khái niệm, công thức, ví dụ và cách mà dự án hiện sử dụng SES/SMA.
+⚠️ **LỖI THỜI**: Tài liệu này là tham khảo lịch sử. **Từ tháng 5/2026**, dự báo chi tiêu đã được thay thế bằng **XGBoost-style Weighted Ensemble Gradient Boosting** trong `server/src/services/xgboost.forecast.service.js`.
+
+Tài liệu này tóm tắt khái niệm, công thức, ví dụ và cách mà dự án trước sử dụng SES/SMA (KHÔNG CÒN DÙNG).
 
 ## 1. Tổng quan
 - SES (Single Exponential Smoothing): phương pháp làm mượt thời gian (time series) đơn giản, đưa ra dự báo một bước tiếp theo dựa trên mức (level) gần nhất. Phản ứng nhanh với biến động nhờ tham số làm mượt `alpha` (0..1).

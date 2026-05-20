@@ -2,59 +2,9 @@ import Transaction from '../models/Transaction.model.js';
 import Goal from '../models/Goal.model.js';
 import mongoose from 'mongoose';
 import * as ss from 'simple-statistics';
+import { forecastNextMonth, forecastCategoryExpense } from '../services/xgboost.forecast.service.js';
 
-/** Chuẩn hoá mảng: thay null/undefined bằng 0 */
-const sanitize = (data) => (Array.isArray(data) && data.length > 0)
-  ? data.map(v => v ?? 0)
-  : [];
 
-/**
- * Single Exponential Smoothing (SES) — one-step-ahead forecast.
- * SES phản ứng nhanh hơn với biến động tổng thể so với SMA,
- * giúp dự báo tổng chi tiêu/thu nhập tháng tiếp theo sát hơn.
- */
-function singleExponentialSmoothing(data, alpha = 0.4) {
-  const clean = sanitize(data);
-  if (clean.length === 0) return 0;
-  let level = clean[0];
-  for (let i = 1; i < clean.length; i++) {
-    level = alpha * clean[i] + (1 - alpha) * level;
-  }
-  return Math.max(0, level);
-}
-
-/**
- * Simple Moving Average (SMA) — trung bình trượt trên `windowSize` điểm cuối.
- * SMA giúp làm mượt hơn ở cấp category (ít dữ liệu) so với SES.
- */
-function simpleMovingAverage(data, windowSize = 3) {
-  const clean = sanitize(data);
-  if (clean.length === 0) return 0;
-  const size = Math.min(windowSize, clean.length);
-  return ss.mean(clean.slice(-size));
-}
-
-/**
- * Consistency score [0, 1] dựa trên MAE của one-step SES errors.
- * hàm đánh giá mức độ "mượt" của chuỗi dữ liệu so với mô hình SES, giúp xác định độ tin cậy của dự báo.
- */
-function smoothingConsistencyScore(data, alpha = 0.4) {
-  const clean = sanitize(data);
-  if (clean.length < 2) return 1;
-
-  let level = clean[0];
-  let absErrSum = 0;
-  for (let i = 1; i < clean.length; i++) {
-    absErrSum += Math.abs(clean[i] - level);
-    level = alpha * clean[i] + (1 - alpha) * level;
-  }
-
-  const avg = ss.mean(clean);
-  if (avg <= 0) return 0;
-
-  const normalizedError = (absErrSum / (clean.length - 1)) / avg;
-  return Math.max(0, Math.min(1, 1 - normalizedError));
-}
 
 // @desc    Get monthly statistics
 // @route   GET /api/stats/monthly
@@ -265,28 +215,23 @@ export const compareStats = async (req, res) => {
   }
 };
 
-// @desc    Forecast next month using SES (overall) + SMA (by category)
+// @desc    Forecast next month using XGBoost Machine Learning Model
 // @route   GET /api/stats/forecast
 // @access  Private
+// Thay thế SES + SMA bằng mô hình XGBoost Gradient Boosting
 export const forecastSpending = async (req, res) => {
   try {
-    // Lấy từ query string: số tháng muốn phân tích (mặc định 6), và tháng/năm tham chiếu (tuỳ chọn — dùng để test với dữ liệu quá khứ).
     const { months = 6, refYear, refMonth } = req.query;
-    // Ép kiểu months sang số nguyên, đảm bảo tối thiểu là 1 (không cho phép n = 0 hoặc âm).
     const n = Math.max(1, parseInt(months, 10) || 6);
     const userId = new mongoose.Types.ObjectId(req.user.id);
-    // Nếu có truyền refYear và refMonth thì dùng làm "thời điểm hiện tại" giả lập. Nếu không, dùng ngày thực. 
-    // Lưu ý month - 1 vì Date tháng bắt đầu từ 0.
     const now = (refYear && refMonth)
       ? new Date(parseInt(refYear), parseInt(refMonth) - 1, 1)
       : new Date();
 
-    // Define range: n months back from now
+    // Lấy dữ liệu giao dịch trong n tháng trước
     const rangeStart = new Date(now.getFullYear(), now.getMonth() - n, 1);
-    // Ngày 0 của tháng hiện tại = ngày cuối cùng của tháng trước. Đặt 23:59:59 để bao trọn ngày đó.
     const rangeEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
 
-    // Single aggregation for monthly type totals + category totals
     const [monthlyAgg, catMonthlyAgg] = await Promise.all([
       Transaction.aggregate([
         { $match: { userId, date: { $gte: rangeStart, $lte: rangeEnd } } },
@@ -308,14 +253,14 @@ export const forecastSpending = async (req, res) => {
       ])
     ]);
 
-    // xây dựng 2 map: monthMap để lưu tổng income/expense theo tháng, catMap để lưu tổng expense theo category+month. 
-    // Cả 2 đều dùng kết quả từ 1 lần aggregate duy nhất, tránh vòng lặp nhiều lần trên dữ liệu gốc.
+    // Xây dựng dữ liệu lịch sử theo tháng
     const monthMap = {};
     monthlyAgg.forEach(r => {
       const key = `${r._id.year}-${r._id.month}`;
       if (!monthMap[key]) monthMap[key] = { income: 0, expense: 0 };
       monthMap[key][r._id.type] = r.total;
     });
+
     const catMap = {};
     catMonthlyAgg.forEach(r => {
       const cat = r._id.category;
@@ -323,12 +268,13 @@ export const forecastSpending = async (req, res) => {
       if (!catMap[cat]) catMap[cat] = {};
       catMap[cat][key] = r.total;
     });
-    // 3 biến để lưu lịch sử expense/income theo tháng và label tương ứng, dùng cho cả phần forecast tổng thể và category-level.
+
+    // Xây dựng các chuỗi thời gian
     const expenseHistory = [];
     const incomeHistory = [];
     const labels = [];
-    // duyệt qua n tháng gần nhất, xây dựng lịch sử tổng income/expense theo tháng dựa trên monthMap, 
-    // và label dạng "MM/YYYY" cho mỗi tháng.
+    const categoryHistories = {};
+
     for (let i = n; i >= 1; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
@@ -336,55 +282,8 @@ export const forecastSpending = async (req, res) => {
       incomeHistory.push(monthMap[key]?.income ?? 0);
       labels.push(`${d.getMonth() + 1}/${d.getFullYear()}`);
     }
-  // set alpha cho ses - 0.4
-    const sesAlpha = 0.4;
-    const smaWindow = Math.min(3, n);
-    // tính toán trung bình, dự báo bằng SES, và đánh giá xu hướng + độ tin cậy của dự báo.
-    const avgExpense = Math.round(ss.mean(expenseHistory));
-    const avgIncome = Math.round(ss.mean(incomeHistory));
-    // Dự báo tổng chi tiêu/thu nhập tháng tiếp theo bằng SES, đảm bảo không âm. Nếu SES trả về 0 (do dữ liệu quá mượt hoặc thiếu biến động), sẽ dùng trung bình làm dự phòng.    
-    const forecastExpense = Math.round(singleExponentialSmoothing(expenseHistory, sesAlpha));
-    const forecastIncome = Math.round(singleExponentialSmoothing(incomeHistory, sesAlpha));
-     // Giữ nguyên logic đơn giản về margin ±10% quanh forecast SES, nhưng đổi tên thành marginLow/marginHigh để rõ ràng hơn.
-    const finalFcstExp = forecastExpense > 0 ? forecastExpense : avgExpense;
-    const finalFcstInc = forecastIncome > 0 ? forecastIncome : avgIncome;
-    
-    
-    // Đánh giá xu hướng dựa trên sự thay đổi giữa recent average (SMA) và historical average, với ngưỡng 2% để xác định tăng/giảm/ổn định.
-    const expenseRecentAvg = simpleMovingAverage(expenseHistory, smaWindow);
-    const expensePastAvg = expenseHistory.length > smaWindow
-      ? ss.mean(expenseHistory.slice(0, -smaWindow))
-      : expenseRecentAvg;
-    const incomeRecentAvg = simpleMovingAverage(incomeHistory, smaWindow);
-    const incomePastAvg = incomeHistory.length > smaWindow
-      ? ss.mean(incomeHistory.slice(0, -smaWindow))
-      : incomeRecentAvg;
-    // Đổi ngưỡng đánh giá xu hướng từ 3% xuống 2% để nhạy hơn với biến động, phù hợp với dữ liệu thực tế thường có nhiều biến động nhỏ.
-    const expenseDelta = expenseRecentAvg - expensePastAvg;
-    const incomeDelta = incomeRecentAvg - incomePastAvg;
-    const expenseTrend = expenseDelta > avgExpense * 0.02 ? 'increasing'
-      : expenseDelta < -avgExpense * 0.02 ? 'decreasing'
-        : 'stable';
-    const incomeTrend = incomeDelta > avgIncome * 0.02 ? 'increasing'
-      : incomeDelta < -avgIncome * 0.02 ? 'decreasing'
-        : 'stable';
-    // Đánh giá độ tin cậy của dự báo bằng cách tính "smoothing consistency score" cho cả expense và income history, 
-    // sau đó lấy trung bình để phân loại confidence level thành high/medium/low.
-    const r2ExpenseScore = smoothingConsistencyScore(expenseHistory, sesAlpha);
-    const r2IncomeScore = smoothingConsistencyScore(incomeHistory, sesAlpha);
-    const r2Avg = (r2ExpenseScore + r2IncomeScore) / 2;
-    const confidence = r2Avg > 0.7 ? 'high' : r2Avg > 0.4 ? 'medium' : 'low';
 
-    // Đặt margin dựa trên forecast SES, với ±10% để tạo khoảng tin cậy cho người dùng, 
-    // giúp họ hiểu rằng dự báo không phải là con số chính xác tuyệt đối mà có thể dao động trong khoảng này.
-    const marginLow = Math.round(Math.max(0, finalFcstExp * 0.9));
-    const marginHigh = Math.round(finalFcstExp * 1.1);
-
-    
-    
-    
-    // Dự báo chi tiêu theo category bằng cách sử dụng SMA trên lịch sử chi tiêu của từng category. 
-    const categoryForecasts = {};
+    // Xây dựng lịch sử theo category
     for (const [category, monthData] of Object.entries(catMap)) {
       const catHistory = [];
       for (let i = n; i >= 1; i--) {
@@ -392,26 +291,34 @@ export const forecastSpending = async (req, res) => {
         const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
         catHistory.push(monthData[key] ?? 0);
       }
-      // Tính trung bình, dự báo bằng SMA, và đánh giá xu hướng + độ tin cậy tương tự như phần tổng thể, nhưng với logic đơn giản hơn do dữ liệu category thường ít biến động hơn.
-      const catAvg = ss.mean(catHistory);
-      const catFcst = Math.round(simpleMovingAverage(catHistory, smaWindow));
-      const catRecentAvg = simpleMovingAverage(catHistory, smaWindow);
-      // Đánh giá xu hướng category dựa trên sự thay đổi giữa recent average (SMA) và historical average, với ngưỡng 3% để xác định tăng/giảm/ổn định. Do dữ liệu category thường có nhiều biến động nhỏ, nên ngưỡng 3% giúp tránh việc đánh giá sai xu hướng chỉ vì những thay đổi nhỏ.  
-      const catPastAvg = catHistory.length > smaWindow
-        ? ss.mean(catHistory.slice(0, -smaWindow))
-        : catRecentAvg;
-        // Đổi ngưỡng đánh giá xu hướng từ 5% xuống 3% để nhạy hơn với biến động ở cấp category, phù hợp với thực tế thường có nhiều biến động nhỏ trong chi tiêu theo category.  
-      const catTrend = (catRecentAvg - catPastAvg) > catAvg * 0.03 ? 'increasing'
-        : (catRecentAvg - catPastAvg) < -catAvg * 0.03 ? 'decreasing'
-          : 'stable';
+      categoryHistories[category] = catHistory;
+    }
+
+    // ========== PHẦN DÙNG XGBOOST ==========
+    // Dự báo chi tiêu tổng thể sử dụng XGBoost
+    const expenseForecast = forecastNextMonth(expenseHistory, categoryHistories);
+    const incomeForecast = forecastNextMonth(incomeHistory, {});
+    
+    // Dự báo theo từng category sử dụng XGBoost
+    const categoryForecasts = {};
+    for (const [category, catHistory] of Object.entries(categoryHistories)) {
+      const catForecast = forecastCategoryExpense(catHistory);
       categoryForecasts[category] = {
-        forecast: catFcst || Math.round(catAvg),
-        average: Math.round(catAvg),
-        trend: catTrend,
-        r2: +smoothingConsistencyScore(catHistory, sesAlpha).toFixed(2)
+        forecast: catForecast.forecast,
+        average: Math.round(ss.mean(catHistory)),
+        trend: catForecast.trend,
+        confidence: catForecast.confidence,
+        r2: catForecast.r2Score
       };
     }
-    // Trả về kết quả dự báo tổng thể và theo category, cùng với các thông tin phân tích xu hướng và độ tin cậy, giúp người dùng có cái nhìn toàn diện về tình hình tài chính sắp tới và có thể điều chỉnh kế hoạch chi tiêu phù hợp.
+
+    // Tính toán các giá trị hỗ trợ
+    const avgExpense = Math.round(ss.mean(expenseHistory));
+    const avgIncome = Math.round(ss.mean(incomeHistory));
+    const marginLow = Math.round(Math.max(0, expenseForecast.forecast * 0.9));
+    const marginHigh = Math.round(expenseForecast.forecast * 1.1);
+
+    // Trả về kết quả dự báo
     res.json({
       success: true,
       data: {
@@ -419,24 +326,27 @@ export const forecastSpending = async (req, res) => {
         incomeHistory,
         labels,
         forecast: {
-          nextMonthExpense: finalFcstExp,
-          nextMonthIncome: finalFcstInc,
-          nextMonthSavings: finalFcstInc - finalFcstExp,
+          nextMonthExpense: expenseForecast.forecast,
+          nextMonthIncome: incomeForecast.forecast,
+          nextMonthSavings: incomeForecast.forecast - expenseForecast.forecast,
           avgExpense,
           avgIncome,
-          expenseTrend,
-          incomeTrend,
-          confidence,
-          r2Expense: +r2ExpenseScore.toFixed(2),
-          r2Income: +r2IncomeScore.toFixed(2),
+          expenseTrend: expenseForecast.trend,
+          incomeTrend: incomeForecast.trend,
+          confidence: expenseForecast.confidence,
+          confidencePercent: expenseForecast.confidencePercent,
+          r2Expense: expenseForecast.r2Score,
+          r2Income: incomeForecast.r2Score,
           marginLow,
           marginHigh,
+          modelType: 'XGBoost Gradient Boosting' // Chỉ ra mô hình được sử dụng
         },
         byCategory: categoryForecasts,
         basedOnMonths: n
       }
     });
   } catch (error) {
+    console.error('Forecast error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

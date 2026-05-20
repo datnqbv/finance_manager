@@ -268,7 +268,7 @@ flowchart TD
 | **Mô tả** | Dự báo chi tiêu tháng tiếp theo dùng Single Exponential Smoothing (SES) + Simple Moving Average (SMA) |
 | **Luồng chính** | 1. User xem Dashboard → thẻ "Forecast"<br/>2. Client gọi GET `/api/stats/forecast`<br/>3. Server: `stats.controller.forecastSpending()`<br/>4. Lấy lịch sử 12 tháng chi tiêu theo category<br/>5. Tính SES (α=0.4) cho overall expense/income<br/>6. Tính SMA (window=3) cho từng category<br/>7. Fallback: nếu không đủ data, dùng trung bình<br/>8. Trả: forecastExpense, forecastIncome, byCategory<br/>9. Client hiển thị kết quả so sánh |
 | **Frontend Files** | - `client/src/pages/Dashboard.jsx` (hiển thị forecast card)<br/>- `client/src/services/stats.service.js` (API call) |
-| **Backend Files** | - `server/src/routes/stats.routes.js` (GET /forecast)<br/>- `server/src/controllers/stats.controller.js`<br/>  - `singleExponentialSmoothing()` helper<br/>  - `simpleMovingAverage()` helper<br/>- `server/src/models/Transaction.model.js` (aggregation) |
+| **Backend Files** | - `server/src/routes/stats.routes.js` (GET /forecast)<br/>- `server/src/controllers/stats.controller.js`<br/>- `server/src/services/xgboost.forecast.service.js`<br/>  - XGBoost-style Weighted Ensemble (6 weak learners)<br/>- `server/src/models/Transaction.model.js` (aggregation) |
 | **Thư viện** | **Server:** mongoose<br/>**Client:** axios, chart libraries |
 | **Endpoint API** | `GET /api/stats/forecast?startDate=...&endDate=...` |
 | **Công thức** | **SES:** ŷ(t+1) = α·y(t) + (1-α)·ŷ(t)<br/>**SMA:** SMA(n) = (1/n)·Σy(t-i) |

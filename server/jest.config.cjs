@@ -12,4 +12,8 @@ module.exports = {
   testTimeout: 30000,
   // Chạy tuần tự để tránh conflict DB giữa các test suite
   maxWorkers: 1,
+  // Allow ml package ES modules
+  transformIgnorePatterns: [
+    'node_modules/(?!(ml|ml-matrix|ml-.*)/)'
+  ]
 };
