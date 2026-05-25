@@ -4,7 +4,6 @@
  */
 import request from 'supertest';
 import app from '../src/app.js';
-import mongoose from 'mongoose';
 import * as db from './helpers/db.js';
 
 process.env.JWT_SECRET = 'test_jwt_secret_at_least_32_chars_long';
@@ -23,12 +22,12 @@ beforeEach(async () => {
   await db.clear();
   const res = await request(app).post('/api/auth/register').send(testUser);
   token  = res.body.data.token;
-  userId = new mongoose.Types.ObjectId(res.body.data.user.id);
+  userId = res.body.data.user.id;
 });
 
 // Helper: seed notification trực tiếp vào DB
 const seedNotification = async (overrides = {}) => {
-  const Notification = (await import('../src/models/Notification.model.js')).default;
+  const { Notification } = await import('../src/models/sequelize/index.js');
   return Notification.create({
     userId,
     type: 'info',
@@ -90,18 +89,10 @@ describe('GET /api/notifications', () => {
   });
 
   it('Chỉ trả về thông báo của user hiện tại', async () => {
-    const Notification = (await import('../src/models/Notification.model.js')).default;
-
-    // Thông báo của user khác (tạo trực tiếp)
-    const otherId = new mongoose.Types.ObjectId();
-    await Notification.create({
-      userId: otherId,
-      type: 'warning',
-      title: 'Của người khác',
-      message: 'Không được thấy',
-      read: false,
-    });
-
+    const other = await request(app).post('/api/auth/register').send({ name: 'OtherNotif', email: 'other_notif@example.com', password: 'password123' });
+    const otherId = other.body.data.user.id;
+    const { Notification } = await import('../src/models/sequelize/index.js');
+    await Notification.create({ userId: otherId, type: 'warning', title: 'Của người khác', message: 'Không được thấy', read: false });
     await seedNotification({ title: 'Của tôi' });
 
     const res = await request(app)
@@ -110,9 +101,9 @@ describe('GET /api/notifications', () => {
 
     expect(res.status).toBe(200);
     const mine = res.body.data.notifications.filter(n => n.title === 'Của tôi');
-    const other = res.body.data.notifications.filter(n => n.title === 'Của người khác');
+    const otherNotifs = res.body.data.notifications.filter(n => n.title === 'Của người khác');
     expect(mine.length).toBe(1);
-    expect(other.length).toBe(0);
+    expect(otherNotifs.length).toBe(0);
   });
 });
 
@@ -123,7 +114,7 @@ describe('PUT /api/notifications/:id/read', () => {
     const notif = await seedNotification();
 
     const res = await request(app)
-      .put(`/api/notifications/${notif._id}/read`)
+      .put(`/api/notifications/${notif.id}/read`)
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
@@ -140,14 +131,12 @@ describe('PUT /api/notifications/:id/read', () => {
   });
 
   it('Thông báo của người khác → 403', async () => {
-    const Notification = (await import('../src/models/Notification.model.js')).default;
-    const otherId = new mongoose.Types.ObjectId();
-    const notif = await Notification.create({
-      userId: otherId, type: 'info', title: 'X', message: 'X', read: false,
-    });
-
+    const other = await request(app).post('/api/auth/register').send({ name: 'OtherNotif2', email: 'other_notif2@example.com', password: 'password123' });
+    const otherId = other.body.data.user.id;
+    const { Notification } = await import('../src/models/sequelize/index.js');
+    const notif = await Notification.create({ userId: otherId, type: 'info', title: 'X', message: 'X', read: false });
     const res = await request(app)
-      .put(`/api/notifications/${notif._id}/read`)
+      .put(`/api/notifications/${notif.id}/read`)
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(403);
@@ -180,7 +169,7 @@ describe('DELETE /api/notifications/:id', () => {
     const notif = await seedNotification();
 
     const res = await request(app)
-      .delete(`/api/notifications/${notif._id}`)
+      .delete(`/api/notifications/${notif.id}`)
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
@@ -196,14 +185,12 @@ describe('DELETE /api/notifications/:id', () => {
   });
 
   it('Thông báo của người khác → 403', async () => {
-    const Notification = (await import('../src/models/Notification.model.js')).default;
-    const otherId = new mongoose.Types.ObjectId();
-    const notif = await Notification.create({
-      userId: otherId, type: 'info', title: 'X', message: 'X', read: false,
-    });
-
+    const other = await request(app).post('/api/auth/register').send({ name: 'OtherNotif3', email: 'other_notif3@example.com', password: 'password123' });
+    const otherId = other.body.data.user.id;
+    const { Notification } = await import('../src/models/sequelize/index.js');
+    const notif = await Notification.create({ userId: otherId, type: 'info', title: 'X', message: 'X', read: false });
     const res = await request(app)
-      .delete(`/api/notifications/${notif._id}`)
+      .delete(`/api/notifications/${notif.id}`)
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(403);

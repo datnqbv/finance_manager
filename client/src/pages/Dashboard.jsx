@@ -326,7 +326,7 @@ const Dashboard = () => {
 
               <div className="space-y-3">
                 {topGoals.length > 0 ? topGoals.map((goal) => (
-                  <div key={goal._id || goal.name}>
+                  <div key={goal.id || goal.name}>
                     <div className="mb-1 flex items-center justify-between text-xs text-[#586074] dark:text-[#a9afbb]">
                       <span className="font-semibold">{goal.name}</span>
                       <span className="font-bold">{goal.progress.toFixed(0)}%</span>
@@ -489,7 +489,7 @@ const Dashboard = () => {
                 {recentTransactions.length > 0 ? recentTransactions.map((tx, idx) => {
                   const status = idx % 3 === 2 ? (isEnglish ? 'Processing' : 'Đang xử lý') : (isEnglish ? 'Completed' : 'Hoàn tất');
                   return (
-                    <tr key={tx._id || idx} className="border-b border-[#eef1f6] dark:border-[#2a303b]">
+                    <tr key={tx.id || idx} className="border-b border-[#eef1f6] dark:border-[#2a303b]">
                       <td className="px-5 py-4">
                         <p className="font-bold text-[#1d2430] dark:text-[#eef1f5]">{tx.note || tx.category}</p>
                         <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{tx.type === 'income' ? (isEnglish ? 'Income transaction' : 'Giao dịch thu') : (isEnglish ? 'Expense transaction' : 'Giao dịch chi')}</p>

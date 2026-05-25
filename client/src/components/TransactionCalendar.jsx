@@ -265,7 +265,7 @@ const TransactionCalendar = ({
             <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
               {selectedDayTxs.map(t => (
                 <div
-                  key={t._id}
+                  key={t.id}
                   className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-[#1a1a1a] hover:bg-gray-100 dark:hover:bg-[#222] transition group/row"
                 >
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm ${
@@ -298,7 +298,7 @@ const TransactionCalendar = ({
                       <FiEdit2 size={14} />
                     </button>
                     <button
-                      onClick={() => onDelete(t._id)}
+                      onClick={() => onDelete(t.id)}
                       className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
                     >
                       <FiTrash2 size={14} />

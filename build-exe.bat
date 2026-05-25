@@ -52,7 +52,7 @@ echo.
 echo [4/4] Dang dong goi thanh .exe...
 cd server
 echo   Buoc 4a: Bundle voi esbuild...
-call npx esbuild src/index.js --bundle --platform=node --format=cjs --target=node18 --outfile=bundled.cjs --external:fsevents --external:kerberos --external:@mongodb-js/zstd --external:snappy --external:mongodb-client-encryption --external:cpu-features --external:aws4
+call npx esbuild src/index.js --bundle --platform=node --format=cjs --target=node18 --outfile=bundled.cjs --external:fsevents
 if %errorlevel% neq 0 (
     echo [LOI] esbuild that bai!
     cd ..
@@ -100,6 +100,10 @@ echo     client\
 echo       dist\             (React frontend)
 echo.
 echo   QUAN TRONG: Chinh file dist\.env truoc khi chay!
-echo   MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/dbname
+echo   SQLSERVER_HOST=your-sql-server-host
+echo   SQLSERVER_PORT=1433
+echo   SQLSERVER_USER=your-sql-server-user
+echo   SQLSERVER_PASSWORD=your-sql-server-password
+echo   SQLSERVER_DATABASE=FinanceManager
 echo.
 pause

@@ -46,7 +46,7 @@ export const DebtProvider = ({ children }) => {
   const updateDebt = async (id, data) => {
     try {
       const res = await debtService.updateDebt(id, data);
-      setDebts(prev => prev.map(d => d._id === id ? res.data : d));
+      setDebts(prev => prev.map(d => d.id === id ? res.data : d));
       toast.success(isEnglish ? 'Updated successfully' : 'Đã cập nhật');
       await refreshStats();
       return { success: true, data: res.data };
@@ -60,7 +60,7 @@ export const DebtProvider = ({ children }) => {
   const deleteDebt = async (id) => {
     try {
       await debtService.deleteDebt(id);
-      setDebts(prev => prev.filter(d => d._id !== id));
+      setDebts(prev => prev.filter(d => d.id !== id));
       toast.success(isEnglish ? 'Debt deleted' : 'Đã xóa khoản nợ');
       await refreshStats();
       return { success: true };
@@ -73,7 +73,7 @@ export const DebtProvider = ({ children }) => {
   const addPayment = async (id, amount, note) => {
     try {
       const res = await debtService.addPayment(id, amount, note);
-      setDebts(prev => prev.map(d => d._id === id ? res.data : d));
+      setDebts(prev => prev.map(d => d.id === id ? res.data : d));
       toast.success(res.message || (isEnglish ? 'Payment recorded' : 'Đã ghi nhận thanh toán'));
       await refreshStats();
       return { success: true, data: res.data, message: res.message };
@@ -87,7 +87,7 @@ export const DebtProvider = ({ children }) => {
   const settleDebt = async (id) => {
     try {
       const res = await debtService.settleDebt(id);
-      setDebts(prev => prev.map(d => d._id === id ? res.data : d));
+      setDebts(prev => prev.map(d => d.id === id ? res.data : d));
       toast.success(isEnglish ? 'Debt settled ✅' : 'Đã tất toán khoản nợ ✅');
       await refreshStats();
       return { success: true };

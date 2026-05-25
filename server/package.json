@@ -7,9 +7,11 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.cjs",
+    "test": "set FORCE_SQLITE_IN_TESTS=true&& node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.cjs",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.cjs --coverage",
-    "build:exe": "npx esbuild src/index.js --bundle --platform=node --format=cjs --target=node18 --outfile=bundled.cjs --external:fsevents --external:kerberos --external:@mongodb-js/zstd --external:snappy --external:mongodb-client-encryption --external:cpu-features --external:aws4 && pkg bundled.cjs --target node18-win-x64 --no-bytecode --public --output ../dist/QuanLyChiTieu.exe"
+    "fts:setup": "node scripts/setup_fulltext_indexes.js",
+    "meili:setup": "node scripts/setup_meilisearch.js",
+    "build:exe": "npx esbuild src/index.js --bundle --platform=node --format=cjs --target=node18 --outfile=bundled.cjs --external:fsevents && pkg bundled.cjs --target node18-win-x64 --no-bytecode --public --output ../dist/QuanLyChiTieu.exe"
   },
   "pkg": {
     "scripts": [
@@ -41,17 +43,20 @@
     "google-auth-library": "^10.6.2",
     "jsonwebtoken": "^9.0.2",
     "ml": "^8.0.0",
-    "mongoose": "^8.0.0",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.10",
+    "sequelize": "^6.32.1",
     "simple-statistics": "^7.8.9",
+    "tedious": "^14.0.2",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "esbuild": "^0.27.7",
     "jest": "^30.2.0",
-    "mongodb-memory-server": "^11.0.1",
+    "meilisearch": "^0.58.0",
     "nodemon": "^3.0.1",
+    "sequelize-cli": "^6.6.0",
+    "sqlite3": "^5.1.6",
     "supertest": "^7.2.2"
   }
 }

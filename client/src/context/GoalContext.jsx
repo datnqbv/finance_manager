@@ -70,7 +70,7 @@ export const GoalProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       const data = await goalService.updateGoal(id, goalData);
-      setGoals(goals.map(g => g._id === id ? data.data : g));
+      setGoals(goals.map(g => g.id === id ? data.data : g));
       await fetchGoalStats();
       toast.success(isEnglish ? 'Goal updated successfully!' : 'Mục tiêu đã được cập nhật thành công!');
        return { success: true, data: data.data };
@@ -89,7 +89,7 @@ export const GoalProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       await goalService.deleteGoal(id);
-      setGoals(goals.filter(g => g._id !== id));
+      setGoals(goals.filter(g => g.id !== id));
       await fetchGoalStats();
       toast.success(isEnglish ? 'Goal deleted successfully!' : 'Mục tiêu đã được xóa thành công!');
       return { success: true };
@@ -108,7 +108,7 @@ export const GoalProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       const data = await goalService.addAmountToGoal(id, amount, note);
-      setGoals(goals.map(g => g._id === id ? data.data : g));
+      setGoals(goals.map(g => g.id === id ? data.data : g));
       await fetchGoalStats();
       return { success: true, data: data.data, message: data.message };
     } catch (err) {

@@ -1,7 +1,5 @@
-import Budget from '../models/Budget.model.js';
-import Transaction from '../models/Transaction.model.js';
-import Category from '../models/Category.model.js';
-import mongoose from 'mongoose';
+import { Budget, Transaction, Category, sequelize } from '../models/sequelize/index.js';
+import { Op } from 'sequelize';
 
 // ── Inline checkAlerts helper (works on .lean() objects) ─────────────────────
 const checkAlertsInline = (alertThresholds, notificationEnabled, currentSpending, effectiveAmount) => {
@@ -14,6 +12,18 @@ const checkAlertsInline = (alertThresholds, notificationEnabled, currentSpending
   return { percentage: Math.round(pct), triggeredAlerts: triggered, isOverBudget: pct > 100 };
 };
 
+const normalizeBudgetRow = (b) => ({
+  ...b,
+  alertThresholds: Array.isArray(b.alertThresholds)
+    ? b.alertThresholds
+    : (typeof b.alertThresholds === 'string'
+      ? (() => { try { return JSON.parse(b.alertThresholds || '[]'); } catch (e) { return []; } })()
+      : []),
+  notificationEnabled: typeof b.notificationEnabled === 'string'
+    ? (b.notificationEnabled === '1' || b.notificationEnabled === 'true')
+    : Boolean(b.notificationEnabled)
+});
+
 // ── Batch spending lookup: groups budgets by date range, 1 aggregation/group ─
 const buildSpendingLookup = async (userId, budgets) => {
   const rangeGroups = {};
@@ -25,13 +35,15 @@ const buildSpendingLookup = async (userId, budgets) => {
 
   const spendingByKey = {};
   await Promise.all(Object.entries(rangeGroups).map(async ([key, { start, end }]) => {
-    const agg = await Transaction.aggregate([
-      { $match: { userId: new mongoose.Types.ObjectId(userId), type: 'expense', date: { $gte: start, $lte: end } } },
-      { $group: { _id: '$category', total: { $sum: '$amount' } } }
-    ]);
+    const rows = await Transaction.findAll({
+      where: { userId, type: 'expense', date: { [Op.between]: [start, end] } },
+      attributes: ['category', [sequelize.fn('SUM', sequelize.col('amount')), 'total']],
+      group: ['category'],
+      raw: true,
+    });
     const catSpend = {};
     let totalSpend = 0;
-    agg.forEach(r => { catSpend[r._id] = r.total; totalSpend += r.total; });
+    rows.forEach(r => { catSpend[r.category] = parseFloat(r.total) || 0; totalSpend += parseFloat(r.total) || 0; });
     spendingByKey[key] = { catSpend, totalSpend };
   }));
 
@@ -73,22 +85,10 @@ const getDateRange = (period, startDate = new Date()) => {
 
 // Helper function to calculate current spending
 const calculateSpending = async (userId, categoryName, dateRange) => {
-  const query = {
-    userId,
-    type: 'expense',
-    date: { $gte: dateRange.start, $lte: dateRange.end }
-  };
-
-  if (categoryName) {
-    query.category = categoryName;
-  }
-
-  const result = await Transaction.aggregate([
-    { $match: query },
-    { $group: { _id: null, total: { $sum: '$amount' } } }
-  ]);
-
-  return result.length > 0 ? result[0].total : 0;
+  const where = { userId, type: 'expense', date: { [Op.between]: [dateRange.start, dateRange.end] } };
+  if (categoryName) where.category = categoryName;
+  const rows = await Transaction.findAll({ where, attributes: [[sequelize.fn('SUM', sequelize.col('amount')), 'total']], raw: true });
+  return rows && rows.length > 0 ? parseFloat(rows[0].total) || 0 : 0;
 };
 
 // Helper: get last period's date range
@@ -132,10 +132,13 @@ const currentPeriodKey = (period, now = new Date()) => {
 // @access  Private
 export const getBudgets = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const now    = new Date();
 
-    const budgets = await Budget.find({ userId, isActive: true }).sort({ categoryName: 1 }).lean();
+    let budgets = await Budget.findAll({ where: { userId, isActive: true }, order: [['categoryName','ASC']], raw: true });
+    // When using `raw: true`, Sequelize returns raw DB values (JSON stored as text).
+    // Ensure `alertThresholds` is an array for downstream helpers.
+    budgets = budgets.map(normalizeBudgetRow);
 
     // ── Rollover: Cái này là  ─────────────
     const rolloverTargets = budgets.filter(b =>
@@ -150,30 +153,28 @@ export const getBudgets = async (req, res) => {
       const rolloverWrites = [];
       await Promise.all(Object.entries(byPeriod).map(async ([period, pBudgets]) => {
         const lastRange = getLastPeriodRange(period, now);
-        const agg = await Transaction.aggregate([
-          { $match: { userId: new mongoose.Types.ObjectId(userId), type: 'expense', date: { $gte: lastRange.start, $lte: lastRange.end } } },
-          { $group: { _id: '$category', total: { $sum: '$amount' } } }
-        ]);
-        const catSpend   = {};
-        let   totalSpend = 0;
-        agg.forEach(r => { catSpend[r._id] = r.total; totalSpend += r.total; });
-        // tính toán số tiền thừa hoặc thiếu từ kỳ trước cho từng ngân sách cần rollover dựa trên tổng chi tiêu của kỳ đó, sau đó chuẩn bị các cập nhật để ghi vào cơ sở dữ liệu, giúp người dùng có cái nhìn chính xác hơn về số tiền còn lại trong ngân sách hiện tại sau khi đã tính đến phần dư hoặc thiếu từ kỳ trước, từ đó có thể điều chỉnh kế hoạch chi tiêu kịp thời để tránh rủi ro tài chính.
-        // tính bằng cách lấy số tiền đã chi tiêu của kỳ trước (theo danh mục nếu có, hoặc tổng nếu là ngân sách tổng) và so sánh với số tiền của ngân sách cộng với phần rolloverAmount từ kỳ trước (nếu có), phần chênh lệch sẽ được ghi vào trường rolloverAmount để cộng vào ngân sách của kỳ hiện tại, giúp người dùng có cái nhìn chính xác hơn về số tiền còn lại trong ngân sách hiện tại sau khi đã tính đến phần dư hoặc thiếu từ kỳ trước, từ đó có thể điều chỉnh kế hoạch chi tiêu kịp thời để tránh rủi ro tài chính.
+        const rows = await Transaction.findAll({
+          where: { userId, type: 'expense', date: { [Op.between]: [lastRange.start, lastRange.end] } },
+          attributes: ['category', [sequelize.fn('SUM', sequelize.col('amount')), 'total']],
+          group: ['category'],
+          raw: true,
+        });
+        const catSpend = {}; let totalSpend = 0;
+        rows.forEach(r => { catSpend[r.category] = parseFloat(r.total) || 0; totalSpend += parseFloat(r.total) || 0; });
         const periodKey = currentPeriodKey(period, now);
         pBudgets.forEach(b => {
-          const lastSpending  = b.categoryName ? (catSpend[b.categoryName] ?? 0) : totalSpend;
-          const surplus       = (b.amount + (b.rolloverAmount || 0)) - lastSpending;
-          rolloverWrites.push({ id: b._id.toString(), rolloverAmount: surplus, lastRolloverMonth: periodKey });
+          const lastSpending = b.categoryName ? (catSpend[b.categoryName] ?? 0) : totalSpend;
+          const surplus = (b.amount + (b.rolloverAmount || 0)) - lastSpending;
+          rolloverWrites.push({ id: b.id, rolloverAmount: surplus, lastRolloverMonth: periodKey });
         });
       }));
 
       if (rolloverWrites.length > 0) {
-        await Budget.bulkWrite(rolloverWrites.map(u => ({
-          updateOne: { filter: { _id: u.id }, update: { $set: { rolloverAmount: u.rolloverAmount, lastRolloverMonth: u.lastRolloverMonth } } }
-        })));
+        await Promise.all(rolloverWrites.map(u => Budget.update({ rolloverAmount: u.rolloverAmount, lastRolloverMonth: u.lastRolloverMonth }, { where: { id: u.id } })));
         const writeMap = Object.fromEntries(rolloverWrites.map(u => [u.id, u]));
         budgets.forEach(b => {
-          const u = writeMap[b._id.toString()];
+          const key = b.id;
+          const u = writeMap[key];
           if (u) { b.rolloverAmount = u.rolloverAmount; b.lastRolloverMonth = u.lastRolloverMonth; }
         });
       }
@@ -191,6 +192,7 @@ export const getBudgets = async (req, res) => {
 
     res.status(200).json({ success: true, count: result.length, data: result });
   } catch (error) {
+    console.error('getBudgets error:', error);
     res.status(500).json({ success: false, message: 'Lỗi khi lấy danh sách ngân sách', error: error.message });
   }
 };
@@ -200,10 +202,7 @@ export const getBudgets = async (req, res) => {
 // @access  Private
 export const getBudget = async (req, res) => {
   try {
-    const budget = await Budget.findOne({
-      _id: req.params.id,
-      userId: req.user._id
-    });
+    const budget = await Budget.findOne({ where: { id: req.params.id, userId: req.user.id }, raw: false });
 
     if (!budget) {
       return res.status(404).json({
@@ -213,24 +212,18 @@ export const getBudget = async (req, res) => {
     }
 
     const dateRange = getDateRange(budget.period, budget.startDate);
-    const currentSpending = await calculateSpending(
-      req.user._id,
-      budget.categoryName,
-      dateRange
-    );
+    const currentSpending = await calculateSpending(req.user.id, budget.categoryName, dateRange);
 
-    const budgetObj = budget.toObject();
-    const alerts = budget.checkAlerts(currentSpending);
+    const budgetObj = budget.get ? budget.get({ plain: true }) : budget;
+    const alerts = checkAlertsInline(budgetObj.alertThresholds, budgetObj.notificationEnabled, currentSpending, budgetObj.amount + (budgetObj.rolloverAmount || 0));
 
     // Get recent transactions
-    const recentTransactions = await Transaction.find({
-      userId: req.user._id,
-      type: 'expense',
-      category: budget.categoryName,
-      date: { $gte: dateRange.start, $lte: dateRange.end }
-    })
-      .sort({ date: -1 })
-      .limit(10);
+    const recentTransactions = await Transaction.findAll({
+      where: { userId: req.user.id, type: 'expense', category: budgetObj.categoryName, date: { [Op.between]: [dateRange.start, dateRange.end] } },
+      order: [['date','DESC']],
+      limit: 10,
+      raw: true
+    });
 
     res.status(200).json({
       success: true,
@@ -259,12 +252,7 @@ export const createBudget = async (req, res) => {
     const { categoryId, categoryName, amount, period, alertThresholds, notificationEnabled } = req.body;
 
     // Check if budget already exists for this category/period
-    const existingBudget = await Budget.findOne({
-      userId: req.user._id,
-      categoryName: categoryName || null,
-      period,
-      isActive: true
-    });
+    const existingBudget = await Budget.findOne({ where: { userId: req.user.id, categoryName: categoryName || null, period, isActive: true } });
 
     if (existingBudget) {
       return res.status(400).json({
@@ -273,12 +261,15 @@ export const createBudget = async (req, res) => {
       });
     }
 
+    // Validate amount
+    const numAmount = Number(amount);
+    if (amount === undefined || Number.isNaN(numAmount) || numAmount < 0) {
+      return res.status(400).json({ success: false, message: 'Số tiền ngân sách không hợp lệ' });
+    }
+
     // Validate category if provided
     if (categoryId) {
-      const category = await Category.findOne({
-        _id: categoryId,
-        userId: req.user._id
-      });
+      const category = await Category.findOne({ where: { id: categoryId, userId: req.user.id } });
 
       if (!category) {
         return res.status(404).json({
@@ -289,10 +280,10 @@ export const createBudget = async (req, res) => {
     }
 
     const budget = await Budget.create({
-      userId: req.user._id,
+      userId: req.user.id,
       categoryId: categoryId || null,
       categoryName: categoryName || null,
-      amount,
+      amount: numAmount,
       period: period || 'monthly',
       alertThresholds: alertThresholds || [80, 100, 120],
       notificationEnabled: notificationEnabled !== false
@@ -319,33 +310,20 @@ export const updateBudget = async (req, res) => {
   try {
     const { amount, period, alertThresholds, notificationEnabled, isActive, rolloverEnabled } = req.body;
 
-    const budget = await Budget.findOne({
-      _id: req.params.id,
-      userId: req.user._id
-    });
+    const budget = await Budget.findOne({ where: { id: req.params.id, userId: req.user.id } });
+    if (!budget) return res.status(404).json({ success: false, message: 'Không tìm thấy ngân sách' });
 
-    if (!budget) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy ngân sách'
-      });
-    }
+    const updates = {};
+    if (amount !== undefined) updates.amount = amount;
+    if (period) updates.period = period;
+    if (alertThresholds) updates.alertThresholds = alertThresholds;
+    if (notificationEnabled !== undefined) updates.notificationEnabled = notificationEnabled;
+    if (isActive !== undefined) updates.isActive = isActive;
+    if (rolloverEnabled !== undefined) updates.rolloverEnabled = rolloverEnabled;
 
-    // Update fields
-    if (amount !== undefined) budget.amount = amount;
-    if (period) budget.period = period;
-    if (alertThresholds) budget.alertThresholds = alertThresholds;
-    if (notificationEnabled !== undefined) budget.notificationEnabled = notificationEnabled;
-    if (isActive !== undefined) budget.isActive = isActive;
-    if (rolloverEnabled !== undefined) budget.rolloverEnabled = rolloverEnabled;
-
-    await budget.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Cập nhật ngân sách thành công',
-      data: budget
-    });
+    await Budget.update(updates, { where: { id: req.params.id } });
+    const updated = await Budget.findByPk(req.params.id, { raw: true });
+    res.status(200).json({ success: true, message: 'Cập nhật ngân sách thành công', data: updated });
   } catch (error) {
     res.status(400).json({
       success: false,
@@ -360,24 +338,9 @@ export const updateBudget = async (req, res) => {
 // @access  Private
 export const deleteBudget = async (req, res) => {
   try {
-    const budget = await Budget.findOne({
-      _id: req.params.id,
-      userId: req.user._id
-    });
-
-    if (!budget) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy ngân sách'
-      });
-    }
-
-    await budget.deleteOne();
-
-    res.status(200).json({
-      success: true,
-      message: 'Xóa ngân sách thành công'
-    });
+    const deleted = await Budget.destroy({ where: { id: req.params.id, userId: req.user.id } });
+    if (!deleted) return res.status(404).json({ success: false, message: 'Không tìm thấy ngân sách' });
+    res.status(200).json({ success: true, message: 'Xóa ngân sách thành công' });
   } catch (error) {
     res.status(400).json({
       success: false,
@@ -393,8 +356,8 @@ export const deleteBudget = async (req, res) => {
 // lấy trạng thái của tất cả ngân sách hiện tại bao gồm số tiền đã chi, còn lại, phần trăm đã đạt được và các cảnh báo nếu có, giúp người dùng nhanh chóng đánh giá tình hình ngân sách của họ và nhận biết những ngân sách nào đang có nguy cơ bị vượt hoặc đã vượt mức, từ đó có thể điều chỉnh kế hoạch chi tiêu kịp thời để tránh rủi ro tài chính.
 export const getBudgetStatus = async (req, res) => {
   try {
-    const userId  = req.user._id;
-    const budgets = await Budget.find({ userId, isActive: true }).lean();
+    const userId = req.user.id;
+    const budgets = (await Budget.findAll({ where: { userId, isActive: true }, order: [['categoryName','ASC']], raw: true })).map(normalizeBudgetRow);
 
     const getSpending = await buildSpendingLookup(userId, budgets);
 
@@ -403,7 +366,7 @@ export const getBudgetStatus = async (req, res) => {
       const effectiveAmount = b.amount + (b.rolloverAmount || 0);
       const alerts = checkAlertsInline(b.alertThresholds, b.notificationEnabled, currentSpending, effectiveAmount);
       return {
-        budgetId: b._id, categoryName: b.categoryName || 'Tổng',
+        budgetId: b.id, categoryName: b.categoryName || 'Tổng',
         amount: b.amount, effectiveAmount, currentSpending,
         remaining: effectiveAmount - currentSpending, ...alerts
       };
@@ -432,8 +395,8 @@ export const getBudgetStatus = async (req, res) => {
 //  giúp người dùng nhanh chóng nhận biết những ngân sách nào đang có nguy cơ bị vượt hoặc đã vượt mức, từ đó có thể điều chỉnh kế hoạch chi tiêu kịp thời để tránh rủi ro tài chính.
 export const getAlerts = async (req, res) => {
   try {
-    const userId  = req.user._id;
-    const budgets = await Budget.find({ userId, isActive: true, notificationEnabled: true }).lean();
+    const userId = req.user.id;
+    let budgets = (await Budget.findAll({ where: { userId, isActive: true, notificationEnabled: true }, raw: true })).map(normalizeBudgetRow);
 
     const getSpending = await buildSpendingLookup(userId, budgets);
 
@@ -444,7 +407,7 @@ export const getAlerts = async (req, res) => {
       const alertInfo = checkAlertsInline(b.alertThresholds, b.notificationEnabled, currentSpending, effectiveAmount);
       if (alertInfo.triggeredAlerts.length > 0) {
         alerts.push({
-          budgetId: b._id, categoryName: b.categoryName || 'Tổng',
+          budgetId: b.id, categoryName: b.categoryName || 'Tổng',
           amount: b.amount, currentSpending, percentage: alertInfo.percentage,
           triggeredAlerts: alertInfo.triggeredAlerts, isOverBudget: alertInfo.isOverBudget,
           message: alertInfo.isOverBudget
@@ -456,6 +419,7 @@ export const getAlerts = async (req, res) => {
 
     res.status(200).json({ success: true, count: alerts.length, data: alerts });
   } catch (error) {
+    console.error('getAlerts error:', error);
     res.status(500).json({ success: false, message: 'Lỗi khi lấy cảnh báo', error: error.message });
   }
 };
@@ -466,40 +430,38 @@ export const getAlerts = async (req, res) => {
 // lấy tổng quan ngân sách bao gồm danh sách ngân sách, trạng thái hiện tại (đã chi bao nhiêu, còn lại bao nhiêu, đã đạt được bao nhiêu phần trăm) và các cảnh báo đã kích hoạt nếu có, giúp người dùng có cái nhìn tổng thể về tình hình ngân sách của họ trong một lần gọi API duy nhất, từ đó dễ dàng theo dõi và quản lý tài chính cá nhân hiệu quả hơn.
 export const getBudgetOverview = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const now    = new Date();
 
     // Rollover check (same batch logic as getBudgets)
-    const allBudgets = await Budget.find({ userId, isActive: true }).sort({ categoryName: 1 }).lean();
+    const allBudgets = (await Budget.findAll({ where: { userId, isActive: true }, order: [['categoryName','ASC']], raw: true })).map(normalizeBudgetRow);
 
-    const rolloverTargets = allBudgets.filter(b =>
-      b.rolloverEnabled && b.lastRolloverMonth !== currentPeriodKey(b.period, now)
-    );
+    const rolloverTargets = allBudgets.filter(b => b.rolloverEnabled && b.lastRolloverMonth !== currentPeriodKey(b.period, now));
     if (rolloverTargets.length > 0) {
       const byPeriod = {};
       rolloverTargets.forEach(b => { (byPeriod[b.period] ??= []).push(b); });
       const rolloverWrites = [];
       await Promise.all(Object.entries(byPeriod).map(async ([period, pBudgets]) => {
         const lastRange = getLastPeriodRange(period, now);
-        const agg = await Transaction.aggregate([
-          { $match: { userId: new mongoose.Types.ObjectId(userId), type: 'expense', date: { $gte: lastRange.start, $lte: lastRange.end } } },
-          { $group: { _id: '$category', total: { $sum: '$amount' } } }
-        ]);
+        const rows = await Transaction.findAll({
+          where: { userId, type: 'expense', date: { [Op.between]: [lastRange.start, lastRange.end] } },
+          attributes: ['category', [sequelize.fn('SUM', sequelize.col('amount')), 'total']],
+          group: ['category'],
+          raw: true,
+        });
         const catSpend = {}; let totalSpend = 0;
-        agg.forEach(r => { catSpend[r._id] = r.total; totalSpend += r.total; });
+        rows.forEach(r => { catSpend[r.category] = parseFloat(r.total) || 0; totalSpend += parseFloat(r.total) || 0; });
         const periodKey = currentPeriodKey(period, now);
         pBudgets.forEach(b => {
           const lastSpending = b.categoryName ? (catSpend[b.categoryName] ?? 0) : totalSpend;
           const surplus = (b.amount + (b.rolloverAmount || 0)) - lastSpending;
-          rolloverWrites.push({ id: b._id.toString(), rolloverAmount: surplus, lastRolloverMonth: periodKey });
+          rolloverWrites.push({ id: b.id, rolloverAmount: surplus, lastRolloverMonth: periodKey });
         });
       }));
       if (rolloverWrites.length > 0) {
-        await Budget.bulkWrite(rolloverWrites.map(u => ({
-          updateOne: { filter: { _id: u.id }, update: { $set: { rolloverAmount: u.rolloverAmount, lastRolloverMonth: u.lastRolloverMonth } } }
-        })));
+        await Promise.all(rolloverWrites.map(u => Budget.update({ rolloverAmount: u.rolloverAmount, lastRolloverMonth: u.lastRolloverMonth }, { where: { id: u.id } })));
         const writeMap = Object.fromEntries(rolloverWrites.map(u => [u.id, u]));
-        allBudgets.forEach(b => { const u = writeMap[b._id.toString()]; if (u) { b.rolloverAmount = u.rolloverAmount; b.lastRolloverMonth = u.lastRolloverMonth; }});
+        allBudgets.forEach(b => { const u = writeMap[b.id]; if (u) { b.rolloverAmount = u.rolloverAmount; b.lastRolloverMonth = u.lastRolloverMonth; }});
       }
     }
 
@@ -519,7 +481,7 @@ export const getBudgetOverview = async (req, res) => {
     const overBudgetCount = budgetsWithSpending.filter(b => b.isOverBudget).length;
     const status = {
       budgets: budgetsWithSpending.map(b => ({
-        budgetId: b._id, categoryName: b.categoryName || 'Tổng',
+        budgetId: b.id, categoryName: b.categoryName || 'Tổng',
         amount: b.amount, effectiveAmount: b.effectiveAmount, currentSpending: b.currentSpending,
         remaining: b.effectiveAmount - b.currentSpending,
         percentage: b.percentage, triggeredAlerts: b.triggeredAlerts, isOverBudget: b.isOverBudget
@@ -532,7 +494,7 @@ export const getBudgetOverview = async (req, res) => {
     const triggeredAlerts = budgetsWithSpending
       .filter(b => b.notificationEnabled !== false && b.triggeredAlerts?.length > 0)
       .map(b => ({
-        budgetId: b._id, categoryName: b.categoryName || 'Tổng',
+        budgetId: b.id, categoryName: b.categoryName || 'Tổng',
         amount: b.amount, currentSpending: b.currentSpending, percentage: b.percentage,
         triggeredAlerts: b.triggeredAlerts, isOverBudget: b.isOverBudget,
         message: b.isOverBudget

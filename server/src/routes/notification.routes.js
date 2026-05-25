@@ -4,7 +4,8 @@ import {
   markAsRead, 
   markAllAsRead, 
   deleteNotification, 
-  deleteAllNotifications 
+  deleteAllNotifications,
+  streamNotifications
 } from '../controllers/notification.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 
@@ -12,6 +13,7 @@ const router = express.Router();
 
 router.use(protect);
 
+router.get('/stream', streamNotifications); // SSE – phải đứng trước /:id
 router.get('/', getNotifications);
 router.put('/read-all', markAllAsRead);
 router.put('/:id/read', markAsRead);

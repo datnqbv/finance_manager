@@ -31,7 +31,7 @@ describe('CategoryModal — render', () => {
   });
 
   it('Title "Sửa danh mục" khi chỉnh sửa', () => {
-    renderModal({ category: { _id: 'c1', name: 'Ăn uống', type: 'expense', icon: '🍔', color: '#3B82F6' } });
+    renderModal({ category: { id: 'c1', name: 'Ăn uống', type: 'expense', icon: '🍔', color: '#3B82F6' } });
     expect(document.body.textContent).toMatch(/sửa danh mục|chỉnh sửa/i);
   });
 
@@ -106,7 +106,7 @@ describe('CategoryModal — validation', () => {
 
 describe('CategoryModal — chỉnh sửa', () => {
   const existing = {
-    _id: 'c1',
+    id: 'c1',
     name: 'Ăn uống',
     icon: '🍔',
     color: '#EF4444',

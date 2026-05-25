@@ -125,14 +125,14 @@ describe('GET /api/goals', () => {
 describe('GET /api/goals/:id', () => {
   it('Lấy thành công → 200 + có monthlySaving', async () => {
     const created = await createGoal();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .get(`/api/goals/${id}`)
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.data._id).toBe(id);
+    expect(res.body.data.id).toBe(id);
     expect(res.body.data.monthlySaving).toBeDefined();
   });
 
@@ -150,7 +150,7 @@ describe('GET /api/goals/:id', () => {
 describe('PUT /api/goals/:id', () => {
   it('Cập nhật tên thành công → 200', async () => {
     const created = await createGoal();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .put(`/api/goals/${id}`)
@@ -163,7 +163,7 @@ describe('PUT /api/goals/:id', () => {
 
   it('Cập nhật targetAmount → phản ánh đúng', async () => {
     const created = await createGoal();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .put(`/api/goals/${id}`)
@@ -189,7 +189,7 @@ describe('PUT /api/goals/:id', () => {
 describe('POST /api/goals/:id/add-amount', () => {
   it('Nạp tiền thành công → currentAmount tăng', async () => {
     const created = await createGoal({ targetAmount: 10000000, currentAmount: 0 });
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .post(`/api/goals/${id}/add-amount`)
@@ -203,7 +203,7 @@ describe('POST /api/goals/:id/add-amount', () => {
 
   it('Nạp đủ targetAmount → isAchieved = true', async () => {
     const created = await createGoal({ targetAmount: 5000000, currentAmount: 0 });
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .post(`/api/goals/${id}/add-amount`)
@@ -216,7 +216,7 @@ describe('POST /api/goals/:id/add-amount', () => {
 
   it('Số tiền = 0 → lỗi 400', async () => {
     const created = await createGoal();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .post(`/api/goals/${id}/add-amount`)
@@ -253,7 +253,7 @@ describe('GET /api/goals/stats', () => {
 describe('DELETE /api/goals/:id', () => {
   it('Xóa thành công → 200', async () => {
     const created = await createGoal();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .delete(`/api/goals/${id}`)
@@ -265,7 +265,7 @@ describe('DELETE /api/goals/:id', () => {
 
   it('Sau khi xóa → danh sách rỗng', async () => {
     const created = await createGoal();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     await request(app).delete(`/api/goals/${id}`).set('Authorization', `Bearer ${token}`);
 
@@ -275,7 +275,7 @@ describe('DELETE /api/goals/:id', () => {
 
   it('Không xóa được của người khác → 404', async () => {
     const created = await createGoal();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .delete(`/api/goals/${id}`)

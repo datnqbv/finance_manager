@@ -30,14 +30,14 @@ const AdminContacts = () => {
         search: search || undefined,
         status: status || undefined,
       });
-      const nextItems = response.data.items || [];
+      const nextItems = response.items || [];
       setItems(nextItems);
-      setSummary(response.data.summary || { new: 0, read: 0, replied: 0 });
-      setPagination(response.data.pagination || { total: 0, page: 1, totalPages: 1, limit: 20 });
+      setSummary(response.summary || { new: 0, read: 0, replied: 0 });
+      setPagination(response.pagination || { total: 0, page: 1, totalPages: 1, limit: 20 });
       setDrafts((current) => {
         const nextDrafts = {};
         nextItems.forEach((item) => {
-          nextDrafts[item._id] = {
+          nextDrafts[item.id] = {
             status: item.status || 'new',
             adminNote: item.adminNote || '',
           };
@@ -152,9 +152,9 @@ const AdminContacts = () => {
               ) : items.length === 0 ? (
                 <tr><td className="px-4 py-6 text-center text-[#7b8798]" colSpan={6}>{isEnglish ? 'No contact messages found' : 'Không có liên hệ nào'}</td></tr>
               ) : items.map((item) => {
-                const draft = drafts[item._id] || { status: item.status, adminNote: item.adminNote || '' };
+                const draft = drafts[item.id] || { status: item.status, adminNote: item.adminNote || '' };
                 return (
-                  <tr key={item._id} className="border-t border-[#edf1f5] align-top">
+                  <tr key={item.id} className="border-t border-[#edf1f5] align-top">
                     <td className="px-4 py-3">
                       <div className="font-semibold text-[#1f2a38]">{item.name}</div>
                       <div className="text-xs text-[#6f7f92]">{item.email}</div>
@@ -165,7 +165,7 @@ const AdminContacts = () => {
                     <td className="px-4 py-3">
                       <select
                         value={draft.status}
-                        onChange={(e) => setDrafts((current) => ({ ...current, [item._id]: { ...draft, status: e.target.value } }))}
+                        onChange={(e) => setDrafts((current) => ({ ...current, [item.id]: { ...draft, status: e.target.value } }))}
                         className="w-full rounded-lg border border-[#d8dde5] px-2 py-1 text-xs outline-none focus:border-[#6aa386]"
                       >
                         {statusOptions.map((option) => (
@@ -176,7 +176,7 @@ const AdminContacts = () => {
                     <td className="px-4 py-3">
                       <textarea
                         value={draft.adminNote}
-                        onChange={(e) => setDrafts((current) => ({ ...current, [item._id]: { ...draft, adminNote: e.target.value } }))}
+                        onChange={(e) => setDrafts((current) => ({ ...current, [item.id]: { ...draft, adminNote: e.target.value } }))}
                         rows={3}
                         className="w-full rounded-lg border border-[#d8dde5] px-2 py-1 text-xs outline-none focus:border-[#6aa386]"
                         placeholder={isEnglish ? 'Add internal note...' : 'Thêm ghi chú nội bộ...'}
@@ -184,10 +184,10 @@ const AdminContacts = () => {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
-                        <button onClick={() => handleSave(item._id)} className="inline-flex items-center gap-1 rounded-md border border-[#d8dde5] px-2.5 py-1.5 text-xs font-semibold text-[#245341] hover:bg-[#edf5f1]">
+                        <button onClick={() => handleSave(item.id)} className="inline-flex items-center gap-1 rounded-md border border-[#d8dde5] px-2.5 py-1.5 text-xs font-semibold text-[#245341] hover:bg-[#edf5f1]">
                           <FiSave size={13} /> {isEnglish ? 'Save' : 'Lưu'}
                         </button>
-                        <button onClick={() => handleDelete(item._id)} className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50">
+                        <button onClick={() => handleDelete(item.id)} className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50">
                           <FiTrash2 size={13} /> {isEnglish ? 'Delete' : 'Xóa'}
                         </button>
                       </div>

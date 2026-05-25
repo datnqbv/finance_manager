@@ -133,7 +133,7 @@ describe('GET /api/debts', () => {
 describe('PUT /api/debts/:id', () => {
   it('Cập nhật personName thành công → 200', async () => {
     const created = await createDebt();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .put(`/api/debts/${id}`)
@@ -146,7 +146,7 @@ describe('PUT /api/debts/:id', () => {
 
   it('Cập nhật amount → tính lại remainingAmount', async () => {
     const created = await createDebt();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .put(`/api/debts/${id}`)
@@ -173,7 +173,7 @@ describe('PUT /api/debts/:id', () => {
 describe('POST /api/debts/:id/pay', () => {
   it('Thanh toán một phần → giảm remainingAmount', async () => {
     const created = await createDebt({ amount: 500000 });
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .post(`/api/debts/${id}/pay`)
@@ -189,7 +189,7 @@ describe('POST /api/debts/:id/pay', () => {
 
   it('Thanh toán đủ → status chuyển thành settled', async () => {
     const created = await createDebt({ amount: 500000 });
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .post(`/api/debts/${id}/pay`)
@@ -203,7 +203,7 @@ describe('POST /api/debts/:id/pay', () => {
 
   it('Số tiền = 0 → lỗi 400', async () => {
     const created = await createDebt();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .post(`/api/debts/${id}/pay`)
@@ -215,7 +215,7 @@ describe('POST /api/debts/:id/pay', () => {
 
   it('Khoản đã settled → không thanh toán thêm được', async () => {
     const created = await createDebt({ amount: 100000 });
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     // Settle toàn bộ
     await request(app)
@@ -238,7 +238,7 @@ describe('POST /api/debts/:id/pay', () => {
 describe('PATCH /api/debts/:id/settle', () => {
   it('Đánh dấu settled thủ công → 200', async () => {
     const created = await createDebt({ amount: 500000 });
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .patch(`/api/debts/${id}/settle`)
@@ -255,7 +255,7 @@ describe('PATCH /api/debts/:id/settle', () => {
 describe('DELETE /api/debts/:id', () => {
   it('Xóa thành công → 200', async () => {
     const created = await createDebt();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .delete(`/api/debts/${id}`)
@@ -267,7 +267,7 @@ describe('DELETE /api/debts/:id', () => {
 
   it('Sau khi xóa → danh sách rỗng', async () => {
     const created = await createDebt();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     await request(app).delete(`/api/debts/${id}`).set('Authorization', `Bearer ${token}`);
 
@@ -277,7 +277,7 @@ describe('DELETE /api/debts/:id', () => {
 
   it('Không xóa được của người khác → 404', async () => {
     const created = await createDebt();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .delete(`/api/debts/${id}`)

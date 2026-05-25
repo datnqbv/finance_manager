@@ -1,37 +1,33 @@
 /**
  * tests/helpers/db.js
- * Helper khởi tạo/đóng MongoDB in-memory cho tests.
+ * Helper khởi tạo/đóng SQLite in-memory (Sequelize) cho tests.
  * Mỗi test file gọi connect() trong beforeAll và close() trong afterAll.
  */
-import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
-
-let mongod;
+import { sequelize, syncModels } from '../../src/models/sequelize/index.js';
 
 /**
- * Khởi động MongoMemoryServer và kết nối Mongoose
+ * Khởi tạo DB in-memory và sync models
  */
 export const connect = async () => {
-  mongod = await MongoMemoryServer.create();
-  const uri = mongod.getUri();
-  await mongoose.connect(uri);
+  // Ensure the SQL config uses in-memory sqlite (also set by npm test via env)
+  process.env.FORCE_SQLITE_IN_TESTS = process.env.FORCE_SQLITE_IN_TESTS || 'true';
+  await syncModels({ force: true });
 };
 
 /**
- * Đóng kết nối và tắt MongoMemoryServer
+ * Đóng kết nối và xóa schema
  */
 export const close = async () => {
-  await mongoose.connection.dropDatabase();
-  await mongoose.connection.close();
-  await mongod.stop();
+  await sequelize.drop();
+  await sequelize.close();
 };
 
 /**
- * Xóa toàn bộ data trong tất cả collections (chạy sau mỗi test)
+ * Xóa toàn bộ data trong tất cả tables (chạy sau mỗi test)
  */
 export const clear = async () => {
-  const collections = mongoose.connection.collections;
-  for (const key in collections) {
-    await collections[key].deleteMany({});
+  const models = sequelize.models;
+  for (const name of Object.keys(models)) {
+    await models[name].destroy({ where: {}, truncate: true, force: true });
   }
 };

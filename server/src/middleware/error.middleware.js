@@ -5,20 +5,20 @@ export const errorHandler = (err, req, res, next) => {
   // Log to console for dev
   console.error('Error:', err);
 
-  // Mongoose bad ObjectId
+  // Bad ObjectId / cast error
   if (err.name === 'CastError') {
     const message = 'Không tìm thấy tài nguyên';
     error = { message, statusCode: 404 };
   }
 
-  // Mongoose duplicate key
+  // Duplicate key error
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0];
     const message = `${field === 'email' ? 'Email' : field} đã tồn tại`;
     error = { message, statusCode: 400 };
   }
 
-  // Mongoose validation error
+  // Validation error (DB or ORM)
   if (err.name === 'ValidationError') {
     const message = Object.values(err.errors).map(val => val.message).join(', ');
     error = { message, statusCode: 400 };

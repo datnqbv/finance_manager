@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 //Main layout wrapper - khung chứa chính của app
 
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -27,7 +27,6 @@ import {
   FiHelpCircle,
   FiSearch
 } from 'react-icons/fi';
-import { useEffect } from 'react';
 import DarkModeToggle from './DarkModeToggle';
 import GlobalSearch from './GlobalSearch';
 import { useTheme } from '../context/ThemeContext';
@@ -54,26 +53,16 @@ const Layout = ({ children }) => {
   const [showAdminMenu, setShowAdminMenu] = useState(false); // Trạng thái hiển thị submenu admin
   const [showMobileSearch, setShowMobileSearch] = useState(false); // Trạng thái hiển thị search overlay mobile
 
-  // Fetch notifications from API
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const response = await getNotifications();
-        if (response.success) {
-          setNotifications(response.data.notifications);
-          setUnreadCount(response.data.unreadCount); // Cập nhật số thông báo chưa đọc
-        }
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const response = await getNotifications();
+      if (response.success) {
+        setNotifications(response.data.notifications);
+        setUnreadCount(response.data.unreadCount); // Cập nhật số thông báo chưa đọc
       }
-    };
-
-    fetchNotifications();
-
-    // Refresh notifications every 1 second
-    const interval = setInterval(fetchNotifications, 1 * 1000);
-
-    return () => clearInterval(interval);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
   }, []);
 
   useEffect(() => {
@@ -81,6 +70,15 @@ const Layout = ({ children }) => {
       setShowAdminMenu(true);
     }
   }, [location.pathname]);
+
+  const toggleNotifications = async () => {
+    const nextValue = !showNotifications;
+    setShowNotifications(nextValue);
+
+    if (nextValue) {
+      await fetchNotifications();
+    }
+  };
 
   const markAsRead = async (id) => { // Đánh dấu một thông báo là đã đọc
     try {
@@ -380,7 +378,7 @@ const Layout = ({ children }) => {
                 {/* Notifications */}
                 <div className="relative">
                   <button
-                    onClick={() => setShowNotifications(!showNotifications)}
+                    onClick={toggleNotifications}
                     className="p-2 rounded-md bg-white dark:bg-[#242730] 
                                      hover:bg-[#eef4fb] dark:hover:bg-[#2b2f39] 
                                      border border-[#d3d7df] dark:border-[#353943]

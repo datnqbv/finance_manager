@@ -73,7 +73,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
 
     let result;
     if (transaction) {
-      result = await updateTransaction(transaction._id, data);
+      result = await updateTransaction(transaction.id, data);
     } else {
       result = await createTransaction(data);
     }
@@ -165,7 +165,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
               >
                 <option value="">Chọn danh mục</option>
                 {availableCategories.map((cat) => (
-                  <option key={cat._id} value={cat.name}>
+                  <option key={cat.id} value={cat.name}>
                     {cat.icon} {cat.name}
                   </option>
                 ))}

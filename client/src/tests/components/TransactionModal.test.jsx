@@ -23,9 +23,9 @@ vi.mock('../../context/TransactionContext', () => ({
 vi.mock('../../context/CategoryContext', () => ({
   useCategories: () => ({
     categories: [
-      { _id: '1', name: 'Ăn uống',   type: 'expense', icon: '🍔' },
-      { _id: '2', name: 'Lương',      type: 'income',  icon: '💰' },
-      { _id: '3', name: 'Di chuyển',  type: 'expense', icon: '🚗' },
+      { id: '1', name: 'Ăn uống',   type: 'expense', icon: '🍔' },
+      { id: '2', name: 'Lương',      type: 'income',  icon: '💰' },
+      { id: '3', name: 'Di chuyển',  type: 'expense', icon: '🚗' },
     ],
     fetchCategories: mockFetchCategories,
   }),
@@ -121,7 +121,7 @@ describe('TransactionModal — tạo mới', () => {
 
 describe('TransactionModal — sửa giao dịch', () => {
   const existingTransaction = {
-    _id: 'tx123',
+    id: 'tx123',
     type: 'expense',
     category: 'Ăn uống',
     amount: 150000,

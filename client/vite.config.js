@@ -12,8 +12,14 @@ export default defineConfig({
     allowedHosts: ['.ngrok-free.dev', 'dreamy-karma-resample.ngrok-free.dev'],
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
+        // Cần cho SSE (Server-Sent Events): tắt buffering để nhận event ngay lập tức
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => {
+            proxyReq.setHeader('Connection', 'keep-alive');
+          });
+        }
       }
     }
   }

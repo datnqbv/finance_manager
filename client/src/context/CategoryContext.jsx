@@ -56,7 +56,7 @@ export const CategoryProvider = ({ children }) => {
     try {
       setLoading(true);
       const data = await categoryService.updateCategory(id, categoryData);
-      setCategories(categories.map(cat => cat._id === id ? data.data : cat));
+      setCategories(categories.map(cat => cat.id === id ? data.data : cat));
       toast.success(data.message || (isEnglish ? 'Category updated successfully' : 'Cập nhật danh mục thành công'));
       return data.data;
     } catch (err) {
@@ -73,7 +73,7 @@ export const CategoryProvider = ({ children }) => {
     try {
       setLoading(true);
       const data = await categoryService.deleteCategory(id);
-      setCategories(categories.filter(cat => cat._id !== id));
+      setCategories(categories.filter(cat => cat.id !== id));
       toast.success(data.message || (isEnglish ? 'Category deleted successfully' : 'Xóa danh mục thành công'));
     } catch (err) {
       const errorMessage = err.response?.data?.message || (isEnglish ? 'Failed to delete category' : 'Lỗi khi xóa danh mục');
@@ -89,7 +89,7 @@ export const CategoryProvider = ({ children }) => {
     try {
       setLoading(true);
       const data = await categoryService.mergeCategories(sourceId, targetId);
-      setCategories(categories.filter(cat => cat._id !== sourceId));
+      setCategories(categories.filter(cat => cat.id !== sourceId));
       toast.success(data.message || (isEnglish ? 'Categories merged successfully' : 'Gộp danh mục thành công'));
     } catch (err) {
       const errorMessage = err.response?.data?.message || (isEnglish ? 'Failed to merge categories' : 'Lỗi khi gộp danh mục');

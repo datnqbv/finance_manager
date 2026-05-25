@@ -1,16 +1,16 @@
-import Category from '../models/Category.model.js';
-import Transaction from '../models/Transaction.model.js';
+import { Category, Transaction } from '../models/sequelize/index.js';
+import { Op } from 'sequelize';
 
 // @desc    Get all categories for user
 // @route   GET /api/categories
 // @access  Private
 export const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find({ userId: req.user._id }).sort({ type: 1, order: 1 });
+    const categories = await Category.findAll({ where: { userId: req.user.id }, order: [['type','ASC'], ['order','ASC']] });
 
     // Nếu user chưa có categories, tạo mặc định
     if (categories.length === 0) {
-      const defaultCategories = await Category.createDefaultCategories(req.user._id);
+      const defaultCategories = await Category.createDefaultCategories(req.user.id);
       return res.status(200).json({
         success: true,
         count: defaultCategories.length,
@@ -37,10 +37,7 @@ export const getCategories = async (req, res) => {
 // @access  Private
 export const getCategory = async (req, res) => {
   try {
-    const category = await Category.findOne({
-      _id: req.params.id,
-      userId: req.user._id
-    });
+    const category = await Category.findOne({ where: { id: req.params.id, userId: req.user.id } });
 
     if (!category) {
       return res.status(404).json({
@@ -50,15 +47,9 @@ export const getCategory = async (req, res) => {
     }
 
     // Đếm số giao dịch sử dụng category này
-    const transactionCount = await Transaction.countDocuments({
-      userId: req.user._id,
-      category: category.name
-    });
+    const transactionCount = await Transaction.count({ where: { userId: req.user.id, category: category.name } });
 
-    res.status(200).json({
-      success: true,
-      data: { ...category.toObject(), transactionCount }
-    });
+    res.status(200).json({ success: true, data: { ...(category.get ? category.get({ plain: true }) : category), transactionCount } });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -76,10 +67,7 @@ export const createCategory = async (req, res) => {
     const { name, icon, color, type, order } = req.body;
 
     // Check if category name already exists for this user
-    const existingCategory = await Category.findOne({
-      userId: req.user._id,
-      name: name.trim()
-    });
+    const existingCategory = await Category.findOne({ where: { userId: req.user.id, name: name.trim() } });
 
     if (existingCategory) {
       return res.status(400).json({
@@ -88,15 +76,7 @@ export const createCategory = async (req, res) => {
       });
     }
 
-    const category = await Category.create({
-      userId: req.user._id,
-      name: name.trim(),
-      icon: icon || '📁',
-      color: color || '#3B82F6',
-      type: type || 'expense',
-      order: order || 0,
-      isDefault: false
-    });
+    const category = await Category.create({ userId: req.user.id, name: name.trim(), icon: icon || '📁', color: color || '#3B82F6', type: type || 'expense', order: order || 0, isDefault: false });
 
     res.status(201).json({
       success: true,
@@ -104,7 +84,7 @@ export const createCategory = async (req, res) => {
       data: category
     });
   } catch (error) {
-    if (error.code === 11000) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({
         success: false,
         message: 'Danh mục này đã tồn tại'
@@ -125,10 +105,7 @@ export const updateCategory = async (req, res) => {
   try {
     const { name, icon, color, type, order } = req.body;
 
-    const category = await Category.findOne({
-      _id: req.params.id,
-      userId: req.user._id
-    });
+    const category = await Category.findOne({ where: { id: req.params.id, userId: req.user.id } });
 
     if (!category) {
       return res.status(404).json({
@@ -139,11 +116,7 @@ export const updateCategory = async (req, res) => {
 
     // Check if new name already exists (nếu đổi tên)
     if (name && name.trim() !== category.name) {
-      const existingCategory = await Category.findOne({
-        userId: req.user._id,
-        name: name.trim(),
-        _id: { $ne: req.params.id }
-      });
+      const existingCategory = await Category.findOne({ where: { userId: req.user.id, name: name.trim(), id: { [Op.ne]: req.params.id } } });
 
       if (existingCategory) {
         return res.status(400).json({
@@ -154,10 +127,7 @@ export const updateCategory = async (req, res) => {
 
       // Update transactions với category name cũ
       const oldName = category.name;
-      await Transaction.updateMany(
-        { userId: req.user._id, category: oldName },
-        { category: name.trim() }
-      );
+      await Transaction.update({ category: name.trim() }, { where: { userId: req.user.id, category: oldName } });
     }
 
     // Update category
@@ -188,10 +158,7 @@ export const updateCategory = async (req, res) => {
 // @access  Private
 export const deleteCategory = async (req, res) => {
   try {
-    const category = await Category.findOne({
-      _id: req.params.id,
-      userId: req.user._id
-    });
+    const category = await Category.findOne({ where: { id: req.params.id, userId: req.user.id } });
 
     if (!category) {
       return res.status(404).json({
@@ -201,10 +168,7 @@ export const deleteCategory = async (req, res) => {
     }
 
     // Check if category is being used in transactions
-    const transactionCount = await Transaction.countDocuments({
-      userId: req.user._id,
-      category: category.name
-    });
+    const transactionCount = await Transaction.count({ where: { userId: req.user.id, category: category.name } });
 
     if (transactionCount > 0) {
       return res.status(400).json({
@@ -214,7 +178,7 @@ export const deleteCategory = async (req, res) => {
       });
     }
 
-    await category.deleteOne();
+    await category.destroy();
 
     res.status(200).json({
       success: true,
@@ -234,10 +198,7 @@ export const deleteCategory = async (req, res) => {
 // @access  Private
 export const getCategoryStats = async (req, res) => { // Lấy thống kê cho danh mục
   try {
-    const category = await Category.findOne({
-      _id: req.params.id,
-      userId: req.user._id
-    });
+    const category = await Category.findOne({ where: { id: req.params.id, userId: req.user.id } });
 
     if (!category) {
       return res.status(404).json({
@@ -247,41 +208,27 @@ export const getCategoryStats = async (req, res) => { // Lấy thống kê cho d
     }
 
     // Tổng số giao dịch
-    const transactionCount = await Transaction.countDocuments({
-      userId: req.user._id,
-      category: category.name
+    const transactionCount = await Transaction.count({ where: { userId: req.user.id, category: category.name } });
+
+    const totalRows = await Transaction.findAll({
+      where: { userId: req.user.id, category: category.name },
+      attributes: [[Transaction.sequelize.fn('SUM', Transaction.sequelize.col('amount')), 'total']],
+      raw: true
     });
+    const totalAmount = parseFloat(totalRows[0]?.total || 0);
 
-    // Tổng số tiền
-    const totalAmount = await Transaction.aggregate([
-      {
-        $match: {
-          userId: req.user._id,
-          category: category.name
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: '$amount' }
-        }
-      }
-    ]);
-
-    // Giao dịch gần nhất
-    const recentTransactions = await Transaction.find({
-      userId: req.user._id,
-      category: category.name
-    })
-      .sort({ date: -1 })
-      .limit(5);
+    const recentTransactions = await Transaction.findAll({
+      where: { userId: req.user.id, category: category.name },
+      order: [['date', 'DESC']],
+      limit: 5
+    });
 
     res.status(200).json({
       success: true,
       data: {
         category,
         transactionCount,
-        totalAmount: totalAmount.length > 0 ? totalAmount[0].total : 0,
+        totalAmount,
         recentTransactions
       }
     });
@@ -309,13 +256,11 @@ export const mergeCategories = async (req, res) => { // Chuyển tất cả giao
     }
 
     const sourceCategory = await Category.findOne({
-      _id: req.params.id,
-      userId: req.user._id
+      where: { id: req.params.id, userId: req.user.id }
     });
 
     const targetCategory = await Category.findOne({
-      _id: targetCategoryId,
-      userId: req.user._id
+      where: { id: targetCategoryId, userId: req.user.id }
     });
 
     if (!sourceCategory || !targetCategory) {
@@ -326,18 +271,15 @@ export const mergeCategories = async (req, res) => { // Chuyển tất cả giao
     }
 
     // Update all transactions
-    const result = await Transaction.updateMany(
-      { userId: req.user._id, category: sourceCategory.name },
-      { category: targetCategory.name }
-    );
+    const [movedCount] = await Transaction.update({ category: targetCategory.name }, { where: { userId: req.user.id, category: sourceCategory.name } });
 
     // Delete source category
-    await sourceCategory.deleteOne();
+    await sourceCategory.destroy();
 
     res.status(200).json({
       success: true,
-      message: `Đã chuyển ${result.modifiedCount} giao dịch từ "${sourceCategory.name}" sang "${targetCategory.name}"`,
-      movedCount: result.modifiedCount
+      message: `Đã chuyển ${movedCount} giao dịch từ "${sourceCategory.name}" sang "${targetCategory.name}"`,
+      movedCount
     });
   } catch (error) {
     res.status(400).json({
@@ -364,11 +306,7 @@ export const reorderCategories = async (req, res) => { // Sắp xếp lại th�
 
     // Update order for each category
     const updatePromises = categories.map(({ id, order }) =>
-      Category.findOneAndUpdate(
-        { _id: id, userId: req.user._id },
-        { order },
-        { new: true }
-      )
+      Category.update({ order }, { where: { id, userId: req.user.id } })
     );
 
     await Promise.all(updatePromises);

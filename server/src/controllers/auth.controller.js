@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { OAuth2Client } from 'google-auth-library';
-import User from '../models/User.model.js';
-import Category from '../models/Category.model.js';
+import { User, Category } from '../models/sequelize/index.js';
 import { sendResetPasswordEmail, sendWelcomeEmail } from '../utils/sendEmail.js';
+import { Op } from 'sequelize';
 
 // Generate short-lived access token (15 minutes)
 const generateAccessToken = (id) => {
@@ -31,7 +31,7 @@ export const register = async (req, res) => {
     const { name, email, password } = req.body;
 
     // Check if user exists
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ where: { email } });
     if (userExists) {
       return res.status(400).json({
         success: false,
@@ -39,24 +39,25 @@ export const register = async (req, res) => {
       });
     }
 
+    // Validate password length
+    if (!password || password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Mật khẩu phải có ít nhất 6 ký tự' });
+    }
+
     // Create user
-    const user = await User.create({
-      name,
-      email,
-      password
-    });
+    const user = await User.create({ name, email, password });
 
     // Create default categories for the new user
     try {
-      await Category.createDefaultCategories(user._id);
+      await Category.createDefaultCategories(user.id);
     } catch (err) {
       console.error('Failed to create default categories:', err);
       // Don't fail registration if category creation fails
     }
 
     // Generate tokens
-    const token = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    const token = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
 
     // Save refresh token to DB
     user.refreshToken = refreshToken;
@@ -74,7 +75,7 @@ export const register = async (req, res) => {
         token,
         refreshToken,
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
           role: user.role,
@@ -108,7 +109,7 @@ export const login = async (req, res) => {
     }
 
     // Check for user (include password field)
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ where: { email }, attributes: { include: ['password'] } });
     
     if (!user) {
       return res.status(401).json({
@@ -128,8 +129,8 @@ export const login = async (req, res) => {
     }
 
     // Generate tokens
-    const token = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    const token = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
 
     // Save refresh token to DB
     user.refreshToken = refreshToken;
@@ -142,7 +143,7 @@ export const login = async (req, res) => {
         token,
         refreshToken,
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
           role: user.role,
@@ -165,13 +166,13 @@ export const login = async (req, res) => {
 // @access  Private
 export const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findByPk(req.user.id);
 
     res.json({
       success: true,
       data: {
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
           role: user.role,
@@ -219,7 +220,7 @@ export const updateProfile = async (req, res) => {
       message: 'Cập nhật thành công',
       data: {
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
           role: user.role,
@@ -251,7 +252,7 @@ export const changePassword = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Mật khẩu mới phải có ít nhất 6 ký tự' });
     }
 
-    const user = await User.findById(req.user.id).select('+password');
+    const user = await User.findByPk(req.user.id, { attributes: { include: ['password'] } });
     const isMatch = await user.comparePassword(currentPassword);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Mật khẩu hiện tại không đúng' });
@@ -273,7 +274,7 @@ export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
 
     if (!user) {
       return res.status(404).json({
@@ -345,10 +346,10 @@ export const resetPassword = async (req, res) => {
     }
 
     // Tìm user và lấy resetPasswordToken
-    const user = await User.findOne({ 
-      email,
-      resetPasswordExpire: { $gt: Date.now() }
-    }).select('+resetPasswordToken +resetPasswordExpire');
+    const user = await User.findOne({
+      where: { email, resetPasswordExpire: { [Op.gt]: new Date() } },
+      attributes: { include: ['resetPasswordToken','resetPasswordExpire'] }
+    });
 
     if (!user) {
       return res.status(400).json({
@@ -374,8 +375,8 @@ export const resetPassword = async (req, res) => {
     await user.save();
 
     // Generate new tokens
-    const token = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    const token = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
 
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
@@ -387,7 +388,7 @@ export const resetPassword = async (req, res) => {
         token,
         refreshToken,
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
           role: user.role,
@@ -424,12 +425,12 @@ export const refreshTokenHandler = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Refresh token hết hạn hoặc không hợp lệ, vui lòng đăng nhập lại' });
     }
 
-    const user = await User.findById(decoded.id).select('+refreshToken');
+    const user = await User.findByPk(decoded.id, { attributes: { include: ['refreshToken'] } });
     if (!user || user.refreshToken !== refreshToken) {
       return res.status(401).json({ success: false, message: 'Refresh token không hợp lệ' });
     }
 
-    const newAccessToken = generateAccessToken(user._id);
+    const newAccessToken = generateAccessToken(user.id);
     res.json({ success: true, data: { token: newAccessToken } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -443,10 +444,7 @@ export const logoutHandler = async (req, res) => {
   try {
     const { refreshToken } = req.body;
     if (refreshToken) {
-      await User.findOneAndUpdate(
-        { refreshToken },
-        { $set: { refreshToken: null } }
-      );
+      await User.update({ refreshToken: null }, { where: { refreshToken } });
     }
     res.json({ success: true, message: 'Đăng xuất thành công' });
   } catch (error) {
@@ -490,11 +488,11 @@ export const googleLogin = async (req, res) => {
     const { sub: googleId, email, name, picture } = googleData;
 
     // Check if user exists by googleId
-    let user = await User.findOne({ googleId });
+    let user = await User.findOne({ where: { googleId } });
 
     if (!user) {
       // Check if user exists by email (to link accounts)
-      user = await User.findOne({ email });
+      user = await User.findOne({ where: { email } });
 
       if (!user) {
         // Create new user
@@ -508,7 +506,7 @@ export const googleLogin = async (req, res) => {
 
         // Create default categories for the new user
         try {
-          await Category.createDefaultCategories(user._id);
+          await Category.createDefaultCategories(user.id);
         } catch (err) {
           console.error('Failed to create default categories:', err);
         }
@@ -525,8 +523,8 @@ export const googleLogin = async (req, res) => {
     }
 
     // Generate tokens
-    const token = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    const token = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
 
     // Save refresh token to DB
     user.refreshToken = refreshToken;
@@ -539,7 +537,7 @@ export const googleLogin = async (req, res) => {
         token,
         refreshToken,
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
           role: user.role,

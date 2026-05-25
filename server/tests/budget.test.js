@@ -118,7 +118,7 @@ describe('GET /api/budgets', () => {
 describe('PUT /api/budgets/:id', () => {
   it('Cập nhật amount thành công → 200', async () => {
     const created = await createBudget();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .put(`/api/budgets/${id}`)
@@ -135,7 +135,7 @@ describe('PUT /api/budgets/:id', () => {
 describe('DELETE /api/budgets/:id', () => {
   it('Xóa thành công → 200', async () => {
     const created = await createBudget();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .delete(`/api/budgets/${id}`)

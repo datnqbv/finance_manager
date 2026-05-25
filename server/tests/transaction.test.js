@@ -124,7 +124,7 @@ describe('GET /api/transactions', () => {
 describe('PUT /api/transactions/:id', () => {
   it('Cập nhật số tiền thành công → 200', async () => {
     const created = await createTx();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .put(`/api/transactions/${id}`)
@@ -150,7 +150,7 @@ describe('PUT /api/transactions/:id', () => {
 describe('DELETE /api/transactions/:id', () => {
   it('Xóa thành công → 200', async () => {
     const created = await createTx();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .delete(`/api/transactions/${id}`)
@@ -162,7 +162,7 @@ describe('DELETE /api/transactions/:id', () => {
 
   it('Xóa xong thì không lấy được nữa', async () => {
     const created = await createTx();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     await request(app)
       .delete(`/api/transactions/${id}`)
@@ -172,7 +172,7 @@ describe('DELETE /api/transactions/:id', () => {
       .get('/api/transactions')
       .set('Authorization', `Bearer ${token}`);
 
-    const found = res.body.data.find(t => t._id === id);
+    const found = res.body.data.find(t => t.id === id);
     expect(found).toBeUndefined();
   });
 
@@ -185,7 +185,7 @@ describe('DELETE /api/transactions/:id', () => {
 
     // User 1 tạo giao dịch
     const created = await createTx();
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     // User 2 thử xóa → phải fail (404 hoặc 403)
     const del = await request(app)

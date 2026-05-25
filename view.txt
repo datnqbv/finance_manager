@@ -1,0 +1,117 @@
+﻿  // Debounced search function
+  const performSearch = useCallback((query) => {
+    if (!query || query.trim() === '') {
+      setSearchResults([]);
+      return;
+    }
+
+    const lowerQuery = query.toLowerCase();
+
+    // Debug: Log data availability
+    console.log('=== GLOBAL SEARCH DEBUG ===');
+    console.log('Search Query:', lowerQuery);
+    console.log('Budgets:', budgets?.length || 0, budgets);
+    console.log('Goals:', goals?.length || 0, goals);
+    console.log('Transactions:', transactions?.length || 0);
+    console.log('Categories:', categories?.length || 0);
+    console.log('Debts:', debts?.length || 0);
+    console.log('===========================');
+
+    // Add page shortcuts (highest priority)
+    const pages = [
+      { title: 'Tß╗òng quan', path: '/', icon: '≡ƒÅá', keywords: ['dashboard', 'tß╗òng quan', 'home', 'tong quan'] },
+      { title: 'Giao dß╗ïch', path: '/transactions', icon: '≡ƒô¥', keywords: ['transactions', 'giao dß╗ïch', 'giao dich', 'transaction'] },
+      { title: 'Danh mß╗Ñc', path: '/categories', icon: '≡ƒôü', keywords: ['categories', 'danh mß╗Ñc', 'danh muc', 'category'] },
+      { title: 'Ng├ón s├ích', path: '/budgets', icon: '≡ƒÆ░', keywords: ['budgets', 'ng├ón s├ích', 'ngan sach', 'budget'] },
+      { title: 'Mß╗Ñc ti├¬u', path: '/goals', icon: '≡ƒÄ»', keywords: ['goals', 'mß╗Ñc ti├¬u', 'muc tieu', 'target'] },
+      { title: 'Quß║ún l├╜ nß╗ú', path: '/debts', icon: '≡ƒñ¥', keywords: ['debts', 'nß╗ú', 'no', 'vay', 'borrow', 'lend', 'quß║ún l├╜ nß╗ú', 'quan ly no'] },
+      { title: 'Thß╗æng k├¬', path: '/statistics', icon: '≡ƒôè', keywords: ['statistics', 'thß╗æng k├¬', 'thong ke', 'stats', 'chart'] },
+      { title: 'T├ái khoß║ún', path: '/profile', icon: '≡ƒæñ', keywords: ['profile', 't├ái khoß║ún', 'tai khoan', 'account'] },
+    ];
+
+    const pageResults = pages
+      .filter(p =>
+        fuzzyMatch(p.title, lowerQuery) ||
+        p.keywords.some(k => fuzzyMatch(k, lowerQuery))
+      )
+      .slice(0, 3)
+      .map(p => ({
+        type: 'page',
+        title: p.title,
+        subtitle: 'Trang',
+        path: p.path,
+        icon: p.icon,
+        matchText: p.title
+      }));
+
+    // Search in transactions with relevance scoring
+    const transactionResults = (transactions || [])
+      .map(t => {
+        const categoryLower = (t.category || '').toLowerCase();
+        const noteLower = (t.note || '').toLowerCase();
+
+        let score = 0;
+
+        // Exact match (highest priority)
+        if (categoryLower === lowerQuery) score += 100;
+        else if (noteLower === lowerQuery) score += 90;
+
+        // Starts with (high priority)
+        else if (categoryLower.startsWith(lowerQuery)) score += 80;
+        else if (noteLower.startsWith(lowerQuery)) score += 70;
+
+        // Contains (medium priority)
+        else if (categoryLower.includes(lowerQuery)) score += 50;
+        else if (noteLower.includes(lowerQuery)) score += 40;
+
+        // Fuzzy match (lower priority)
+        else if (fuzzyMatch(t.category, lowerQuery)) score += 20;
+        else if (fuzzyMatch(t.note, lowerQuery)) score += 15;
+
+        // Amount match
+        if (t.amount?.toString().includes(lowerQuery)) score += 10;
+
+        // Type match
+        if (t.type === 'income' && (fuzzyMatch('thu nhß║¡p', lowerQuery) || fuzzyMatch('income', lowerQuery))) score += 5;
+        if (t.type === 'expense' && (fuzzyMatch('chi ti├¬u', lowerQuery) || fuzzyMatch('expense', lowerQuery))) score += 5;
+
+        return {
+          ...t,
+          relevanceScore: score
+        };
+      })
+      .filter(t => t.relevanceScore > 0)
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+      .slice(0, 5)
+      .map(t => ({
+        type: 'transaction',
+        id: t._id,
+        title: t.category,
+        subtitle: `${t.note || (t.type === 'income' ? 'Thu nhß║¡p' : 'Chi ti├¬u')} - ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(t.amount)}`,
+        path: '/transactions',
+        icon: t.type === 'income' ? '≡ƒôê' : '≡ƒôë',
+        date: new Date(t.date).toLocaleDateString('vi-VN'),
+        matchText: t.category || t.note,
+        relevanceScore: t.relevanceScore
+      }));
+
+    // Search in categories with relevance scoring
+    const categoryResults = (categories || [])
+      .map(c => {
+        const nameLower = (c.name || '').toLowerCase();
+        let score = 0;
+
+        if (nameLower === lowerQuery) score += 100;
+        else if (nameLower.startsWith(lowerQuery)) score += 80;
+        else if (nameLower.includes(lowerQuery)) score += 50;
+        else if (fuzzyMatch(c.name, lowerQuery)) score += 20;
+
+        if (c.type === 'income' && fuzzyMatch('thu nhß║¡p', lowerQuery)) score += 5;
+        if (c.type === 'expense' && fuzzyMatch('chi ti├¬u', lowerQuery)) score += 5;
+
+        return { ...c, relevanceScore: score };
+      })
+      .filter(c => c.relevanceScore > 0)
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+      .slice(0, 3)
+      .map(c 

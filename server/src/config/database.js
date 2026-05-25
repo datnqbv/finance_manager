@@ -1,30 +1,16 @@
-import mongoose from 'mongoose';
-
 const connectDB = async () => {
+  // Use Sequelize (SQL) as the sole DB backend now.
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      // Mongoose 6+ không cần các options này nữa
-      // useNewUrlParser: true,
-      // useUnifiedTopology: true,
-    });
+    const { testConnection } = await import('./sqlserver.js');
+    const { syncModels } = await import('../models/sequelize/index.js');
 
-    console.log(` MongoDB Connected: ${conn.connection.host}`);
-    
-    // Log database name
-    console.log(` Database: ${conn.connection.name}`);
-  } catch (error) {
-    console.error(` Error connecting to MongoDB: ${error.message}`);
+    await testConnection();
+    await syncModels({ force: false });
+    console.log(' Using SQL (Sequelize) as database backend');
+  } catch (err) {
+    console.error(' Error connecting to SQL database:', err.message || err);
     process.exit(1);
   }
 };
-
-// Handle MongoDB connection events
-mongoose.connection.on('disconnected', () => {
-  console.log(' MongoDB disconnected');
-});
-
-mongoose.connection.on('error', (err) => {
-  console.error(` MongoDB connection error: ${err}`);
-});
 
 export default connectDB;

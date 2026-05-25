@@ -1,26 +1,26 @@
-import Budget from '../models/Budget.model.js';
-import Goal from '../models/Goal.model.js';
-import Transaction from '../models/Transaction.model.js';
-import Notification from '../models/Notification.model.js';
+import { Budget, Goal, Transaction, Notification, sequelize } from '../models/sequelize/index.js';
+import { Op } from 'sequelize';
+
+// Map lưu các SSE connection theo userId (mỗi user có thể có nhiều tab/connection)
+export const sseClients = new Map(); // userId -> Set of res objects
+
+// Gửi push notification qua SSE tới tất cả connection của 1 user
+export const pushNotificationToUser = (userId, data) => {
+  const clients = sseClients.get(String(userId));
+  if (!clients || clients.size === 0) return;
+  const payload = `data: ${JSON.stringify(data)}\n\n`;
+  for (const res of clients) {
+    try { res.write(payload); } catch (_) { clients.delete(res); }
+  }
+};
 
 // Helper function to calculate spending for a budget
 const calculateBudgetSpending = async (userId, categoryName, dateRange) => {
-  const query = {
-    userId,
-    type: 'expense',
-    date: { $gte: dateRange.start, $lte: dateRange.end }
-  };
+  const where = { userId, type: 'expense', date: { [Op.between]: [dateRange.start, dateRange.end] } };
+  if (categoryName) where.category = categoryName;
 
-  if (categoryName) {
-    query.category = categoryName;
-  }
-
-  const result = await Transaction.aggregate([
-    { $match: query },
-    { $group: { _id: null, total: { $sum: '$amount' } } }
-  ]);
-
-  return result.length > 0 ? result[0].total : 0;
+  const rows = await Transaction.findAll({ where, attributes: [[sequelize.fn('SUM', sequelize.col('amount')), 'total']], raw: true });
+  return rows && rows.length > 0 ? parseFloat(rows[0].total) || 0 : 0;
 };
 
 // Helper function to get date range
@@ -83,21 +83,18 @@ export const getNotifications = async (req, res) => {
     }
 
     // Lấy thông báo từ database
-    const dbNotifications = await Notification.find(query)
-      .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
-      .skip(parseInt(skip));
+    const dbNotifications = await Notification.findAll({ where: query, order: [['createdAt','DESC']], limit: parseInt(limit), offset: parseInt(skip), raw: true });
 
     // Format thông báo
     const formattedNotifications = dbNotifications.map(notif => {
       const timeAgo = getTimeAgo(notif.createdAt);
       return {
-        id: notif._id.toString(),
+        id: notif.id,
         type: notif.type,
         title: notif.title,
         message: notif.message,
         time: timeAgo,
-        read: notif.read,
+        read: !!notif.read,
         createdAt: notif.createdAt,
         relatedId: notif.relatedId,
         relatedModel: notif.relatedModel,
@@ -106,23 +103,20 @@ export const getNotifications = async (req, res) => {
     });
 
     // Đếm số thông báo chưa đọc
-    const unreadCount = await Notification.countDocuments({ 
-      userId: req.user.id, 
-      read: false 
-    });
+    const unreadCount = await Notification.count({ where: { userId: req.user.id, read: false } });
 
     // Tạo thêm các thông báo tự động từ goals - không bao gồm budget vì đã tạo trong transaction
     const autoNotifications = [];
     const notificationIds = new Set();
 
     // 1. Kiểm tra các mục tiêu
-    const goals = await Goal.find({ userId: req.user.id });
+    const goals = await Goal.findAll({ where: { userId: req.user.id }, raw: true });
 
     for (const goal of goals) {
       const percentage = (goal.currentAmount / goal.targetAmount) * 100;
 
       if (percentage >= 100 && goal.status !== 'completed') {
-        const notifId = `goal-completed-${goal._id}`;
+        const notifId = `goal-completed-${goal.id}`;
         if (!notificationIds.has(notifId)) {
           notificationIds.add(notifId);
           autoNotifications.push({
@@ -136,7 +130,7 @@ export const getNotifications = async (req, res) => {
           });
         }
       } else if (percentage >= 80 && percentage < 100) {
-        const notifId = `goal-progress-${goal._id}`;
+        const notifId = `goal-progress-${goal.id}`;
         if (!notificationIds.has(notifId)) {
           notificationIds.add(notifId);
           autoNotifications.push({
@@ -178,31 +172,11 @@ export const getNotifications = async (req, res) => {
 // @access  Private
 export const markAsRead = async (req, res) => {
   try {
-    const notification = await Notification.findById(req.params.id);
-
-    if (!notification) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy thông báo'
-      });
-    }
-
-    // Check ownership
-    if (notification.userId.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: 'Không có quyền truy cập'
-      });
-    }
-
-    notification.read = true;
-    await notification.save();
-
-    res.json({
-      success: true,
-      message: 'Đã đánh dấu đã đọc',
-      data: notification
-    });
+    const notification = await Notification.findByPk(req.params.id);
+    if (!notification) return res.status(404).json({ success: false, message: 'Không tìm thấy thông báo' });
+    if (notification.userId !== req.user.id) return res.status(403).json({ success: false, message: 'Không có quyền truy cập' });
+    await notification.update({ read: true });
+    res.json({ success: true, message: 'Đã đánh dấu đã đọc', data: notification });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -216,10 +190,7 @@ export const markAsRead = async (req, res) => {
 // @access  Private
 export const markAllAsRead = async (req, res) => {
   try {
-    await Notification.updateMany(
-      { userId: req.user.id, read: false },
-      { read: true }
-    );
+    await Notification.update({ read: true }, { where: { userId: req.user.id, read: false } });
 
     res.json({
       success: true,
@@ -238,29 +209,11 @@ export const markAllAsRead = async (req, res) => {
 // @access  Private
 export const deleteNotification = async (req, res) => {
   try {
-    const notification = await Notification.findById(req.params.id);
-
-    if (!notification) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy thông báo'
-      });
-    }
-
-    // Check ownership
-    if (notification.userId.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: 'Không có quyền truy cập'
-      });
-    }
-
-    await notification.deleteOne();
-
-    res.json({
-      success: true,
-      message: 'Đã xóa thông báo'
-    });
+    const notification = await Notification.findByPk(req.params.id);
+    if (!notification) return res.status(404).json({ success: false, message: 'Không tìm thấy thông báo' });
+    if (notification.userId !== req.user.id) return res.status(403).json({ success: false, message: 'Không có quyền truy cập' });
+    await notification.destroy();
+    res.json({ success: true, message: 'Đã xóa thông báo' });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -274,7 +227,7 @@ export const deleteNotification = async (req, res) => {
 // @access  Private
 export const deleteAllNotifications = async (req, res) => {
   try {
-    await Notification.deleteMany({ userId: req.user.id });
+    await Notification.destroy({ where: { userId: req.user.id } });
 
     res.json({
       success: true,
@@ -286,4 +239,47 @@ export const deleteAllNotifications = async (req, res) => {
       message: error.message
     });
   }
+};
+
+// @desc    SSE stream - real-time notification push
+// @route   GET /api/notifications/stream
+// @access  Private
+export const streamNotifications = async (req, res) => {
+  const userId = String(req.user.id);
+
+  // Set SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // tắt nginx buffering nếu có
+  res.flushHeaders();
+
+  // Đăng ký connection vào map
+  if (!sseClients.has(userId)) {
+    sseClients.set(userId, new Set());
+  }
+  sseClients.get(userId).add(res);
+
+  // Gửi unreadCount ngay khi kết nối để client hiển thị badge
+  try {
+    const unreadCount = await Notification.count({ where: { userId: req.user.id, read: false } });
+    res.write(`data: ${JSON.stringify({ type: 'init', unreadCount })}\n\n`);
+  } catch (_) {
+    res.write(`data: ${JSON.stringify({ type: 'init', unreadCount: 0 })}\n\n`);
+  }
+
+  // Giữ connection sống bằng heartbeat mỗi 30 giây
+  const heartbeat = setInterval(() => {
+    try { res.write(': heartbeat\n\n'); } catch (_) { clearInterval(heartbeat); }
+  }, 30000);
+
+  // Cleanup khi client ngắt kết nối
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    const clients = sseClients.get(userId);
+    if (clients) {
+      clients.delete(res);
+      if (clients.size === 0) sseClients.delete(userId);
+    }
+  });
 };

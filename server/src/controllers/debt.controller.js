@@ -1,17 +1,17 @@
-import Debt from '../models/Debt.model.js';
+import { Debt } from '../models/sequelize/index.js';
 
 // GET /api/debts
 export const getDebts = async (req, res) => {
   try {
     const { status, type } = req.query;
-    const filter = { userId: req.user._id };
+    const filter = { userId: req.user.id };
     if (status) filter.status = status;
     if (type)   filter.type   = type;
 
-    const debts = await Debt.find(filter).sort({ createdAt: -1 });
+    const debts = await Debt.findAll({ where: filter, order: [['createdAt','DESC']] });
 
     // Stats
-    const all = await Debt.find({ userId: req.user._id });
+    const all = await Debt.findAll({ where: { userId: req.user.id } });
     const stats = {
       totalLend:     all.filter(d => d.type === 'lend').reduce((s, d) => s + d.remainingAmount, 0),
       totalBorrow:   all.filter(d => d.type === 'borrow').reduce((s, d) => s + d.remainingAmount, 0),
@@ -29,8 +29,7 @@ export const getDebts = async (req, res) => {
 export const createDebt = async (req, res) => {
   try {
     const { type, personName, amount, description, dueDate } = req.body;
-    const debt = await Debt.create({
-      userId: req.user._id,
+    const debt = await Debt.create({ userId: req.user.id,
       type,
       personName,
       amount,
@@ -47,7 +46,7 @@ export const createDebt = async (req, res) => {
 // PUT /api/debts/:id
 export const updateDebt = async (req, res) => {
   try {
-    const debt = await Debt.findOne({ _id: req.params.id, userId: req.user._id });
+    const debt = await Debt.findOne({ where: { id: req.params.id, userId: req.user.id } });
     if (!debt) return res.status(404).json({ success: false, message: 'Không tìm thấy khoản nợ' });
 
     const { personName, amount, description, dueDate } = req.body;
@@ -72,8 +71,8 @@ export const updateDebt = async (req, res) => {
 // DELETE /api/debts/:id
 export const deleteDebt = async (req, res) => {
   try {
-    const debt = await Debt.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
-    if (!debt) return res.status(404).json({ success: false, message: 'Không tìm thấy khoản nợ' });
+    const deleted = await Debt.destroy({ where: { id: req.params.id, userId: req.user.id } });
+    if (!deleted) return res.status(404).json({ success: false, message: 'Không tìm thấy khoản nợ' });
     res.json({ success: true, message: 'Đã xóa khoản nợ' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Lỗi khi xóa', error: err.message });
@@ -87,14 +86,16 @@ export const addPayment = async (req, res) => {
     if (!amount || amount <= 0)
       return res.status(400).json({ success: false, message: 'Số tiền phải lớn hơn 0' });
 
-    const debt = await Debt.findOne({ _id: req.params.id, userId: req.user._id });
+    const debt = await Debt.findOne({ where: { id: req.params.id, userId: req.user.id } });
     if (!debt) return res.status(404).json({ success: false, message: 'Không tìm thấy khoản nợ' });
     if (debt.status === 'settled')
       return res.status(400).json({ success: false, message: 'Khoản nợ đã tất toán' });
 
-    const payAmount = Math.min(amount, debt.remainingAmount);
-    debt.paymentHistory.push({ amount: payAmount, note: note || '', date: new Date() });
-    debt.remainingAmount -= payAmount;
+    const payAmount = Math.min(amount, parseFloat(debt.remainingAmount));
+    const history = Array.isArray(debt.paymentHistory) ? debt.paymentHistory.slice() : [];
+    history.push({ amount: payAmount, note: note || '', date: new Date() });
+    debt.paymentHistory = history;
+    debt.remainingAmount = parseFloat(debt.remainingAmount) - payAmount;
     if (debt.remainingAmount <= 0) {
       debt.remainingAmount = 0;
       debt.status = 'settled';
@@ -114,7 +115,7 @@ export const addPayment = async (req, res) => {
 // PATCH /api/debts/:id/settle  — đánh dấu tất toán thủ công
 export const settleDebt = async (req, res) => {
   try {
-    const debt = await Debt.findOne({ _id: req.params.id, userId: req.user._id });
+    const debt = await Debt.findOne({ where: { id: req.params.id, userId: req.user.id } });
     if (!debt) return res.status(404).json({ success: false, message: 'Không tìm thấy khoản nợ' });
     debt.status = 'settled';
     debt.remainingAmount = 0;

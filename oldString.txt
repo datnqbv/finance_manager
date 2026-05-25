@@ -1,0 +1,99 @@
+t { useNavigate } from 'react-router-dom';
+import { FiSearch, FiX } from 'react-icons/fi';
+import { useTransactions } from '../context/TransactionContext';
+import { useCategories } from '../context/CategoryContext';
+import { useBudgets } from '../context/BudgetContext';
+import { useGoal } from '../context/GoalContext';
+import { useDebt } from '../context/DebtContext';
+import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+
+const GlobalSearch = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const navigate = useNavigate();
+  const searchRef = useRef(null);
+  const debounceTimer = useRef(null);
+  const { user } = useAuth();
+  const { language } = useLanguage();
+  const isEnglish = language === 'en';
+  const { transactions } = useTransactions();
+  const { categories } = useCategories();
+  const { budgets } = useBudgets();
+  const { goals } = useGoal();
+  const { debts, fetchDebts } = useDebt();
+
+  // Close search when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!debts || debts.length === 0) {
+      fetchDebts().catch(() => {});
+    }
+  }, [debts, fetchDebts]);
+
+  // Fuzzy search helper - tìm kiếm gần đúng
+  const fuzzyMatch = (text, query) => {
+    if (!text || !query) return false;
+    text = text.toLowerCase();
+    query = query.toLowerCase();
+
+    // Exact match
+    if (text.includes(query)) return true;
+
+    // Remove Vietnamese accents for better matching
+    const removeAccents = (str) => {
+      return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    };
+
+    const normalizedText = removeAccents(text);
+    const normalizedQuery = removeAccents(query);
+
+    if (normalizedText.includes(normalizedQuery)) return true;
+
+    // Fuzzy matching - allow 1-2 character differences
+    let queryIndex = 0;
+    let matchCount = 0;
+
+    for (let i = 0; i < normalizedText.length && queryIndex < normalizedQuery.length; i++) {
+      if (normalizedText[i] === normalizedQuery[queryIndex]) {
+        matchCount++;
+        queryIndex++;
+      }
+    }
+
+    // If matched at least 70% of the query characters
+    return matchCount / normalizedQuery.length >= 0.7;
+  };
+
+  // Highlight matching text
+  const highlightText = (text, query) => {
+    if (!text || !query) return text;
+
+    const lowerText = text.toLowerCase();
+    const lowerQuery = query.toLowerCase();
+    const index = lowerText.indexOf(lowerQuery);
+
+    if (index === -1) return text;
+
+    return (
+      <>
+        {text.substring(0, index)}
+        <span className="bg-yellow-200 dark:bg-yellow-500/30 text-gray-900 dark:text-yellow-300 font-semibold">
+          {text.substring(index, index + query.length)}
+        </span>
+        {text.substring(index + query.length)}
+      </>
+    );
+  };
+

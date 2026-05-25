@@ -101,7 +101,7 @@ describe('POST /api/categories', () => {
 describe('PUT /api/categories/:id', () => {
   it('Cập nhật tên thành công → 200', async () => {
     const created = await createCategory({ name: 'Tên cũ test abc' });
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .put(`/api/categories/${id}`)
@@ -127,7 +127,7 @@ describe('PUT /api/categories/:id', () => {
 describe('DELETE /api/categories/:id', () => {
   it('Xóa danh mục thành công → 200', async () => {
     const created = await createCategory({ name: 'Xóa tôi test 99' });
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res = await request(app)
       .delete(`/api/categories/${id}`)
@@ -139,7 +139,7 @@ describe('DELETE /api/categories/:id', () => {
 
   it('Sau khi xóa → không còn trong danh sách', async () => {
     const created = await createCategory({ name: 'Tạm thời test 88' });
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     await request(app)
       .delete(`/api/categories/${id}`)
@@ -149,13 +149,13 @@ describe('DELETE /api/categories/:id', () => {
       .get('/api/categories')
       .set('Authorization', `Bearer ${token}`);
 
-    const found = res.body.data.find(c => c._id === id);
+    const found = res.body.data.find(c => c.id === id);
     expect(found).toBeUndefined();
   });
 
   it('Không xóa được danh mục của người khác', async () => {
     const created = await createCategory({ name: 'Custom cat user1 unique' });
-    const id = created.body.data._id;
+    const id = created.body.data.id;
 
     const res2 = await request(app)
       .post('/api/auth/register')

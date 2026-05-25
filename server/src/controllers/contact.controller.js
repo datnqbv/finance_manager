@@ -1,8 +1,9 @@
-import ContactMessage from '../models/ContactMessage.model.js';
+import { ContactMessage } from '../models/sequelize/index.js';
 import {
   sendContactNotificationToAdmin,
   sendContactConfirmationToUser,
 } from '../utils/sendEmail.js';
+import { Op } from 'sequelize';
 
 // POST /api/contact
 export const submitContact = async (req, res) => {
@@ -28,8 +29,7 @@ export const submitContact = async (req, res) => {
     // Chống spam: Kiểm tra cùng email gửi trong vòng 5 phút
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     const recentMessage = await ContactMessage.findOne({
-      email: email.trim().toLowerCase(),
-      createdAt: { $gte: fiveMinutesAgo },
+      where: { email: email.trim().toLowerCase(), createdAt: { [Op.gte]: fiveMinutesAgo } }
     });
     if (recentMessage) {
       return res.status(429).json({
@@ -38,7 +38,7 @@ export const submitContact = async (req, res) => {
       });
     }
 
-    // Lưu vào MongoDB
+    // Lưu vào database (Sequelize)
     const contactMsg = await ContactMessage.create({
       name:      name.trim(),
       email:     email.trim().toLowerCase(),
@@ -84,38 +84,33 @@ export const getContactMessages = async (req, res) => {
       order = 'desc'
     } = req.query;
 
-    const query = {};
-    if (status && ['new', 'read', 'replied'].includes(status)) {
-      query.status = status;
-    }
-
+    const where = {};
+    if (status && ['new', 'read', 'replied'].includes(status)) where.status = status;
     if (search?.trim()) {
-      const pattern = new RegExp(search.trim(), 'i');
-      query.$or = [
-        { name: pattern },
-        { email: pattern },
-        { subject: pattern },
-        { message: pattern },
+      const term = `%${search.trim()}%`;
+      where[Op.or] = [
+        { name: { [Op.like]: term } },
+        { email: { [Op.like]: term } },
+        { subject: { [Op.like]: term } },
+        { message: { [Op.like]: term } },
       ];
     }
 
     const pageNum = Math.max(parseInt(page, 10) || 1, 1);
     const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
-    const skip = (pageNum - 1) * limitNum;
-    const sortOrder = order === 'asc' ? 1 : -1;
-    const allowedSortFields = ['createdAt', 'updatedAt', 'status', 'email'];
-    const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    const offset = (pageNum - 1) * limitNum;
+    const orderArr = [[sortBy, order === 'asc' ? 'ASC' : 'DESC']];
 
-    const [items, total, statusStats] = await Promise.all([
-      ContactMessage.find(query).sort({ [sortField]: sortOrder }).skip(skip).limit(limitNum).lean(),
-      ContactMessage.countDocuments(query),
-      ContactMessage.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+    const [result, statusCounts] = await Promise.all([
+      ContactMessage.findAndCountAll({ where, limit: limitNum, offset, order: orderArr }),
+      ContactMessage.findAll({ attributes: ['status', [ContactMessage.sequelize.fn('COUNT', ContactMessage.sequelize.col('status')), 'count']], group: ['status'], raw: true }),
     ]);
 
+    const items = result.rows;
+    const total = result.count;
+
     const summary = { new: 0, read: 0, replied: 0 };
-    statusStats.forEach((entry) => {
-      if (summary[entry._id] !== undefined) summary[entry._id] = entry.count;
-    });
+    statusCounts.forEach((entry) => { if (summary[entry.status] !== undefined) summary[entry.status] = parseInt(entry.count, 10); });
 
     return res.json({
       success: true,
@@ -153,10 +148,12 @@ export const updateContactMessage = async (req, res) => {
       updateData.adminNote = String(adminNote).trim();
     }
 
-    const item = await ContactMessage.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+    const item = await ContactMessage.findByPk(id);
     if (!item) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy liên hệ' });
     }
+
+    await item.update(updateData);
 
     return res.json({ success: true, message: 'Cập nhật liên hệ thành công', data: item });
   } catch (error) {
@@ -168,10 +165,12 @@ export const updateContactMessage = async (req, res) => {
 export const deleteContactMessage = async (req, res) => {
   try {
     const { id } = req.params;
-    const item = await ContactMessage.findByIdAndDelete(id);
+    const item = await ContactMessage.findByPk(id);
     if (!item) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy liên hệ' });
     }
+
+    await item.destroy();
 
     return res.json({ success: true, message: 'Xóa liên hệ thành công' });
   } catch (error) {

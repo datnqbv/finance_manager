@@ -14,9 +14,9 @@ const mockFetchCategories = vi.fn();
 vi.mock('../../context/CategoryContext', () => ({
   useCategories: () => ({
     categories: [
-      { _id: 'c1', name: 'Ăn uống',  type: 'expense', icon: '🍔' },
-      { _id: 'c2', name: 'Di chuyển', type: 'expense', icon: '🚗' },
-      { _id: 'c3', name: 'Lương',     type: 'income',  icon: '💰' },
+      { id: 'c1', name: 'Ăn uống',  type: 'expense', icon: '🍔' },
+      { id: 'c2', name: 'Di chuyển', type: 'expense', icon: '🚗' },
+      { id: 'c3', name: 'Lương',     type: 'income',  icon: '💰' },
     ],
     fetchCategories: mockFetchCategories,
   }),
@@ -85,7 +85,7 @@ describe('BudgetModal — validation', () => {
 
 describe('BudgetModal — sửa ngân sách', () => {
   const existingBudget = {
-    _id: 'b1',
+    id: 'b1',
     categoryName: 'Ăn uống',
     amount: 3000000,
     period: 'monthly',

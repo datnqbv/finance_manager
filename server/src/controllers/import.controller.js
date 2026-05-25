@@ -1,8 +1,7 @@
 import { parse as csvParse } from 'csv-parse/sync';
 import * as XLSX from 'xlsx';
 import multer from 'multer';
-import Transaction from '../models/Transaction.model.js';
-import Category from '../models/Category.model.js';
+import { Transaction, Category } from '../models/sequelize/index.js';
 
 // Multer: lưu file trong memory
 const storage = multer.memoryStorage();
@@ -116,9 +115,9 @@ export const importTransactions = async (req, res) => {
     }
 
     // Fetch user's categories for matching
-    const userCategories = await Category.find({ userId: req.user.id }).lean();
+    const userCategories = await Category.findAll({ where: { userId: req.user.id } });
     const categoryMap = {};
-    userCategories.forEach(c => { categoryMap[c.name.toLowerCase()] = c.name; });
+    userCategories.forEach(c => { const name = c.name || (c.get ? c.get('name') : undefined); if (name) categoryMap[name.toLowerCase()] = name; });
 
     const imported = [];
     const skipped = [];
@@ -169,7 +168,7 @@ export const importTransactions = async (req, res) => {
     // Bulk insert
     let insertedCount = 0;
     if (imported.length > 0) {
-      const result = await Transaction.insertMany(imported, { ordered: false });
+      const result = await Transaction.bulkCreate(imported);
       insertedCount = result.length;
     }
 

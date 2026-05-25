@@ -1,4 +1,5 @@
-import Goal from '../models/Goal.model.js';
+import { Goal } from '../models/sequelize/index.js';
+import { Op } from 'sequelize';
 
 // @desc    Get all goals
 // @route   GET /api/goals
@@ -6,13 +7,13 @@ import Goal from '../models/Goal.model.js';
 export const getGoals = async (req, res) => {
   try {
     const { isAchieved } = req.query;
-    const filter = { userId: req.user._id };
+    const filter = { userId: req.user.id };
     
     if (isAchieved !== undefined) {
       filter.isAchieved = isAchieved === 'true';
     }
 
-    const goals = await Goal.find(filter).sort({ deadline: 1, priority: -1 });
+    const goals = await Goal.findAll({ where: filter, order: [['deadline','ASC'], ['priority','DESC']] });
 
     res.status(200).json({
       success: true,
@@ -33,10 +34,7 @@ export const getGoals = async (req, res) => {
 // @access  Private
 export const getGoal = async (req, res) => {
   try {
-    const goal = await Goal.findOne({
-      _id: req.params.id,
-      userId: req.user._id
-    });
+    const goal = await Goal.findOne({ where: { id: req.params.id, userId: req.user.id } });
 
     if (!goal) {
       return res.status(404).json({
@@ -46,7 +44,7 @@ export const getGoal = async (req, res) => {
     }
 
     // Add calculated fields
-    const goalData = goal.toObject();
+    const goalData = goal.get ? goal.get({ plain: true }) : goal;
     goalData.monthlySaving = goal.calculateMonthlySaving();
 
     res.status(200).json({
@@ -79,7 +77,7 @@ export const createGoal = async (req, res) => {
     } = req.body;
 
     const goal = await Goal.create({
-      userId: req.user._id,
+      userId: req.user.id,
       name,
       description,
       targetAmount,
@@ -109,10 +107,7 @@ export const createGoal = async (req, res) => {
 // @access  Private
 export const updateGoal = async (req, res) => {
   try {
-    const goal = await Goal.findOne({
-      _id: req.params.id,
-      userId: req.user._id
-    });
+    const goal = await Goal.findOne({ where: { id: req.params.id, userId: req.user.id } });
 
     if (!goal) {
       return res.status(404).json({
@@ -167,10 +162,7 @@ export const updateGoal = async (req, res) => {
 // @access  Private
 export const deleteGoal = async (req, res) => {
   try {
-    const goal = await Goal.findOne({
-      _id: req.params.id,
-      userId: req.user._id
-    });
+    const goal = await Goal.findOne({ where: { id: req.params.id, userId: req.user.id } });
 
     if (!goal) {
       return res.status(404).json({
@@ -179,7 +171,7 @@ export const deleteGoal = async (req, res) => {
       });
     }
 
-    await goal.deleteOne();
+    await goal.destroy();
 
     res.status(200).json({
       success: true,
@@ -208,10 +200,7 @@ export const addAmountToGoal = async (req, res) => {
       });
     }
 
-    const goal = await Goal.findOne({
-      _id: req.params.id,
-      userId: req.user._id
-    });
+    const goal = await Goal.findOne({ where: { id: req.params.id, userId: req.user.id } });
 
     if (!goal) {
       return res.status(404).json({
@@ -241,7 +230,7 @@ export const addAmountToGoal = async (req, res) => {
 // @access  Private
 export const getGoalStats = async (req, res) => {
   try {
-    const goals = await Goal.find({ userId: req.user._id });
+    const goals = await Goal.findAll({ where: { userId: req.user.id } });
 
     const totalGoals = goals.length;
     const achievedGoals = goals.filter(g => g.isAchieved).length;

@@ -76,10 +76,10 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
         categoryName: ''
       }));
     } else {
-      const category = categories.find(c => c._id === categoryId);
+      const category = categories.find(c => c.id === categoryId);
       setFormData(prev => ({
         ...prev,
-        categoryId: category._id,
+        categoryId: category.id,
         categoryName: category.name
       }));
     }
@@ -118,7 +118,7 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
             >
               <option value="">Ngân sách tổng</option>
               {expenseCategories.map((cat) => (
-                <option key={cat._id} value={cat._id}>
+                <option key={cat.id} value={cat.id}>
                   {cat.icon} {cat.name}
                 </option>
               ))}

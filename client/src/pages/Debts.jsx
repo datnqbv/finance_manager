@@ -80,12 +80,12 @@ const Debts = () => {
     .slice(0, 6);
   // xác nhận tất toán khoản nợ với người dùng trước khi gọi API để cập nhật trạng thái của khoản nợ thành "settled", giúp người dùng tránh được những thao tác nhầm lẫn có thể dẫn đến việc đánh dấu một khoản nợ chưa được thanh toán là đã tất toán, từ đó đảm bảo tính chính xác của dữ liệu công nợ và hỗ trợ quản lý tài chính cá nhân hiệu quả hơn.  
   const handleSave = async (data) => {
-    if (editingDebt) return updateDebt(editingDebt._id, data);
+    if (editingDebt) return updateDebt(editingDebt.id, data);
     return createDebt(data);
   };
   // xác nhận xóa khoản nợ với người dùng trước khi gọi API để xóa khoản nợ đó, giúp người dùng tránh được những thao tác nhầm lẫn có thể dẫn đến việc xóa một khoản nợ quan trọng mà họ chưa muốn xóa, từ đó đảm bảo tính chính xác của dữ liệu công nợ và hỗ trợ quản lý tài chính cá nhân hiệu quả hơn.
   const handleDelete = async (debt) => {
-    if (window.confirm(isEnglish ? `Delete debt "${debt.personName}"?` : `Xóa khoản nợ "${debt.personName}"?`)) deleteDebt(debt._id);
+    if (window.confirm(isEnglish ? `Delete debt "${debt.personName}"?` : `Xóa khoản nợ "${debt.personName}"?`)) deleteDebt(debt.id);
   };
   // xác nhận tất toán khoản nợ với người dùng trước khi gọi API để cập nhật trạng thái của khoản nợ thành "settled", giúp người dùng tránh được những thao tác nhầm lẫn có thể dẫn đến việc đánh dấu một khoản nợ chưa được thanh toán là đã tất toán, từ đó đảm bảo tính chính xác của dữ liệu công nợ và hỗ trợ quản lý tài chính cá nhân hiệu quả hơn.
   const handlePay = async (id) => {
@@ -144,7 +144,7 @@ const Debts = () => {
               {topProgressDebts.length > 0 ? topProgressDebts.map((debt) => {
                 const pct = paidPct(debt);
                 return (
-                  <div key={debt._id}>
+                  <div key={debt.id}>
                     <div className="mb-1 flex items-center justify-between text-xs text-[#586074] dark:text-[#a9afbb]">
                       <span className="font-semibold truncate pr-3">{debt.personName}</span>
                       <span className="font-bold">{pct}%</span>
@@ -188,7 +188,7 @@ const Debts = () => {
                 const reachedHeight = Math.max(progress, 8);
                 const remainHeight = Math.max(100 - progress, 8);
                 return (
-                  <div key={debt._id} className="flex-1 min-w-0">
+                  <div key={debt.id} className="flex-1 min-w-0">
                     <div className="h-[170px] flex items-end justify-center gap-2">
                       <div className={`w-4 rounded-t-md ${debt.type === 'lend' ? 'bg-[#0b6f53]' : 'bg-[#b4534b]'}`} style={{ height: `${reachedHeight}%` }} />
                       <div className="w-4 rounded-t-md bg-[#b7c4d8]" style={{ height: `${remainHeight}%` }} />
@@ -216,7 +216,7 @@ const Debts = () => {
               const days = daysUntil(debt.dueDate);
               const overdue = days !== null && days < 0;
               return (
-                <div key={debt._id} className="flex items-center justify-between rounded-xl bg-[#f4f6f9] p-3 dark:bg-[#232936]">
+                <div key={debt.id} className="flex items-center justify-between rounded-xl bg-[#f4f6f9] p-3 dark:bg-[#232936]">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${overdue ? 'bg-[#f3d7d2] text-[#7b3e35]' : 'bg-[#dfe8f6] text-[#476082]'}`}>
                       {overdue ? <FiAlertTriangle size={14} /> : <FiClock size={14} />}
@@ -306,11 +306,11 @@ const Debts = () => {
                 const pct = paidPct(debt);
                 const days = daysUntil(debt.dueDate);
                 const overdue = days !== null && days < 0 && !isSettled;
-                const expanded = expandedId === debt._id;
-                const paying = payingId === debt._id;
+                const expanded = expandedId === debt.id;
+                const paying = payingId === debt.id;
 
                 return [
-                  <tr key={`row-${debt._id}`} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
+                  <tr key={`row-${debt.id}`} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
                     <td className="px-5 py-4">
                       <p className="font-bold text-[#1d2430] dark:text-[#eef1f5]">{debt.personName}</p>
                       <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{debt.description || (isEnglish ? 'Personal debt record' : 'Khoản vay mượn cá nhân')}</p>
@@ -347,7 +347,7 @@ const Debts = () => {
                         {!isSettled && (
                           <button
                             onClick={() => {
-                              setPayingId(paying ? null : debt._id);
+                              setPayingId(paying ? null : debt.id);
                               setExpandedId(null);
                               setPayAmount('');
                               setPayNote('');
@@ -361,7 +361,7 @@ const Debts = () => {
                         {(debt.paymentHistory?.length ?? 0) > 0 && (
                           <button
                             onClick={() => {
-                              setExpandedId(expanded ? null : debt._id);
+                              setExpandedId(expanded ? null : debt.id);
                               setPayingId(null);
                             }}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc] dark:hover:bg-[#364050]"
@@ -372,7 +372,7 @@ const Debts = () => {
                         )}
                         {!isSettled && (
                           <button
-                            onClick={() => settleDebt(debt._id)}
+                            onClick={() => settleDebt(debt.id)}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#e6ecfa] text-[#6177a6] hover:bg-[#dce6fa] dark:bg-[#313b54] dark:text-[#a9bcdf] dark:hover:bg-[#39455f]"
                             title={isEnglish ? 'Settle' : 'Tất toán'}
                           >
@@ -398,7 +398,7 @@ const Debts = () => {
                   </tr>,
 
                   paying ? (
-                    <tr key={`pay-${debt._id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f8fbfa] dark:bg-[#1f2d29]">
+                    <tr key={`pay-${debt.id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f8fbfa] dark:bg-[#1f2d29]">
                       <td colSpan={8} className="px-5 py-3">
                         <div className="flex flex-col gap-2 md:flex-row md:items-center">
                           <div className="md:w-64">
@@ -417,7 +417,7 @@ const Debts = () => {
                             className="md:flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-[#334640] rounded-xl dark:bg-[#18231f] dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                           />
                           <div className="flex items-center gap-2">
-                            <button onClick={() => handlePay(debt._id)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition">{isEnglish ? 'Confirm' : 'Xác nhận'}</button>
+                            <button onClick={() => handlePay(debt.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition">{isEnglish ? 'Confirm' : 'Xác nhận'}</button>
                             <button onClick={() => { setPayingId(null); setPayAmount(''); setPayNote(''); }} className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 px-3 py-2 rounded-xl text-xs font-bold transition">{isEnglish ? 'Cancel' : 'Hủy'}</button>
                           </div>
                         </div>
@@ -426,7 +426,7 @@ const Debts = () => {
                   ) : null,
 
                   expanded ? (
-                    <tr key={`history-${debt._id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f9fafc] dark:bg-[#212734]">
+                    <tr key={`history-${debt.id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f9fafc] dark:bg-[#212734]">
                       <td colSpan={8} className="px-5 py-3">
                         <div className="max-h-52 overflow-y-auto divide-y divide-gray-100 dark:divide-[#2b3241] rounded-xl border border-[#e8edf4] dark:border-[#2f3748]">
                           {[...debt.paymentHistory].reverse().map((h, i) => (

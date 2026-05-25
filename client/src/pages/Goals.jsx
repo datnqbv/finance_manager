@@ -17,7 +17,7 @@ const Goals = () => {
   const [showAddAmount, setShowAddAmount] = useState(null);
   const [addAmountValue, setAddAmountValue] = useState('');
   const [addAmountNote, setAddAmountNote] = useState('');
-  const [showHistory, setShowHistory] = useState(null); // goal._id
+  const [showHistory, setShowHistory] = useState(null); // goal.id
   const [filter, setFilter] = useState('all'); // all, active, achieved
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -35,7 +35,7 @@ const Goals = () => {
   };
 
   const handleUpdateGoal = async (goalData) => {
-    const result = await updateGoal(selectedGoal._id, goalData);
+    const result = await updateGoal(selectedGoal.id, goalData);
     if (result.success) {
       setIsModalOpen(false);
       setSelectedGoal(null);
@@ -180,7 +180,7 @@ const Goals = () => {
 
             <div className="space-y-3">
               {topProgressGoals.length > 0 ? topProgressGoals.map((goal) => (
-                <div key={goal._id}>
+                <div key={goal.id}>
                   <div className="mb-1 flex items-center justify-between text-xs text-[#586074] dark:text-[#a9afbb]">
                     <span className="font-semibold truncate pr-3">{goal.name}</span>
                     <span className="font-bold">{(goal.progressPercentage || 0).toFixed(0)}%</span>
@@ -223,7 +223,7 @@ const Goals = () => {
                 const reachedHeight = Math.max(progress, 8);
                 const remainHeight = Math.max(100 - progress, 8);
                 return (
-                  <div key={goal._id} className="flex-1 min-w-0">
+                  <div key={goal.id} className="flex-1 min-w-0">
                     <div className="h-[170px] flex items-end justify-center gap-2">
                       <div className="w-4 rounded-t-md bg-[#003d2d]" style={{ height: `${reachedHeight}%` }} />
                       <div className="w-4 rounded-t-md bg-[#b7c4d8]" style={{ height: `${remainHeight}%` }} />
@@ -252,7 +252,7 @@ const Goals = () => {
             {deadlineGoals.length > 0 ? deadlineGoals.map((goal) => {
               const daysInfo = getDaysRemaining(goal.deadline);
               return (
-                <div key={goal._id} className="flex items-center justify-between rounded-xl bg-[#f4f6f9] p-3 dark:bg-[#232936]">
+                <div key={goal.id} className="flex items-center justify-between rounded-xl bg-[#f4f6f9] p-3 dark:bg-[#232936]">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="h-8 w-8 rounded-lg bg-[#dfe8f6] text-[#476082] flex items-center justify-center font-bold">
                       <FiClock size={14} />
@@ -325,7 +325,7 @@ const Goals = () => {
                 const daysInfo = getDaysRemaining(goal.deadline);
                 const priority = getPriorityBadge(goal.priority);
                 return [
-                    <tr key={`row-${goal._id}`} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
+                    <tr key={`row-${goal.id}`} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="h-9 w-9 rounded-lg flex items-center justify-center text-lg" style={{ backgroundColor: `${goal.color || '#3b82f6'}1f` }}>
@@ -366,7 +366,7 @@ const Goals = () => {
                           {!goal.isAchieved && (
                             <button
                               onClick={() => {
-                                setShowAddAmount(showAddAmount === goal._id ? null : goal._id);
+                                setShowAddAmount(showAddAmount === goal.id ? null : goal.id);
                                 setShowHistory(null);
                               }}
                               className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#e7f6ee] text-[#1f7d55] hover:bg-[#d7f0e4] dark:bg-[#204236] dark:text-[#8edbbb] dark:hover:bg-[#285344]"
@@ -378,7 +378,7 @@ const Goals = () => {
                           {(goal.depositHistory?.length ?? 0) > 0 && (
                             <button
                               onClick={() => {
-                                setShowHistory(showHistory === goal._id ? null : goal._id);
+                                setShowHistory(showHistory === goal.id ? null : goal.id);
                                 setShowAddAmount(null);
                               }}
                               className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc] dark:hover:bg-[#364050]"
@@ -395,7 +395,7 @@ const Goals = () => {
                             <FiEdit2 size={14} />
                           </button>
                           <button
-                            onClick={() => handleDeleteGoal(goal._id)}
+                            onClick={() => handleDeleteGoal(goal.id)}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#f8eceb] text-[#a55d56] hover:bg-[#f4dedc] dark:bg-[#3b2a2c] dark:text-[#e0a29a] dark:hover:bg-[#4a3336]"
                             title={isEnglish ? 'Delete' : 'Xóa'}
                           >
@@ -405,8 +405,8 @@ const Goals = () => {
                       </td>
                     </tr>,
 
-                    showAddAmount === goal._id ? (
-                      <tr key={`add-${goal._id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f8fbfa] dark:bg-[#1f2d29]">
+                    showAddAmount === goal.id ? (
+                      <tr key={`add-${goal.id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f8fbfa] dark:bg-[#1f2d29]">
                         <td colSpan={7} className="px-5 py-3">
                           <div className="flex flex-col gap-2 md:flex-row md:items-center">
                             <div className="md:w-64">
@@ -426,7 +426,7 @@ const Goals = () => {
                             />
                             <div className="flex items-center gap-2">
                               <button
-                                onClick={() => handleAddAmount(goal._id)}
+                                onClick={() => handleAddAmount(goal.id)}
                                 className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors"
                               >
                                 {isEnglish ? 'Confirm' : 'Xác nhận'}
@@ -443,8 +443,8 @@ const Goals = () => {
                       </tr>
                     ) : null,
 
-                    showHistory === goal._id ? (
-                      <tr key={`history-${goal._id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f9fafc] dark:bg-[#212734]">
+                    showHistory === goal.id ? (
+                      <tr key={`history-${goal.id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f9fafc] dark:bg-[#212734]">
                         <td colSpan={7} className="px-5 py-3">
                           <div className="max-h-52 overflow-y-auto divide-y divide-gray-100 dark:divide-[#2b3241] rounded-xl border border-[#e8edf4] dark:border-[#2f3748]">
                             {[...goal.depositHistory].reverse().map((entry, i) => (

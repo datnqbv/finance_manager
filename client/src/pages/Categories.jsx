@@ -34,7 +34,7 @@ const Categories = () => {
     }
     if (window.confirm(isEnglish ? `Delete category "${category.name}"?` : `Xóa danh mục "${category.name}"?`)) {
       try {
-        await deleteCategory(category._id);
+        await deleteCategory(category.id);
       } catch {}
     }
   };
@@ -45,7 +45,7 @@ const Categories = () => {
   };
 
   const handleSave = async (formData) => {
-    if (editingCategory) await updateCategory(editingCategory._id, formData);
+    if (editingCategory) await updateCategory(editingCategory.id, formData);
     else await createCategory(formData);
   };
 
@@ -212,7 +212,7 @@ const Categories = () => {
             </thead>
             <tbody>
               {paginatedCategories.length > 0 ? paginatedCategories.map((category, idx) => (
-                <tr key={category._id} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
+                <tr key={category.id} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="h-9 w-9 rounded-lg flex items-center justify-center text-lg" style={{ backgroundColor: `${category.color || '#10b981'}1f` }}>
@@ -220,7 +220,7 @@ const Categories = () => {
                       </div>
                       <div className="min-w-0">
                         <p className="truncate font-bold text-[#1d2430] dark:text-[#eef1f5]">{category.name}</p>
-                        <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'Code' : 'Mã'}: {category._id?.slice(-6)}</p>
+                        <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'Code' : 'Mã'}: {category.id?.slice(-6)}</p>
                       </div>
                     </div>
                   </td>

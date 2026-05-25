@@ -99,7 +99,7 @@ const GlobalSearch = () => {
   };
 
   // Debounced search function
-  const performSearch = useCallback((query) => {
+  const performSearch = useCallback(async (query) => {
     if (!query || query.trim() === '') {
       setSearchResults([]);
       return;
@@ -107,21 +107,11 @@ const GlobalSearch = () => {
 
     const lowerQuery = query.toLowerCase();
 
-    // Debug: Log data availability
-    console.log('=== GLOBAL SEARCH DEBUG ===');
-    console.log('Search Query:', lowerQuery);
-    console.log('Budgets:', budgets?.length || 0, budgets);
-    console.log('Goals:', goals?.length || 0, goals);
-    console.log('Transactions:', transactions?.length || 0);
-    console.log('Categories:', categories?.length || 0);
-    console.log('Debts:', debts?.length || 0);
-    console.log('===========================');
-
     // Add page shortcuts (highest priority)
     const pages = [
       { title: 'Tổng quan', path: '/', icon: '🏠', keywords: ['dashboard', 'tổng quan', 'home', 'tong quan'] },
       { title: 'Giao dịch', path: '/transactions', icon: '📝', keywords: ['transactions', 'giao dịch', 'giao dich', 'transaction'] },
-      { title: 'Danh mục', path: '/categories', icon: '📁', keywords: ['categories', 'danh mục', 'danh muc', 'category'] },
+      { title: 'Danh mục', path: '/categories', icon: '📂', keywords: ['categories', 'danh mục', 'danh muc', 'category'] },
       { title: 'Ngân sách', path: '/budgets', icon: '💰', keywords: ['budgets', 'ngân sách', 'ngan sach', 'budget'] },
       { title: 'Mục tiêu', path: '/goals', icon: '🎯', keywords: ['goals', 'mục tiêu', 'muc tieu', 'target'] },
       { title: 'Quản lý nợ', path: '/debts', icon: '🤝', keywords: ['debts', 'nợ', 'no', 'vay', 'borrow', 'lend', 'quản lý nợ', 'quan ly no'] },
@@ -130,10 +120,7 @@ const GlobalSearch = () => {
     ];
 
     const pageResults = pages
-      .filter(p =>
-        fuzzyMatch(p.title, lowerQuery) ||
-        p.keywords.some(k => fuzzyMatch(k, lowerQuery))
-      )
+      .filter(p => p.title.toLowerCase().includes(lowerQuery) || p.keywords.some(k => k.toLowerCase().includes(lowerQuery)))
       .slice(0, 3)
       .map(p => ({
         type: 'page',
@@ -144,213 +131,45 @@ const GlobalSearch = () => {
         matchText: p.title
       }));
 
-    // Search in transactions with relevance scoring
-    const transactionResults = (transactions || [])
-      .map(t => {
-        const categoryLower = (t.category || '').toLowerCase();
-        const noteLower = (t.note || '').toLowerCase();
+    try {
+      const response = await searchService.globalSearch(lowerQuery, 'all', 5);
+      if (response.success && response.data) {
+        const { transactions = [], categories = [], budgets = [], goals = [], debts = [] } = response.data;
+        
+        const transactionResults = transactions.map(t => ({
+          type: 'transaction', id: t.id, title: t.category,
+          subtitle: (t.note || (t.type === 'income' ? 'Thu nhập' : 'Chi tiêu')) + ' - ' + new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(t.amount),
+          path: '/transactions', icon: t.type === 'income' ? '📈' : '📉',
+          date: new Date(t.date).toLocaleDateString('vi-VN'), matchText: t.category || t.note || ''
+        }));
+        const categoryResults = categories.map(c => ({
+          type: 'category', id: c.id, title: c.name,
+          subtitle: 'Danh mục ' + (c.type === 'income' ? 'thu nhập' : (c.type === 'expense' ? 'chi tiêu' : 'cả hai')),
+          path: '/categories', icon: c.icon || '📂', matchText: c.name || ''
+        }));
+        const budgetResults = budgets.map(b => ({
+          type: 'budget', id: b.id, title: b.category || b.categoryName || 'Tổng ngân sách',
+          subtitle: 'Ngân sách ' + (b.period === 'monthly' ? 'tháng' : (b.period === 'weekly' ? 'tuần' : 'năm')) + ' - ' + new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(b.amount),
+          path: '/budgets', icon: '💰', matchText: b.category || b.categoryName || 'Tổng ngân sách'
+        }));
+        const goalResults = goals.map(g => ({
+          type: 'goal', id: g.id, title: g.name,
+          subtitle: 'Mục tiêu ' + (g.status === 'active' ? 'đang thực hiện' : (g.status === 'completed' ? 'đã hoàn thành' : 'tạm dừng')) + ' - ' + new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(g.currentAmount) + '/' + new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(g.targetAmount),
+          path: '/goals', icon: g.status === 'completed' ? '✅' : '🎯', matchText: g.name || ''
+        }));
+        const debtResults = debts.map(debt => ({
+          type: 'debt', id: debt.id, title: debt.personName,
+          subtitle: (debt.type === 'lend' ? 'Họ nợ tôi' : 'Tôi nợ họ') + ' - ' + new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(debt.remainingAmount ?? debt.amount ?? 0),
+          path: '/debts', icon: debt.status === 'settled' ? '✅' : (debt.type === 'lend' ? '🧑‍🤝‍🧑' : '🏦'),
+          matchText: (debt.personName + ' ' + (debt.description || '')).trim(),
+          date: debt.dueDate ? new Date(debt.dueDate).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN') : undefined
+        }));
 
-        let score = 0;
-
-        // Exact match (highest priority)
-        if (categoryLower === lowerQuery) score += 100;
-        else if (noteLower === lowerQuery) score += 90;
-
-        // Starts with (high priority)
-        else if (categoryLower.startsWith(lowerQuery)) score += 80;
-        else if (noteLower.startsWith(lowerQuery)) score += 70;
-
-        // Contains (medium priority)
-        else if (categoryLower.includes(lowerQuery)) score += 50;
-        else if (noteLower.includes(lowerQuery)) score += 40;
-
-        // Fuzzy match (lower priority)
-        else if (fuzzyMatch(t.category, lowerQuery)) score += 20;
-        else if (fuzzyMatch(t.note, lowerQuery)) score += 15;
-
-        // Amount match
-        if (t.amount?.toString().includes(lowerQuery)) score += 10;
-
-        // Type match
-        if (t.type === 'income' && (fuzzyMatch('thu nhập', lowerQuery) || fuzzyMatch('income', lowerQuery))) score += 5;
-        if (t.type === 'expense' && (fuzzyMatch('chi tiêu', lowerQuery) || fuzzyMatch('expense', lowerQuery))) score += 5;
-
-        return {
-          ...t,
-          relevanceScore: score
-        };
-      })
-      .filter(t => t.relevanceScore > 0)
-      .sort((a, b) => b.relevanceScore - a.relevanceScore)
-      .slice(0, 5)
-      .map(t => ({
-        type: 'transaction',
-        id: t._id,
-        title: t.category,
-        subtitle: `${t.note || (t.type === 'income' ? 'Thu nhập' : 'Chi tiêu')} - ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(t.amount)}`,
-        path: '/transactions',
-        icon: t.type === 'income' ? '📈' : '📉',
-        date: new Date(t.date).toLocaleDateString('vi-VN'),
-        matchText: t.category || t.note,
-        relevanceScore: t.relevanceScore
-      }));
-
-    // Search in categories with relevance scoring
-    const categoryResults = (categories || [])
-      .map(c => {
-        const nameLower = (c.name || '').toLowerCase();
-        let score = 0;
-
-        if (nameLower === lowerQuery) score += 100;
-        else if (nameLower.startsWith(lowerQuery)) score += 80;
-        else if (nameLower.includes(lowerQuery)) score += 50;
-        else if (fuzzyMatch(c.name, lowerQuery)) score += 20;
-
-        if (c.type === 'income' && fuzzyMatch('thu nhập', lowerQuery)) score += 5;
-        if (c.type === 'expense' && fuzzyMatch('chi tiêu', lowerQuery)) score += 5;
-
-        return { ...c, relevanceScore: score };
-      })
-      .filter(c => c.relevanceScore > 0)
-      .sort((a, b) => b.relevanceScore - a.relevanceScore)
-      .slice(0, 3)
-      .map(c => ({
-        type: 'category',
-        id: c._id,
-        title: c.name,
-        subtitle: `Danh mục ${c.type === 'income' ? 'thu nhập' : c.type === 'expense' ? 'chi tiêu' : 'cả hai'}`,
-        path: '/categories',
-        icon: c.icon || '📁',
-        matchText: c.name,
-        relevanceScore: c.relevanceScore
-      }));
-
-    // Search in budgets
-    const isBudgetKeyword = fuzzyMatch('ngân sách', lowerQuery) ||
-      fuzzyMatch('budget', lowerQuery) ||
-      fuzzyMatch('chi tiêu', lowerQuery) ||
-      fuzzyMatch('tổng chi', lowerQuery);
-
-    const budgetResults = (budgets || [])
-      .filter(b => {
-        if (isBudgetKeyword) return true;
-        const categoryMatch = fuzzyMatch(b.category, lowerQuery) || fuzzyMatch(b.categoryName, lowerQuery);
-        const amountMatch = b.amount?.toString().includes(lowerQuery);
-        const periodMatch = fuzzyMatch(b.period, lowerQuery);
-        return categoryMatch || amountMatch || periodMatch;
-      })
-      .slice(0, isBudgetKeyword ? 5 : 3)
-      .map(b => ({
-        type: 'budget',
-        id: b._id,
-        title: b.category || b.categoryName || 'Tổng ngân sách',
-        subtitle: `Ngân sách ${b.period === 'monthly' ? 'tháng' : b.period === 'weekly' ? 'tuần' : 'năm'} - ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(b.amount)}`,
-        path: '/budgets',
-        icon: '💰',
-        matchText: b.category || b.categoryName || 'Tổng ngân sách'
-      }));
-
-    // Search in goals
-    const isGoalKeyword = fuzzyMatch('mục tiêu', lowerQuery) || fuzzyMatch('goal', lowerQuery);
-
-    const goalResults = (goals || [])
-      .filter(g => {
-        if (isGoalKeyword) return true;
-        const nameMatch = fuzzyMatch(g.name, lowerQuery);
-        const amountMatch = g.targetAmount?.toString().includes(lowerQuery) ||
-          g.currentAmount?.toString().includes(lowerQuery);
-        const statusMatch = fuzzyMatch(g.status, lowerQuery);
-        return nameMatch || amountMatch || statusMatch;
-      })
-      .slice(0, isGoalKeyword ? 5 : 3)
-      .map(g => ({
-        type: 'goal',
-        id: g._id,
-        title: g.name,
-        subtitle: `Mục tiêu ${g.status === 'active' ? 'đang thực hiện' : g.status === 'completed' ? 'đã hoàn thành' : 'tạm dừng'} - ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(g.currentAmount)}/${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(g.targetAmount)}`,
-        path: '/goals',
-        icon: g.status === 'completed' ? '✅' : '🎯',
-        matchText: g.name
-      }));
-
-    const isDebtKeyword = fuzzyMatch('nợ', lowerQuery) ||
-      fuzzyMatch('debt', lowerQuery) ||
-      fuzzyMatch('quản lý nợ', lowerQuery) ||
-      fuzzyMatch('vay', lowerQuery) ||
-      fuzzyMatch('borrow', lowerQuery) ||
-      fuzzyMatch('lend', lowerQuery);
-
-    const debtResults = (debts || [])
-      .map((debt) => {
-        const nameLower = (debt.personName || '').toLowerCase();
-        const descriptionLower = (debt.description || '').toLowerCase();
-        let score = 0;
-
-        if (nameLower === lowerQuery) score += 100;
-        else if (descriptionLower === lowerQuery) score += 90;
-        else if (nameLower.startsWith(lowerQuery)) score += 80;
-        else if (descriptionLower.startsWith(lowerQuery)) score += 70;
-        else if (nameLower.includes(lowerQuery)) score += 50;
-        else if (descriptionLower.includes(lowerQuery)) score += 40;
-        else if (fuzzyMatch(debt.personName, lowerQuery)) score += 20;
-        else if (fuzzyMatch(debt.description, lowerQuery)) score += 15;
-
-        if (debt.amount?.toString().includes(lowerQuery) || debt.remainingAmount?.toString().includes(lowerQuery)) score += 10;
-        if (debt.type === 'lend' && isDebtKeyword) score += 5;
-        if (debt.type === 'borrow' && isDebtKeyword) score += 5;
-        if (debt.status === 'settled' && fuzzyMatch('đã tất toán', lowerQuery)) score += 5;
-        if (debt.status === 'active' && fuzzyMatch('đang hoạt động', lowerQuery)) score += 5;
-
-        return {
-          ...debt,
-          relevanceScore: score
-        };
-      })
-      .filter(debt => debt.relevanceScore > 0)
-      .sort((a, b) => b.relevanceScore - a.relevanceScore)
-      .slice(0, isDebtKeyword ? 5 : 3)
-      .map(debt => ({
-        type: 'debt',
-        id: debt._id,
-        title: debt.personName,
-        subtitle: `${debt.type === 'lend' ? 'Họ nợ tôi' : 'Tôi nợ họ'} - ${new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(debt.remainingAmount ?? debt.amount ?? 0)}`,
-        path: '/debts',
-        icon: debt.status === 'settled' ? '✅' : debt.type === 'lend' ? '🤝' : '💸',
-        matchText: `${debt.personName} ${debt.description || ''}`.trim(),
-        relevanceScore: debt.relevanceScore,
-        date: debt.dueDate ? new Date(debt.dueDate).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN') : undefined,
-      }));
-
-    // Combine results and sort by relevance score
-    const allResults = [
-      ...transactionResults,
-      ...categoryResults,
-      ...budgetResults,
-      ...goalResults,
-      ...debtResults
-    ];
-
-    // Sort all results by relevance score
-    allResults.sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
-
-    // Pages always at top if matched
-    const finalResults = [
-      ...pageResults,
-      ...allResults.slice(0, 15) // Limit total results
-    ];
-
-    console.log('Search Results:', {
-      pages: pageResults.length,
-      transactions: transactionResults.length,
-      categories: categoryResults.length,
-      budgets: budgetResults.length,
-      goals: goalResults.length,
-      debts: debtResults.length,
-      total: finalResults.length
-    });
-
-    setSearchResults(finalResults);
-  }, [transactions, categories, budgets, goals, debts, user?.currency, isEnglish]);
+        const allResults = [...transactionResults, ...categoryResults, ...budgetResults, ...goalResults, ...debtResults];
+        setSearchResults([...pageResults, ...allResults.slice(0, 15)]);
+      } else { setSearchResults(pageResults); }
+    } catch (error) { console.error('Lỗi API MeiliSearch:', error); setSearchResults(pageResults); }
+  }, [isEnglish, user?.currency]);
 
   // Debounced search with useEffect
   useEffect(() => {

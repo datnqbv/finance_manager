@@ -20,7 +20,7 @@ Trước khi bắt đầu, hãy đảm bảo máy của bạn đã có:
 
 - `Node.js` phiên bản LTS trở lên.
 - `npm` đi kèm với Node.js.
-- `MongoDB` đang chạy local hoặc một chuỗi kết nối MongoDB Atlas hợp lệ.
+- `SQL Server` đang chạy local hoặc một instance/host hợp lệ.
 - Tài khoản Google và `Google OAuth Client ID` nếu muốn dùng đăng nhập Google.
 - Tài khoản email Gmail và `App Password` nếu muốn dùng chức năng gửi mail.
 
@@ -32,7 +32,7 @@ Các biến quan trọng:
 
 - `NODE_ENV`: chế độ chạy, thường là `development` khi dev.
 - `PORT`: cổng backend, mặc định là `5000`.
-- `MONGODB_URI`: chuỗi kết nối MongoDB.
+- `SQLSERVER_HOST`, `SQLSERVER_PORT`, `SQLSERVER_USER`, `SQLSERVER_PASSWORD`, `SQLSERVER_DATABASE`: thông tin kết nối SQL Server.
 - `JWT_SECRET`: secret dùng để ký access token.
 - `JWT_REFRESH_SECRET`: secret riêng cho refresh token, có thể dùng giá trị khác `JWT_SECRET`.
 - `GOOGLE_CLIENT_ID`: client ID dùng cho xác thực Google.
@@ -53,7 +53,13 @@ Các biến quan trọng:
 ```env
 NODE_ENV=development
 PORT=5000
-MONGODB_URI=mongodb+srv://np21062004_db_user:
+DB_TYPE=sqlserver
+SQLSERVER_HOST=localhost
+SQLSERVER_PORT=1433
+SQLSERVER_USER=sa
+SQLSERVER_PASSWORD=replace-with-your-sql-server-password
+SQLSERVER_DATABASE=FinanceManager
+SQLSERVER_ENCRYPT=false
 JWT_SECRET=replace-with-a-long-random-secret
 JWT_REFRESH_SECRET=replace-with-a-different-long-random-secret
 GOOGLE_CLIENT_ID=replace-with-your-google-oauth-client-id.apps.googleusercontent.com

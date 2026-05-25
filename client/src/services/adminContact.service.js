@@ -3,7 +3,7 @@ import api from './api';
 export const adminContactService = {
   getMessages: async (params = {}) => {
     const response = await api.get('/contact/messages', { params });
-    return response.data;
+    return response.data.data;
   },
 
   updateMessage: async (id, payload) => {

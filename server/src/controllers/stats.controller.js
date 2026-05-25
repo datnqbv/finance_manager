@@ -1,6 +1,5 @@
-import Transaction from '../models/Transaction.model.js';
-import Goal from '../models/Goal.model.js';
-import mongoose from 'mongoose';
+import { Transaction, Goal, sequelize } from '../models/sequelize/index.js';
+import { Op } from 'sequelize';
 import * as ss from 'simple-statistics';
 import { forecastNextMonth, forecastCategoryExpense } from '../services/xgboost.forecast.service.js';
 
@@ -19,29 +18,19 @@ export const getMonthlyStats = async (req, res) => {
     const startDate = new Date(targetYear, targetMonth - 1, 1);
     const endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59);
 
-    const transactions = await Transaction.find({
-      userId: req.user.id,
-      date: { $gte: startDate, $lte: endDate }
-    });
+    const transactions = await Transaction.findAll({ where: { userId: req.user.id, date: { [Op.between]: [startDate, endDate] } }, raw: true });
 
-    const income = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const expense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const income = transactions.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
+    const expense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
 
     const byCategory = transactions.reduce((acc, t) => {
-      if (!acc[t.category]) acc[t.category] = { income: 0, expense: 0 };
-      acc[t.category][t.type] += t.amount;
+      const cat = t.category || 'Uncategorized';
+      if (!acc[cat]) acc[cat] = { income: 0, expense: 0 };
+      acc[cat][t.type] += Number(t.amount);
       return acc;
     }, {});
 
-    res.json({
-      success: true,
-      data: {
-        period: { year: targetYear, month: targetMonth, startDate, endDate },
-        summary: { income, expense, balance: income - expense },
-        byCategory,
-        transactions: transactions.length
-      }
-    });
+    res.json({ success: true, data: { period: { year: targetYear, month: targetMonth, startDate, endDate }, summary: { income, expense, balance: income - expense }, byCategory, transactions: transactions.length } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -53,43 +42,23 @@ export const getMonthlyStats = async (req, res) => {
 // dùng cho dashboard tổng quan, giúp người dùng có cái nhìn nhanh về tình hình tài chính hiện tại và xu hướng gần đây.
 export const getSummary = async (req, res) => {
   try {
-    const userId = new mongoose.Types.ObjectId(req.user.id);
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [overallAgg, monthlyAgg, recent] = await Promise.all([
-      // Total income/expense all-time — single aggregation, no document fetch
-      Transaction.aggregate([
-        { $match: { userId } },
-        { $group: { _id: '$type', total: { $sum: '$amount' }, count: { $sum: 1 } } }
-      ]),
-      // This-month income/expense
-      Transaction.aggregate([
-        { $match: { userId, date: { $gte: startOfMonth } } },
-        { $group: { _id: '$type', total: { $sum: '$amount' } } }
-      ]),
-      // Recent 5 transactions
-      Transaction.find({ userId: req.user.id }).sort({ date: -1 }).limit(5).lean()
-    ]);
+    const overallRows = await Transaction.findAll({ where: { userId: req.user.id }, attributes: ['type', [sequelize.fn('SUM', sequelize.col('amount')), 'total'], [sequelize.fn('COUNT', sequelize.col('id')), 'count']], group: ['type'], raw: true });
+    const overallMap = {}; overallRows.forEach(r => overallMap[r.type] = r);
+    const totalIncome = parseFloat(overallMap.income?.total || 0);
+    const totalExpense = parseFloat(overallMap.expense?.total || 0);
+    const totalCount = parseInt(overallMap.income?.count || 0) + parseInt(overallMap.expense?.count || 0);
 
-    const toMap = (agg) => agg.reduce((m, r) => { m[r._id] = r; return m; }, {});
-    const overall = toMap(overallAgg);
-    const monthly = toMap(monthlyAgg);
+    const monthlyRows = await Transaction.findAll({ where: { userId: req.user.id, date: { [Op.gte]: startOfMonth } }, attributes: ['type', [sequelize.fn('SUM', sequelize.col('amount')), 'total']], group: ['type'], raw: true });
+    const monthlyMap = {}; monthlyRows.forEach(r => monthlyMap[r.type] = r);
+    const monthlyIncome = parseFloat(monthlyMap.income?.total || 0);
+    const monthlyExpense = parseFloat(monthlyMap.expense?.total || 0);
 
-    const totalIncome = overall.income?.total ?? 0;
-    const totalExpense = overall.expense?.total ?? 0;
-    const totalCount = (overall.income?.count ?? 0) + (overall.expense?.count ?? 0);
-    const monthlyIncome = monthly.income?.total ?? 0;
-    const monthlyExpense = monthly.expense?.total ?? 0;
+    const recent = await Transaction.findAll({ where: { userId: req.user.id }, order: [['date','DESC']], limit: 5, raw: true });
 
-    res.json({
-      success: true,
-      data: {
-        overall: { totalIncome, totalExpense, balance: totalIncome - totalExpense, transactionCount: totalCount },
-        thisMonth: { income: monthlyIncome, expense: monthlyExpense, balance: monthlyIncome - monthlyExpense },
-        recentTransactions: recent
-      }
-    });
+    res.json({ success: true, data: { overall: { totalIncome, totalExpense, balance: totalIncome - totalExpense, transactionCount: totalCount }, thisMonth: { income: monthlyIncome, expense: monthlyExpense, balance: monthlyIncome - monthlyExpense }, recentTransactions: recent } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -103,23 +72,22 @@ export const getSummary = async (req, res) => {
 export const getCategoryStats = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    const query = { userId: req.user.id };
+    const where = { userId: req.user.id };
     if (startDate || endDate) {
-      query.date = {};
-      if (startDate) query.date.$gte = new Date(startDate);
-      if (endDate) query.date.$lte = new Date(endDate);
+      where.date = {};
+      if (startDate) where.date[Op.gte] = new Date(startDate);
+      if (endDate) where.date[Op.lte] = new Date(endDate);
     }
 
-    const transactions = await Transaction.find(query);
-
-    const categoryStats = transactions.reduce((acc, t) => {
-      if (!acc[t.category]) acc[t.category] = { category: t.category, income: 0, expense: 0, count: 0 };
-      acc[t.category][t.type] += t.amount;
-      acc[t.category].count++;
-      return acc;
-    }, {});
-
-    const result = Object.values(categoryStats).sort((a, b) => b.expense - a.expense);
+    const rows = await Transaction.findAll({ where, attributes: ['category', 'type', [sequelize.fn('SUM', sequelize.col('amount')), 'total'], [sequelize.fn('COUNT', sequelize.col('id')), 'count']], group: ['category','type'], raw: true });
+    const categoryStats = {};
+    rows.forEach(r => {
+      const cat = r.category || 'Uncategorized';
+      categoryStats[cat] ??= { category: cat, income: 0, expense: 0, count: 0 };
+      categoryStats[cat][r.type] = parseFloat(r.total) || 0;
+      categoryStats[cat].count += parseInt(r.count || 0);
+    });
+    const result = Object.values(categoryStats).sort((a,b) => b.expense - a.expense);
     res.json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -133,11 +101,9 @@ export const getCategoryStats = async (req, res) => {
 export const compareStats = async (req, res) => {
   try {
     const { type = 'month', periods = 6, refYear, refMonth } = req.query;
-    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const userId = req.user.id;
     const n = parseInt(periods);
-    const now = (refYear && refMonth)
-      ? new Date(parseInt(refYear), parseInt(refMonth) - 1, 1)
-      : new Date();
+    const now = (refYear && refMonth) ? new Date(parseInt(refYear), parseInt(refMonth) - 1, 1) : new Date();
 
     let startDate, endDate;
     const results = [];
@@ -147,69 +113,59 @@ export const compareStats = async (req, res) => {
       startDate = new Date(startYear, 0, 1);
       endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
 
-      // Single aggregation grouped by year
-      const agg = await Transaction.aggregate([
-        { $match: { userId, date: { $gte: startDate, $lte: endDate } } },
-        {
-          $group: {
-            _id: { year: { $year: '$date' }, type: '$type' },
-            total: { $sum: '$amount' }, count: { $sum: 1 }
-          }
-        }
-      ]);
+      const yearFn = sequelize.getDialect && sequelize.getDialect() === 'sqlite' ? sequelize.fn('strftime', '%Y', sequelize.col('date')) : sequelize.fn('YEAR', sequelize.col('date'));
+      const rows = await Transaction.findAll({ where: { userId, date: { [Op.between]: [startDate, endDate] } }, attributes: [[yearFn, 'year'], 'type', [sequelize.fn('SUM', sequelize.col('amount')), 'total'], [sequelize.fn('COUNT', sequelize.col('id')), 'count']], group: [yearFn, 'type'], raw: true });
       const map = {};
-      agg.forEach(r => {
-        const key = r._id.year;
-        if (!map[key]) map[key] = { income: 0, expense: 0, count: 0 };
-        map[key][r._id.type] += r.total;
-        map[key].count += r.count;
+      rows.forEach(r => {
+        r.year = parseInt(r.year);
+        const y = r.year;
+        map[y] ??= { income: 0, expense: 0, count: 0 };
+        map[y][r.type] += parseFloat(r.total || 0);
+        map[y].count += parseInt(r.count || 0);
       });
-      for (let i = 0; i < n; i++) {
-        const year = startYear + i;
-        const d = map[year] || { income: 0, expense: 0, count: 0 };
-        results.push({ period: `${year}`, startDate: new Date(year, 0, 1), endDate: new Date(year, 11, 31, 23, 59, 59), income: d.income, expense: d.expense, balance: d.income - d.expense, transactionCount: d.count });
+      for (let y = startYear; y <= now.getFullYear(); y++) {
+        const e = map[y] || { income: 0, expense: 0, count: 0 };
+        results.push({ label: `${y}`, income: e.income, expense: e.expense, balance: e.income - e.expense, txCount: e.count });
       }
     } else {
-      const baseDate = new Date(now.getFullYear(), now.getMonth() - n + 1, 1);
-      startDate = baseDate;
-      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-
-      // Single aggregation grouped by year+month
-      const agg = await Transaction.aggregate([
-        { $match: { userId, date: { $gte: startDate, $lte: endDate } } },
-        {
-          $group: {
-            _id: { year: { $year: '$date' }, month: { $month: '$date' }, type: '$type' },
-            total: { $sum: '$amount' }, count: { $sum: 1 }
-          }
-        }
-      ]);
-      const map = {};
-      agg.forEach(r => {
-        const key = `${r._id.year}-${r._id.month}`;
-        if (!map[key]) map[key] = { income: 0, expense: 0, count: 0 };
-        map[key][r._id.type] += r.total;
-        map[key].count += r.count;
+      const rangeStart = new Date(now.getFullYear(), now.getMonth() - n + 1, 1);
+      const rangeEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      const yearFn = sequelize.getDialect && sequelize.getDialect() === 'sqlite' ? sequelize.fn('strftime', '%Y', sequelize.col('date')) : sequelize.fn('YEAR', sequelize.col('date'));
+      const monthFn = sequelize.getDialect && sequelize.getDialect() === 'sqlite' ? sequelize.fn('strftime', '%m', sequelize.col('date')) : sequelize.fn('MONTH', sequelize.col('date'));
+      const rows = await Transaction.findAll({
+        where: { userId, date: { [Op.between]: [rangeStart, rangeEnd] } },
+        attributes: [[yearFn, 'year'], [monthFn, 'month'], 'type', [sequelize.fn('SUM', sequelize.col('amount')), 'total']],
+        group: [yearFn, monthFn, 'type'],
+        raw: true 
       });
+
+      const map = {};
+      rows.forEach(r => {
+        const year = parseInt(r.year, 10);
+        const month = parseInt(r.month, 10);
+        const key = `${year}-${month}`;
+        if (!map[key]) map[key] = { income: 0, expense: 0 };
+        map[key][r.type] += parseFloat(r.total || 0);
+      });
+
       for (let i = n - 1; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
-        const entry = map[key] || { income: 0, expense: 0, count: 0 };
-        const sDate = new Date(d.getFullYear(), d.getMonth(), 1);
-        const eDate = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
-        results.push({ period: `${d.getMonth() + 1}/${d.getFullYear()}`, startDate: sDate, endDate: eDate, income: entry.income, expense: entry.expense, balance: entry.income - entry.expense, transactionCount: entry.count });
+        const e = map[key] || { income: 0, expense: 0 };
+        results.push({ label: `${d.getMonth() + 1}/${d.getFullYear()}`, income: e.income, expense: e.expense, balance: e.income - e.expense, txCount: 0 });
       }
     }
 
-    const withGrowth = results.map((item, index) => {
-      if (index === 0) return { ...item, incomeGrowth: 0, expenseGrowth: 0 };
-      const prev = results[index - 1];
-      const incomeGrowth = prev.income > 0 ? +((item.income - prev.income) / prev.income * 100).toFixed(2) : 0;
-      const expenseGrowth = prev.expense > 0 ? +((item.expense - prev.expense) / prev.expense * 100).toFixed(2) : 0;
-      return { ...item, incomeGrowth, expenseGrowth };
-    });
+    // compute simple growth between last two periods
+    let growth = { income: 0, expense: 0 };
+    if (results.length >= 2) {
+      const last = results[results.length - 1];
+      const prev = results[results.length - 2];
+      growth.income = prev.income > 0 ? +(((last.income - prev.income) / prev.income) * 100).toFixed(2) : 0;
+      growth.expense = prev.expense > 0 ? +(((last.expense - prev.expense) / prev.expense) * 100).toFixed(2) : 0;
+    }
 
-    res.json({ success: true, data: { type, periods: withGrowth } });
+    res.json({ success: true, data: { type, periods: results, growth } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -218,12 +174,12 @@ export const compareStats = async (req, res) => {
 // @desc    Forecast next month using XGBoost Machine Learning Model
 // @route   GET /api/stats/forecast
 // @access  Private
-// Thay thế SES + SMA bằng mô hình XGBoost Gradient Boosting
+// Dự báo chi tiêu sử dụng XGBoost-style Gradient Boosting
 export const forecastSpending = async (req, res) => {
   try {
     const { months = 6, refYear, refMonth } = req.query;
     const n = Math.max(1, parseInt(months, 10) || 6);
-    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const userId = req.user.id;
     const now = (refYear && refMonth)
       ? new Date(parseInt(refYear), parseInt(refMonth) - 1, 1)
       : new Date();
@@ -232,41 +188,31 @@ export const forecastSpending = async (req, res) => {
     const rangeStart = new Date(now.getFullYear(), now.getMonth() - n, 1);
     const rangeEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
 
+    const yearFn = sequelize.getDialect && sequelize.getDialect() === 'sqlite' ? sequelize.fn('strftime', '%Y', sequelize.col('date')) : sequelize.fn('YEAR', sequelize.col('date'));
+    const monthFn = sequelize.getDialect && sequelize.getDialect() === 'sqlite' ? sequelize.fn('strftime', '%m', sequelize.col('date')) : sequelize.fn('MONTH', sequelize.col('date'));
     const [monthlyAgg, catMonthlyAgg] = await Promise.all([
-      Transaction.aggregate([
-        { $match: { userId, date: { $gte: rangeStart, $lte: rangeEnd } } },
-        {
-          $group: {
-            _id: { year: { $year: '$date' }, month: { $month: '$date' }, type: '$type' },
-            total: { $sum: '$amount' }
-          }
-        }
-      ]),
-      Transaction.aggregate([
-        { $match: { userId, type: 'expense', date: { $gte: rangeStart, $lte: rangeEnd } } },
-        {
-          $group: {
-            _id: { year: { $year: '$date' }, month: { $month: '$date' }, category: '$category' },
-            total: { $sum: '$amount' }
-          }
-        }
-      ])
+      Transaction.findAll({ where: { userId, date: { [Op.between]: [rangeStart, rangeEnd] } }, attributes: [[yearFn, 'year'], [monthFn, 'month'], 'type', [sequelize.fn('SUM', sequelize.col('amount')), 'total']], group: [yearFn, monthFn, 'type'], raw: true }),
+      Transaction.findAll({ where: { userId, type: 'expense', date: { [Op.between]: [rangeStart, rangeEnd] } }, attributes: [[yearFn, 'year'], [monthFn, 'month'], 'category', [sequelize.fn('SUM', sequelize.col('amount')), 'total']], group: [yearFn, monthFn, 'category'], raw: true })
     ]);
+
+    // Normalize aggregation results (year/month may be strings in SQLite)
+    monthlyAgg.forEach(r => { r.year = parseInt(r.year); r.month = parseInt(r.month); });
+    catMonthlyAgg.forEach(r => { r.year = parseInt(r.year); r.month = parseInt(r.month); });
 
     // Xây dựng dữ liệu lịch sử theo tháng
     const monthMap = {};
     monthlyAgg.forEach(r => {
-      const key = `${r._id.year}-${r._id.month}`;
+      const key = `${r.year}-${r.month}`;
       if (!monthMap[key]) monthMap[key] = { income: 0, expense: 0 };
-      monthMap[key][r._id.type] = r.total;
+      monthMap[key][r.type] += parseFloat(r.total || 0);
     });
 
     const catMap = {};
     catMonthlyAgg.forEach(r => {
-      const cat = r._id.category;
-      const key = `${r._id.year}-${r._id.month}`;
+      const cat = r.category;
+      const key = `${r.year}-${r.month}`;
       if (!catMap[cat]) catMap[cat] = {};
-      catMap[cat][key] = r.total;
+      catMap[cat][key] = parseFloat(r.total || 0);
     });
 
     // Xây dựng các chuỗi thời gian
@@ -359,7 +305,7 @@ export const analyzeTrends = async (req, res) => {
   try {
     // Lấy từ query string: số tháng muốn phân tích (mặc định 12), và tháng/năm tham chiếu (tuỳ chọn — dùng để test với dữ liệu quá khứ).
     const { period = 12, refYear, refMonth } = req.query;
-    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const userId = req.user.id;
     const n = parseInt(period);
     const now = (refYear && refMonth)
       ? new Date(parseInt(refYear), parseInt(refMonth) - 1, 1)
@@ -368,23 +314,13 @@ export const analyzeTrends = async (req, res) => {
     // Việc đặt endDate là ngày cuối cùng của tháng hiện tại giúp đảm bảo rằng chúng ta đang phân tích dữ liệu đầy đủ của các tháng đã qua, thay vì chỉ đến ngày hiện tại.
     const rangeStart = new Date(now.getFullYear(), now.getMonth() - n + 1, 1);
     const rangeEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-    // Single aggregation grouped by year+month+type để lấy tổng thu/chi theo tháng, giúp phân tích xu hướng tổng thể.
-    const agg = await Transaction.aggregate([
-      { $match: { userId, date: { $gte: rangeStart, $lte: rangeEnd } } },
-      {
-        $group: {
-          _id: { year: { $year: '$date' }, month: { $month: '$date' }, type: '$type' },
-          total: { $sum: '$amount' }
-        }
-      }
-    ]);
-    // Xây dựng map để dễ dàng truy cập tổng thu/chi theo tháng, giúp việc tạo chuỗi dữ liệu cho phần phân tích xu hướng trở nên đơn giản và hiệu quả.  
+    // Use dialect-aware YEAR/MONTH extraction (SQLite uses strftime)
+    const yearFn = sequelize.getDialect && sequelize.getDialect() === 'sqlite' ? sequelize.fn('strftime', '%Y', sequelize.col('date')) : sequelize.fn('YEAR', sequelize.col('date'));
+    const monthFn = sequelize.getDialect && sequelize.getDialect() === 'sqlite' ? sequelize.fn('strftime', '%m', sequelize.col('date')) : sequelize.fn('MONTH', sequelize.col('date'));
+    const rows = await Transaction.findAll({ where: { userId, date: { [Op.between]: [rangeStart, rangeEnd] } }, attributes: [[yearFn, 'year'], [monthFn, 'month'], 'type', [sequelize.fn('SUM', sequelize.col('amount')), 'total']], group: [yearFn, monthFn, 'type'], raw: true });
     const map = {};
-    agg.forEach(r => {
-      const key = `${r._id.year}-${r._id.month}`;
-      if (!map[key]) map[key] = { income: 0, expense: 0 };
-      map[key][r._id.type] = r.total;
-    });
+    // Normalize year/month that may be strings on SQLite
+    rows.forEach(r => { r.year = parseInt(r.year); r.month = parseInt(r.month); const key = `${r.year}-${r.month}`; if (!map[key]) map[key] = { income: 0, expense: 0 }; map[key][r.type] = parseFloat(r.total || 0); });
     // Duyệt qua n tháng gần nhất để xây dựng chuỗi dữ liệu thu/chi theo tháng, cùng với label dạng "MM/YYYY" cho mỗi tháng, giúp phần phân tích xu hướng có dữ liệu đầy đủ và chính xác.
     const trends = [];
     for (let i = n - 1; i >= 0; i--) {
@@ -442,29 +378,15 @@ export const analyzeTrends = async (req, res) => {
 export const getTopCategories = async (req, res) => {
   try {
     const { limit = 10, startDate, endDate, type = 'expense' } = req.query;
-    const query = { userId: req.user.id, type };
+    const where = { userId: req.user.id, type };
     if (startDate || endDate) {
-      query.date = {};
-      if (startDate) query.date.$gte = new Date(startDate);
-      if (endDate) query.date.$lte = new Date(endDate);
+      where.date = {};
+      if (startDate) where.date[Op.gte] = new Date(startDate);
+      if (endDate) where.date[Op.lte] = new Date(endDate);
     }
-
-    const result = await Transaction.aggregate([
-      { $match: query },
-      { $group: { _id: '$category', total: { $sum: '$amount' }, count: { $sum: 1 }, avgAmount: { $avg: '$amount' } } },
-      { $sort: { total: -1 } },
-      { $limit: parseInt(limit) }
-    ]);
-
-    const totalAmount = result.reduce((s, i) => s + i.total, 0);
-    const formatted = result.map(item => ({
-      category: item._id,
-      total: item.total,
-      count: item.count,
-      average: Math.round(item.avgAmount),
-      percentage: totalAmount > 0 ? +((item.total / totalAmount) * 100).toFixed(2) : 0
-    }));
-
+    const rows = await Transaction.findAll({ where, attributes: ['category', [sequelize.fn('SUM', sequelize.col('amount')), 'total'], [sequelize.fn('COUNT', sequelize.col('id')), 'count'], [sequelize.fn('AVG', sequelize.col('amount')), 'avgAmount']], group: ['category'], order: [[sequelize.literal('total'), 'DESC']], limit: parseInt(limit), raw: true });
+    const totalAmount = rows.reduce((s,i) => s + parseFloat(i.total || 0), 0);
+    const formatted = rows.map(item => ({ category: item.category, total: parseFloat(item.total || 0), count: parseInt(item.count || 0), average: Math.round(parseFloat(item.avgAmount || 0)), percentage: totalAmount > 0 ? +((parseFloat(item.total || 0) / totalAmount) * 100).toFixed(2) : 0 }));
     res.json({ success: true, data: { categories: formatted, totalAmount, type } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -482,19 +404,14 @@ export const getDailyStats = async (req, res) => {
     const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30));
     const end = endDate ? new Date(endDate) : new Date();
 
-    const transactions = await Transaction.find({
-      userId: req.user.id,
-      date: { $gte: start, $lte: end }
-    }).sort({ date: 1 });
-
+    const transactions = await Transaction.findAll({ where: { userId: req.user.id, date: { [Op.between]: [start, end] } }, order: [['date','ASC']], raw: true });
     const dailyData = {};
     transactions.forEach(t => {
-      const key = t.date.toISOString().split('T')[0];
+      const key = new Date(t.date).toISOString().split('T')[0];
       if (!dailyData[key]) dailyData[key] = { date: key, income: 0, expense: 0, transactions: 0 };
-      dailyData[key][t.type] += t.amount;
+      dailyData[key][t.type] += Number(t.amount);
       dailyData[key].transactions++;
     });
-
     const result = Object.values(dailyData).map(day => ({ ...day, balance: day.income - day.expense }));
     res.json({ success: true, data: result });
   } catch (error) {
@@ -510,7 +427,7 @@ export const getDailyStats = async (req, res) => {
 export const getWeeklyStats = async (req, res) => {
   try {
     const { weeks = 12 } = req.query;
-    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const userId = req.user.id;
     const n = parseInt(weeks);
     const now = new Date();
 
@@ -529,27 +446,21 @@ export const getWeeklyStats = async (req, res) => {
     const rangeStart = weekSlots[0].start;
     const rangeEnd = weekSlots[weekSlots.length - 1].end;
 
-    // Single aggregation + ISO-week grouping
-    const agg = await Transaction.aggregate([
-      { $match: { userId, date: { $gte: rangeStart, $lte: rangeEnd } } },
-      {
-        $group: {
-          _id: {
-            isoWeek: { $isoWeek: '$date' },
-            isoYear: { $isoWeekYear: '$date' },
-            type: '$type'
-          },
-          total: { $sum: '$amount' },
-          count: { $sum: 1 }
-        }
-      }
-    ]);
+    // Fetch transactions in range and group into week slots
+    const txs = await Transaction.findAll({ where: { userId, date: { [Op.between]: [rangeStart, rangeEnd] } }, raw: true });
     const weekMap = {};
-    agg.forEach(r => {
-      const key = `${r._id.isoYear}-${r._id.isoWeek}`;
+    txs.forEach(t => {
+      const d = new Date(t.date);
+      const key = (() => {
+        const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7));
+        const year = tmp.getUTCFullYear();
+        const week = Math.ceil((((tmp - new Date(Date.UTC(year, 0, 1))) / 86400000) + 1) / 7);
+        return `${year}-${week}`;
+      })();
       if (!weekMap[key]) weekMap[key] = { income: 0, expense: 0, count: 0 };
-      weekMap[key][r._id.type] += r.total;
-      weekMap[key].count += r.count;
+      weekMap[key][t.type] += Number(t.amount);
+      weekMap[key].count += 1;
     });
     // lấy kết quả từ aggregation và map vào các slot tuần đã xây dựng, đảm bảo rằng mỗi slot tuần đều có dữ liệu thu/chi, ngay cả khi không có giao dịch nào trong tuần đó (sẽ hiển thị 0).  
     const getISOWeekKey = (d) => {
@@ -587,7 +498,7 @@ export const getWeeklyStats = async (req, res) => {
 /*
 export const getAIInsights = async (req, res) => {
   try {
-    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const userId = req.user.id; // user identifier for DB queries
     const now = new Date();
     const months = 12;
 
@@ -756,7 +667,7 @@ export const getAIInsights = async (req, res) => {
 // @access  Private
 export const getDashboard = async (req, res) => {
   try {
-    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const userId = req.user.id;
     const { startDate, endDate } = req.query;
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -777,77 +688,44 @@ export const getDashboard = async (req, res) => {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    // Run all aggregations + queries in parallel
-    const [
-      overallAgg,
-      monthSummaryAgg,
-      sixMonthAgg,
-      periodAgg,
-      lastMonthCatAgg,
-      recent,
-      goals
-    ] = await Promise.all([
-      // All-time totals
-      Transaction.aggregate([
-        { $match: { userId } },
-        { $group: { _id: '$type', total: { $sum: '$amount' }, count: { $sum: 1 } } }
-      ]),
-      // Current month summary
-      Transaction.aggregate([
-        { $match: { userId, date: { $gte: startOfMonth } } },
-        { $group: { _id: '$type', total: { $sum: '$amount' } } }
-      ]),
-      // 6-month monthly breakdown
-      Transaction.aggregate([
-        { $match: { userId, date: { $gte: sixMonthStart } } },
-        {
-          $group: {
-            _id: { year: { $year: '$date' }, month: { $month: '$date' }, type: '$type' },
-            total: { $sum: '$amount' }
-          }
-        }
-      ]),
-      // Period transactions (for category stats + daily fluctuation)
-      Transaction.find({
-        userId: req.user.id,
-        date: { $gte: periodStart, $lte: periodEnd }
-      }).sort({ date: -1 }).lean(),
-      // Last month category stats
-      Transaction.aggregate([
-        { $match: { userId, date: { $gte: lastMonthStart, $lte: lastMonthEnd } } },
-        { $group: { _id: { category: '$category', type: '$type' }, total: { $sum: '$amount' }, count: { $sum: 1 } } }
-      ]),
-      // Recent 5 transactions
-      Transaction.find({ userId: req.user.id }).sort({ date: -1 }).limit(5).lean(),
-      // Goals (lightweight)
-      Goal.find({ userId: req.user.id }).lean()
+    // Run all aggregations + queries in parallel using Sequelize
+    const yearFn = sequelize.getDialect && sequelize.getDialect() === 'sqlite' ? sequelize.fn('strftime', '%Y', sequelize.col('date')) : sequelize.fn('YEAR', sequelize.col('date'));
+    const monthFn = sequelize.getDialect && sequelize.getDialect() === 'sqlite' ? sequelize.fn('strftime', '%m', sequelize.col('date')) : sequelize.fn('MONTH', sequelize.col('date'));
+
+    const [overallRows, monthSummaryRows, sixMonthRows, periodRows, lastMonthCatRows, recentRows, goalsRows] = await Promise.all([
+      Transaction.findAll({ where: { userId }, attributes: ['type', [sequelize.fn('SUM', sequelize.col('amount')), 'total'], [sequelize.fn('COUNT', sequelize.col('id')), 'count']], group: ['type'], raw: true }),
+      Transaction.findAll({ where: { userId, date: { [Op.gte]: startOfMonth } }, attributes: ['type', [sequelize.fn('SUM', sequelize.col('amount')), 'total']], group: ['type'], raw: true }),
+      Transaction.findAll({ where: { userId, date: { [Op.gte]: sixMonthStart } }, attributes: [[yearFn, 'year'], [monthFn, 'month'], 'type', [sequelize.fn('SUM', sequelize.col('amount')), 'total']], group: [yearFn, monthFn, 'type'], raw: true }),
+      Transaction.findAll({ where: { userId, date: { [Op.between]: [periodStart, periodEnd] } }, order: [['date','DESC']], raw: true }),
+      Transaction.findAll({ where: { userId, date: { [Op.between]: [lastMonthStart, lastMonthEnd] } }, attributes: ['category', 'type', [sequelize.fn('SUM', sequelize.col('amount')), 'total'], [sequelize.fn('COUNT', sequelize.col('id')), 'count']], group: ['category','type'], raw: true }),
+      Transaction.findAll({ where: { userId }, order: [['date','DESC']], limit: 5, raw: true }),
+      Goal.findAll({ where: { userId }, raw: true })
     ]);
 
     // ── Overall summary ──
-    const toMap = (agg) => agg.reduce((m, r) => { m[r._id] = r; return m; }, {});
-    const overall = toMap(overallAgg);
-    const monthly = toMap(monthSummaryAgg);
+    const overall = {}; overallRows.forEach(r => overall[r.type] = r);
+    const monthly = {}; monthSummaryRows.forEach(r => monthly[r.type] = r);
     const summary = {
       overall: {
-        totalIncome: overall.income?.total ?? 0,
-        totalExpense: overall.expense?.total ?? 0,
-        balance: (overall.income?.total ?? 0) - (overall.expense?.total ?? 0),
-        transactionCount: (overall.income?.count ?? 0) + (overall.expense?.count ?? 0)
+        totalIncome: parseFloat(overall.income?.total || 0),
+        totalExpense: parseFloat(overall.expense?.total || 0),
+        balance: (parseFloat(overall.income?.total || 0)) - (parseFloat(overall.expense?.total || 0)),
+        transactionCount: parseInt(overall.income?.count || 0) + parseInt(overall.expense?.count || 0)
       },
       thisMonth: {
-        income: monthly.income?.total ?? 0,
-        expense: monthly.expense?.total ?? 0,
-        balance: (monthly.income?.total ?? 0) - (monthly.expense?.total ?? 0)
+        income: parseFloat(monthly.income?.total || 0),
+        expense: parseFloat(monthly.expense?.total || 0),
+        balance: (parseFloat(monthly.income?.total || 0)) - (parseFloat(monthly.expense?.total || 0))
       },
-      recentTransactions: recent
+      recentTransactions: recentRows
     };
 
     // ── 6-month chart ──
     const sixMonthMap = {};
-    sixMonthAgg.forEach(r => {
-      const key = `${r._id.year}-${r._id.month}`;
+    sixMonthRows.forEach(r => {
+      const key = `${r.year}-${r.month}`;
       if (!sixMonthMap[key]) sixMonthMap[key] = { income: 0, expense: 0 };
-      sixMonthMap[key][r._id.type] = r.total;
+      sixMonthMap[key][r.type] = parseFloat(r.total || 0);
     });
     const monthlyStats = [];
     for (let i = 5; i >= 0; i--) {
@@ -859,32 +737,32 @@ export const getDashboard = async (req, res) => {
 
     // ── Period category stats ──
     const catMap = {};
-    periodAgg.forEach(t => {
+    periodRows.forEach(t => {
       if (!catMap[t.category]) catMap[t.category] = { category: t.category, income: 0, expense: 0, count: 0 };
-      catMap[t.category][t.type] += t.amount;
+      catMap[t.category][t.type] += Number(t.amount);
       catMap[t.category].count++;
     });
     const categoryStats = Object.values(catMap).sort((a, b) => b.expense - a.expense);
 
     // ── Last month category stats ──
     const lastMonthCatMap = {};
-    lastMonthCatAgg.forEach(r => {
-      const cat = r._id.category;
+    lastMonthCatRows.forEach(r => {
+      const cat = r.category;
       if (!lastMonthCatMap[cat]) lastMonthCatMap[cat] = { category: cat, income: 0, expense: 0, count: 0 };
-      lastMonthCatMap[cat][r._id.type] += r.total;
-      lastMonthCatMap[cat].count += r.count;
+      lastMonthCatMap[cat][r.type] += parseFloat(r.total || 0);
+      lastMonthCatMap[cat].count += parseInt(r.count || 0);
     });
     const lastMonthCategoryStats = Object.values(lastMonthCatMap).sort((a, b) => b.expense - a.expense);
 
     // ── Period summary (filtered) ──
-    const periodIncome = periodAgg.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const periodExpense = periodAgg.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const periodIncome = periodRows.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
+    const periodExpense = periodRows.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
     const filteredSummary = {
       income: periodIncome,
       expense: periodExpense,
       balance: periodIncome - periodExpense,
-      transactionCount: periodAgg.length,
-      recentTransactions: periodAgg.slice(0, 5)
+      transactionCount: periodRows.length,
+      recentTransactions: periodRows.slice(0, 5)
     };
 
     // ── Daily fluctuation (last 7 days from period transactions) ──
@@ -895,11 +773,11 @@ export const getDashboard = async (req, res) => {
       const key = d.toISOString().split('T')[0];
       dailyData[key] = { date: key, dateLabel: `${d.getDate()}/${d.getMonth() + 1}`, income: 0, expense: 0, balance: 0, count: 0 };
     }
-    periodAgg.forEach(t => {
+    periodRows.forEach(t => {
       const key = new Date(t.date).toISOString().split('T')[0];
       if (dailyData[key]) {
-        if (t.type === 'income') dailyData[key].income += t.amount;
-        else dailyData[key].expense += t.amount;
+        if (t.type === 'income') dailyData[key].income += Number(t.amount);
+        else dailyData[key].expense += Number(t.amount);
         dailyData[key].count++;
       }
     });
@@ -917,7 +795,7 @@ export const getDashboard = async (req, res) => {
         categoryStats,
         lastMonthCategoryStats,
         dailyFluctuation: dailyArr,
-        goals
+        goals: goalsRows
       }
     });
   } catch (error) {

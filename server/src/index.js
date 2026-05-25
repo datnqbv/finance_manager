@@ -20,7 +20,7 @@ dotenv.config({ path: envPath });
 
 const PORT = process.env.PORT || 5000;
 
-// Connect to MongoDB
+// Connect to SQL Server via Sequelize
 connectDB();
 
 // Serve React static files (production build)

@@ -1,16 +1,14 @@
 /**
  * XGBoost-style Forecasting Service
  * Sử dụng Weighted Ensemble Gradient Boosting để dự báo chi tiêu tháng tiếp theo
- * Thay thế SES + SMA bằng mô hình học máy XGBoost-like predictor
  */
 
-import Transaction from '../models/Transaction.model.js';
 import * as ss from 'simple-statistics';
-import mongoose from 'mongoose';
 
 /**
  * XGBoost-style Weighted Ensemble Forecaster
- * Kết hợp nhiều weak learners (SES, SMA, Linear Trend, ...) theo kiểu Gradient Boosting
+ * Kết hợp nhiều weak learners (Linear Trend, Weighted Recent, Adaptive, Median)
+ * LƯU Ý: Hệ thống hiện chỉ sử dụng XGBoost-style ensemble
  */
 class XGBoostEnsembleForecaster {
   constructor(data) {
@@ -18,23 +16,7 @@ class XGBoostEnsembleForecaster {
     this.n = data.length;
   }
 
-  // Weak Learner 1: Single Exponential Smoothing
-  predictSES(alpha = 0.4) {
-    if (this.n === 0) return 0;
-    let level = this.data[0];
-    for (let i = 1; i < this.n; i++) {
-      level = alpha * this.data[i] + (1 - alpha) * level;
-    }
-    return Math.max(0, level);
-  }
-
-  // Weak Learner 2: Simple Moving Average
-  predictSMA(windowSize = 3) {
-    if (this.n === 0) return 0;
-    const size = Math.min(windowSize, this.n);
-    const avg = ss.mean(this.data.slice(-size));
-    return Math.max(0, avg);
-  }
+  // Weak learners: linear trend, weighted recent, adaptive, median
 
   // Weak Learner 3: Linear Trend Extrapolation
   predictLinearTrend() {
@@ -80,19 +62,24 @@ class XGBoostEnsembleForecaster {
     return Math.max(0, adaptive);
   }
 
+  // Weak Learner: Median of recent values
+  predictMedian() {
+    if (this.n === 0) return 0;
+    const arr = [...this.data];
+    return Math.max(0, ss.median(arr));
+  }
+
   // Gradient Boosting Ensemble - weighted combination of weak learners
   predict() {
     if (this.n === 0) return 0;
     if (this.n === 1) return this.data[0];
     
-    // Get predictions from all weak learners
+    // Get predictions from selected weak learners
     const predictions = [
-      { value: this.predictSES(0.3), weight: 0.25 },
-      { value: this.predictSES(0.4), weight: 0.15 },
-      { value: this.predictSMA(3), weight: 0.20 },
-      { value: this.predictLinearTrend(), weight: 0.15 },
-      { value: this.predictWeightedRecent(), weight: 0.15 },
-      { value: this.predictAdaptive(), weight: 0.10 }
+      { value: this.predictLinearTrend(), weight: 0.35 },
+      { value: this.predictWeightedRecent(), weight: 0.30 },
+      { value: this.predictAdaptive(), weight: 0.20 },
+      { value: this.predictMedian(), weight: 0.15 }
     ];
     
     // Weighted average ensemble

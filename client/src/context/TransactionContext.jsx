@@ -67,7 +67,7 @@ export const TransactionProvider = ({ children }) => {
     try {
       const data = await transactionService.updateTransaction(id, transactionData);
       setTransactions(
-        transactions.map((t) => (t._id === id ? data.data : t))
+        transactions.map((t) => (t.id === id ? data.data : t))
       );
       invalidateTransactionStats();
       toast.success(data.message || 'Cập nhật thành công!');
@@ -82,7 +82,7 @@ export const TransactionProvider = ({ children }) => {
   const deleteTransaction = async (id) => {
     try {
       const data = await transactionService.deleteTransaction(id);
-      setTransactions(transactions.filter((t) => t._id !== id));
+      setTransactions(transactions.filter((t) => t.id !== id));
       invalidateTransactionStats();
       toast.success(data.message || 'Xóa thành công!');
       return { success: true };

@@ -39,7 +39,7 @@ describe('GoalModal — render', () => {
   it('Title "Chỉnh sửa" khi có goal', () => {
     renderModal({
       goal: {
-        _id: 'g1', name: 'Mua xe', targetAmount: 30000000,
+        id: 'g1', name: 'Mua xe', targetAmount: 30000000,
         currentAmount: 0, deadline: '2027-01-01', priority: 'high',
         icon: '🚗', color: '#3b82f6',
       },
@@ -124,7 +124,7 @@ describe('GoalModal — validation', () => {
 
 describe('GoalModal — chỉnh sửa', () => {
   const existing = {
-    _id: 'g1',
+    id: 'g1',
     name: 'Du lịch Nhật Bản',
     description: 'Tiết kiệm đi Nhật',
     targetAmount: 50000000,

@@ -420,7 +420,7 @@ const Transactions = () => {
                 </thead>
                 <tbody>
                   {transactions.map((transaction) => (
-                    <tr key={transaction._id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <tr key={transaction.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
                         {formatDate(transaction.date)}
                       </td>
@@ -450,7 +450,7 @@ const Transactions = () => {
                             <FiEdit2 size={18} />
                           </button>
                           <button
-                            onClick={() => handleDelete(transaction._id)}
+                            onClick={() => handleDelete(transaction.id)}
                             className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
                           >
                             <FiTrash2 size={18} />

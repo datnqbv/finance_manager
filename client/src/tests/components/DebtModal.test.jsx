@@ -32,7 +32,7 @@ describe('DebtModal — render', () => {
 
   it('Title "Sửa khoản nợ" khi chỉnh sửa', () => {
     renderModal({
-      debt: { _id: 'd1', type: 'borrow', personName: 'Nguyễn A', amount: 500000, description: '' }
+      debt: { id: 'd1', type: 'borrow', personName: 'Nguyễn A', amount: 500000, description: '' }
     });
     expect(screen.getByText(/sửa khoản nợ/i)).toBeInTheDocument();
   });
@@ -112,7 +112,7 @@ describe('DebtModal — validation', () => {
 
 describe('DebtModal — chỉnh sửa', () => {
   const existing = {
-    _id: 'd1',
+    id: 'd1',
     type: 'lend',
     personName: 'Nguyễn Văn C',
     amount: 1000000,

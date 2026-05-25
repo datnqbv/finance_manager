@@ -1,12 +1,10 @@
 
-import Transaction from '../models/Transaction.model.js';
-import Category from '../models/Category.model.js';
-import Budget from '../models/Budget.model.js';
-import Goal from '../models/Goal.model.js';
-import Debt from '../models/Debt.model.js';
+import { Transaction, Category, Budget, Goal, Debt, sequelize } from '../models/sequelize/index.js';
+import { searchDocuments } from '../services/meilisearch.service.js';
+import { Op } from 'sequelize';
 
 /**
- * @desc    Global search sử dụng MongoDB Aggregation Pipeline
+ * @desc    Global search sử dụng Sequelize/SQL Server
  * @route   GET /api/search
  * @access  Private
  * @query   q (search query), type (optional: transaction|category|budget|goal|debt|all)
@@ -33,241 +31,39 @@ export const globalSearch = async (req, res) => {
     const searchQuery = q.trim();
     const results = {};
 
-    // Tạo regex cho tìm kiếm không phân biệt hoa thường và dấu
-    const searchRegex = new RegExp(searchQuery, 'i');
+    // Cấu hình filter cho Meilisearch
+    const searchOptions = {
+      filter: [`userId = ${userId}`],
+      limit: parseInt(limit) || 20
+    };
 
-    // 1. SEARCH TRANSACTIONS - Sử dụng Aggregation Pipeline
+    // 1. SEARCH TRANSACTIONS
     if (type === 'all' || type === 'transaction') {
-      results.transactions = await Transaction.aggregate([
-        {
-          // Stage 1: nhóm các transaction của user và lọc theo truy vấn tìm kiếm
-          $match: {
-            userId: req.user._id,
-            $or: [
-              { category: { $regex: searchRegex } },
-              { note: { $regex: searchRegex } },
-              { amount: { $eq: parseFloat(searchQuery) || 0 } }
-            ]
-          }
-        },
-        {
-          // Stage 2: thêm trường relevanceScore dựa trên mức độ phù hợp của kết quả với truy vấn tìm kiếm
-          $addFields: {
-            relevanceScore: {
-              $add: [
-                // Category exact match: +10
-                { $cond: [{ $eq: ['$category', searchQuery] }, 10, 0] },
-                // Category contains: +5
-                { $cond: [{ $regexMatch: { input: '$category', regex: searchRegex } }, 5, 0] },
-                // Note contains: +3
-                { $cond: [{ $regexMatch: { input: '$note', regex: searchRegex } }, 3, 0] },
-                // Amount match: +2
-                { $cond: [{ $eq: ['$amount', parseFloat(searchQuery) || 0] }, 2, 0] }
-              ]
-            },
-            dateFormatted: {
-              $dateToString: { format: '%d/%m/%Y', date: '$date' }
-            }
-          }
-        },
-        {
-          // Stage 3: sắp xếp kết quả theo relevanceScore giảm dần, sau đó theo date giảm dần
-          $sort: { relevanceScore: -1, date: -1 }
-        },
-        {
-          // Stage 4: Limit kết quả trả về
-          $limit: parseInt(limit)
-        },
-        {
-          // Stage 5: Chọn trường cần thiết để trả về
-          $project: {
-            type: 1,
-            category: 1,
-            amount: 1,
-            note: 1,
-            date: 1,
-            dateFormatted: 1,
-            relevanceScore: 1,
-            createdAt: 1
-          }
-        }
-      ]);
+      const msRes = await searchDocuments('transactions', searchQuery, searchOptions);
+      results.transactions = msRes.hits || [];
     }
 
     // 2. SEARCH CATEGORIES
     if (type === 'all' || type === 'category') {
-      results.categories = await Category.aggregate([
-        {
-          $match: {
-            userId: req.user._id,
-            $or: [
-              { name: { $regex: searchRegex } },
-              { description: { $regex: searchRegex } }
-            ]
-          }
-        },
-        {
-          $addFields: {
-            relevanceScore: {
-              $add: [
-                { $cond: [{ $eq: ['$name', searchQuery] }, 10, 0] },
-                { $cond: [{ $regexMatch: { input: '$name', regex: searchRegex } }, 5, 0] }
-              ]
-            }
-          }
-        },
-        {
-          $sort: { relevanceScore: -1, order: 1 }
-        },
-        {
-          $limit: parseInt(limit)
-        }
-      ]);
+      const msRes = await searchDocuments('categories', searchQuery, searchOptions);
+      results.categories = msRes.hits || [];
     }
 
     // 3. SEARCH BUDGETS
     if (type === 'all' || type === 'budget') {
-      results.budgets = await Budget.aggregate([
-        {
-          $match: {
-            userId: req.user._id,
-            $or: [
-              { category: { $regex: searchRegex } },
-              { name: { $regex: searchRegex } }
-            ]
-          }
-        },
-        {
-          $addFields: {
-            relevanceScore: {
-              $add: [
-                { $cond: [{ $eq: ['$category', searchQuery] }, 10, 0] },
-                { $cond: [{ $regexMatch: { input: '$category', regex: searchRegex } }, 5, 0] }
-              ]
-            },
-            // Tính spending percentage
-            spentPercentage: {
-              $multiply: [
-                { $divide: ['$spent', '$limit'] },
-                100
-              ]
-            }
-          }
-        },
-        {
-          $sort: { relevanceScore: -1, createdAt: -1 }
-        },
-        {
-          $limit: parseInt(limit)
-        }
-      ]);
+      const msRes = await searchDocuments('budgets', searchQuery, searchOptions);
+      results.budgets = msRes.hits || [];
     }
 
     // 4. SEARCH GOALS
     if (type === 'all' || type === 'goal') {
-      results.goals = await Goal.aggregate([
-        {
-          $match: {
-            userId: req.user._id,
-            $or: [
-              { name: { $regex: searchRegex } },
-              { description: { $regex: searchRegex } }
-            ]
-          }
-        },
-        {
-          $addFields: {
-            relevanceScore: {
-              $add: [
-                { $cond: [{ $eq: ['$name', searchQuery] }, 10, 0] },
-                { $cond: [{ $regexMatch: { input: '$name', regex: searchRegex } }, 5, 0] }
-              ]
-            },
-            // Tính progress percentage
-            progressPercentage: {
-              $multiply: [
-                { $divide: ['$currentAmount', '$targetAmount'] },
-                100
-              ]
-            },
-            // Tính days remaining
-            daysRemaining: {
-              $dateDiff: {
-                startDate: new Date(),
-                endDate: '$deadline',
-                unit: 'day'
-              }
-            }
-          }
-        },
-        {
-          $sort: { relevanceScore: -1, deadline: 1 }
-        },
-        {
-          $limit: parseInt(limit)
-        }
-      ]);
+      const msRes = await searchDocuments('goals', searchQuery, searchOptions);
+      results.goals = msRes.hits || [];
     }
     // 5. SEARCH DEBTS
     if (type === 'all' || type === 'debt') {
-      const parsedAmount = parseFloat(searchQuery);
-      const isAmountQuery = !Number.isNaN(parsedAmount);
-
-      results.debts = await Debt.aggregate([
-        {
-          $match: {
-            userId: req.user._id,
-            $or: [
-              { personName: { $regex: searchRegex } },
-              { description: { $regex: searchRegex } },
-              ...(isAmountQuery ? [{ amount: { $eq: parsedAmount } }, { remainingAmount: { $eq: parsedAmount } }] : [])
-            ]
-          }
-        },
-        {
-          $addFields: {
-            relevanceScore: {
-              $add: [
-                { $cond: [{ $eq: ['$personName', searchQuery] }, 10, 0] },
-                { $cond: [{ $regexMatch: { input: '$personName', regex: searchRegex } }, 5, 0] },
-                { $cond: [{ $regexMatch: { input: '$description', regex: searchRegex } }, 3, 0] },
-                ...(isAmountQuery ? [
-                  { $cond: [{ $eq: ['$amount', parsedAmount] }, 2, 0] },
-                  { $cond: [{ $eq: ['$remainingAmount', parsedAmount] }, 2, 0] }
-                ] : []),
-                { $cond: [{ $eq: ['$type', 'lend'] }, 1, 0] }
-              ]
-            },
-            dueDateFormatted: {
-              $cond: [
-                { $ifNull: ['$dueDate', false] },
-                { $dateToString: { format: '%d/%m/%Y', date: '$dueDate' } },
-                null
-              ]
-            }
-          }
-        },
-        {
-          $sort: { relevanceScore: -1, createdAt: -1 }
-        },
-        {
-          $limit: parseInt(limit)
-        },
-        {
-          $project: {
-            type: 1,
-            personName: 1,
-            amount: 1,
-            remainingAmount: 1,
-            description: 1,
-            dueDate: 1,
-            dueDateFormatted: 1,
-            status: 1,
-            relevanceScore: 1,
-            createdAt: 1
-          }
-        }
-      ]);
+      const msRes = await searchDocuments('debts', searchQuery, searchOptions);
+      results.debts = msRes.hits || [];
     }
 
     // Calculate total results
@@ -310,86 +106,38 @@ export const advancedSearch = async (req, res) => {
     let results = [];
 
     switch (type) {
-      case 'transaction':
-        const transactionMatch = {
-          userId: req.user._id
-        };
-
-        // Add search query
-        if (query) {
-          transactionMatch.$or = [
-            { category: { $regex: searchRegex } },
-            { note: { $regex: searchRegex } }
-          ];
-        }
-
-        // Add filters
-        if (filters.type) transactionMatch.type = filters.type;
-        if (filters.category) transactionMatch.category = filters.category;
-        if (filters.startDate || filters.endDate) {
-          transactionMatch.date = {};
-          if (filters.startDate) transactionMatch.date.$gte = new Date(filters.startDate);
-          if (filters.endDate) transactionMatch.date.$lte = new Date(filters.endDate);
-        }
-        if (filters.minAmount) transactionMatch.amount = { $gte: parseFloat(filters.minAmount) };
-        if (filters.maxAmount) {
-          transactionMatch.amount = transactionMatch.amount || {};
-          transactionMatch.amount.$lte = parseFloat(filters.maxAmount);
-        }
-
-        results = await Transaction.aggregate([
-          { $match: transactionMatch },
-          {
-            $addFields: {
-              relevanceScore: {
-                $cond: [
-                  { $regexMatch: { input: '$category', regex: searchRegex } },
-                  10,
-                  5
-                ]
-              }
-            }
-          },
-          { $sort: { relevanceScore: -1, date: -1 } },
-          { $limit: 50 }
-        ]);
-        break;
-
-      case 'budget':
-        const budgetMatch = {
-          userId: req.user._id
-        };
-
-        if (query) {
-          budgetMatch.$or = [
-            { category: { $regex: searchRegex } },
-            { name: { $regex: searchRegex } }
-          ];
-        }
-
-        if (filters.isActive !== undefined) budgetMatch.isActive = filters.isActive;
-        if (filters.period) budgetMatch.period = filters.period;
-
-        results = await Budget.aggregate([
-          { $match: budgetMatch },
-          {
-            $addFields: {
-              spentPercentage: {
-                $multiply: [{ $divide: ['$spent', '$limit'] }, 100]
-              }
-            }
-          },
-          { $sort: { createdAt: -1 } },
-          { $limit: 50 }
-        ]);
-        break;
-
-      // Add more cases for other types...
-      default:
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid search type'
+      case 'transaction': {
+        const filtersArray = [`userId = ${userId}`];
+        if (filters.type) filtersArray.push(`type = "${filters.type}"`);
+        if (filters.category) filtersArray.push(`category = "${filters.category}"`);
+        // Note: Meilisearch numeric dates need to be UNIX timestamp. If date is not indexed as numeric in Meilisearch, filtering by date range won't work out of the box unless handled. 
+        // For amounts:
+        if (filters.minAmount) filtersArray.push(`amount >= ${filters.minAmount}`);
+        if (filters.maxAmount) filtersArray.push(`amount <= ${filters.maxAmount}`);
+        
+        const msRes = await searchDocuments('transactions', query || '', {
+          filter: filtersArray,
+          limit: 50,
+          sort: ['date:desc']
         });
+        results = msRes.hits || [];
+        break;
+      }
+      case 'budget': {
+        const filtersArray = [`userId = ${userId}`];
+        if (filters.isActive !== undefined) filtersArray.push(`isActive = ${filters.isActive}`);
+        if (filters.period) filtersArray.push(`period = "${filters.period}"`);
+
+        const msRes = await searchDocuments('budgets', query || '', {
+          filter: filtersArray,
+          limit: 50,
+          sort: ['createdAt:desc']
+        });
+        results = msRes.hits || [];
+        break;
+      }
+      default:
+        return res.status(400).json({ success: false, message: 'Invalid search type' });
     }
 
     res.json({
@@ -426,67 +174,23 @@ export const getSearchSuggestions = async (req, res) => {
 
     const searchRegex = new RegExp('^' + q, 'i'); // Starts with
 
-    // Get unique categories from transactions
-    const categorySuggestions = await Transaction.aggregate([
-      {
-        $match: {
-          userId: req.user._id,
-          category: { $regex: searchRegex }
-        }
-      },
-      {
-        $group: {
-          _id: '$category',
-          count: { $sum: 1 },
-          totalAmount: { $sum: '$amount' }
-        }
-      },
-      {
-        $sort: { count: -1 }
-      },
-      {
-        $limit: 5
-      },
-      {
-        $project: {
-          _id: 0,
-          text: '$_id',
-          type: 'category',
-          count: 1,
-          totalAmount: 1
-        }
-      }
-    ]);
+    // Category suggestions: fetch categories starting with query, dedupe and sort by frequency
+    const txs = await Transaction.findAll({ where: { userId, category: { [Op.like]: `${q}%` } }, attributes: ['category', 'amount'], raw: true, limit: 200 });
+    const counts = {};
+    for (const t of txs) {
+      if (!t.category) continue;
+      counts[t.category] = counts[t.category] ? counts[t.category] + 1 : 1;
+    }
+    const categorySuggestions = Object.entries(counts)
+      .sort((a,b) => b[1] - a[1])
+      .slice(0,5)
+      .map(([text,count]) => ({ text, type: 'category', count }));
 
-    // Get recent notes
-    const noteSuggestions = await Transaction.aggregate([
-      {
-        $match: {
-          userId: req.user._id,
-          note: { $regex: searchRegex, $ne: '' }
-        }
-      },
-      {
-        $group: {
-          _id: '$note',
-          count: { $sum: 1 }
-        }
-      },
-      {
-        $sort: { count: -1 }
-      },
-      {
-        $limit: 3
-      },
-      {
-        $project: {
-          _id: 0,
-          text: '$_id',
-          type: 'note',
-          count: 1
-        }
-      }
-    ]);
+    // Note suggestions: recent non-empty notes starting with q
+    const notes = await Transaction.findAll({ where: { userId, note: { [Op.like]: `${q}%` }, note: { [Op.ne]: '' } }, attributes: ['note'], raw: true, limit: 50 });
+    const noteCounts = {};
+    for (const n of notes) { noteCounts[n.note] = (noteCounts[n.note] || 0) + 1; }
+    const noteSuggestions = Object.entries(noteCounts).slice(0,3).map(([text,count]) => ({ text, type: 'note', count }));
 
     const suggestions = [...categorySuggestions, ...noteSuggestions];
 

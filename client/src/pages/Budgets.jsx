@@ -34,7 +34,7 @@ const Budgets = () => {
   // hàm handleDelete được sử dụng để xử lý việc xóa một ngân sách khi người dùng nhấn nút xóa, nó sẽ hiển thị một hộp thoại xác nhận để đảm bảo rằng người dùng thực sự muốn xóa ngân sách đó, giúp tránh những thao tác nhầm lẫn có thể dẫn đến việc mất dữ liệu quan trọng. Nếu người dùng xác nhận, hàm sẽ gọi API deleteBudget để xóa ngân sách khỏi hệ thống và cập nhật lại danh sách ngân sách trên giao diện người dùng.
   const handleDelete = async (budget) => {
     if (window.confirm(isEnglish ? `Delete budget "${budget.categoryName || 'Total'}"?` : `Xóa ngân sách "${budget.categoryName || 'Tổng'}"?`)) {
-      try { await deleteBudget(budget._id); } catch {}
+      try { await deleteBudget(budget.id); } catch {}
     }
   };
   // hàm handleSave được sử dụng để xử lý việc lưu một ngân sách mới hoặc cập nhật một ngân sách hiện có khi người dùng hoàn thành việc nhập thông tin trong modal, nó sẽ kiểm tra xem đang ở chế độ chỉnh sửa hay tạo mới và gọi API tương ứng (updateBudget hoặc createBudget) để lưu dữ liệu vào hệ thống, sau đó đóng modal và tải lại danh sách ngân sách để cập nhật thông tin mới nhất trên trang ngân sách, giúp người dùng quản lý các ngân sách của mình một cách hiệu quả sau khi thực hiện các thao tác thêm hoặc chỉnh sửa.
@@ -44,7 +44,7 @@ const Budgets = () => {
   };
   // hàm handleSave được sử dụng để xử lý việc lưu một ngân sách mới hoặc cập nhật một ngân sách hiện có khi người dùng hoàn thành việc nhập thông tin trong modal, nó sẽ kiểm tra xem đang ở chế độ chỉnh sửa hay tạo mới và gọi API tương ứng (updateBudget hoặc createBudget) để lưu dữ liệu vào hệ thống, sau đó đóng modal và tải lại danh sách ngân sách để cập nhật thông tin mới nhất trên trang ngân sách, giúp người dùng quản lý các ngân sách của mình một cách hiệu quả sau khi thực hiện các thao tác thêm hoặc chỉnh sửa. Đồng thời, hàm này cũng sẽ hiển thị thông báo thành công hoặc lỗi cho người dùng sau khi thực hiện thao tác lưu ngân sách mới hoặc cập nhật ngân sách hiện có trên trang ngân sách, giúp cải thiện trải nghiệm người dùng bằng cách cung cấp phản hồi rõ ràng về kết quả của hành động của họ, giúp họ hiểu rằng thao tác đã được thực hiện thành công hoặc nếu có lỗi xảy ra, họ sẽ biết để có thể thử lại hoặc điều chỉnh thông tin nhập vào cho phù hợp.
   const handleSave = async (formData) => {
-    if (editingBudget) await updateBudget(editingBudget._id, formData);
+    if (editingBudget) await updateBudget(editingBudget.id, formData);
     else await createBudget(formData);
   };
 
@@ -133,7 +133,7 @@ const Budgets = () => {
               {progressBudgets.length > 0 ? progressBudgets.map((budget) => {
                 const pct = Math.min(budget.percentage || 0, 100);
                 return (
-                  <div key={budget._id}>
+                  <div key={budget.id}>
                     <div className="mb-1 flex items-center justify-between text-xs text-[#586074] dark:text-[#a9afbb]">
                       <span className="font-semibold truncate pr-3">{budget.categoryName || (isEnglish ? 'Total expense' : 'Tổng chi tiêu')}</span>
                       <span className="font-bold">{budget.percentage || 0}%</span>
@@ -177,7 +177,7 @@ const Budgets = () => {
                 const spentHeight = Math.max(cap, 8);
                 const remainingHeight = Math.max(100 - cap, 8);
                 return (
-                  <div key={budget._id} className="flex-1 min-w-0">
+                  <div key={budget.id} className="flex-1 min-w-0">
                     <div className="h-[170px] flex items-end justify-center gap-2">
                       <div className="w-4 rounded-t-md bg-[#003d2d]" style={{ height: `${spentHeight}%` }} />
                       <div className="w-4 rounded-t-md bg-[#b7c4d8]" style={{ height: `${remainingHeight}%` }} />
@@ -276,7 +276,7 @@ const Budgets = () => {
                 const effectiveAmount = budget.effectiveAmount ?? budget.amount;
                 const remaining = effectiveAmount - budget.currentSpending;
                 return (
-                  <tr key={budget._id} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
+                  <tr key={budget.id} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
                     <td className="px-5 py-4">
                       <p className="font-bold text-[#1d2430] dark:text-[#eef1f5]">{budget.categoryName || (isEnglish ? 'Total expense' : 'Tổng chi tiêu')}</p>
                       <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{budget.percentage}% {isEnglish ? 'used' : 'đã sử dụng'}</p>

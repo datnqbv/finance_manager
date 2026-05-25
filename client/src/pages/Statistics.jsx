@@ -143,7 +143,7 @@ const Statistics = () => {
     if (c.status === 'fulfilled') {
       const raw = c.value?.data || [];
       bundle.catStats = raw.map(item => ({
-        _id: item.category,
+        category: item.category,
         totalIncome: item.income || 0,
         totalExpense: item.expense || 0,
         count: item.count || 0,
@@ -301,7 +301,7 @@ const Statistics = () => {
   // ── Overview tab ─────────────────────────────────────────────────────────
   const OverviewTab = () => {
     const pieData = catStats.filter(c => c.totalExpense > 0).slice(0, 8).map((c, i) => ({
-      name: c._id, value: c.totalExpense, fill: COLORS[i % COLORS.length]
+      name: c.category, value: c.totalExpense, fill: COLORS[i % COLORS.length]
     }));
     const topExpCats = [...catStats].sort((a, b) => b.totalExpense - a.totalExpense).slice(0, 6);
     const maxExp = topExpCats[0]?.totalExpense || 1;
@@ -399,9 +399,9 @@ const Statistics = () => {
             </div>
             <div className="space-y-2.5">
               {topExpCats.map((c, i) => (
-                <div key={c._id}>
+                <div key={c.category}>
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="font-semibold text-[#1f2733] dark:text-[#e8edf4] truncate max-w-[60%]">{c._id}</span>
+                    <span className="font-semibold text-[#1f2733] dark:text-[#e8edf4] truncate max-w-[60%]">{c.category}</span>
                     <span className="font-bold text-[#df4b4b] dark:text-[#ff8f8f] flex-shrink-0 ml-2">{fmt(c.totalExpense)}</span>
                   </div>
                   <div className="h-1.5 bg-[#e1e7f0] dark:bg-[#2e3542] rounded-full overflow-hidden">
@@ -422,7 +422,7 @@ const Statistics = () => {
               <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Income/Expense by Category' : 'Thu/Chi theo danh mục'}</h3>
             </div>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={catStats.slice(0,8).map(c => ({ name: c._id, [isEnglish ? 'Income' : 'Thu nhập']: c.totalIncome||0, [isEnglish ? 'Expense' : 'Chi tiêu']: c.totalExpense||0 }))} margin={{left: 0, right: 0}}>
+              <BarChart data={catStats.slice(0,8).map(c => ({ name: c.category, [isEnglish ? 'Income' : 'Thu nhập']: c.totalIncome||0, [isEnglish ? 'Expense' : 'Chi tiêu']: c.totalExpense||0 }))} margin={{left: 0, right: 0}}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" className="dark:stroke-[#222]"/>
                 <XAxis dataKey="name" tick={{fontSize:10}} interval={0} angle={-30} textAnchor="end" height={50}/>
                 <YAxis tickFormatter={fmtShort} tick={{fontSize:10}} width={45}/>
@@ -970,7 +970,7 @@ const Statistics = () => {
               <div className="rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
                 <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{isEnglish ? 'Top expense category' : 'Danh mục chi cao nhất'}</p>
                 <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">
-                  {monthTopCategory ? `${monthTopCategory._id}: ${fmt(monthTopCategory.totalExpense)}` : (isEnglish ? 'No category data yet' : 'Chưa có dữ liệu danh mục')}
+                  {monthTopCategory ? `${monthTopCategory.category}: ${fmt(monthTopCategory.totalExpense)}` : (isEnglish ? 'No category data yet' : 'Chưa có dữ liệu danh mục')}
                 </p>
               </div>
             </div>
