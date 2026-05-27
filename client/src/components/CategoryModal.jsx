@@ -77,42 +77,42 @@ const CategoryModal = ({ category, onClose, onSave }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-[#111111] rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-modal-fade">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-[#191d25] border border-gray-100 dark:border-gray-800 transition-all transform scale-100 max-h-[90vh] overflow-y-auto animate-modal-scale">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-[#2a2a2a]">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             {category ? 'Sửa danh mục' : 'Thêm danh mục'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-[#222222] rounded-lg transition"
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-[#232936] dark:hover:text-gray-300"
           >
-            <FiX size={24} className="text-gray-500 dark:text-gray-400" />
+            <FiX size={18} />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {/* Icon Picker */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
               Icon
             </label>
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setShowIconPicker(!showIconPicker)}
-                className="w-full flex items-center justify-between p-4 border-2 border-gray-300 dark:border-[#2a2a2a] rounded-lg hover:border-primary-500 dark:hover:border-primary-500 transition"
+                className="w-full flex items-center justify-between p-3.5 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-[#004b38] dark:hover:border-emerald-500 bg-gray-50 dark:bg-[#232936] transition"
               >
-                <span className="text-4xl">{formData.icon}</span>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  Click để chọn icon
+                <span className="text-3xl">{formData.icon}</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">
+                  Bấm để chọn icon
                 </span>
               </button>
 
               {showIconPicker && (
-                <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-lg shadow-xl z-10 max-h-60 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-white dark:bg-[#232936] border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl z-10 max-h-60 overflow-y-auto">
                   <div className="grid grid-cols-8 gap-2">
                     {EMOJI_ICONS.map((emoji, index) => (
                       <button
@@ -122,8 +122,8 @@ const CategoryModal = ({ category, onClose, onSave }) => {
                           setFormData(prev => ({ ...prev, icon: emoji }));
                           setShowIconPicker(false);
                         }}
-                        className={`text-2xl p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#222222] transition ${
-                          formData.icon === emoji ? 'bg-primary-100 dark:bg-primary-900/30 ring-2 ring-primary-500' : ''
+                        className={`text-2xl p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-[#191d25] transition ${
+                          formData.icon === emoji ? 'bg-emerald-50 dark:bg-emerald-500/10 ring-2 ring-[#004b38] dark:ring-emerald-500' : ''
                         }`}
                       >
                         {emoji}
@@ -137,7 +137,7 @@ const CategoryModal = ({ category, onClose, onSave }) => {
 
           {/* Color Picker */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
               Màu sắc
             </label>
             <div className="grid grid-cols-10 gap-2">
@@ -146,8 +146,8 @@ const CategoryModal = ({ category, onClose, onSave }) => {
                   key={color}
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, color }))}
-                  className={`w-10 h-10 rounded-lg transition-transform hover:scale-110 ${
-                    formData.color === color ? 'ring-2 ring-offset-2 ring-gray-400 dark:ring-offset-[#111111] scale-110' : ''
+                  className={`w-7 h-7 rounded-lg transition-transform hover:scale-110 ${
+                    formData.color === color ? 'ring-2 ring-offset-2 ring-gray-400 dark:ring-offset-[#191d25] scale-110' : ''
                   }`}
                   style={{ backgroundColor: color }}
                 />
@@ -158,13 +158,13 @@ const CategoryModal = ({ category, onClose, onSave }) => {
                 type="color"
                 value={formData.color}
                 onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-                className="w-12 h-12 rounded-lg cursor-pointer"
+                className="w-10 h-10 rounded-xl cursor-pointer border border-gray-200 dark:border-gray-800 bg-transparent"
               />
               <input
                 type="text"
                 value={formData.color}
                 onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-                className="input flex-1"
+                className="input text-sm flex-1"
                 placeholder="#3B82F6"
               />
             </div>
@@ -172,7 +172,7 @@ const CategoryModal = ({ category, onClose, onSave }) => {
 
           {/* Category Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
               Tên danh mục <span className="text-red-500">*</span>
             </label>
             <input
@@ -180,25 +180,25 @@ const CategoryModal = ({ category, onClose, onSave }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className={`input ${errors.name ? 'border-red-500' : ''}`}
+              className={`input text-sm ${errors.name ? 'border-red-500' : ''}`}
               placeholder="Ví dụ: Ăn uống, Lương, ..."
               maxLength={50}
             />
             {errors.name && (
-              <p className="mt-1 text-sm text-red-500">{errors.name}</p>
+              <p className="mt-1 text-xs text-red-500">{errors.name}</p>
             )}
           </div>
 
           {/* Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
               Loại danh mục
             </label>
             <select
               name="type"
               value={formData.type}
               onChange={handleChange}
-              className="input"
+              className="input text-sm"
             >
               <option value="income">Thu nhập</option>
               <option value="expense">Chi tiêu</option>
@@ -208,7 +208,7 @@ const CategoryModal = ({ category, onClose, onSave }) => {
 
           {/* Order */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
               Thứ tự hiển thị
             </label>
             <input
@@ -216,30 +216,30 @@ const CategoryModal = ({ category, onClose, onSave }) => {
               name="order"
               value={formData.order}
               onChange={handleChange}
-              className="input"
+              className="input text-sm"
               min="0"
               placeholder="0"
             />
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-[11px] text-gray-400">
               Số càng nhỏ sẽ hiển thị càng trước
             </p>
           </div>
 
           {/* Preview */}
-          <div className="p-4 bg-gray-50 dark:bg-[#0a0a0a] rounded-lg border-2 border-dashed border-gray-300 dark:border-[#2a2a2a]">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Xem trước:</p>
+          <div className="p-4 bg-gray-50 dark:bg-[#232936] rounded-xl border border-dashed border-gray-200 dark:border-gray-800">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Xem trước:</p>
             <div className="flex items-center gap-3">
               <div 
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                className="w-11 h-11 rounded-xl flex items-center justify-center text-xl transition-all"
                 style={{ backgroundColor: formData.color + '20', color: formData.color }}
               >
                 {formData.icon}
               </div>
               <div>
-                <p className="font-semibold text-gray-900 dark:text-white">
+                <p className="font-bold text-sm text-gray-900 dark:text-white">
                   {formData.name || 'Tên danh mục'}
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-gray-400 dark:text-gray-500">
                   {formData.type === 'income' ? 'Thu nhập' : formData.type === 'expense' ? 'Chi tiêu' : 'Cả hai'}
                 </p>
               </div>
@@ -247,7 +247,7 @@ const CategoryModal = ({ category, onClose, onSave }) => {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
             <button
               type="button"
               onClick={onClose}

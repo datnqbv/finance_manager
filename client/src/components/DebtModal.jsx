@@ -49,40 +49,43 @@ const DebtModal = ({ debt, onClose, onSave }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-[#111111] rounded-2xl shadow-2xl w-full max-w-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-modal-fade">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-[#191d25] border border-gray-100 dark:border-gray-800 transition-all transform scale-100 max-h-[90vh] overflow-y-auto animate-modal-scale">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-[#222]">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             {debt ? 'Sửa khoản nợ' : 'Thêm khoản nợ'}
           </h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-[#222] rounded-xl transition">
-            <FiX size={20} className="text-gray-500" />
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-[#232936] dark:hover:text-gray-300"
+          >
+            <FiX size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {/* Type toggle */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Loại</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Loại</label>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { value: 'borrow', label: '💸 Tôi đang vay', desc: 'Tôi nợ người khác', color: 'border-red-400 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400' },
-                { value: 'lend',   label: '🤝 Tôi cho vay', desc: 'Người khác nợ tôi', color: 'border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' },
+                { value: 'borrow', label: '💸 Tôi đang vay', desc: 'Tôi nợ người khác', activeColor: 'border-rose-300 bg-rose-50/50 dark:border-rose-950/40 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 ring-2 ring-rose-500' },
+                { value: 'lend',   label: '🤝 Tôi cho vay', desc: 'Người khác nợ tôi', activeColor: 'border-[#cfe2d8] bg-emerald-50/50 dark:border-[#335348] dark:bg-[#273332] text-[#0d3a2d] dark:text-[#b9e4d2] ring-2 ring-emerald-500' },
               ].map(opt => (
                 <button
                   key={opt.value}
                   type="button"
                   onClick={() => change('type', opt.value)}
                   disabled={!!debt}
-                  className={`p-3 rounded-xl border-2 text-left transition-all ${
+                  className={`p-3 rounded-xl border text-left transition-all ${
                     form.type === opt.value
-                      ? opt.color + ' border-opacity-100'
-                      : 'border-gray-200 dark:border-[#2a2a2a] text-gray-400 hover:border-gray-300'
+                      ? opt.activeColor
+                      : 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-[#232936] text-gray-400 hover:border-gray-300 dark:hover:border-gray-700'
                   } ${debt ? 'opacity-60 cursor-not-allowed' : ''}`}
                 >
                   <p className="text-sm font-bold">{opt.label}</p>
-                  <p className="text-xs opacity-75 mt-0.5">{opt.desc}</p>
+                  <p className="text-[10px] opacity-75 mt-0.5">{opt.desc}</p>
                 </button>
               ))}
             </div>
@@ -90,7 +93,7 @@ const DebtModal = ({ debt, onClose, onSave }) => {
 
           {/* Person name */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
               {form.type === 'lend' ? 'Tên người vay' : 'Tên người cho vay'} <span className="text-red-500">*</span>
             </label>
             <input
@@ -98,14 +101,14 @@ const DebtModal = ({ debt, onClose, onSave }) => {
               value={form.personName}
               onChange={e => change('personName', e.target.value)}
               placeholder="Nhập tên..."
-              className={`input ${errors.personName ? 'border-red-500' : ''}`}
+              className={`input text-sm ${errors.personName ? 'border-red-500' : ''}`}
             />
             {errors.personName && <p className="text-xs text-red-500 mt-1">{errors.personName}</p>}
           </div>
 
           {/* Amount */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
               Số tiền <span className="text-red-500">*</span>
             </label>
             <CurrencyInput
@@ -119,20 +122,20 @@ const DebtModal = ({ debt, onClose, onSave }) => {
 
           {/* Due date */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
               Hạn trả (tùy chọn)
             </label>
             <input
               type="date"
               value={form.dueDate}
               onChange={e => change('dueDate', e.target.value)}
-              className="input"
+              className="input text-sm"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
               Ghi chú
             </label>
             <textarea
@@ -140,12 +143,12 @@ const DebtModal = ({ debt, onClose, onSave }) => {
               onChange={e => change('description', e.target.value)}
               placeholder="Mô tả khoản nợ..."
               rows={2}
-              className="input resize-none"
+              className="input text-sm resize-none"
             />
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
             <button type="button" onClick={onClose} className="flex-1 btn btn-secondary">Hủy</button>
             <button type="submit" className="flex-1 btn btn-primary">{debt ? 'Cập nhật' : 'Tạo mới'}</button>
           </div>

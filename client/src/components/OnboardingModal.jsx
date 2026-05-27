@@ -61,13 +61,13 @@ const OnboardingModal = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-modal-fade">
+      <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl dark:bg-[#191d25] border border-gray-100 dark:border-gray-800 transition-all transform scale-100 overflow-hidden animate-modal-scale">
 
         {/* Progress bar */}
-        <div className="h-1 bg-gray-100 dark:bg-[#222222]">
+        <div className="h-1 bg-gray-100 dark:bg-gray-800/60">
           <div
-            className="h-full bg-emerald-500 transition-all duration-500"
+            className="h-full bg-[#004b38] dark:bg-emerald-500 transition-all duration-500"
             style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
           />
         </div>
@@ -75,7 +75,7 @@ const OnboardingModal = ({ onClose }) => {
         {/* Step 1: Welcome */}
         {step === 0 && (
           <div className="p-8 text-center">
-            <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-4xl shadow-lg shadow-emerald-500/30">
+            <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-4xl shadow-lg shadow-emerald-500/10 dark:shadow-emerald-500/5">
               👋
             </div>
             <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">
@@ -86,13 +86,13 @@ const OnboardingModal = ({ onClose }) => {
               Hãy để chúng tôi giúp bạn thiết lập nhanh trong <strong>30 giây</strong>. 🚀
             </p>
 
-            <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-4 mb-6 text-left space-y-2">
+            <div className="bg-emerald-50/50 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/20 rounded-xl p-4 mb-6 text-left space-y-2">
               {[
                 { emoji: '📂', text: 'Tạo danh mục thu chi mặc định' },
                 { emoji: '💸', text: 'Sẵn sàng nhập giao dịch đầu tiên' },
                 { emoji: '📊', text: 'Xem thống kê & phân tích chi tiêu' },
               ].map(item => (
-                <div key={item.text} className="flex items-center gap-3 text-sm text-emerald-700 dark:text-emerald-400">
+                <div key={item.text} className="flex items-center gap-3 text-sm text-[#0d3a2d] dark:text-emerald-400 font-semibold">
                   <span>{item.emoji}</span>
                   <span>{item.text}</span>
                 </div>
@@ -102,13 +102,13 @@ const OnboardingModal = ({ onClose }) => {
             <div className="flex gap-3">
               <button
                 onClick={handleSkip}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-[#2a2a2a] text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition"
+                className="flex-1 py-2.5 rounded-xl btn btn-secondary text-sm"
               >
                 Bỏ qua
               </button>
               <button
                 onClick={() => setStep(1)}
-                className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold flex items-center justify-center gap-2 transition"
+                className="flex-1 py-2.5 rounded-xl bg-[#003d2d] hover:bg-[#00523d] text-white text-sm font-semibold flex items-center justify-center gap-2 transition"
               >
                 Bắt đầu <FiArrowRight size={15} />
               </button>
@@ -136,8 +136,8 @@ const OnboardingModal = ({ onClose }) => {
                     onClick={() => toggleCategory(i)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm text-left transition-all ${
                       selected.has(i)
-                        ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                        : 'border-gray-200 dark:border-[#2a2a2a] text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-[#3a3a3a]'
+                        ? 'border-emerald-300 bg-emerald-50/50 dark:border-emerald-800/40 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 ring-2 ring-emerald-500'
+                        : 'border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#232936] text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-700'
                     }`}
                   >
                     <span className="text-lg">{cat.icon}</span>
@@ -149,7 +149,7 @@ const OnboardingModal = ({ onClose }) => {
             </div>
 
             {/* Expense */}
-            <p className="text-xs font-bold text-red-500 mb-2 uppercase tracking-wide">Chi tiêu</p>
+            <p className="text-xs font-bold text-rose-500 mb-2 uppercase tracking-wide">Chi tiêu</p>
             <div className="grid grid-cols-2 gap-2 mb-5">
               {DEFAULT_CATEGORIES.filter(c => c.type === 'expense').map((cat) => {
                 const i = DEFAULT_CATEGORIES.indexOf(cat);
@@ -159,8 +159,8 @@ const OnboardingModal = ({ onClose }) => {
                     onClick={() => toggleCategory(i)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm text-left transition-all ${
                       selected.has(i)
-                        ? 'border-red-300 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400'
-                        : 'border-gray-200 dark:border-[#2a2a2a] text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-[#3a3a3a]'
+                        ? 'border-rose-300 bg-rose-50/50 dark:border-rose-950/40 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 ring-2 ring-rose-500'
+                        : 'border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#232936] text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-700'
                     }`}
                   >
                     <span className="text-lg">{cat.icon}</span>
@@ -174,14 +174,14 @@ const OnboardingModal = ({ onClose }) => {
             <div className="flex gap-3">
               <button
                 onClick={() => setStep(0)}
-                className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-[#2a2a2a] text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition flex items-center gap-1"
+                className="px-4 py-2.5 rounded-xl btn btn-secondary text-sm flex items-center gap-1"
               >
                 <FiArrowLeft size={14} /> Quay lại
               </button>
               <button
                 onClick={handleCreateCategories}
                 disabled={creating || selected.size === 0}
-                className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white text-sm font-semibold flex items-center justify-center gap-2 transition"
+                className="flex-1 py-2.5 rounded-xl bg-[#003d2d] hover:bg-[#00523d] disabled:opacity-60 text-white text-sm font-semibold flex items-center justify-center gap-2 transition"
               >
                 {creating ? (
                   <>
@@ -201,7 +201,7 @@ const OnboardingModal = ({ onClose }) => {
         {/* Step 3: Done */}
         {step === 2 && (
           <div className="p-8 text-center">
-            <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-4xl shadow-lg shadow-emerald-500/30 animate-bounce">
+            <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-4xl shadow-lg shadow-emerald-500/10 dark:shadow-emerald-500/5 animate-bounce">
               🎉
             </div>
             <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">
@@ -216,13 +216,13 @@ const OnboardingModal = ({ onClose }) => {
             <div className="flex flex-col gap-2">
               <button
                 onClick={() => handleFinish('/transactions')}
-                className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold flex items-center justify-center gap-2 transition"
+                className="w-full py-3 rounded-xl bg-[#003d2d] hover:bg-[#00523d] text-white text-sm font-semibold flex items-center justify-center gap-2 transition"
               >
                 💸 Thêm giao dịch đầu tiên
               </button>
               <button
                 onClick={() => handleFinish('/dashboard')}
-                className="w-full py-2.5 rounded-xl border border-gray-200 dark:border-[#2a2a2a] text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition"
+                className="w-full py-2.5 rounded-xl btn btn-secondary text-sm"
               >
                 Về Dashboard
               </button>
