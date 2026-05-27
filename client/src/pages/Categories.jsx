@@ -198,7 +198,8 @@ const Categories = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full text-sm">
             <thead>
                 <tr className="border-b border-[#eceff4] bg-[#f8f9fb] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:bg-[#232936] dark:text-[#9fa7b4]">
@@ -288,6 +289,79 @@ const Categories = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card List View */}
+        <div className="block md:hidden divide-y divide-gray-100 dark:divide-gray-800">
+          {paginatedCategories.length > 0 ? paginatedCategories.map((category) => (
+            <div key={category.id} className="py-4 px-1 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-9 w-9 rounded-lg flex items-center justify-center text-lg shrink-0" style={{ backgroundColor: `${category.color || '#10b981'}1f` }}>
+                    {category.icon || '📁'}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate font-bold text-[#1d2430] dark:text-[#eef1f5] text-sm">{category.name}</p>
+                    <p className="text-[11px] text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'Code' : 'Mã'}: {category.id?.slice(-6)}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+                    category.type === 'income'
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                      : category.type === 'expense'
+                      ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                      : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                  }`}>
+                    {category.type === 'income' ? (isEnglish ? 'Income' : 'Thu nhập') : category.type === 'expense' ? (isEnglish ? 'Expense' : 'Chi tiêu') : (isEnglish ? 'Both' : 'Cả hai')}
+                  </span>
+                  {category.isDefault ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[#edf0f5] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#5b6474] dark:bg-[#313846] dark:text-[#bac4d3]">
+                      <FiLock size={9} /> {isEnglish ? 'Default' : 'Mặc định'}
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-[#e4f8ef] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#12724e] dark:bg-[#213c33] dark:text-[#80d6b4]">
+                      {isEnglish ? 'Custom' : 'Tùy chỉnh'}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mt-1 text-xs text-gray-500">
+                <div className="flex items-center gap-4">
+                  <div className="inline-flex items-center gap-1">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: category.color || '#10b981' }} />
+                    <span className="font-semibold text-gray-800 dark:text-gray-250">{category.color || '#10b981'}</span>
+                  </div>
+                  <div>
+                    <span>{isEnglish ? 'Order: ' : 'Thứ tự: '}</span>
+                    <span className="font-bold text-gray-800 dark:text-gray-250">{category.order || 0}</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => handleEdit(category)}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc]"
+                  >
+                    <FiEdit2 size={13} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(category)}
+                    disabled={category.isDefault}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#f8eceb] text-[#a55d56] hover:bg-[#f4dedc] disabled:opacity-40 dark:bg-[#3b2a2c] dark:text-[#e0a29a]"
+                  >
+                    <FiTrash2 size={13} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )) : (
+            <div className="text-center py-8 text-sm text-gray-500">
+              {isEnglish ? 'No categories match the current filter.' : 'Không có danh mục phù hợp với bộ lọc hiện tại.'}
+            </div>
+          )}
         </div>
 
         {totalItems > 0 && (

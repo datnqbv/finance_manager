@@ -367,7 +367,7 @@ const Layout = ({ children }) => {
               </div>
 
               {/* Right: Actions */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 {/* Mobile: icon search button — bấm mở overlay */}
                 <button
                   onClick={() => setShowMobileSearch(true)}
@@ -490,7 +490,7 @@ const Layout = ({ children }) => {
                     setShowUserMenu(true);
                     setShowSettings(true);
                   }}
-                  className="p-2 rounded-md bg-white dark:bg-[#242730]
+                  className="hidden sm:inline-flex p-2 rounded-md bg-white dark:bg-[#242730]
                            hover:bg-[#eef4fb] dark:hover:bg-[#2b2f39]
                            border border-[#d3d7df] dark:border-[#353943]
                            transition-colors duration-200"

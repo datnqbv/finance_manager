@@ -534,7 +534,8 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b border-[#eceff4] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:text-[#9fa7b4]">
@@ -585,9 +586,7 @@ const Dashboard = () => {
                           : tx.type === 'expense' 
                           ? 'text-[#1a1f29] dark:text-[#f0f3f7]' 
                           : 'text-blue-600 dark:text-blue-400'
-                      }`}>
-                        {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : '⇆ '}{formatCurrency(tx.amount)}
-                      </td>
+                      }`}>{tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : '⇆ '}{formatCurrency(tx.amount)}</td>
                       <td className="px-5 py-4 text-right">
                         <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${(isEnglish ? status === 'Completed' : status === 'Hoàn tất') ? 'bg-[#e6ecfa] text-[#6177a6] dark:bg-[#313b54] dark:text-[#a9bcdf]' : 'bg-[#f4ddd7] text-[#9a5f54] dark:bg-[#4a3330] dark:text-[#d7a59b]'}`}>
                           {status}
@@ -604,6 +603,59 @@ const Dashboard = () => {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card List View */}
+          <div className="block md:hidden divide-y divide-gray-100 dark:divide-[#242a35]">
+            {recentTransactions.length > 0 ? (
+              recentTransactions.map((tx, idx) => {
+                const status = idx % 3 === 2 ? (isEnglish ? 'Processing' : 'Đang xử lý') : (isEnglish ? 'Completed' : 'Hoàn tất');
+                return (
+                  <div key={tx.id || idx} className="p-3 flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-sm text-gray-900 dark:text-white">{tx.note || tx.category}</p>
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400">{formatDate(tx.date)}</p>
+                      </div>
+                      <p className={`text-sm font-black ${
+                        tx.type === 'income' 
+                          ? 'text-[#0c7a58] dark:text-[#54d5aa]' 
+                          : tx.type === 'expense' 
+                          ? 'text-[#1a1f29] dark:text-[#f0f3f7]' 
+                          : 'text-blue-600 dark:text-blue-400'
+                      }`}>
+                        {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : '⇆ '}{formatCurrency(tx.amount)}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
+                        <span className="font-semibold text-gray-700 dark:text-gray-300">{tx.category}</span>
+                        {tx.wallet && (
+                          <span className="flex items-center gap-1 text-[11px] text-gray-400">
+                            <span>• {tx.wallet.icon}</span>
+                            <span>{tx.wallet.name}</span>
+                            {tx.type === 'transfer' && tx.toWallet && (
+                              <>
+                                <span>→</span>
+                                <span>{tx.toWallet.icon}</span>
+                                <span>{tx.toWallet.name}</span>
+                              </>
+                            )}
+                          </span>
+                        )}
+                      </div>
+                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${(isEnglish ? status === 'Completed' : status === 'Hoàn tất') ? 'bg-[#e6ecfa] text-[#6177a6] dark:bg-[#313b54] dark:text-[#a9bcdf]' : 'bg-[#f4ddd7] text-[#9a5f54] dark:bg-[#4a3330] dark:text-[#d7a59b]'}`}>
+                        {status}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="py-8 text-center text-sm text-gray-500">
+                {isEnglish ? 'No matching transactions.' : 'Không có giao dịch phù hợp.'}
+              </div>
+            )}
           </div>
         </div>
       </div>

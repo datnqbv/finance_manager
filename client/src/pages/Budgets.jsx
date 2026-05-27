@@ -171,7 +171,7 @@ const Budgets = () => {
           </div>
 
           {analysisBudgets.length > 0 ? (
-            <div className="flex items-end gap-4 h-[220px] px-2">
+            <div className="flex items-end gap-2 sm:gap-4 h-[220px] px-2">
               {analysisBudgets.map((budget) => {
                 const cap = Math.min(budget.percentage || 0, 100);
                 const spentHeight = Math.max(cap, 8);
@@ -257,7 +257,8 @@ const Budgets = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-[#eceff4] bg-[#f8f9fb] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:bg-[#232936] dark:text-[#9fa7b4]">
@@ -327,6 +328,77 @@ const Budgets = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card List View */}
+        <div className="block md:hidden divide-y divide-gray-100 dark:divide-gray-800">
+          {paginatedBudgets.length > 0 ? paginatedBudgets.map((budget) => {
+            const status = getStatus(budget.percentage || 0);
+            const effectiveAmount = budget.effectiveAmount ?? budget.amount;
+            const remaining = effectiveAmount - budget.currentSpending;
+            return (
+              <div key={budget.id} className="py-4 px-1 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-base text-gray-900 dark:text-white">
+                      {budget.categoryName || (isEnglish ? 'Total expense' : 'Tổng chi tiêu')}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {periodLabel(budget.period)}
+                    </p>
+                  </div>
+                  <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${status.bg} ${status.text}`}>
+                    {status.label}
+                  </span>
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full mt-1">
+                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>{budget.percentage}% {isEnglish ? 'used' : 'đã dùng'}</span>
+                    <span className={`font-semibold ${remaining >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                      {remaining >= 0 ? (isEnglish ? 'Left: ' : 'Còn lại: ') : (isEnglish ? 'Over: ' : 'Vượt: ')}
+                      {formatCurrency(Math.abs(remaining))}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-[#e3e7ee] dark:bg-[#2d3340]">
+                    <div className={`h-full rounded-full ${status.bar}`} style={{ width: `${Math.min(budget.percentage || 0, 100)}%` }} />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50 dark:border-gray-800/40 text-xs">
+                  <div className="flex gap-4">
+                    <div>
+                      <span className="text-gray-400 dark:text-gray-500 block">{isEnglish ? 'Spent' : 'Đã chi'}</span>
+                      <span className="font-semibold text-gray-800 dark:text-gray-200">{formatCurrency(budget.currentSpending)}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 dark:text-gray-500 block">{isEnglish ? 'Budget' : 'Ngân sách'}</span>
+                      <span className="font-semibold text-gray-800 dark:text-gray-200">{formatCurrency(effectiveAmount)}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => handleEdit(budget)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc]"
+                    >
+                      <FiEdit2 size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(budget)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#f8eceb] text-[#a55d56] hover:bg-[#f4dedc] dark:bg-[#3b2a2c] dark:text-[#e0a29a]"
+                    >
+                      <FiTrash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }) : (
+            <div className="text-center py-8 text-sm text-gray-500">
+              {isEnglish ? 'No budgets match the current filter.' : 'Không có ngân sách phù hợp với bộ lọc hiện tại.'}
+            </div>
+          )}
         </div>
 
         {totalItems > 0 && (

@@ -182,7 +182,7 @@ const Debts = () => {
           </div>
 
           {chartDebts.length > 0 ? (
-            <div className="flex items-end gap-4 h-[220px] px-2">
+            <div className="flex items-end gap-2 sm:gap-4 h-[220px] px-2">
               {chartDebts.map((debt) => {
                 const progress = paidPct(debt);
                 const reachedHeight = Math.max(progress, 8);
@@ -285,7 +285,8 @@ const Debts = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-[#eceff4] bg-[#f8f9fb] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:bg-[#232936] dark:text-[#9fa7b4]">
@@ -460,6 +461,161 @@ const Debts = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card List View */}
+        <div className="block md:hidden divide-y divide-gray-100 dark:divide-gray-800">
+          {paginatedDebts.length > 0 ? paginatedDebts.map((debt) => {
+            const isLend = debt.type === 'lend';
+            const isSettled = debt.status === 'settled';
+            const pct = paidPct(debt);
+            const days = daysUntil(debt.dueDate);
+            const overdue = days !== null && days < 0 && !isSettled;
+            const expanded = expandedId === debt.id;
+            const paying = payingId === debt.id;
+
+            return (
+              <div key={debt.id} className="py-4 px-1 flex flex-col gap-2.5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="font-bold text-base text-gray-900 dark:text-white">{debt.personName}</h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{debt.description || (isEnglish ? 'Personal debt record' : 'Khoản vay mượn cá nhân')}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${isLend ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'}`}>
+                      {isLend ? (isEnglish ? 'Lend' : 'Cho vay') : (isEnglish ? 'Borrow' : 'Tôi vay')}
+                    </span>
+                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${isSettled ? 'bg-[#e4f8ef] text-[#12724e] dark:bg-[#213c33] dark:text-[#80d6b4]' : 'bg-[#fff4db] text-[#8a6a2f] dark:bg-[#3a3422] dark:text-[#f0d493]'}`}>
+                      {isSettled ? (isEnglish ? 'Settled' : 'Tất toán') : (isEnglish ? 'Active' : 'Đang hoạt động')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="w-full">
+                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>{pct}% {isEnglish ? 'paid' : 'đã trả'}</span>
+                    <span className={`font-semibold ${isLend ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                      {isEnglish ? 'Remaining: ' : 'Còn lại: '}{fmt(debt.remainingAmount)}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-[#e3e7ee] dark:bg-[#2d3340]">
+                    <div className={`h-full rounded-full ${isSettled ? 'bg-gray-400' : isLend ? 'bg-emerald-600' : 'bg-red-500'}`} style={{ width: `${Math.min(pct, 100)}%` }} />
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                  <div>
+                    <span>{isEnglish ? 'Original: ' : 'Gốc: '}</span>
+                    <span className="font-bold text-gray-800 dark:text-gray-200">{fmt(debt.amount)}</span>
+                  </div>
+                  {debt.dueDate ? (
+                    <span className={`font-semibold ${overdue ? 'text-red-600 dark:text-red-400' : 'text-[#6f7480] dark:text-[#a4acba]'}`}>
+                      {isEnglish ? 'Due: ' : 'Hạn: '}{overdue ? (isEnglish ? `Overdue ${Math.abs(days)} days` : `Quá hạn ${Math.abs(days)} ngày`) : fmtDate(debt.dueDate)}
+                    </span>
+                  ) : <span>—</span>}
+                </div>
+
+                {/* Mobile Actions */}
+                <div className="flex items-center justify-between gap-2 mt-1 pt-2.5 border-t border-gray-50 dark:border-gray-800/40">
+                  <div className="flex gap-1">
+                    {!isSettled && (
+                      <button
+                        onClick={() => {
+                          setPayingId(paying ? null : debt.id);
+                          setExpandedId(null);
+                          setPayAmount('');
+                          setPayNote('');
+                        }}
+                        className="inline-flex h-8 px-2.5 items-center justify-center rounded-lg bg-[#e7f6ee] text-[#1f7d55] hover:bg-[#d7f0e4] dark:bg-[#204236] dark:text-[#8edbbb] text-xs font-bold gap-1"
+                      >
+                        <FiPlus size={13} /> {isEnglish ? 'Pay' : 'Thanh toán'}
+                      </button>
+                    )}
+                    {(debt.paymentHistory?.length ?? 0) > 0 && (
+                      <button
+                        onClick={() => {
+                          setExpandedId(expanded ? null : debt.id);
+                          setPayingId(null);
+                        }}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc]"
+                        title={isEnglish ? 'History' : 'Lịch sử'}
+                      >
+                        <FiClock size={13} />
+                      </button>
+                    )}
+                    {!isSettled && (
+                      <button
+                        onClick={() => settleDebt(debt.id)}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#e6ecfa] text-[#6177a6] hover:bg-[#dce6fa] dark:bg-[#313b54] dark:text-[#a9bcdf]"
+                        title={isEnglish ? 'Settle' : 'Tất toán'}
+                      >
+                        <FiCheck size={13} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => { setEditingDebt(debt); setShowModal(true); }}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc]"
+                    >
+                      <FiEdit2 size={13} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(debt)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#f8eceb] text-[#a55d56] hover:bg-[#f4dedc] dark:bg-[#3b2a2c] dark:text-[#e0a29a]"
+                    >
+                      <FiTrash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Inline paying section */}
+                {paying && (
+                  <div className="mt-2 p-3 rounded-xl bg-[#f8fbfa] dark:bg-[#1f2d29] border border-emerald-100 dark:border-emerald-950 flex flex-col gap-2">
+                    <CurrencyInput
+                      value={payAmount}
+                      onChange={v => setPayAmount(v)}
+                      placeholder={isEnglish ? 'Amount' : 'Số tiền'}
+                      baseClass="w-full px-3 py-2 text-xs border border-gray-250 dark:border-[#334640] rounded-xl dark:bg-[#18231f] dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                    <input
+                      type="text"
+                      value={payNote}
+                      onChange={e => setPayNote(e.target.value)}
+                      placeholder={isEnglish ? 'Note (optional)...' : 'Ghi chú (tùy chọn)...'}
+                      className="w-full px-3 py-2 text-xs border border-gray-250 dark:border-[#334640] rounded-xl dark:bg-[#18231f] dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                    <div className="flex justify-end gap-2 mt-1">
+                      <button onClick={() => handlePay(debt.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">{isEnglish ? 'Confirm' : 'Xác nhận'}</button>
+                      <button onClick={() => { setPayingId(null); setPayAmount(''); setPayNote(''); }} className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400 px-3 py-1.5 rounded-lg text-xs font-bold transition">{isEnglish ? 'Cancel' : 'Hủy'}</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Inline payment history section */}
+                {expanded && (
+                  <div className="mt-2 p-2 rounded-xl bg-[#f9fafc] dark:bg-[#212734] border border-gray-100 dark:border-gray-800 flex flex-col gap-1.5 max-h-40 overflow-y-auto">
+                    {[...debt.paymentHistory].reverse().map((h, i) => (
+                      <div key={i} className="flex items-start justify-between gap-2 py-1 px-1 border-b border-gray-50 dark:border-gray-800/40 last:border-0">
+                        <div className="min-w-0">
+                          <p className={`text-xs font-semibold ${isLend ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                            {isLend ? '+' : '-'}{fmt(h.amount)}
+                          </p>
+                          {h.note && <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate">{h.note}</p>}
+                        </div>
+                        <p className="text-[9px] text-gray-400 dark:text-gray-500 mt-0.5">{fmtDate(h.date)}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          }) : (
+            <div className="text-center py-8 text-sm text-gray-500">
+              {isEnglish ? 'No debts match the current filter.' : 'Không có khoản nợ phù hợp với bộ lọc hiện tại.'}
+            </div>
+          )}
         </div>
 
         {totalItems > 0 && (

@@ -190,7 +190,7 @@ const Wallets = () => {
             </h3>
             
             <form onSubmit={handleQuickTransfer} className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <label className="block text-[10px] uppercase text-gray-400 font-bold mb-1">{isEnglish ? 'From' : 'Từ ví'}</label>
                   <select
@@ -225,7 +225,7 @@ const Wallets = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <input
                     type="number"
@@ -351,48 +351,87 @@ const Wallets = () => {
             {isEnglish ? 'Loading history...' : 'Đang tải lịch sử...'}
           </div>
         ) : transfers.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-800 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
-                  <th className="py-3 px-4">{isEnglish ? 'Date' : 'Ngày'}</th>
-                  <th className="py-3 px-4">{isEnglish ? 'From Wallet' : 'Ví nguồn'}</th>
-                  <th className="py-3 px-4"></th>
-                  <th className="py-3 px-4">{isEnglish ? 'To Wallet' : 'Ví nhận'}</th>
-                  <th className="py-3 px-4 text-right">{isEnglish ? 'Amount' : 'Số tiền'}</th>
-                  <th className="py-3 px-4">{isEnglish ? 'Note' : 'Ghi chú'}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transfers.map((tx) => (
-                  <tr key={tx.id} className="border-b border-gray-50 dark:border-gray-800/40 hover:bg-gray-50 dark:hover:bg-gray-800/20 transition-colors">
-                    <td className="py-3 px-4 text-gray-500 dark:text-gray-400">
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 dark:border-gray-800 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
+                    <th className="py-3 px-4">{isEnglish ? 'Date' : 'Ngày'}</th>
+                    <th className="py-3 px-4">{isEnglish ? 'From Wallet' : 'Ví nguồn'}</th>
+                    <th className="py-3 px-4"></th>
+                    <th className="py-3 px-4">{isEnglish ? 'To Wallet' : 'Ví nhận'}</th>
+                    <th className="py-3 px-4 text-right">{isEnglish ? 'Amount' : 'Số tiền'}</th>
+                    <th className="py-3 px-4">{isEnglish ? 'Note' : 'Ghi chú'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transfers.map((tx) => (
+                    <tr key={tx.id} className="border-b border-gray-50 dark:border-gray-800/40 hover:bg-gray-50 dark:hover:bg-gray-800/20 transition-colors">
+                      <td className="py-3 px-4 text-gray-500 dark:text-gray-400">
+                        {new Date(tx.date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })}
+                      </td>
+                      <td className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
+                        <span className="mr-1">{tx.wallet?.icon || '💳'}</span>
+                        {tx.wallet?.name || (isEnglish ? 'Source Wallet' : 'Ví nguồn')}
+                      </td>
+                      <td className="py-3 px-4 text-blue-500 text-center font-bold">→</td>
+                      <td className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
+                        <span className="mr-1">{tx.toWallet?.icon || '💳'}</span>
+                        {tx.toWallet?.name || (isEnglish ? 'Target Wallet' : 'Ví nhận')}
+                      </td>
+                      <td className="py-3 px-4 text-right font-bold text-blue-600 dark:text-blue-400">
+                        {formatCurrency(tx.amount)}
+                      </td>
+                      <td className="py-3 px-4 text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
+                        {tx.note || '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card List View */}
+            <div className="block md:hidden divide-y divide-gray-100 dark:divide-gray-800">
+              {transfers.map((tx) => (
+                <div key={tx.id} className="py-3 px-1 flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <span>
                       {new Date(tx.date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', {
                         day: '2-digit',
                         month: '2-digit',
                         year: 'numeric'
                       })}
-                    </td>
-                    <td className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
-                      <span className="mr-1">{tx.wallet?.icon || '💳'}</span>
-                      {tx.wallet?.name || (isEnglish ? 'Source Wallet' : 'Ví nguồn')}
-                    </td>
-                    <td className="py-3 px-4 text-blue-500 text-center font-bold">→</td>
-                    <td className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
-                      <span className="mr-1">{tx.toWallet?.icon || '💳'}</span>
-                      {tx.toWallet?.name || (isEnglish ? 'Target Wallet' : 'Ví nhận')}
-                    </td>
-                    <td className="py-3 px-4 text-right font-bold text-blue-600 dark:text-blue-400">
+                    </span>
+                    <span className="font-bold text-blue-600 dark:text-blue-400 text-sm">
                       {formatCurrency(tx.amount)}
-                    </td>
-                    <td className="py-3 px-4 text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
-                      {tx.note || '-'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs font-semibold text-gray-755 dark:text-gray-300">
+                    <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
+                      {tx.wallet?.icon || '💳'} {tx.wallet?.name || (isEnglish ? 'Source' : 'Nguồn')}
+                    </span>
+                    <span className="text-blue-550">→</span>
+                    <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
+                      {tx.toWallet?.icon || '💳'} {tx.toWallet?.name || (isEnglish ? 'Target' : 'Nhận')}
+                    </span>
+                  </div>
+
+                  {tx.note && (
+                    <p className="text-xs text-gray-400 dark:text-gray-500 italic mt-0.5">
+                      {isEnglish ? 'Note: ' : 'Ghi chú: '}{tx.note}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             {isEnglish ? 'No transfers logged yet.' : 'Chưa có lịch sử chuyển khoản nào.'}

@@ -431,7 +431,8 @@ const Transactions = () => {
       <div className="tx-area-table card tx-table-card">
         {transactions.length > 0 ? (
           <>
-            <div className="overflow-x-auto">
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
@@ -515,6 +516,83 @@ const Transactions = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Card List View */}
+            <div className="block md:hidden divide-y divide-gray-100 dark:divide-gray-800">
+              {transactions.map((transaction) => (
+                <div key={transaction.id} className="py-3 px-1 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-sm text-gray-900 dark:text-white">
+                        {transaction.note || transaction.category}
+                      </p>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                        {formatDate(transaction.date)}
+                      </p>
+                    </div>
+                    <p className={`text-sm font-black ${
+                      transaction.type === 'income' 
+                        ? 'text-green-600 dark:text-green-400' 
+                        : transaction.type === 'expense' 
+                        ? 'text-red-600 dark:text-red-400' 
+                        : 'text-blue-600 dark:text-blue-400'
+                    }`}>
+                      {transaction.type === 'income' ? '+' : transaction.type === 'expense' ? '-' : '⇆ '}
+                      {formatCurrency(transaction.amount)}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                        {transaction.category}
+                      </span>
+                      {transaction.wallet && (
+                        <span className="text-[11px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                          <span>{transaction.wallet.icon}</span>
+                          <span>{transaction.wallet.name}</span>
+                          {transaction.type === 'transfer' && transaction.toWallet && (
+                            <>
+                              <span>→</span>
+                              <span>{transaction.toWallet.icon}</span>
+                              <span>{transaction.toWallet.name}</span>
+                            </>
+                          )}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <span className={
+                        transaction.type === 'income' 
+                          ? 'badge-income text-[9px] px-2 py-0.5' 
+                          : transaction.type === 'expense' 
+                          ? 'badge-expense text-[9px] px-2 py-0.5' 
+                          : 'badge-transfer text-[9px] px-2 py-0.5'
+                      }>
+                        {transaction.type === 'income'
+                          ? (isEnglish ? 'Income' : 'Thu nhập')
+                          : transaction.type === 'expense'
+                          ? (isEnglish ? 'Expense' : 'Chi tiêu')
+                          : (isEnglish ? 'Transfer' : 'Chuyển khoản')}
+                      </span>
+                      <button
+                        onClick={() => handleEdit(transaction)}
+                        className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition"
+                      >
+                        <FiEdit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(transaction.id)}
+                        className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
+                      >
+                        <FiTrash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Pagination */}

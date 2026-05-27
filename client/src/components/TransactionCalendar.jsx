@@ -19,10 +19,10 @@ const TransactionCalendar = ({
   // Build calendar grid (always 6 rows × 7 cols)
   const { cells, monthLabel } = useMemo(() => {
     const firstDay = new Date(year, month - 1, 1);
-    const lastDay  = new Date(year, month, 0);
+    const lastDay = new Date(year, month, 0);
     // Monday-based: Mon=0 … Sun=6
     const startOffset = (firstDay.getDay() + 6) % 7;
-    const totalDays   = lastDay.getDate();
+    const totalDays = lastDay.getDate();
 
     const cells = [];
     for (let i = 0; i < 42; i++) {
@@ -58,11 +58,11 @@ const TransactionCalendar = ({
   // dùng để xác định ngày hiện tại và áp dụng kiểu dáng đặc biệt cho ô ngày đó trên lịch, giúp người dùng dễ dàng nhận biết ngày hôm nay trong giao diện lịch, từ đó thuận tiện hơn trong việc theo dõi và quản lý các giao dịch tài chính hàng ngày.
   const prevMonth = () => {
     if (month === 1) onMonthChange(year - 1, 12);
-    else             onMonthChange(year, month - 1);
+    else onMonthChange(year, month - 1);
   };
   const nextMonth = () => {
     if (month === 12) onMonthChange(year + 1, 1);
-    else              onMonthChange(year, month + 1);
+    else onMonthChange(year, month + 1);
   };
   const goToday = () => {
     onMonthChange(today.getFullYear(), today.getMonth() + 1);
@@ -70,11 +70,11 @@ const TransactionCalendar = ({
 
   // chọn một ngày cụ thể để xem chi tiết giao dịch của ngày đó, giúp người dùng có cái nhìn chi tiết về thu/chi trong ngày, từ đó dễ dàng theo dõi và điều chỉnh kế hoạch tài chính hàng ngày. 
   const selectedDayTxs = selectedDay ? (byDay[selectedDay] || []) : [];
-  const selectedIncome  = selectedDayTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const selectedIncome = selectedDayTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const selectedExpense = selectedDayTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
   // Month totals
-  const monthIncome  = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const monthIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const monthExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
   return (
@@ -127,13 +127,12 @@ const TransactionCalendar = ({
         {WEEKDAYS.map(d => (
           <div
             key={d}
-            className={`text-center text-xs font-semibold py-1.5 rounded-lg ${
-              d === 'CN'
+            className={`text-center text-xs font-semibold py-1.5 rounded-lg ${d === 'CN'
                 ? 'text-red-500 dark:text-red-400'
                 : d === 'T7'
-                ? 'text-blue-500 dark:text-blue-400'
-                : 'text-gray-500 dark:text-gray-400'
-            }`}
+                  ? 'text-blue-500 dark:text-blue-400'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}
           >
             {d}
           </div>
@@ -147,13 +146,13 @@ const TransactionCalendar = ({
             return <div key={`empty-${idx}`} className="aspect-square" />;
           }
 
-          const key       = toKey(day);
-          const dayTxs    = byDay[key] || [];
-          const income    = dayTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-          const expense   = dayTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-          const isToday   = key === todayKey;
+          const key = toKey(day);
+          const dayTxs = byDay[key] || [];
+          const income = dayTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+          const expense = dayTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+          const isToday = key === todayKey;
           const isSelected = key === selectedDay;
-          const hasTxs    = dayTxs.length > 0;
+          const hasTxs = dayTxs.length > 0;
 
           // Day-of-week: Sunday = col 7 (idx % 7 === 6 since Mon-based), Saturday = col 6 (idx%7===5)
           const colPos = idx % 7; // 0=Mon ... 5=Sat ... 6=Sun
@@ -168,25 +167,24 @@ const TransactionCalendar = ({
                 ${isSelected
                   ? 'bg-emerald-500 shadow-lg shadow-emerald-500/30'
                   : isToday
-                  ? 'bg-emerald-50 dark:bg-emerald-500/10 ring-2 ring-emerald-400'
-                  : hasTxs
-                  ? 'bg-gray-50 dark:bg-[#1a1a1a] hover:bg-gray-100 dark:hover:bg-[#222]'
-                  : 'hover:bg-gray-50 dark:hover:bg-[#1a1a1a]'}
+                    ? 'bg-emerald-50 dark:bg-emerald-500/10 ring-2 ring-emerald-400'
+                    : hasTxs
+                      ? 'bg-gray-50 dark:bg-[#1a1a1a] hover:bg-gray-100 dark:hover:bg-[#222]'
+                      : 'hover:bg-gray-50 dark:hover:bg-[#1a1a1a]'}
               `}
               style={{ minHeight: '70px' }}
             >
               {/* Date number */}
-              <span className={`text-xs font-bold self-end mr-0.5 mt-0.5 ${
-                isSelected
+              <span className={`text-xs font-bold self-end mr-0.5 mt-0.5 ${isSelected
                   ? 'text-white'
                   : isToday
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : isSun
-                  ? 'text-red-500 dark:text-red-400'
-                  : isSat
-                  ? 'text-blue-500 dark:text-blue-400'
-                  : 'text-gray-700 dark:text-gray-300'
-              }`}>
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : isSun
+                      ? 'text-red-500 dark:text-red-400'
+                      : isSat
+                        ? 'text-blue-500 dark:text-blue-400'
+                        : 'text-gray-700 dark:text-gray-300'
+                }`}>
                 {day}
               </span>
 
@@ -194,30 +192,27 @@ const TransactionCalendar = ({
               {hasTxs && (
                 <div className="w-full mt-auto space-y-0.5 px-0.5">
                   {income > 0 && (
-                    <div className={`text-[10px] font-semibold truncate leading-tight px-1 py-0.5 rounded ${
-                      isSelected
+                    <div className={`text-[10px] font-semibold truncate leading-tight px-1 py-0.5 rounded ${isSelected
                         ? 'text-emerald-100 bg-emerald-600/50'
                         : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10'
-                    }`}>
+                      }`}>
                       +{formatCurrency(income)}
                     </div>
                   )}
                   {expense > 0 && (
-                    <div className={`text-[10px] font-semibold truncate leading-tight px-1 py-0.5 rounded ${
-                      isSelected
+                    <div className={`text-[10px] font-semibold truncate leading-tight px-1 py-0.5 rounded ${isSelected
                         ? 'text-red-100 bg-red-600/40'
                         : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10'
-                    }`}>
+                      }`}>
                       -{formatCurrency(expense)}
                     </div>
                   )}
                   {/* tx count dot */}
                   <div className={`flex justify-end ${isSelected ? 'opacity-70' : ''}`}>
-                    <span className={`text-[9px] px-1 rounded-full ${
-                      isSelected
+                    <span className={`text-[9px] px-1 rounded-full ${isSelected
                         ? 'text-white/80'
                         : 'text-gray-400 dark:text-gray-500'
-                    }`}>
+                      }`}>
                       {dayTxs.length} giao dịch
                     </span>
                   </div>
@@ -268,11 +263,10 @@ const TransactionCalendar = ({
                   key={t.id}
                   className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-[#1a1a1a] hover:bg-gray-100 dark:hover:bg-[#222] transition group/row"
                 >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm ${
-                    t.type === 'income'
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm ${t.type === 'income'
                       ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600'
                       : 'bg-red-100 dark:bg-red-500/15 text-red-500'
-                  }`}>
+                    }`}>
                     {t.type === 'income' ? '▲' : '▼'}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -283,11 +277,10 @@ const TransactionCalendar = ({
                       <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{t.note}</p>
                     )}
                   </div>
-                  <span className={`text-sm font-bold flex-shrink-0 ${
-                    t.type === 'income'
+                  <span className={`text-sm font-bold flex-shrink-0 ${t.type === 'income'
                       ? 'text-emerald-600 dark:text-emerald-400'
                       : 'text-red-500 dark:text-red-400'
-                  }`}>
+                    }`}>
                     {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
                   </span>
                   <div className="flex gap-1 opacity-0 group-hover/row:opacity-100 transition">
