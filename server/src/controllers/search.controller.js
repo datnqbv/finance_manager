@@ -1,7 +1,7 @@
 
 import { Transaction, Category, Budget, Goal, Debt, sequelize } from '../models/sequelize/index.js';
-import { searchDocuments } from '../services/meilisearch.service.js';
 import { Op } from 'sequelize';
+import { getSearchCondition } from '../utils/fts.js';
 
 /**
  * @desc    Global search sử dụng Sequelize/SQL Server
@@ -31,52 +31,50 @@ export const globalSearch = async (req, res) => {
     const searchQuery = q.trim();
     const results = {};
 
-    // Cấu hình filter cho Meilisearch
-    const searchOptions = {
-      filter: [`userId = ${userId}`],
-      limit: parseInt(limit) || 20
-    };
-
-    // 1. SEARCH TRANSACTIONS
+    // 1. SEARCH TRANSACTIONS (DB fallback / FTS)
     if (type === 'all' || type === 'transaction') {
-      const msRes = await searchDocuments('transactions', searchQuery, searchOptions);
-      results.transactions = msRes.hits || [];
+      const whereTx = { userId };
+      whereTx[Op.and] = [getSearchCondition(['category', 'note'], searchQuery)];
+      const txs = await Transaction.findAll({ where: whereTx, limit: parseInt(limit) || 20, raw: true });
+      results.transactions = txs;
     }
 
     // 2. SEARCH CATEGORIES
     if (type === 'all' || type === 'category') {
-      const msRes = await searchDocuments('categories', searchQuery, searchOptions);
-      results.categories = msRes.hits || [];
+      const whereCat = { userId };
+      whereCat[Op.and] = [getSearchCondition('name', searchQuery)];
+      const cats = await Category.findAll({ where: whereCat, limit: parseInt(limit) || 20, raw: true });
+      results.categories = cats;
     }
 
     // 3. SEARCH BUDGETS
     if (type === 'all' || type === 'budget') {
-      const msRes = await searchDocuments('budgets', searchQuery, searchOptions);
-      results.budgets = msRes.hits || [];
+      const whereBud = { userId };
+      whereBud[Op.and] = [getSearchCondition('categoryName', searchQuery)];
+      const buds = await Budget.findAll({ where: whereBud, limit: parseInt(limit) || 20, raw: true });
+      results.budgets = buds;
     }
 
     // 4. SEARCH GOALS
     if (type === 'all' || type === 'goal') {
-      const msRes = await searchDocuments('goals', searchQuery, searchOptions);
-      results.goals = msRes.hits || [];
+      const whereGoal = { userId };
+      whereGoal[Op.and] = [getSearchCondition(['name', 'description'], searchQuery)];
+      const goals = await Goal.findAll({ where: whereGoal, limit: parseInt(limit) || 20, raw: true });
+      results.goals = goals;
     }
+
     // 5. SEARCH DEBTS
     if (type === 'all' || type === 'debt') {
-      const msRes = await searchDocuments('debts', searchQuery, searchOptions);
-      results.debts = msRes.hits || [];
+      const whereDebt = { userId };
+      whereDebt[Op.and] = [getSearchCondition(['personName', 'description'], searchQuery)];
+      const debtsRes = await Debt.findAll({ where: whereDebt, limit: parseInt(limit) || 20, raw: true });
+      results.debts = debtsRes;
     }
 
     // Calculate total results
     const total = Object.values(results).reduce((sum, arr) => sum + (arr?.length || 0), 0);
 
-    res.json({
-      success: true,
-      data: {
-        ...results,
-        total,
-        query: searchQuery
-      }
-    });
+    res.json({ success: true, data: { ...results, total, query: searchQuery } });
 
   } catch (error) {
     console.error('Search error:', error);
@@ -107,33 +105,35 @@ export const advancedSearch = async (req, res) => {
 
     switch (type) {
       case 'transaction': {
-        const filtersArray = [`userId = ${userId}`];
-        if (filters.type) filtersArray.push(`type = "${filters.type}"`);
-        if (filters.category) filtersArray.push(`category = "${filters.category}"`);
-        // Note: Meilisearch numeric dates need to be UNIX timestamp. If date is not indexed as numeric in Meilisearch, filtering by date range won't work out of the box unless handled. 
-        // For amounts:
-        if (filters.minAmount) filtersArray.push(`amount >= ${filters.minAmount}`);
-        if (filters.maxAmount) filtersArray.push(`amount <= ${filters.maxAmount}`);
-        
-        const msRes = await searchDocuments('transactions', query || '', {
-          filter: filtersArray,
-          limit: 50,
-          sort: ['date:desc']
-        });
-        results = msRes.hits || [];
+        const where = { userId };
+        if (filters.type) where.type = filters.type;
+        if (filters.category) where.category = filters.category;
+        if (filters.minAmount) where.amount = { ...(where.amount || {}), [Op.gte]: filters.minAmount };
+        if (filters.maxAmount) where.amount = { ...(where.amount || {}), [Op.lte]: filters.maxAmount };
+        if (filters.startDate || filters.endDate) {
+          where.date = {};
+          if (filters.startDate) where.date[Op.gte] = new Date(filters.startDate);
+          if (filters.endDate) where.date[Op.lte] = new Date(filters.endDate);
+        }
+
+        if (query && query.trim()) {
+          where[Op.and] = [getSearchCondition(['category', 'note'], query)];
+        }
+
+        const txs = await Transaction.findAll({ where, limit: 50, order: [['date','DESC']], raw: true });
+        results = txs || [];
         break;
       }
       case 'budget': {
-        const filtersArray = [`userId = ${userId}`];
-        if (filters.isActive !== undefined) filtersArray.push(`isActive = ${filters.isActive}`);
-        if (filters.period) filtersArray.push(`period = "${filters.period}"`);
+        const where = { userId };
+        if (filters.isActive !== undefined) where.isActive = filters.isActive;
+        if (filters.period) where.period = filters.period;
+        if (query && query.trim()) {
+          where[Op.and] = [getSearchCondition('categoryName', query)];
+        }
 
-        const msRes = await searchDocuments('budgets', query || '', {
-          filter: filtersArray,
-          limit: 50,
-          sort: ['createdAt:desc']
-        });
-        results = msRes.hits || [];
+        const buds = await Budget.findAll({ where, limit: 50, order: [['createdAt','DESC']], raw: true });
+        results = buds || [];
         break;
       }
       default:

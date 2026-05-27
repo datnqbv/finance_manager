@@ -1,112 +1,302 @@
 # Personal Finance Manager
 
-Ứng dụng web full-stack quản lý chi tiêu cá nhân, tập trung vào 3 bài toán chính: theo dõi dòng tiền, kiểm soát ngân sách và ra quyết định dựa trên dữ liệu thống kê.
+Personal Finance Manager là ứng dụng web full-stack quản lý chi tiêu cá nhân, được xây dựng để giải quyết bài toán theo dõi thu chi, kiểm soát ngân sách, đặt mục tiêu tài chính và tra cứu dữ liệu nhanh bằng tìm kiếm toàn cục.
 
-README này được viết theo hướng nhà tuyển dụng có thể đọc nhanh trong 1-2 phút để nắm rõ dự án làm gì, sử dụng công nghệ gì và thể hiện năng lực kỹ thuật ra sao.
+Ứng dụng được tách rõ thành hai phần: frontend chạy bằng React/Vite và backend chạy bằng Node.js/Express, kết nối với SQL Server qua Sequelize. Tìm kiếm toàn cục được thiết kế để sử dụng một FTS engine; hiện đang sử dụng truy vấn cơ sở dữ liệu làm fallback tạm thời.
 
-## 1) Tổng quan nhanh
+## Mục tiêu của dự án
 
-- Bài toán: người dùng cá nhân thường khó theo dõi thu chi, dễ vượt ngân sách và thiếu góc nhìn tổng quan tài chính.
-- Giải pháp: ứng dụng hỗ trợ quản lý giao dịch, mục tiêu tiết kiệm, khoản nợ, thống kê biểu đồ, tìm kiếm toàn cục và xuất báo cáo.
-- Giá trị kỹ thuật: kiến trúc tách `client/server`, REST API, xác thực JWT + refresh token, có kiểm thử cho cả frontend và backend.
+- Giúp người dùng quản lý thu nhập, chi tiêu và số dư theo từng ngày, tháng hoặc khoảng thời gian tùy chọn.
+- Hỗ trợ theo dõi ngân sách, khoản nợ, mục tiêu tiết kiệm và lịch sử giao dịch.
+- Cung cấp biểu đồ, thống kê, dự báo và các công cụ nhập/xuất dữ liệu để hỗ trợ phân tích tài chính cá nhân.
+- Tích hợp các luồng đăng nhập hiện đại như Google OAuth và xử lý gửi email để phục vụ khôi phục mật khẩu, thông báo hoặc liên hệ.
 
-# Hướng Dẫn Chạy Dự Án
+## Tính năng nổi bật
 
-Tài liệu này hướng dẫn cách chạy dự án **Personal Finance Manager / Quản lý chi tiêu** trên máy local, bao gồm cấu hình môi trường, chạy frontend, backend và cách build file `.exe` trên Windows nếu cần.
+- Đăng ký, đăng nhập, đăng xuất, quên mật khẩu và xác thực bằng JWT.
+- Đăng nhập bằng Google OAuth.
+- Quản lý giao dịch thu chi, danh mục, ngân sách, khoản nợ và mục tiêu tiết kiệm.
+- Dashboard tổng quan với số liệu, biểu đồ, thống kê theo thời gian.
+- Tìm kiếm toàn cục (FTS engine) — pluggable; hiện tạm dùng truy vấn DB như fallback.
+- Import dữ liệu từ file, export báo cáo ra Excel/PDF.
+- Trang admin để quản lý người dùng, phản hồi liên hệ và dữ liệu hệ thống.
+- Thông báo, dark mode, onboarding và các tiện ích UI giúp trải nghiệm tốt hơn.
 
-## 1. Yêu cầu trước khi chạy
+## Công nghệ sử dụng
 
-Trước khi bắt đầu, hãy đảm bảo máy của bạn đã có:
+### Frontend
 
-- `Node.js` phiên bản LTS trở lên.
-- `npm` đi kèm với Node.js.
-- `SQL Server` đang chạy local hoặc một instance/host hợp lệ.
-- Tài khoản Google và `Google OAuth Client ID` nếu muốn dùng đăng nhập Google.
-- Tài khoản email Gmail và `App Password` nếu muốn dùng chức năng gửi mail.
+- React 18
+- Vite
+- React Router DOM
+- Axios
+- Tailwind CSS
+- Framer Motion và GSAP cho animation
+- Chart.js, react-chartjs-2, Recharts cho biểu đồ
+- React Toastify cho thông báo
+- @react-oauth/google cho đăng nhập Google
+- jsPDF, jspdf-autotable, XLSX để xuất báo cáo và file dữ liệu
+- Vitest, Testing Library cho kiểm thử UI
 
-### 2. Tạo file môi trường cho backend
+### Backend
 
-Trong thư mục `server`, tạo file `.env` dựa trên nội dung mẫu và điền giá trị thật của bạn.
+- Node.js
+- Express
+- Sequelize ORM
+- SQL Server thông qua `tedious`
+- JWT cho xác thực
+- bcryptjs cho hash mật khẩu
+- Nodemailer cho gửi email
+	- Full-text search (FTS) — pluggable engine (search engine removed; DB fallback in use)
+- csv-parse và multer cho import file
+- `ml` và service dự báo xu hướng chi tiêu
+- Jest và Supertest cho kiểm thử API
 
-Các biến quan trọng:
+### Hạ tầng dữ liệu và tích hợp
 
-- `NODE_ENV`: chế độ chạy, thường là `development` khi dev.
-- `PORT`: cổng backend, mặc định là `5000`.
-- `SQLSERVER_HOST`, `SQLSERVER_PORT`, `SQLSERVER_USER`, `SQLSERVER_PASSWORD`, `SQLSERVER_DATABASE`: thông tin kết nối SQL Server.
-- `JWT_SECRET`: secret dùng để ký access token.
-- `JWT_REFRESH_SECRET`: secret riêng cho refresh token, có thể dùng giá trị khác `JWT_SECRET`.
-- `GOOGLE_CLIENT_ID`: client ID dùng cho xác thực Google.
-- `EMAIL_USER`: địa chỉ Gmail dùng để gửi email.
-- `EMAIL_PASS`: `App Password` của Gmail, không phải mật khẩu đăng nhập thông thường.
+- SQL Server là nguồn dữ liệu chính.
+FTS engine được đồng bộ dữ liệu và cấu trúc index để phục vụ tìm kiếm nhanh.
+- Google OAuth dùng cho xác thực bên thứ ba.
+- Gmail App Password dùng cho gửi email.
+- SQLite chỉ dùng cho môi trường test khi bật `FORCE_SQLITE_IN_TESTS`.
 
-### 2.2. Cấu hình cho frontend
+## Kiến trúc tổng thể
 
-Frontend đọc biến môi trường bằng `VITE_...`.
+```mermaid
+flowchart LR
+ 	U[Người dùng] --> C[Client React + Vite]
+ 	C -->|REST API| S[Server Express]
+ 	S --> DB[SQL Server]
+ 	S --> FTS[Full-text Search]
+ 	S --> E[Email / Nodemailer]
+ 	S --> G[Google OAuth]
+ 	S --> F[Import / Export / Forecast]
+```
 
-Các biến quan trọng:
+Luồng chính của hệ thống:
 
-- `VITE_API_URL`: URL backend API, ví dụ `http://localhost:5000/api`.
-- `VITE_GOOGLE_CLIENT_ID`: Google client ID dùng ở phía trình duyệt.
+1. Người dùng thao tác trên frontend React.
+2. Frontend gọi API sang backend qua `VITE_API_URL`.
+3. Backend xác thực, xử lý nghiệp vụ và đọc/ghi dữ liệu trên SQL Server.
+4. Khi cần tìm kiếm nhanh, backend sẽ truy vấn engine FTS nếu được cấu hình, hoặc dùng truy vấn cơ sở dữ liệu làm fallback.
+5. Các tác vụ phụ trợ như email, import file, thống kê, dự báo và admin được xử lý ở tầng server.
 
-### 2.3. Ví dụ nhanh
+## Cấu trúc thư mục
+
+### Gốc dự án
+
+- `README.md`: tài liệu tổng quan và hướng dẫn chạy dự án.
+- `build-exe.bat`: script build bản `.exe` cho Windows.
+- `docs/`: tài liệu học thuật, sơ đồ UML, mô tả nghiệp vụ và tích hợp Google Login.
+- `client/`: ứng dụng frontend.
+- `server/`: ứng dụng backend và các script đồng bộ dữ liệu.
+- `assets/`: tài nguyên hình ảnh, screenshot demo.
+
+### `client/`
+
+- `src/main.jsx`: điểm vào của ứng dụng React.
+- `src/App.jsx`: cấu trúc router và layout tổng thể.
+- `src/index.css`: style toàn cục và Tailwind base.
+- `src/pages/`: các màn hình nghiệp vụ và trang public/admin.
+- `src/components/`: các component dùng lại như modal, layout, search, calendar, pagination, route guard.
+- `src/context/`: state dùng chung như auth, theme, user hoặc app-level state.
+- `src/services/`: lớp gọi API từ frontend.
+- `src/utils/`: hàm tiện ích, format tiền, ngày tháng, validation.
+- `src/tests/`: kiểm thử giao diện.
+
+### `server/`
+
+- `src/index.js`: điểm khởi động backend.
+- `src/app.js`: cấu hình Express, middleware và route.
+	- `src/config/`: cấu hình database, SQL Server và (FTS engine — nếu có).
+- `src/controllers/`: xử lý nghiệp vụ cho từng nhóm chức năng.
+- `src/routes/`: khai báo endpoint REST.
+- `src/models/sequelize/`: định nghĩa model và quan hệ Sequelize.
+- `src/middleware/`: middleware xác thực và xử lý lỗi.
+	- `src/services/`: dịch vụ FTS (nếu có), dự báo, logic hỗ trợ.
+- `src/utils/`: hàm tiện ích như gửi email.
+	- `scripts/`: script setup index và đồng bộ dữ liệu (FTS-related scripts removed/replaced).
+- `tests/`: kiểm thử backend.
+
+## Giải thích các file quan trọng
+
+### Frontend
+
+- `client/src/pages/Dashboard.jsx`: trang tổng quan số liệu, biểu đồ và dữ liệu nổi bật.
+- `client/src/pages/Transactions.jsx`: quản lý giao dịch thu/chi.
+- `client/src/pages/Categories.jsx`: quản lý nhóm danh mục thu chi.
+- `client/src/pages/Budgets.jsx`: quản lý ngân sách theo kỳ.
+- `client/src/pages/Goals.jsx`: quản lý mục tiêu tài chính.
+- `client/src/pages/Debts.jsx`: quản lý khoản nợ.
+- `client/src/pages/Statistics.jsx`: phân tích và biểu đồ chi tiêu.
+- `client/src/pages/Login.jsx`, `Register.jsx`, `ForgotPassword.jsx`: xác thực tài khoản.
+- `client/src/pages/AdminDashboard.jsx`, `AdminUsers.jsx`, `AdminContacts.jsx`: khu vực quản trị.
+- `client/src/components/TransactionModal.jsx`, `BudgetModal.jsx`, `GoalModal.jsx`, `DebtModal.jsx`, `CategoryModal.jsx`: form tạo/sửa dữ liệu.
+- `client/src/components/GlobalSearch.jsx`: ô tìm kiếm toàn cục.
+- `client/src/components/TransactionCalendar.jsx`: xem giao dịch theo lịch.
+- `client/src/components/ImportModal.jsx`: nhập dữ liệu từ file.
+- `client/src/components/PrivateRoute.jsx`, `PublicRoute.jsx`: chặn truy cập theo trạng thái đăng nhập.
+- `client/src/components/Layout.jsx`: khung bố cục chính của ứng dụng.
+
+### Backend
+
+- `server/src/config/sqlserver.js`: cấu hình kết nối SQL Server.
+- `server/src/config/database.js`: lớp cấu hình database chung.
+- `server/src/models/sequelize/index.js`: khởi tạo model Sequelize và quan hệ.
+- `server/src/controllers/auth.controller.js`: đăng ký, đăng nhập, refresh token, Google login.
+- `server/src/controllers/transaction.controller.js`: nghiệp vụ giao dịch và đồng bộ tìm kiếm.
+- `server/src/controllers/category.controller.js`: CRUD danh mục.
+- `server/src/controllers/budget.controller.js`: CRUD ngân sách.
+- `server/src/controllers/goal.controller.js`: CRUD mục tiêu.
+- `server/src/controllers/debt.controller.js`: CRUD khoản nợ.
+- `server/src/controllers/stats.controller.js`: thống kê, biểu đồ và dự báo.
+- `server/src/controllers/import.controller.js`: import dữ liệu từ file.
+- `server/src/controllers/notification.controller.js`: thông báo.
+- `server/src/controllers/contact.controller.js`: nhận phản hồi liên hệ.
+- `server/src/controllers/admin.controller.js`: chức năng quản trị.
+- `server/src/services/xgboost.forecast.service.js`: service dự báo chi tiêu.
+- `server/src/utils/sendEmail.js`: gửi email bằng Nodemailer.
+
+## Cài đặt môi trường
+
+### Yêu cầu trước khi chạy
+
+- Node.js LTS trở lên.
+- npm đi kèm Node.js.
+- SQL Server đang chạy và có database phù hợp.
+- Tài khoản Google nếu muốn bật đăng nhập Google.
+- Gmail App Password nếu muốn bật gửi email.
+
+### Cài đặt dependencies
+
+```bash
+cd client
+npm install
+
+cd ../server
+npm install
+```
+
+### Cấu hình `server/.env`
+
+Tạo hoặc chỉnh file `server/.env` với các biến chính sau:
 
 ```env
 NODE_ENV=development
 PORT=5000
 DB_TYPE=sqlserver
+
 SQLSERVER_HOST=localhost
 SQLSERVER_PORT=1433
 SQLSERVER_USER=sa
-SQLSERVER_PASSWORD=replace-with-your-sql-server-password
+SQLSERVER_PASSWORD=your-sql-password
 SQLSERVER_DATABASE=FinanceManager
 SQLSERVER_ENCRYPT=false
+
 JWT_SECRET=replace-with-a-long-random-secret
-JWT_REFRESH_SECRET=replace-with-a-different-long-random-secret
-GOOGLE_CLIENT_ID=replace-with-your-google-oauth-client-id.apps.googleusercontent.com
+JWT_EXPIRE=7d
+
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-gmail-app-password
 
+CLIENT_URL=http://localhost:5173
+
+	# FTS engine host/key removed; configure your chosen FTS engine if needed
+```
+
+### Cấu hình frontend
+
+Tạo file `client/.env` nếu chưa có:
+
+```env
 VITE_API_URL=http://localhost:5000/api
-VITE_GOOGLE_CLIENT_ID=replace-with-your-google-oauth-client-id.apps.googleusercontent.com
+VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 ```
 
-## 3. Cài đặt dependencies
+## Chạy dự án ở môi trường phát triển
 
-Dự án tách thành hai phần nên cần cài đặt riêng:
-
-### 3.1. Frontend
-
-```bash
-cd client
-npm install
-```
-
-### 3.2. Backend
+### Backend
 
 ```bash
 cd server
-npm install
-```
-
-## 4. Chạy dự án ở môi trường phát triển
-
-### 4.1. Chạy backend
-
-Mở terminal tại thư mục `server` và chạy:
-
-```bash
 npm run dev
 ```
 
-Backend mặc định sẽ chạy ở `http://localhost:5000` nếu bạn giữ nguyên `PORT=5000`.
-
-### 4.2. Chạy frontend
-
-Mở terminal khác tại thư mục `client` và chạy:
+### Frontend
 
 ```bash
+cd client
 npm run dev
 ```
+
+Mặc định frontend chạy ở `http://localhost:5173`, backend chạy ở `http://localhost:5000`.
+
+## Full-text search (FTS)
+
+FTS engine support has been removed from the project. Full-text search is implemented
+as a pluggable component; currently the backend falls back to database `LIKE` queries.
+
+If you plan to add a dedicated FTS engine, consult the project maintainer or add documentation under `docs/`.
+for historical notes and create new setup/sync scripts for your chosen engine.
+
+## Chạy kiểm thử
+
+### Backend
+
+```bash
+cd server
+npm test
+```
+
+### Frontend
+
+```bash
+cd client
+npm test
+```
+
+## Build bản Windows `.exe`
+
+Backend có script build sẵn trong `server/package.json` và file batch ở gốc dự án.
+
+```bash
+cd server
+npm run build:exe
+```
+
+Hoặc dùng file `build-exe.bat` nếu muốn chạy theo quy trình Windows.
+
+## Một số chức năng quan trọng
+
+- Dashboard tổng quan theo thời gian.
+- CRUD giao dịch, danh mục, ngân sách, mục tiêu và khoản nợ.
+- Tìm kiếm toàn cục bằng FTS engine.
+ - Tìm kiếm toàn cục (FTS engine — pluggable; hiện dùng truy vấn DB làm fallback).
+- Đăng nhập Google và đăng nhập bằng email/mật khẩu.
+- Quên mật khẩu và gửi mail xác thực.
+- Import dữ liệu từ file Excel/CSV.
+- Export báo cáo ra file.
+- Trang admin để quản trị người dùng và liên hệ.
+- Phân tích thống kê và dự báo chi tiêu.
+
+## Lưu ý triển khai
+
+- Không đưa file `.env`, dữ liệu thật hoặc secret lên Git.
+- Không commit `server/data.ms`, `server/dumps` hoặc binary của engine tìm kiếm.
+ - Không commit `server/dumps` hoặc binary/engine data lên Git.
+- Khi chạy local trên Windows, nên dùng `http://127.0.0.1:7700` thay vì `localhost` để tránh lỗi phân giải IPv6.
+- If you use a separate FTS engine, follow its docs for setup and sync.
+
+## Tài liệu liên quan
+- [docs/GOOGLE_LOGIN_IMPLEMENTATION.md](docs/GOOGLE_LOGIN_IMPLEMENTATION.md)
+- [docs/SSO_INTEGRATION.md](docs/SSO_INTEGRATION.md)
+
+## Kết luận
+
+Dự án này là một hệ thống quản lý chi tiêu cá nhân có đầy đủ nền tảng kỹ thuật cho một sản phẩm thực tế: kiến trúc client/server rõ ràng, xác thực an toàn, tích hợp tìm kiếm tốc độ cao, thống kê, dự báo, import/export và các luồng quản trị cần thiết.
 
 
 

@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './context/AuthContext';
+import { WalletProvider } from './context/WalletContext';
 import { TransactionProvider } from './context/TransactionContext';
 import { CategoryProvider } from './context/CategoryContext';
 import { BudgetProvider } from './context/BudgetContext';
@@ -24,6 +25,7 @@ import Transactions from './pages/Transactions';
 import Statistics from './pages/Statistics';
 import Categories from './pages/Categories';
 import Budgets from './pages/Budgets';
+import Wallets from './pages/Wallets';
 import Goals from './pages/Goals';
 import Debts from './pages/Debts';
 import Profile from './pages/Profile';
@@ -36,11 +38,12 @@ function App() {
   return (
     <LanguageProvider>
       <AuthProvider>  
-        <CategoryProvider> 
-          <BudgetProvider> 
-              <GoalProvider> 
-                <DebtProvider>
-                <TransactionProvider>
+        <WalletProvider>
+          <CategoryProvider> 
+            <BudgetProvider> 
+                <GoalProvider> 
+                  <DebtProvider>
+                  <TransactionProvider>
                   <Router> 
           <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] transition-colors duration-300">
             <Routes>
@@ -66,6 +69,9 @@ function App() {
               </Route>
               <Route path="/budgets" element={<PrivateRoute />}> 
                 <Route index element={<Budgets />} /> 
+              </Route>
+              <Route path="/wallets" element={<PrivateRoute />}> 
+                <Route index element={<Wallets />} /> 
               </Route>
               <Route path="/goals" element={<PrivateRoute />}> 
                 <Route index element={<Goals />} /> 
@@ -109,7 +115,8 @@ function App() {
             </GoalProvider>        
         </BudgetProvider>  
       </CategoryProvider>
-    </AuthProvider>
+      </WalletProvider>
+      </AuthProvider>
     </LanguageProvider>
   );
 }

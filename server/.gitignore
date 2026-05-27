@@ -13,8 +13,7 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
-# Local MeiliSearch binary
-meilisearch.exe
+# (Removed local search engine binary entries)
 
 # IDE
 .vscode/

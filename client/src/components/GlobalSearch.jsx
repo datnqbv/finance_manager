@@ -8,6 +8,7 @@ import { useGoal } from '../context/GoalContext';
 import { useDebt } from '../context/DebtContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import searchService from '../services/search.service';
 
 const GlobalSearch = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -168,7 +169,7 @@ const GlobalSearch = () => {
         const allResults = [...transactionResults, ...categoryResults, ...budgetResults, ...goalResults, ...debtResults];
         setSearchResults([...pageResults, ...allResults.slice(0, 15)]);
       } else { setSearchResults(pageResults); }
-    } catch (error) { console.error('Lỗi API MeiliSearch:', error); setSearchResults(pageResults); }
+    } catch (error) { console.error('Lỗi API tìm kiếm:', error); setSearchResults(pageResults); }
   }, [isEnglish, user?.currency]);
 
   // Debounced search with useEffect

@@ -7,6 +7,10 @@ const connectDB = async () => {
     await testConnection();
     await syncModels({ force: false });
     console.log(' Using SQL (Sequelize) as database backend');
+    
+    // Check and initialize Full-Text Search support
+    const { initFtsSupport } = await import('../utils/fts.js');
+    await initFtsSupport();
   } catch (err) {
     console.error(' Error connecting to SQL database:', err.message || err);
     process.exit(1);

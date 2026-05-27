@@ -3,6 +3,7 @@ import CurrencyInput from '../components/CurrencyInput';
 import { useTransactions } from '../context/TransactionContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useWallets } from '../context/WalletContext';
 import { FiPlus, FiEdit2, FiTrash2, FiFilter, FiDownload, FiList, FiCalendar, FiUpload } from 'react-icons/fi';
 import TransactionModal from '../components/TransactionModal';
 import TransactionCalendar from '../components/TransactionCalendar';
@@ -15,6 +16,7 @@ const Transactions = () => {
   const { user } = useAuth();
   const { transactions, pagination, loading, fetchTransactions, deleteTransaction } = useTransactions();
   const { t, language } = useLanguage();
+  const { wallets, fetchWallets } = useWallets();
   const isEnglish = language === 'en';
   const [showModal, setShowModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -32,7 +34,8 @@ const Transactions = () => {
     dateFrom: '',
     dateTo: '',
     amountFrom: '',
-    amountTo: ''
+    amountTo: '',
+    walletId: ''
   });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -72,12 +75,17 @@ const Transactions = () => {
     if (filter.dateTo)      params.endDate    = filter.dateTo + 'T23:59:59';
     if (filter.amountFrom)  params.amountMin  = filter.amountFrom;
     if (filter.amountTo)    params.amountMax  = filter.amountTo;
+    if (filter.walletId)    params.walletId   = filter.walletId;
     fetchTransactions(params);
   }, [filter, currentPage, itemsPerPage, viewMode, calendarMonth]);
 
   useEffect(() => {
     loadTransactions();
   }, [loadTransactions]);
+
+  useEffect(() => {
+    fetchWallets();
+  }, []);
 
   // Thay đổi tháng calendar
   const handleCalendarMonthChange = (year, month) => {
@@ -142,7 +150,7 @@ const Transactions = () => {
   };
   // Xóa toàn bộ bộ lọc (cả filter state lẫn local advanced state)
   const clearFilters = () => {
-    setFilter({ type: '', category: '', searchText: '', dateFrom: '', dateTo: '', amountFrom: '', amountTo: '' });
+    setFilter({ type: '', category: '', searchText: '', dateFrom: '', dateTo: '', amountFrom: '', amountTo: '', walletId: '' });
     setAdvLocal({ category: '', dateFrom: '', dateTo: '', amountFrom: '', amountTo: '' });
     setCurrentPage(1);
   };
@@ -306,6 +314,23 @@ const Transactions = () => {
                 <option value="">{isEnglish ? 'All types' : 'Tất cả loại'}</option>
                 <option value="income">{isEnglish ? 'Income' : 'Thu nhập'}</option>
                 <option value="expense">{isEnglish ? 'Expense' : 'Chi tiêu'}</option>
+                <option value="transfer">{isEnglish ? 'Transfer' : 'Chuyển khoản'}</option>
+              </select>
+            </div>
+
+            <div className="tx-filter-wallet">
+              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">{isEnglish ? 'Wallet' : 'Tài khoản ví'}</label>
+              <select
+                value={filter.walletId}
+                onChange={(e) => handleFilterChange('walletId', e.target.value)}
+                className="input w-full"
+              >
+                <option value="">{isEnglish ? 'All wallets' : 'Tất cả ví'}</option>
+                {wallets.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.icon} {w.name}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -425,20 +450,49 @@ const Transactions = () => {
                         {formatDate(transaction.date)}
                       </td>
                       <td className="py-3 px-4">
-                        <span className={transaction.type === 'income' ? 'badge-income' : 'badge-expense'}>
+                        <span className={
+                          transaction.type === 'income' 
+                            ? 'badge-income' 
+                            : transaction.type === 'expense' 
+                            ? 'badge-expense' 
+                            : 'badge-transfer'
+                        }>
                           {transaction.type === 'income'
                             ? (isEnglish ? 'Income' : 'Thu nhập')
-                            : (isEnglish ? 'Expense' : 'Chi tiêu')}
+                            : transaction.type === 'expense'
+                            ? (isEnglish ? 'Expense' : 'Chi tiêu')
+                            : (isEnglish ? 'Transfer' : 'Chuyển khoản')}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{transaction.category}</td>
+                      <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
+                        <div className="flex flex-col">
+                          <span className="font-medium">{transaction.category}</span>
+                          {transaction.wallet && (
+                            <span className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-0.5">
+                              <span>{transaction.wallet.icon}</span>
+                              <span>{transaction.wallet.name}</span>
+                              {transaction.type === 'transfer' && transaction.toWallet && (
+                                <>
+                                  <span className="text-gray-400">→</span>
+                                  <span>{transaction.toWallet.icon}</span>
+                                  <span>{transaction.toWallet.name}</span>
+                                </>
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td className="py-3 px-4 text-gray-600 dark:text-gray-400 text-sm">
                         {transaction.note || '-'}
                       </td>
                       <td className={`py-3 px-4 text-right font-semibold ${
-                        transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                        transaction.type === 'income' 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : transaction.type === 'expense' 
+                          ? 'text-red-600 dark:text-red-400' 
+                          : 'text-blue-600 dark:text-blue-400'
                       }`}>
-                        {transaction.type === 'income' ? '+' : '-'}
+                        {transaction.type === 'income' ? '+' : transaction.type === 'expense' ? '-' : '⇆ '}
                         {formatCurrency(transaction.amount)}
                       </td>
                       <td className="py-3 px-4">

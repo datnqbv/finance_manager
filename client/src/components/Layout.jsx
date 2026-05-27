@@ -25,7 +25,8 @@ import {
   FiShield,
   FiChevronDown,
   FiHelpCircle,
-  FiSearch
+  FiSearch,
+  FiBriefcase
 } from 'react-icons/fi';
 import DarkModeToggle from './DarkModeToggle';
 import GlobalSearch from './GlobalSearch';
@@ -71,6 +72,13 @@ const Layout = ({ children }) => {
     }
   }, [location.pathname]);
 
+  useEffect(() => {
+    fetchNotifications();
+    // Poll notifications every 30 seconds for live updates
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
   const toggleNotifications = async () => {
     const nextValue = !showNotifications;
     setShowNotifications(nextValue);
@@ -114,6 +122,7 @@ const Layout = ({ children }) => {
     { path: '/transactions', icon: FiCreditCard, label: isEnglish ? 'Transactions' : 'Giao dịch', isImg: false },
     { path: '/categories', icon: FiFolder, label: isEnglish ? 'Categories' : 'Danh mục', isImg: false },
     { path: '/budgets', icon: FiDollarSign, label: isEnglish ? 'Budgets' : 'Ngân sách', isImg: false },
+    { path: '/wallets', icon: FiBriefcase, label: isEnglish ? 'Wallets' : 'Quản lý ví', isImg: false },
     { path: '/goals', icon: FiTarget, label: isEnglish ? 'Goals' : 'Mục tiêu', isImg: false },
     { path: '/debts', icon: FiUsers, label: isEnglish ? 'Debt Management' : 'Quản lý nợ', isImg: false },
     { path: '/statistics', icon: FiBarChart2, label: isEnglish ? 'Statistics' : 'Thống kê', isImg: false },

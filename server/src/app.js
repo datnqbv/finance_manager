@@ -16,6 +16,7 @@ import contactRoutes from './routes/contact.routes.js';
 import debtRoutes from './routes/debt.routes.js';
 import importRoutes from './routes/import.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import walletRoutes from './routes/wallet.routes.js';
 import { errorHandler } from './middleware/error.middleware.js';
 
 const app = express();
@@ -42,6 +43,7 @@ app.use('/api/contact',       contactRoutes);
 app.use('/api/debts',         debtRoutes);
 app.use('/api/import',        importRoutes);
 app.use('/api/admin',         adminRoutes);
+app.use('/api/wallets',       walletRoutes);
 
 // Error handling middleware (phải đứng cuối)
 app.use(errorHandler);

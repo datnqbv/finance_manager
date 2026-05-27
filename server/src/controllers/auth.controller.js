@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { OAuth2Client } from 'google-auth-library';
-import { User, Category } from '../models/sequelize/index.js';
+import { User, Category, Wallet } from '../models/sequelize/index.js';
 import { sendResetPasswordEmail, sendWelcomeEmail } from '../utils/sendEmail.js';
 import { Op } from 'sequelize';
 
@@ -47,12 +47,23 @@ export const register = async (req, res) => {
     // Create user
     const user = await User.create({ name, email, password });
 
-    // Create default categories for the new user
+    // Create default categories and default wallet for the new user
     try {
-      await Category.createDefaultCategories(user.id);
+      await Promise.all([
+        Category.createDefaultCategories(user.id),
+        Wallet.create({
+          userId: user.id,
+          name: 'Ví chính',
+          isDefault: true,
+          icon: '💼',
+          color: '#3B82F6',
+          balance: 0,
+          initialBalance: 0
+        })
+      ]);
     } catch (err) {
-      console.error('Failed to create default categories:', err);
-      // Don't fail registration if category creation fails
+      console.error('Failed to create default categories or wallet:', err);
+      // Don't fail registration if default assets creation fails
     }
 
     // Generate tokens
@@ -504,11 +515,22 @@ export const googleLogin = async (req, res) => {
           password: null // No password for Google SSO
         });
 
-        // Create default categories for the new user
+        // Create default categories and default wallet for the new user
         try {
-          await Category.createDefaultCategories(user.id);
+          await Promise.all([
+            Category.createDefaultCategories(user.id),
+            Wallet.create({
+              userId: user.id,
+              name: 'Ví chính',
+              isDefault: true,
+              icon: '💼',
+              color: '#3B82F6',
+              balance: 0,
+              initialBalance: 0
+            })
+          ]);
         } catch (err) {
-          console.error('Failed to create default categories:', err);
+          console.error('Failed to create default categories or wallet:', err);
         }
 
         // Send welcome email

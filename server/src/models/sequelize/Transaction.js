@@ -14,8 +14,16 @@ Transaction.init({
     allowNull: false,
   },
   type: {
-    type: DataTypes.ENUM('income','expense'),
+    type: DataTypes.ENUM('income','expense','transfer'),
     allowNull: false,
+  },
+  walletId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+  },
+  toWalletId: {
+    type: DataTypes.UUID,
+    allowNull: true,
   },
   category: {
     type: DataTypes.STRING(150),
@@ -43,6 +51,8 @@ Transaction.init({
     { fields: ['userId'] },
     { fields: ['userId','date'] },
     { fields: ['userId','type'] },
+    { fields: ['walletId'] },
+    { fields: ['toWalletId'] },
   ],
 });
 

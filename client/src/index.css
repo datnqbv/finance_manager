@@ -72,6 +72,11 @@
       @apply inline-flex items-center whitespace-nowrap px-3 py-1 bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-400 
         text-sm font-medium rounded-full border border-red-200 dark:border-red-500/30;
   }
+  /* mẫu badge chuyển khoản */
+  .badge-transfer {
+      @apply inline-flex items-center whitespace-nowrap px-3 py-1 bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-400 
+        text-sm font-medium rounded-full border border-blue-200 dark:border-blue-500/30;
+  }
   
   
   /* mẫu thẻ card cho darkmode */
@@ -408,6 +413,7 @@ button {
   grid-template-areas:
     'search'
     'type'
+    'wallet'
     'actions';
 }
 
@@ -417,6 +423,10 @@ button {
 
 .tx-filter-type {
   grid-area: type;
+}
+
+.tx-filter-wallet {
+  grid-area: wallet;
 }
 
 .tx-filter-actions {
@@ -448,7 +458,8 @@ button {
   .tx-filter-grid {
     grid-template-areas:
       'search search'
-      'type actions';
+      'type wallet'
+      'actions actions';
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
@@ -506,6 +517,7 @@ button {
     grid-template-areas:
       'search'
       'type'
+      'wallet'
       'actions';
     grid-template-columns: minmax(0, 1fr);
   }

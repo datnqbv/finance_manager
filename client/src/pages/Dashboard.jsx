@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTransactions } from '../context/TransactionContext';
 import { useCategories } from '../context/CategoryContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useWallets } from '../context/WalletContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, ComposedChart, Line } from 'recharts';
 import PageTransition from '../components/PageTransition';
 import { DashboardSkeleton } from '../components/LoadingSkeleton';
@@ -15,6 +16,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { revision: transactionRevision } = useTransactions();
   const { categories, fetchCategories } = useCategories();
+  const { wallets, fetchWallets } = useWallets();
   const { t, language } = useLanguage();
   const isEnglish = language === 'en';
   const navigate = useNavigate();
@@ -33,6 +35,7 @@ const Dashboard = () => {
   useEffect(() => {
     fetchData();
     fetchCategories();
+    fetchWallets();
   }, [timeFilter, user?.id, transactionRevision]);
   
   // hàm dùng để tính toán phạm vi ngày tháng dựa trên bộ lọc thời gian đã chọn, trả về đối tượng chứa startDate và endDate dưới dạng chuỗi ISO, giúp xác định khoảng thời gian mà dashboard sẽ hiển thị dữ liệu
@@ -271,6 +274,8 @@ const Dashboard = () => {
     .slice(0, 3)
   const topForecastTotal = topForecastCategories.reduce((sum, item) => sum + item.amount, 0);
   // điều kiện để hiển thị skeleton loading khi đang tải dữ liệu, giúp cải thiện trải nghiệm người dùng bằng cách cung cấp phản hồi trực quan trong khi chờ đợi dữ liệu được tải về và xử lý trên dashboard 
+  const totalWalletBalance = wallets.reduce((sum, w) => sum + (parseFloat(w.balance) || 0), 0);
+
   if (loading) return <PageTransition><DashboardSkeleton /></PageTransition>;
 
   return (
@@ -281,7 +286,7 @@ const Dashboard = () => {
             <div className="absolute -right-8 top-1/2 h-52 w-52 -translate-y-1/2 rounded-full bg-[#4c8f7a] opacity-35" />
             <div className="relative">
               <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">{greeting.text}</p>
-              <h1 className="mt-3 text-5xl font-black tracking-tight">{formatCurrency(filteredSummary?.balance || 0)}</h1>
+              <h1 className="mt-3 text-5xl font-black tracking-tight">{formatCurrency(totalWalletBalance)}</h1>
               <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-[#d8fff2]">
                 <FiTrendingUp size={12} />
                 {monthChange >= 0 ? '+' : ''}{monthChange.toFixed(1)}% {t('monthlyComparison')}
@@ -316,6 +321,61 @@ const Dashboard = () => {
           </div>
 
           <div className="xl:col-span-4 space-y-4">
+            {/* Wallet Summary Card */}
+            <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">
+                  {isEnglish ? 'My Wallets' : 'Tài khoản ví'}
+                </h3>
+                <button 
+                  onClick={() => navigate('/wallets')} 
+                  className="text-xs font-semibold text-[#3a4a62] hover:underline dark:text-[#b9c3d0]"
+                >
+                  {isEnglish ? 'Manage' : 'Quản lý'}
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {wallets.length > 0 ? (
+                  wallets.map((wallet) => {
+                    const walletPct = totalWalletBalance > 0 
+                      ? ((parseFloat(wallet.balance) || 0) / totalWalletBalance) * 100 
+                      : 0;
+                    return (
+                      <div key={wallet.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div 
+                            className="h-9 w-9 rounded-xl flex items-center justify-center text-lg shadow-sm"
+                            style={{ 
+                              backgroundColor: wallet.color ? `${wallet.color}15` : '#eceff4',
+                              color: wallet.color || '#333'
+                            }}
+                          >
+                            {wallet.icon || '💳'}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-[#1f2733] dark:text-[#e8edf4]">
+                              {wallet.name}
+                            </p>
+                            <p className="text-[10px] text-[#6f7480] dark:text-[#a4acba]">
+                              {walletPct.toFixed(0)}% {isEnglish ? 'of assets' : 'tài sản'}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-sm font-black text-[#1a1f29] dark:text-[#eff2f6] text-right">
+                          {formatCurrency(wallet.balance || 0)}
+                        </p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">
+                    {isEnglish ? 'No wallets found' : 'Chưa có tài khoản ví nào'}
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">{t('goalProgress')}</h3>
@@ -492,12 +552,41 @@ const Dashboard = () => {
                     <tr key={tx.id || idx} className="border-b border-[#eef1f6] dark:border-[#2a303b]">
                       <td className="px-5 py-4">
                         <p className="font-bold text-[#1d2430] dark:text-[#eef1f5]">{tx.note || tx.category}</p>
-                        <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{tx.type === 'income' ? (isEnglish ? 'Income transaction' : 'Giao dịch thu') : (isEnglish ? 'Expense transaction' : 'Giao dịch chi')}</p>
+                        <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">
+                          {tx.type === 'income' 
+                            ? (isEnglish ? 'Income transaction' : 'Giao dịch thu') 
+                            : tx.type === 'expense' 
+                            ? (isEnglish ? 'Expense transaction' : 'Giao dịch chi') 
+                            : (isEnglish ? 'Transfer transaction' : 'Giao dịch chuyển khoản')}
+                        </p>
                       </td>
-                      <td className="px-5 py-4 font-medium text-[#303846] dark:text-[#c9d1db]">{tx.category}</td>
+                      <td className="px-5 py-4">
+                        <div className="flex flex-col">
+                          <span className="font-medium text-[#303846] dark:text-[#c9d1db]">{tx.category}</span>
+                          {tx.wallet && (
+                            <span className="text-[11px] text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-0.5">
+                              <span>{tx.wallet.icon}</span>
+                              <span>{tx.wallet.name}</span>
+                              {tx.type === 'transfer' && tx.toWallet && (
+                                <>
+                                  <span className="text-gray-400">→</span>
+                                  <span>{tx.toWallet.icon}</span>
+                                  <span>{tx.toWallet.name}</span>
+                                </>
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-5 py-4 text-[#6f7480] dark:text-[#a4acba]">{formatDate(tx.date)}</td>
-                      <td className={`px-5 py-4 text-right font-black ${tx.type === 'income' ? 'text-[#0c7a58] dark:text-[#54d5aa]' : 'text-[#1a1f29] dark:text-[#f0f3f7]'}`}>
-                        {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                      <td className={`px-5 py-4 text-right font-black ${
+                        tx.type === 'income' 
+                          ? 'text-[#0c7a58] dark:text-[#54d5aa]' 
+                          : tx.type === 'expense' 
+                          ? 'text-[#1a1f29] dark:text-[#f0f3f7]' 
+                          : 'text-blue-600 dark:text-blue-400'
+                      }`}>
+                        {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : '⇆ '}{formatCurrency(tx.amount)}
                       </td>
                       <td className="px-5 py-4 text-right">
                         <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${(isEnglish ? status === 'Completed' : status === 'Hoàn tất') ? 'bg-[#e6ecfa] text-[#6177a6] dark:bg-[#313b54] dark:text-[#a9bcdf]' : 'bg-[#f4ddd7] text-[#9a5f54] dark:bg-[#4a3330] dark:text-[#d7a59b]'}`}>

@@ -1,6 +1,7 @@
-import { Transaction, Notification, Budget, sequelize } from '../models/sequelize/index.js';
-import { searchDocuments } from '../services/meilisearch.service.js';
+import { Transaction, Notification, Budget, Wallet, sequelize } from '../models/sequelize/index.js';
 import { Op } from 'sequelize';
+import { getSearchCondition } from '../utils/fts.js';
+import { recalculateWalletBalance } from './wallet.controller.js';
 
 // Helper function to get date range based on period
 const getDateRange = (period, startDate = new Date()) => {
@@ -80,7 +81,7 @@ export const getTransactions = async (req, res) => {
   try {
     const {
       type, category, startDate, endDate,
-      search, amountMin, amountMax,
+      search, amountMin, amountMax, walletId,
       page = 1, limit = 10,
       sortBy = 'date', sortOrder = 'desc'
     } = req.query;
@@ -90,27 +91,43 @@ export const getTransactions = async (req, res) => {
     const skip     = (pageNum - 1) * limitNum;
 
     if (search) {
-      // Use MeiliSearch for text search
-      const filtersArray = [`userId = ${req.user.id}`];
-      if (type) filtersArray.push(`type = "${type}"`);
-      if (category) filtersArray.push(`category = "${category}"`);
-      if (amountMin) filtersArray.push(`amount >= ${parseFloat(amountMin)}`);
-      if (amountMax) filtersArray.push(`amount <= ${parseFloat(amountMax)}`);
+      const where = { userId: req.user.id };
+      where[Op.and] = [getSearchCondition(['category', 'note'], search)];
+      if (type) where.type = type;
+      if (category) where.category = category;
+      if (walletId) {
+        where[Op.or] = [
+          { walletId: walletId },
+          { toWalletId: walletId }
+        ];
+      }
+      if (amountMin || amountMax) {
+        where.amount = {};
+        if (amountMin) where.amount[Op.gte] = parseFloat(amountMin);
+        if (amountMax) where.amount[Op.lte] = parseFloat(amountMax);
+      }
 
-      const msRes = await searchDocuments('transactions', search, {
-        filter: filtersArray,
-        offset: skip,
-        limit: limitNum || 500,
-        sort: [`${sortBy}:${sortOrder}`]
-      });
+      const [transactionsFound, totalFound] = await Promise.all([
+        Transaction.findAll({
+          where,
+          order: [[sortBy, sortOrder === 'asc' ? 'ASC' : 'DESC']],
+          offset: skip,
+          limit: limitNum || undefined,
+          include: [
+            { model: Wallet, as: 'wallet', attributes: ['id', 'name', 'icon', 'color'] },
+            { model: Wallet, as: 'toWallet', attributes: ['id', 'name', 'icon', 'color'] }
+          ]
+        }),
+        Transaction.count({ where })
+      ]);
 
       return res.json({
         success: true,
-        count: msRes.hits.length,
-        total: msRes.estimatedTotalHits || msRes.totalHits || msRes.hits.length,
+        count: transactionsFound.length,
+        total: totalFound,
         page: pageNum,
-        totalPages: limitNum > 0 ? Math.ceil((msRes.estimatedTotalHits || msRes.totalHits || msRes.hits.length) / limitNum) : 1,
-        data: msRes.hits
+        totalPages: limitNum > 0 ? Math.ceil(totalFound / limitNum) : 1,
+        data: transactionsFound
       });
     }
 
@@ -119,6 +136,12 @@ export const getTransactions = async (req, res) => {
     const where = { userId: req.user.id };
     if (type) where.type = type;
     if (category) where.category = category;
+    if (walletId) {
+      where[Op.or] = [
+        { walletId: walletId },
+        { toWalletId: walletId }
+      ];
+    }
     if (startDate || endDate) {
       where.date = {};
       if (startDate) where.date[Op.gte] = new Date(startDate);
@@ -133,7 +156,16 @@ export const getTransactions = async (req, res) => {
     const order    = [[sortBy, sortOrder === 'asc' ? 'ASC' : 'DESC']];
 
     const [transactions, total] = await Promise.all([
-      Transaction.findAll({ where, order, offset: limitNum > 0 ? skip : undefined, limit: limitNum || undefined }),
+      Transaction.findAll({
+        where,
+        order,
+        offset: limitNum > 0 ? skip : undefined,
+        limit: limitNum || undefined,
+        include: [
+          { model: Wallet, as: 'wallet', attributes: ['id', 'name', 'icon', 'color'] },
+          { model: Wallet, as: 'toWallet', attributes: ['id', 'name', 'icon', 'color'] }
+        ]
+      }),
       Transaction.count({ where }),
     ]);
 
@@ -190,14 +222,58 @@ export const getTransaction = async (req, res) => {
 // @access  Private
 export const createTransaction = async (req, res) => {
   try {
-    const { type, category, amount, note, date } = req.body;
+    const { type, category, amount, note, date, walletId, toWalletId } = req.body;
     // Validate amount
     const numAmount = Number(amount);
     if (!amount || Number.isNaN(numAmount) || numAmount <= 0) {
       return res.status(400).json({ success: false, message: 'Số tiền không hợp lệ' });
     }
 
-    const transaction = await Transaction.create({ userId: req.user.id, type, category, amount: numAmount, note, date: date || Date.now() });
+    // Check wallet availability
+    let actualWalletId = walletId;
+    if (!actualWalletId) {
+      const defWallet = await Wallet.findOne({ where: { userId: req.user.id, isDefault: true } });
+      if (!defWallet) {
+        return res.status(400).json({ success: false, message: 'Bạn chưa có ví mặc định. Vui lòng tạo ví trước.' });
+      }
+      actualWalletId = defWallet.id;
+    }
+
+    const wallet = await Wallet.findOne({ where: { id: actualWalletId, userId: req.user.id } });
+    if (!wallet) {
+      return res.status(400).json({ success: false, message: 'Ví không hợp lệ' });
+    }
+
+    // Validate transfer wallets
+    if (type === 'transfer') {
+      if (!toWalletId) {
+        return res.status(400).json({ success: false, message: 'Ví nhận không được để trống khi chuyển khoản' });
+      }
+      if (toWalletId === actualWalletId) {
+        return res.status(400).json({ success: false, message: 'Ví nhận và ví nguồn không được trùng nhau' });
+      }
+      const targetWallet = await Wallet.findOne({ where: { id: toWalletId, userId: req.user.id } });
+      if (!targetWallet) {
+        return res.status(400).json({ success: false, message: 'Ví nhận không hợp lệ' });
+      }
+    }
+
+    const transaction = await Transaction.create({
+      userId: req.user.id,
+      type,
+      category: type === 'transfer' ? 'Chuyển khoản' : category,
+      amount: numAmount,
+      note,
+      date: date || Date.now(),
+      walletId: actualWalletId,
+      toWalletId: type === 'transfer' ? toWalletId : null
+    });
+
+    // Recalculate wallet balances
+    await recalculateWalletBalance(actualWalletId);
+    if (type === 'transfer' && toWalletId) {
+      await recalculateWalletBalance(toWalletId);
+    }
 
     // Tạo thông báo chi tiết cho giao dịch mới
     const transactionDate = new Date();
@@ -214,20 +290,25 @@ export const createTransaction = async (req, res) => {
     // Kiểm tra xem có phải giao dịch lớn không (>= 1 triệu)
     const isLargeTransaction = amount >= 1000000;
     
-    const typeText = type === 'income' ? 'thu nhập' : 'chi tiêu';
-    let notificationTitle, notificationType;
+    let notificationTitle, notificationType, notificationMessage;
     
-    if (isLargeTransaction) {
-      // Thông báo đặc biệt cho giao dịch lớn
-      notificationTitle = type === 'income' ? '💰 Thu nhập lớn!' : '🚨 Chi tiêu lớn!';
-      notificationType = type === 'income' ? 'success' : 'warning';
-    } else {
-      // Thông báo thường
-      notificationTitle = type === 'income' ? '💰 Giao dịch thu nhập' : '💸 Giao dịch chi tiêu';
+    if (type === 'transfer') {
+      const fromW = wallet ? wallet.name : 'ví nguồn';
+      const toW = targetWallet ? targetWallet.name : 'ví đích';
+      notificationTitle = '⇆ Giao dịch chuyển khoản';
       notificationType = 'transaction';
+      notificationMessage = `Vào lúc ${formattedTime} ngày ${formattedDate}, bạn đã chuyển khoản ${amount.toLocaleString('vi-VN')} ₫ từ ví "${fromW}" sang ví "${toW}"${note ? ` - ${note}` : ''}`;
+    } else {
+      const typeText = type === 'income' ? 'thu nhập' : 'chi tiêu';
+      if (isLargeTransaction) {
+        notificationTitle = type === 'income' ? '💰 Thu nhập lớn!' : '🚨 Chi tiêu lớn!';
+        notificationType = type === 'income' ? 'success' : 'warning';
+      } else {
+        notificationTitle = type === 'income' ? '💰 Giao dịch thu nhập' : '💸 Giao dịch chi tiêu';
+        notificationType = 'transaction';
+      }
+      notificationMessage = `Vào lúc ${formattedTime} ngày ${formattedDate}, bạn đã ${typeText} ${amount.toLocaleString('vi-VN')} ₫ cho "${category}"${note ? ` - ${note}` : ''}`;
     }
-    
-    const notificationMessage = `Vào lúc ${formattedTime} ngày ${formattedDate}, bạn đã ${typeText} ${amount.toLocaleString('vi-VN')} ₫ cho "${category}"${note ? ` - ${note}` : ''}`;
 
     await Notification.create({ userId: req.user.id, type: notificationType, title: notificationTitle, message: notificationMessage, relatedId: transaction.id || transaction._id, relatedModel: 'Transaction', read: false, metadata: { transactionType: type, category, amount, date: transaction.date, isLargeTransaction } });
 
@@ -269,8 +350,28 @@ export const updateTransaction = async (req, res) => {
         message: 'Không có quyền truy cập'
       });
     }
-    await Transaction.update(req.body, { where: { id: req.params.id } });
+
+    const oldWalletId = transaction.walletId;
+    const oldToWalletId = transaction.toWalletId;
+
+    const updateData = { ...req.body };
+    if (updateData.type === 'transfer') {
+      updateData.category = 'Chuyển khoản';
+    }
+
+    await Transaction.update(updateData, { where: { id: req.params.id } });
     transaction = await Transaction.findByPk(req.params.id);
+
+    // Recalculate all affected wallet balances
+    if (oldWalletId) await recalculateWalletBalance(oldWalletId);
+    if (oldToWalletId) await recalculateWalletBalance(oldToWalletId);
+
+    if (transaction.walletId && transaction.walletId !== oldWalletId) {
+      await recalculateWalletBalance(transaction.walletId);
+    }
+    if (transaction.toWalletId && transaction.toWalletId !== oldToWalletId) {
+      await recalculateWalletBalance(transaction.toWalletId);
+    }
 
     // Tạo thông báo cho việc cập nhật giao dịch
     const transactionDate = new Date();
@@ -325,6 +426,9 @@ export const deleteTransaction = async (req, res) => {
       });
     }
 
+    const walletId = transaction.walletId;
+    const toWalletId = transaction.toWalletId;
+
     // Tạo thông báo trước khi xóa
     const transactionDate = new Date();
     const formattedDate = transactionDate.toLocaleDateString('vi-VN', {
@@ -342,6 +446,10 @@ export const deleteTransaction = async (req, res) => {
 
     await Notification.create({ userId: req.user.id, type: 'transaction', title: '🗑️ Xóa giao dịch', message: notificationMessage, relatedId: null, relatedModel: null, read: false, metadata: { transactionType: transaction.type, category: transaction.category, amount: transaction.amount, date: transaction.date, deleted: true } });
     await Transaction.destroy({ where: { id: req.params.id } });
+
+    // Recalculate affected wallet balances
+    if (walletId) await recalculateWalletBalance(walletId);
+    if (toWalletId) await recalculateWalletBalance(toWalletId);
 
     res.json({
       success: true,

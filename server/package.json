@@ -10,8 +10,10 @@
     "test": "set FORCE_SQLITE_IN_TESTS=true&& node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.cjs",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.cjs --coverage",
     "fts:setup": "node scripts/setup_fulltext_indexes.js",
-    "meili:setup": "node scripts/setup_meilisearch.js",
+    "fts:reindex": "node scripts/reindex_fulltext.js",
+    "db:migrate-wallets": "node scripts/migrate_wallets.js",
     "build:exe": "npx esbuild src/index.js --bundle --platform=node --format=cjs --target=node18 --outfile=bundled.cjs --external:fsevents && pkg bundled.cjs --target node18-win-x64 --no-bytecode --public --output ../dist/QuanLyChiTieu.exe"
+    
   },
   "pkg": {
     "scripts": [
@@ -53,7 +55,6 @@
   "devDependencies": {
     "esbuild": "^0.27.7",
     "jest": "^30.2.0",
-    "meilisearch": "^0.58.0",
     "nodemon": "^3.0.1",
     "sequelize-cli": "^6.6.0",
     "sqlite3": "^5.1.6",

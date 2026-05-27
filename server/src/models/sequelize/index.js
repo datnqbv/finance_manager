@@ -1,4 +1,5 @@
 import User from './User.js';
+import Wallet from './Wallet.js';
 import Transaction from './Transaction.js';
 import Category from './Category.js';
 import Budget from './Budget.js';
@@ -7,10 +8,18 @@ import Debt from './Debt.js';
 import Notification from './Notification.js';
 import ContactMessage from './ContactMessage.js';
 import { sequelize } from '../../config/sqlserver.js';
-import { syncDocument, removeDocument } from '../../services/meilisearch.service.js';
 
 function initModels() {
   // Associations
+  User.hasMany(Wallet, { foreignKey: 'userId', as: 'wallets' });
+  Wallet.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+  
+  Wallet.hasMany(Transaction, { foreignKey: 'walletId', as: 'transactions' });
+  Transaction.belongsTo(Wallet, { foreignKey: 'walletId', as: 'wallet' });
+  
+  Wallet.hasMany(Transaction, { foreignKey: 'toWalletId', as: 'incomingTransfers' });
+  Transaction.belongsTo(Wallet, { foreignKey: 'toWalletId', as: 'toWallet' });
+
   User.hasMany(Transaction, { foreignKey: 'userId', as: 'transactions' });
   Transaction.belongsTo(User, { foreignKey: 'userId', as: 'user' });
   User.hasMany(Category, { foreignKey: 'userId', as: 'categories' });
@@ -25,22 +34,8 @@ function initModels() {
   Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
   // ContactMessage is independent (no user relation currently)
 
-  // MeiliSearch Sync Hooks
-  const createHook = (indexName) => ({
-    afterCreate: async (instance) => await syncDocument(indexName, instance.toJSON()),
-    afterUpdate: async (instance) => await syncDocument(indexName, instance.toJSON()),
-    afterDestroy: async (instance) => await removeDocument(indexName, instance.id),
-  });
-
-  const transactionHooks = createHook('transactions');
-  Transaction.addHook('afterCreate', transactionHooks.afterCreate);
-  Transaction.addHook('afterUpdate', transactionHooks.afterUpdate);
-  Transaction.addHook('afterDestroy', transactionHooks.afterDestroy);
-
-  const categoryHooks = createHook('categories');
-  Category.addHook('afterCreate', categoryHooks.afterCreate);
-  Category.addHook('afterUpdate', categoryHooks.afterUpdate);
-  Category.addHook('afterDestroy', categoryHooks.afterDestroy);
+  // Search sync hooks removed (previously used external FTS engine).
+  // If you add a different FTS engine, attach model hooks here to sync documents.
 }
 
 async function syncModels({ force = false } = {}) {
@@ -48,4 +43,4 @@ async function syncModels({ force = false } = {}) {
   await sequelize.sync({ force });
 }
 
-export { sequelize, initModels, syncModels, User, Transaction, Category, Budget, Goal, Debt, Notification, ContactMessage };
+export { sequelize, initModels, syncModels, User, Wallet, Transaction, Category, Budget, Goal, Debt, Notification, ContactMessage };
