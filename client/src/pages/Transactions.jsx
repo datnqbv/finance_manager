@@ -169,10 +169,10 @@ const Transactions = () => {
   // Hàm dùng cho xuất dữ liệu giao dịch hiện tại ra file PDF, giúp người dùng có thể lưu trữ hoặc chia sẻ thông tin giao dịch của mình một cách dễ dàng và thuận tiện trên trang giao dịch. Khi người dùng nhấn nút xuất PDF, hàm này sẽ được gọi để tạo file PDF chứa danh sách các giao dịch hiện tại và cung cấp tùy chọn tải xuống cho người dùng.
   const pageIncome = transactions
     .filter((t) => t.type === 'income')
-    .reduce((sum, t) => sum + (t.amount || 0), 0);
+    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
   const pageExpense = transactions
     .filter((t) => t.type === 'expense')
-    .reduce((sum, t) => sum + (t.amount || 0), 0);
+    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
   const pageBalance = pageIncome - pageExpense;
 
   if (loading && transactions.length === 0) {

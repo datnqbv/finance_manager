@@ -236,8 +236,8 @@ export const getGoalStats = async (req, res) => {
     const achievedGoals = goals.filter(g => g.isAchieved).length;
     const activeGoals = goals.filter(g => !g.isAchieved).length;
     
-    const totalTargetAmount = goals.reduce((sum, g) => sum + g.targetAmount, 0);
-    const totalCurrentAmount = goals.reduce((sum, g) => sum + g.currentAmount, 0);
+    const totalTargetAmount = goals.reduce((sum, g) => sum + parseFloat(g.targetAmount || 0), 0);
+    const totalCurrentAmount = goals.reduce((sum, g) => sum + parseFloat(g.currentAmount || 0), 0);
     const totalRemainingAmount = goals.reduce((sum, g) => sum + g.remainingAmount, 0);
 
     const overallProgress = totalTargetAmount > 0 

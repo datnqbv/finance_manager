@@ -372,7 +372,7 @@ export const getBudgetStatus = async (req, res) => {
       };
     });
 
-    const totalBudget   = budgets.reduce((s, b) => s + b.amount, 0);
+    const totalBudget   = budgets.reduce((s, b) => s + parseFloat(b.amount || 0), 0);
     const totalSpending = statusList.reduce((s, b) => s + b.currentSpending, 0);
     const overBudgetCount = statusList.filter(b => b.isOverBudget).length;
 
@@ -476,7 +476,7 @@ export const getBudgetOverview = async (req, res) => {
     });
 
     // Build status summary
-    const totalBudget   = allBudgets.reduce((s, b) => s + b.amount, 0);
+    const totalBudget   = allBudgets.reduce((s, b) => s + parseFloat(b.amount || 0), 0);
     const totalSpending = budgetsWithSpending.reduce((s, b) => s + b.currentSpending, 0);
     const overBudgetCount = budgetsWithSpending.filter(b => b.isOverBudget).length;
     const status = {

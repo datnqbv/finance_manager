@@ -13,8 +13,8 @@ export const getDebts = async (req, res) => {
     // Stats
     const all = await Debt.findAll({ where: { userId: req.user.id } });
     const stats = {
-      totalLend:     all.filter(d => d.type === 'lend').reduce((s, d) => s + d.remainingAmount, 0),
-      totalBorrow:   all.filter(d => d.type === 'borrow').reduce((s, d) => s + d.remainingAmount, 0),
+      totalLend:     all.filter(d => d.type === 'lend').reduce((s, d) => s + parseFloat(d.remainingAmount || 0), 0),
+      totalBorrow:   all.filter(d => d.type === 'borrow').reduce((s, d) => s + parseFloat(d.remainingAmount || 0), 0),
       activeLend:    all.filter(d => d.type === 'lend'   && d.status === 'active').length,
       activeBorrow:  all.filter(d => d.type === 'borrow' && d.status === 'active').length,
     };

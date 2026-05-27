@@ -64,8 +64,8 @@ const Budgets = () => {
 
   const overCount = budgetStatus?.summary?.overBudgetCount || 0;
   // tính toán tổng ngân sách, tổng chi tiêu và tổng còn lại dựa trên dữ liệu ngân sách hiện có, giúp người dùng có cái nhìn tổng quan về tình hình tài chính của mình trong kỳ ngân sách hiện tại. Điều này hỗ trợ họ trong việc quản lý và điều chỉnh chi tiêu một cách hiệu quả hơn để đạt được mục tiêu tài chính cá nhân của mình. 
-  const totalBudget = budgetStatus?.summary?.totalBudget || budgets.reduce((sum, b) => sum + (b.effectiveAmount ?? b.amount ?? 0), 0);
-  const totalSpending = budgetStatus?.summary?.totalSpending || budgets.reduce((sum, b) => sum + (b.currentSpending || 0), 0);
+  const totalBudget = budgetStatus?.summary?.totalBudget || budgets.reduce((sum, b) => sum + (parseFloat(b.effectiveAmount ?? b.amount ?? 0) || 0), 0);
+  const totalSpending = budgetStatus?.summary?.totalSpending || budgets.reduce((sum, b) => sum + (parseFloat(b.currentSpending) || 0), 0);
   const totalRemaining = budgetStatus?.summary?.totalRemaining ?? (totalBudget - totalSpending);
   const spendPercent = totalBudget > 0 ? Math.min((totalSpending / totalBudget) * 100, 100) : 0;
 

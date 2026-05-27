@@ -121,8 +121,8 @@ const Goals = () => {
   // tiến độ chung: tổng mục tiêu, đã đạt, còn thiếu, % hoàn thành
   const activeCount   = goals.filter(g => !g.isAchieved).length;
   const achievedCount = goals.filter(g => g.isAchieved).length;
-  const totalTarget = goals.reduce((sum, g) => sum + (g.targetAmount || 0), 0);
-  const totalCurrent = goals.reduce((sum, g) => sum + (g.currentAmount || 0), 0);
+  const totalTarget = goals.reduce((sum, g) => sum + (parseFloat(g.targetAmount) || 0), 0);
+  const totalCurrent = goals.reduce((sum, g) => sum + (parseFloat(g.currentAmount) || 0), 0);
   const totalRemaining = totalTarget - totalCurrent;
   const overallProgress = totalTarget > 0 ? Math.min((totalCurrent / totalTarget) * 100, 100) : 0;
   const topProgressGoals = [...goals]

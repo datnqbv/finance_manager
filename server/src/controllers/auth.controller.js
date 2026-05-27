@@ -208,7 +208,7 @@ export const updateProfile = async (req, res) => {
   try {
     const { name, budget, currency, avatar } = req.body;
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findByPk(req.user.id);
 
     if (!user) {
       return res.status(404).json({

@@ -61,8 +61,8 @@ const Debts = () => {
   );
 
   const activeDebts = debts.filter(d => d.status === 'active');
-  const totalLend = stats?.totalLend ?? debts.filter(d => d.type === 'lend').reduce((s, d) => s + (d.remainingAmount || 0), 0);
-  const totalBorrow = stats?.totalBorrow ?? debts.filter(d => d.type === 'borrow').reduce((s, d) => s + (d.remainingAmount || 0), 0);
+  const totalLend = parseFloat(stats?.totalLend) || debts.filter(d => d.type === 'lend').reduce((s, d) => s + (parseFloat(d.remainingAmount) || 0), 0);
+  const totalBorrow = parseFloat(stats?.totalBorrow) || debts.filter(d => d.type === 'borrow').reduce((s, d) => s + (parseFloat(d.remainingAmount) || 0), 0);
   const netBalance = totalLend - totalBorrow;
   const settledCount = debts.filter(d => d.status === 'settled').length;
   // dùng cho phần tiến độ trả nợ và biểu đồ biến động công nợ, ưu tiên hiển thị những khoản có số tiền lớn hoặc tiến độ đã trả gần hoàn thành để người dùng dễ dàng theo dõi và quản lý các khoản nợ quan trọng nhất của họ. Đồng thời, phần lịch nợ sẽ ưu tiên hiển thị những khoản sắp đến hạn để người dùng có thể chủ động trong việc thanh toán và tránh phát sinh quá hạn. 
