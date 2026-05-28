@@ -9,7 +9,7 @@ import Pagination from '../components/Pagination';
 
 const Goals = () => {
   const ITEMS_PER_PAGE = 8;
-  const { goals, goalStats, loading, fetchGoals, fetchGoalStats, createGoal, updateGoal, deleteGoal, addAmountToGoal } = useGoal();
+  const { goals, loading, fetchGoals, createGoal, updateGoal, deleteGoal, addAmountToGoal } = useGoal();
   const { t, language } = useLanguage();
   const isEnglish = language === 'en';
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,7 +23,6 @@ const Goals = () => {
 
   useEffect(() => {
     fetchGoals();
-    fetchGoalStats();
   }, []);
 
   const handleCreateGoal = async (goalData) => {

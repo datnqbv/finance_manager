@@ -15,10 +15,19 @@ export const getGoals = async (req, res) => {
 
     const goals = await Goal.findAll({ where: filter, order: [['deadline','ASC'], ['priority','DESC']] });
 
+    const goalsData = goals.map(goal => {
+      const data = goal.get({ plain: true });
+      data.progressPercentage = goal.progressPercentage;
+      data.remainingAmount = goal.remainingAmount;
+      data.daysRemaining = goal.daysRemaining;
+      data.monthlySaving = goal.calculateMonthlySaving();
+      return data;
+    });
+
     res.status(200).json({
       success: true,
-      count: goals.length,
-      data: goals
+      count: goalsData.length,
+      data: goalsData
     });
   } catch (error) {
     res.status(500).json({
@@ -230,7 +239,7 @@ export const addAmountToGoal = async (req, res) => {
 // @access  Private
 export const getGoalStats = async (req, res) => {
   try {
-    const goals = await Goal.findAll({ where: { userId: req.user.id } });
+    const goals = await Goal.findAll({ where: { userId: req.user.id }, raw: true });
 
     const totalGoals = goals.length;
     const achievedGoals = goals.filter(g => g.isAchieved).length;
@@ -238,7 +247,7 @@ export const getGoalStats = async (req, res) => {
     
     const totalTargetAmount = goals.reduce((sum, g) => sum + parseFloat(g.targetAmount || 0), 0);
     const totalCurrentAmount = goals.reduce((sum, g) => sum + parseFloat(g.currentAmount || 0), 0);
-    const totalRemainingAmount = goals.reduce((sum, g) => sum + g.remainingAmount, 0);
+    const totalRemainingAmount = goals.reduce((sum, g) => sum + Math.max(parseFloat(g.targetAmount || 0) - parseFloat(g.currentAmount || 0), 0), 0);
 
     const overallProgress = totalTargetAmount > 0 
       ? parseFloat(((totalCurrentAmount / totalTargetAmount) * 100).toFixed(1))

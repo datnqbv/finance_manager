@@ -56,6 +56,11 @@
     min-width: 130px;
     overflow: visible;
   }
+  /* Ẩn biểu tượng lịch mặc định của input type="date" */
+  .hide-picker-indicator::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+  }
   /* mẫu thẻ card */
   .card {
     @apply bg-white dark:bg-[#111111] rounded-xl shadow-sm 
@@ -107,11 +112,13 @@
   }
   
   /* Hide scrollbar nhưng vẫn scroll được */
-  .hide-scrollbar::-webkit-scrollbar {
+  .hide-scrollbar::-webkit-scrollbar,
+  .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
   
-  .hide-scrollbar {
+  .hide-scrollbar,
+  .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }

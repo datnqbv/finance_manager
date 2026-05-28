@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FiX } from 'react-icons/fi';
 import CurrencyInput from './CurrencyInput';
+import DatePicker from './DatePicker';
 
 const DebtModal = ({ debt, onClose, onSave }) => {
   const [form, setForm] = useState({
@@ -125,11 +126,9 @@ const DebtModal = ({ debt, onClose, onSave }) => {
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
               Hạn trả (tùy chọn)
             </label>
-            <input
-              type="date"
+            <DatePicker
               value={form.dueDate}
-              onChange={e => change('dueDate', e.target.value)}
-              className="input text-sm"
+              onChange={val => change('dueDate', val)}
             />
           </div>
 

@@ -85,7 +85,14 @@ const Statistics = () => {
   const [forecast,   setForecast]   = useState(null);
   const [trends,     setTrends]     = useState(null);
   const [daily,      setDaily]      = useState([]);
+  const [isMobile,   setIsMobile]   = useState(window.innerWidth < 768);
   const monthBundleCacheRef = useRef(new Map());
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fmt = useCallback((n) =>
     new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(n || 0),
@@ -153,7 +160,7 @@ const Statistics = () => {
     if (cmp.status === 'fulfilled') {
       const periods = cmp.value?.data?.periods || [];
       bundle.compare = periods.map(p => {
-        const [mon, yr] = (p.period || '').split('/');
+        const [mon, yr] = (p.label || p.period || '').split('/');
         return {
           month: parseInt(mon) || 0,
           year: parseInt(yr) || 0,
@@ -217,6 +224,7 @@ const Statistics = () => {
   }, [fetchMonthBundle, getMonthKey]);
 
   useEffect(() => {
+    if (!user?.id) return;
     monthBundleCacheRef.current.clear();
 
     const controller = new AbortController();
@@ -323,12 +331,12 @@ const Statistics = () => {
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2 items-center">
-            <div className="flex items-center bg-[#f4f7fb] dark:bg-[#222935] p-1 rounded-xl gap-0.5 flex-wrap">
+          <div className="mt-3 flex flex-wrap gap-2 items-center w-full overflow-hidden">
+            <div className="flex items-center bg-[#f4f7fb] dark:bg-[#222935] p-1 rounded-xl gap-0.5 overflow-x-auto max-w-full scrollbar-hide flex-nowrap">
               {Array.from({length: 12}, (_, i) => i + 1).map(m => (
                 <button key={m}
                   onClick={() => setSelectedMonth(m)}
-                  className={`w-9 h-7 rounded-lg text-xs font-semibold transition-all ${
+                  className={`w-9 h-7 rounded-lg text-xs font-semibold flex-shrink-0 transition-all ${
                     selectedMonth === m
                       ? 'bg-white dark:bg-[#303746] text-[#1f2733] dark:text-[#f1f4f8] shadow-sm'
                       : 'text-[#7f8795] dark:text-[#9ba3b2] hover:text-[#2d3645] dark:hover:text-[#e5eaf1]'
@@ -336,7 +344,7 @@ const Statistics = () => {
                 >{isEnglish ? `M${m}` : `T${m}`}</button>
               ))}
             </div>
-            <div className="flex items-center bg-[#f4f7fb] dark:bg-[#222935] p-1 rounded-xl gap-0.5">
+            <div className="flex items-center bg-[#f4f7fb] dark:bg-[#222935] p-1 rounded-xl gap-0.5 flex-shrink-0">
               {[selectedYear - 1, selectedYear, selectedYear + 1].map(y => (
                 <button key={y}
                   onClick={() => setSelectedYear(y)}
@@ -351,24 +359,24 @@ const Statistics = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Income' : 'Thu nhập'}</p>
-            <p className="mt-2 text-2xl font-black text-[#159b63] dark:text-[#58d49f]">{fmt(overviewIncome)}</p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Income' : 'Thu nhập'}</p>
+            <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#159b63] dark:text-[#58d49f] truncate">{fmt(overviewIncome)}</p>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Expense' : 'Chi tiêu'}</p>
-            <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">{fmt(overviewExpense)}</p>
+          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Expense' : 'Chi tiêu'}</p>
+            <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f] truncate">{fmt(overviewExpense)}</p>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Net savings' : 'Tiết kiệm ròng'}</p>
-            <p className={`mt-2 text-2xl font-black ${overviewSaving >= 0 ? 'text-[#2e67da] dark:text-[#8eb2ff]' : 'text-[#c0701c] dark:text-[#f2ba76]'}`}>
+          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Net savings' : 'Tiết kiệm ròng'}</p>
+            <p className={`mt-2 text-sm sm:text-xl md:text-2xl font-black truncate ${overviewSaving >= 0 ? 'text-[#2e67da] dark:text-[#8eb2ff]' : 'text-[#c0701c] dark:text-[#f2ba76]'}`}>
               {fmt(overviewSaving)}
             </p>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Transactions' : 'Giao dịch'}</p>
-            <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{monthly?.totalTransactions ?? 0}</p>
+          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Transactions' : 'Giao dịch'}</p>
+            <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#7a43db] dark:text-[#bd97ff] truncate">{monthly?.totalTransactions ?? 0}</p>
           </div>
         </div>
 
@@ -381,7 +389,7 @@ const Statistics = () => {
             {pieData.length > 0 ? (
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({name, percent}) => `${name} ${(percent*100).toFixed(0)}%`} labelLine={false} fontSize={10}>
+                  <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({name, percent}) => isMobile ? `${(percent*100).toFixed(0)}%` : `${name} ${(percent*100).toFixed(0)}%`} labelLine={false} fontSize={10}>
                     {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]}/>)}
                   </Pie>
                   <Tooltip content={<ChartTip fmt={fmt}/>}/>
@@ -441,28 +449,28 @@ const Statistics = () => {
   // ── Compare tab ──────────────────────────────────────────────────────────
   const CompareTab = () => (
     <div className="space-y-5">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total income (6 months)' : 'Tổng thu (6 tháng)'}</p>
-          <p className="mt-2 text-2xl font-black text-[#159b63] dark:text-[#58d49f]">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total income (6 months)' : 'Tổng thu (6 tháng)'}</p>
+          <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#159b63] dark:text-[#58d49f] truncate">
             {fmt(compare.reduce((s,m)=>s+(m.totalIncome||0),0))}
           </p>
         </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total expense (6 months)' : 'Tổng chi (6 tháng)'}</p>
-          <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">
+        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total expense (6 months)' : 'Tổng chi (6 tháng)'}</p>
+          <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f] truncate">
             {fmt(compare.reduce((s,m)=>s+(m.totalExpense||0),0))}
           </p>
         </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg income/month' : 'TB thu/tháng'}</p>
-          <p className="mt-2 text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff]">
+        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg income/month' : 'TB thu/tháng'}</p>
+          <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff] truncate">
             {fmt(compare.length ? compare.reduce((s,m)=>s+(m.totalIncome||0),0)/compare.length : 0)}
           </p>
         </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg expense/month' : 'TB chi/tháng'}</p>
-          <p className="mt-2 text-2xl font-black text-[#c0701c] dark:text-[#f2ba76]">
+        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg expense/month' : 'TB chi/tháng'}</p>
+          <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#c0701c] dark:text-[#f2ba76] truncate">
             {fmt(compare.length ? compare.reduce((s,m)=>s+(m.totalExpense||0),0)/compare.length : 0)}
           </p>
         </div>
@@ -493,7 +501,8 @@ const Statistics = () => {
           <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
             <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Monthly Details' : 'Chi tiết theo tháng'}</h3>
           </div>
-          <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-xs">
               <thead className="bg-[#f8f9fb] dark:bg-[#232936]">
                 <tr>
@@ -523,6 +532,46 @@ const Statistics = () => {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="block md:hidden divide-y divide-[#eef1f6] dark:divide-[#2a303b]">
+            {compare.map((m, i) => {
+              const savings = (m.totalIncome||0) - (m.totalExpense||0);
+              const rate    = m.totalIncome ? ((savings/m.totalIncome)*100).toFixed(1) : '—';
+              const prev    = compare[i-1];
+              const growth  = prev?.totalExpense ? (((m.totalExpense - prev.totalExpense)/prev.totalExpense)*100).toFixed(1) : '—';
+              return (
+                <div key={i} className="p-4 space-y-2 hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
+                  <div className="flex items-center justify-between font-bold text-sm text-gray-800 dark:text-gray-200">
+                    <span>{isEnglish ? 'Month' : 'Tháng'} {isEnglish ? 'M' : 'T'}{m.month}/{m.year}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${savings >= 0 ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-600' : 'bg-orange-50 dark:bg-orange-950/20 text-orange-600'}`}>
+                      {isEnglish ? 'Savings' : 'Tiết kiệm'}: {fmt(savings)}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex justify-between border-b border-gray-100 dark:border-gray-800/40 pb-1">
+                      <span>{isEnglish ? 'Income' : 'Thu nhập'}:</span>
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">{fmt(m.totalIncome)}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-gray-100 dark:border-gray-800/40 pb-1">
+                      <span>{isEnglish ? 'Expense' : 'Chi tiêu'}:</span>
+                      <span className="font-semibold text-red-600 dark:text-red-400">{fmt(m.totalExpense)}</span>
+                    </div>
+                    <div className="flex justify-between pb-1">
+                      <span>{isEnglish ? 'Savings rate' : 'Tỷ lệ tiết kiệm'}:</span>
+                      <span className="font-semibold text-gray-700 dark:text-gray-300">{rate !== '—' ? `${rate}%` : '—'}</span>
+                    </div>
+                    <div className="flex justify-between pb-1">
+                      <span>{isEnglish ? 'Expense growth' : 'Tăng trưởng chi'}:</span>
+                      <span className={`font-semibold ${growth !== '—' ? (parseFloat(growth) > 0 ? 'text-red-500' : 'text-emerald-500') : 'text-gray-400'}`}>
+                        {growth !== '—' ? `${parseFloat(growth) > 0 ? '+' : ''}${growth}%` : '—'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -557,22 +606,22 @@ const Statistics = () => {
 
     return (
       <div className="space-y-5">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Expense forecast' : 'Dự báo chi tiêu'}</p>
-            <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">{fmt(f?.nextMonthExpense)}</p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Expense forecast' : 'Dự báo chi tiêu'}</p>
+            <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f] truncate">{fmt(f?.nextMonthExpense)}</p>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Income forecast' : 'Dự báo thu nhập'}</p>
-            <p className="mt-2 text-2xl font-black text-[#159b63] dark:text-[#58d49f]">{fmt(f?.nextMonthIncome)}</p>
+          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Income forecast' : 'Dự báo thu nhập'}</p>
+            <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#159b63] dark:text-[#58d49f] truncate">{fmt(f?.nextMonthIncome)}</p>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Savings forecast' : 'Dự báo tiết kiệm'}</p>
-            <p className="mt-2 text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff]">{fmt(f?.nextMonthSavings)}</p>
+          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Savings forecast' : 'Dự báo tiết kiệm'}</p>
+            <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff] truncate">{fmt(f?.nextMonthSavings)}</p>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Model confidence' : 'Độ tin cậy mô hình'}</p>
-            <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{f?.confidencePercent !== undefined ? `${f.confidencePercent}%` : (confidenceMap[f?.confidence] || '—')}</p>
+          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Model confidence' : 'Độ tin cậy mô hình'}</p>
+            <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#7a43db] dark:text-[#bd97ff] truncate">{f?.confidencePercent !== undefined ? `${f.confidencePercent}%` : (confidenceMap[f?.confidence] || '—')}</p>
           </div>
         </div>
 
@@ -661,7 +710,8 @@ const Statistics = () => {
             <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
               <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Category Expense Forecast' : 'Dự báo chi tiêu theo danh mục'}</h3>
             </div>
-            <div className="overflow-x-auto">
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-xs">
                 <thead className="bg-[#f8f9fb] dark:bg-[#232936]">
                   <tr>
@@ -683,6 +733,34 @@ const Statistics = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Card View */}
+            <div className="block md:hidden divide-y divide-[#eef1f6] dark:divide-[#2a303b]">
+              {catForecastList.map(([cat, d]) => (
+                <div key={cat} className="p-4 space-y-2 hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
+                  <div className="flex items-center justify-between font-bold text-sm text-gray-800 dark:text-gray-200">
+                    <span>{cat}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-950/20 text-red-600">
+                      {isEnglish ? 'Forecast' : 'Dự báo'}: {fmt(d.forecast)}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex justify-between border-b border-gray-100 dark:border-gray-800/40 pb-1">
+                      <span>{isEnglish ? 'Average/month' : 'TB/tháng'}:</span>
+                      <span className="font-semibold text-gray-700 dark:text-gray-300">{fmt(d.average)}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-gray-100 dark:border-gray-800/40 pb-1">
+                      <span>{isEnglish ? 'Trend' : 'Xu hướng'}:</span>
+                      <span><TrendBadge trend={d.trend} isEnglish={isEnglish}/></span>
+                    </div>
+                    <div className="col-span-2 flex justify-between pb-0.5">
+                      <span>{isEnglish ? 'Confidence' : 'Độ tin cậy'}:</span>
+                      <span><ConfidenceBadge confidence={d.r2 > 0.7 ? 'high' : d.r2 > 0.4 ? 'medium' : 'low'} isEnglish={isEnglish}/></span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -695,22 +773,22 @@ const Statistics = () => {
     const trendData = t?.monthlyData || [];
     return (
       <div className="space-y-5">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg income/month' : 'TB Thu/tháng'}</p>
-            <p className="mt-2 text-2xl font-black text-[#159b63] dark:text-[#58d49f]">{fmt(t?.averageIncome)}</p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg income/month' : 'TB Thu/tháng'}</p>
+            <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#159b63] dark:text-[#58d49f] truncate">{fmt(t?.averageIncome)}</p>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg expense/month' : 'TB Chi/tháng'}</p>
-            <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">{fmt(t?.averageExpense)}</p>
+          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg expense/month' : 'TB Chi/tháng'}</p>
+            <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f] truncate">{fmt(t?.averageExpense)}</p>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg savings' : 'TB Tiết kiệm'}</p>
-            <p className="mt-2 text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff]">{fmt(t?.averageSavings)}</p>
+          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg savings' : 'TB Tiết kiệm'}</p>
+            <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff] truncate">{fmt(t?.averageSavings)}</p>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Expense trend' : 'Xu hướng chi'}</p>
-            <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{t?.overallTrend || '—'}</p>
+          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Expense trend' : 'Xu hướng chi'}</p>
+            <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#7a43db] dark:text-[#bd97ff] truncate">{t?.overallTrend || '—'}</p>
           </div>
         </div>
 
@@ -754,7 +832,8 @@ const Statistics = () => {
             <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
               <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Monthly Details' : 'Chi tiết theo tháng'}</h3>
             </div>
-            <div className="overflow-x-auto">
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-xs">
                 <thead className="bg-[#f8f9fb] dark:bg-[#232936]">
                   <tr>
@@ -785,6 +864,42 @@ const Statistics = () => {
                   })}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="block md:hidden divide-y divide-[#eef1f6] dark:divide-[#2a303b]">
+              {trendData.map((d, i) => {
+                const rate = d.income ? ((d.savings/d.income)*100) : 0;
+                return (
+                  <div key={i} className="p-4 space-y-2 hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
+                    <div className="flex items-center justify-between font-bold text-sm text-gray-800 dark:text-gray-200">
+                      <span>{isEnglish ? 'Month' : 'Tháng'} {isEnglish ? 'M' : 'T'}{d.month}/{d.year}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${d.savings >= 0 ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-600' : 'bg-orange-50 dark:bg-orange-950/20 text-orange-600'}`}>
+                        {isEnglish ? 'Savings' : 'Tiết kiệm'}: {fmt(d.savings)}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      <div className="flex justify-between border-b border-gray-100 dark:border-gray-800/40 pb-1">
+                        <span>{isEnglish ? 'Income' : 'Thu nhập'}:</span>
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">{fmt(d.income)}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-gray-100 dark:border-gray-800/40 pb-1">
+                        <span>{isEnglish ? 'Expense' : 'Chi tiêu'}:</span>
+                        <span className="font-semibold text-red-600 dark:text-red-400">{fmt(d.expense)}</span>
+                      </div>
+                      <div className="col-span-2 flex justify-between items-center pb-0.5 pt-1">
+                        <span>{isEnglish ? 'Savings rate' : 'Tỷ lệ tiết kiệm'}:</span>
+                        <div className="flex items-center gap-2">
+                          <div className="h-1.5 w-16 bg-gray-100 dark:bg-[#2a2a2a] rounded-full overflow-hidden">
+                            <div className="h-full rounded-full bg-blue-500 transition-all" style={{width:`${Math.max(0,Math.min(100,rate))}%`}}/>
+                          </div>
+                          <span className="font-semibold text-gray-700 dark:text-gray-300">{rate.toFixed(1)}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -823,24 +938,24 @@ const Statistics = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total income in period' : 'Tổng thu giai đoạn'}</p>
-          <p className="mt-2 text-2xl font-black text-[#159b63] dark:text-[#58d49f]">{fmt(dailyIncomeTotal)}</p>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total income in period' : 'Tổng thu giai đoạn'}</p>
+          <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#159b63] dark:text-[#58d49f] truncate">{fmt(dailyIncomeTotal)}</p>
         </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total expense in period' : 'Tổng chi giai đoạn'}</p>
-          <p className="mt-2 text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f]">{fmt(dailyExpenseTotal)}</p>
+        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total expense in period' : 'Tổng chi giai đoạn'}</p>
+          <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f] truncate">{fmt(dailyExpenseTotal)}</p>
         </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Net balance' : 'Cân bằng ròng'}</p>
-          <p className={`mt-2 text-2xl font-black ${dailyIncomeTotal - dailyExpenseTotal >= 0 ? 'text-[#2e67da] dark:text-[#8eb2ff]' : 'text-[#c0701c] dark:text-[#f2ba76]'}`}>
+        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Net balance' : 'Cân bằng ròng'}</p>
+          <p className={`mt-2 text-sm sm:text-xl md:text-2xl font-black truncate ${dailyIncomeTotal - dailyExpenseTotal >= 0 ? 'text-[#2e67da] dark:text-[#8eb2ff]' : 'text-[#c0701c] dark:text-[#f2ba76]'}`}>
             {fmt(dailyIncomeTotal - dailyExpenseTotal)}
           </p>
         </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
-          <p className="text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Transactions count' : 'Số giao dịch'}</p>
-          <p className="mt-2 text-2xl font-black text-[#7a43db] dark:text-[#bd97ff]">{dailyTxTotal}</p>
+        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Transactions count' : 'Số giao dịch'}</p>
+          <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#7a43db] dark:text-[#bd97ff] truncate">{dailyTxTotal}</p>
         </div>
       </div>
 
@@ -871,7 +986,8 @@ const Statistics = () => {
             <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
               <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Daily Details' : 'Chi tiết theo ngày'}</h3>
             </div>
-            <div className="overflow-x-auto max-h-80 overflow-y-auto">
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto max-h-80 overflow-y-auto">
               <table className="w-full text-xs">
                 <thead className="bg-[#f8f9fb] dark:bg-[#232936] sticky top-0">
                   <tr>
@@ -893,6 +1009,30 @@ const Statistics = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="block md:hidden max-h-80 overflow-y-auto divide-y divide-[#eef1f6] dark:divide-[#2a303b]">
+              {[...daily].reverse().map((d, i) => (
+                <div key={i} className="p-4 space-y-2 hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
+                  <div className="flex items-center justify-between font-bold text-sm text-gray-800 dark:text-gray-200">
+                    <span>{new Date(d.date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-[#be9cff]">
+                      {d.count || 0} {isEnglish ? 'Txs' : 'giao dịch'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex justify-between border-b border-gray-100 dark:border-gray-800/40 pb-1">
+                      <span>{isEnglish ? 'Income' : 'Thu nhập'}:</span>
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">{fmt(d.income)}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-gray-100 dark:border-gray-800/40 pb-1">
+                      <span>{isEnglish ? 'Expense' : 'Chi tiêu'}:</span>
+                      <span className="font-semibold text-red-600 dark:text-red-400">{fmt(d.expense)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </>
@@ -917,31 +1057,31 @@ const Statistics = () => {
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
-        <div className="xl:col-span-8 rounded-xl bg-[#004b38] p-6 text-white shadow-[0_14px_40px_rgba(1,56,42,0.28)] relative overflow-hidden">
+        <div className="xl:col-span-8 rounded-xl bg-[#004b38] p-5 sm:p-6 text-white shadow-[0_14px_40px_rgba(1,56,42,0.28)] relative overflow-hidden">
           <div className="absolute -right-8 top-1/2 h-52 w-52 -translate-y-1/2 rounded-full bg-[#4c8f7a] opacity-35" />
           <div className="relative">
             <div className="flex items-center gap-2">
               <FiBarChart2 size={18} className="text-[#b8e4d6]" />
               <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">{isEnglish ? 'Statistics Dashboard' : 'Bảng điều khiển thống kê'}</p>
             </div>
-            <h1 className="mt-3 text-5xl font-black tracking-tight">{fmt(currentBalance)}</h1>
+            <h1 className="mt-3 text-3xl sm:text-5xl font-black tracking-tight">{fmt(currentBalance)}</h1>
             <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-[#d8fff2]">
               <FiZap size={12} />
               {periodLabel} • {isEnglish ? 'Savings rate' : 'Tỷ lệ tiết kiệm'} {savingRate.toFixed(1)}%
             </div>
 
-            <div className="mt-8 grid grid-cols-1 gap-4 border-t border-[#1e6b57] pt-5 sm:grid-cols-3">
+            <div className="mt-6 md:mt-8 grid grid-cols-3 gap-2 sm:gap-4 border-t border-[#1e6b57] pt-5">
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Total income' : 'Tổng thu'}</p>
-                <p className="mt-1 text-2xl font-bold">{fmt(currentIncome)}</p>
+                <p className="text-[10px] md:text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Total income' : 'Tổng thu'}</p>
+                <p className="mt-1 text-sm sm:text-base md:text-2xl font-bold truncate">{fmt(currentIncome)}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Total expense' : 'Tổng chi'}</p>
-                <p className="mt-1 text-2xl font-bold">{fmt(currentExpense)}</p>
+                <p className="text-[10px] md:text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Total expense' : 'Tổng chi'}</p>
+                <p className="mt-1 text-sm sm:text-base md:text-2xl font-bold truncate">{fmt(currentExpense)}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Transactions' : 'Số giao dịch'}</p>
-                <p className="mt-1 text-2xl font-bold">{monthly?.totalTransactions ?? 0}</p>
+                <p className="text-[10px] md:text-xs uppercase tracking-wide text-[#9ed3c3]">{isEnglish ? 'Transactions' : 'Số giao dịch'}</p>
+                <p className="mt-1 text-sm sm:text-base md:text-2xl font-bold truncate">{monthly?.totalTransactions ?? 0}</p>
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FaTimes, FaInfoCircle } from 'react-icons/fa';
 import CurrencyInput from './CurrencyInput';
+import DatePicker from './DatePicker';
 
 const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
   const [formData, setFormData] = useState({
@@ -215,12 +216,15 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
                 Hạn Hoàn Thành *
               </label>
-              <input
-                type="date"
-                name="deadline"
+              <DatePicker
                 value={formData.deadline}
-                onChange={handleChange}
-                className={`input text-sm ${errors.deadline ? 'border-red-500' : ''}`}
+                onChange={val => {
+                  setFormData(prev => ({ ...prev, deadline: val }));
+                  if (errors.deadline) {
+                    setErrors(prev => ({ ...prev, deadline: '' }));
+                  }
+                }}
+                className={errors.deadline ? 'border-red-500' : ''}
               />
               {errors.deadline && (
                 <p className="mt-1 text-xs text-red-500">{errors.deadline}</p>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import CurrencyInput from './CurrencyInput';
+import DatePicker from './DatePicker';
 import { useTransactions } from '../context/TransactionContext';
 import { useCategories } from '../context/CategoryContext';
 import { useWallets } from '../context/WalletContext';
@@ -78,6 +79,60 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
     setSmartText('');
   };
 
+  const preprocessImage = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          
+          // Draw image to canvas
+          ctx.drawImage(img, 0, 0);
+          
+          // Get image data
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imageData.data;
+          
+          // Apply linear contrast stretching to make text darker and paper whiter without creating solid black shadow blocks
+          const contrast = 1.5;
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            
+            // Grayscale conversion
+            const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+            
+            // Contrast adjustment formula
+            let v = contrast * (gray - 128) + 128;
+            v = Math.max(0, Math.min(255, v));
+            
+            data[i] = v;
+            data[i + 1] = v;
+            data[i + 2] = v;
+          }
+          
+          ctx.putImageData(imageData, 0, 0);
+          
+          // Convert canvas back to file blob
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+            } else {
+              resolve(file);
+            }
+          }, 'image/jpeg');
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -86,36 +141,211 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
     const toastId = toast.loading("🔍 Đang đọc hóa đơn...");
 
     try {
+      // Preprocess image to enhance OCR readability (resolves dot matrix and blur details)
+      const processedFile = await preprocessImage(file);
+
       // Tesseract reads image and identifies text
-      const result = await Tesseract.recognize(file, 'vie', { 
+      const result = await Tesseract.recognize(processedFile, 'vie', { 
         logger: m => {} 
       });
       
       const text = result.data.text.toLowerCase();
       const lines = text.split('\n');
-      let maxTotal = 0;
+      
+      // OCR numeric character pattern: allow digits, and commonly confused characters
+      // o/O -> 0, l/i/I/|/! -> 1, s/S -> 5, g -> 9
+      const OCR_NUM_CHAR = '[0-9oOl|i!IsSg]';
+      const numberRegex = new RegExp(`\\b${OCR_NUM_CHAR}+(?:[.,]\\s*${OCR_NUM_CHAR}+)*\\b`, 'g');
 
-      // Scan each line for total indicators
-      for (let line of lines) {
-        if (line.includes('tổng') || line.includes('total') || line.includes('thanh toán') || line.includes('vnd') || line.includes('cộng')) {
-          const matches = line.match(/\d+([.,]\d+)+/g);
-          if (matches) {
-            matches.forEach(m => {
-              const val = parseFloat(m.replace(/[,.]/g, ''));
-              if (val > maxTotal && val > 1000) maxTotal = val; // Assuming logic total > 1000 vnđ
-            });
+      const cleanNumber = (str) => {
+        let cleaned = str.toLowerCase();
+        // Correct common OCR errors
+        cleaned = cleaned.replace(/[oO]/g, '0');
+        cleaned = cleaned.replace(/[liI|!]/g, '1');
+        cleaned = cleaned.replace(/[sS]/g, '5');
+        cleaned = cleaned.replace(/g/g, '9');
+        
+        // Remove decimal cents/xu part (.00 or ,00) at the end
+        cleaned = cleaned.replace(/[.,]00\s*$/, '');
+        
+        // Strip out non-digit formatting characters
+        cleaned = cleaned.replace(/\D/g, '');
+        
+        return parseFloat(cleaned) || 0;
+      };
+
+      const isIgnoredNumber = (str, val) => {
+        const digits = str.replace(/\D/g, '');
+        
+        // Ignore Vietnamese phone numbers (starts with 0 and has 10 digits, or starts with 84 and has 11-12 digits)
+        if (/^0\d{9}$/.test(digits) || /^84\d{9,10}$/.test(digits)) {
+          return true;
+        }
+        
+        // Ignore tax codes / MST (typically 10 or 13 digits)
+        if (digits.length === 10 || digits.length === 13) {
+          return true;
+        }
+        
+        // Ignore calendar years (e.g. 2020-2030)
+        if (val >= 2020 && val <= 2030) {
+          return true;
+        }
+        
+        return false;
+      };
+
+      const getLineScore = (lineText) => {
+        let score = 0;
+        const normalized = lineText.toLowerCase();
+
+        // Exclude phone ranges, dates, addresses (e.g. 13-11-2011, 9407863-8259956, 17-19)
+        if (/\b\d+\s*[-\/]\s*\d+\b/.test(normalized)) {
+          return -150;
+        }
+
+        // Phone number / Contact lines - should be heavily penalized or ignored
+        const phoneKeywords = ['đt', 'dt', 'tel', 'phone', 'fax', 'hotline', 'điện thoại', 'dien thoai', 'contact', 'mst', 'mst:', 'dĩ', 'dỉ', 'di', 'đỉ', 'đĩ'];
+        for (const kw of phoneKeywords) {
+          if (normalized.includes(kw)) {
+            return -150; // Return immediately to exclude/penalize this line completely
           }
+        }
+
+        // Very high priority: explicit total keywords
+        const veryHighKeywords = [
+          'tổng cộng', 'tong cong', 'tổng tiền', 'tong tien', 'tổng thanh toán', 'tong thanh toan',
+          'total amount', 'amount due', 'net total', 'grand total', 'khách phải trả', 'khach phai tra',
+          'khách cần trả', 'khach can tra', 'khách thanh toán', 'khach thanh toan', 'tổng cộng/total',
+          'cần thanh toán', 'can thanh toan', 'tổng cộng thanh toán'
+        ];
+        
+        // High priority: general total/sum words
+        const highKeywords = [
+          'tổng', 'total', 'thanh toán', 'thanh toan', 'thành tiền', 'thanh tien', 'tiền phải trả',
+          'sum', 'cộng tiền', 'cong tien'
+        ];
+
+        // Medium priority: payment details
+        const medKeywords = [
+          'tiền mặt', 'tien mat', 'chuyển khoản', 'chuyen khoan', 'banking', 'thẻ', 'card',
+          'cash', 'visa', 'mastercard', 'vnpay', 'momo'
+        ];
+
+        // Negative priority: change details, customer paid, quantity
+        const negKeywords = [
+          'tiền thừa', 'tien thua', 'thối lại', 'thoi lai', 'tiền thối', 'tien thoi', 'change', 'balance',
+          'khách đưa', 'khach dua', 'tiền khách đưa', 'tien khach dua', 'nhận của khách', 'nhan cua khach'
+        ];
+
+        // Detail rows (e.g., quantities, item unit prices)
+        const detailKeywords = [
+          'đơn giá', 'don gia', 'giá bán', 'gia ban', 'unit price', 'price', 'số lượng', 'so luong',
+          'quantity', 'qty', 'x1', 'x2', 'x3', 'x4', 'x5'
+        ];
+
+        for (const kw of veryHighKeywords) {
+          if (normalized.includes(kw)) {
+            score += 100;
+            break;
+          }
+        }
+
+        if (score === 0) {
+          for (const kw of highKeywords) {
+            if (normalized.includes(kw)) {
+              score += 50;
+              break;
+            }
+          }
+        }
+
+        for (const kw of medKeywords) {
+          if (normalized.includes(kw)) {
+            score += 15;
+          }
+        }
+
+        for (const kw of negKeywords) {
+          if (normalized.includes(kw)) {
+            score -= 100;
+          }
+        }
+
+        for (const kw of detailKeywords) {
+          if (normalized.includes(kw)) {
+            score -= 50;
+          }
+        }
+
+        return score;
+      };
+
+      const candidates = [];
+      const lineScores = lines.map(line => getLineScore(line));
+
+      for (let i = 0; i < lines.length; i++) {
+        let score = lineScores[i];
+        
+        // Score inheritance: if current line has no keywords, it might inherit from the line directly above
+        // Label is always above or on the same line as the amount, never below
+        if (score <= 0 && i > 0) {
+          const aboveScore = lineScores[i - 1];
+          if (aboveScore > 0) {
+            score = Math.max(score, aboveScore * 0.8);
+          }
+        }
+
+        const matches = lines[i].match(numberRegex);
+        if (matches) {
+          matches.forEach(m => {
+            const val = cleanNumber(m);
+            // Ignore candidates <= 1000 VND and those flagged as phone numbers/tax codes/years
+            if (val > 1000 && !isIgnoredNumber(m, val)) {
+              candidates.push({
+                text: m,
+                value: val,
+                score: score,
+                line: lines[i]
+              });
+            }
+          });
         }
       }
 
-      // Fallback: if keywords failed, just grab the absolute largest number in the document
-      if (maxTotal === 0) {
-        const allMatches = text.match(/\d+([.,]\d+)+/g);
-        if (allMatches) {
-           allMatches.forEach(m => {
-              const val = parseFloat(m.replace(/[,.]/g, ''));
-              if (val > maxTotal) maxTotal = val; 
-           });
+      // Sort: highest score first, then largest value
+      candidates.sort((a, b) => {
+        if (b.score !== a.score) {
+          return b.score - a.score;
+        }
+        return b.value - a.value;
+      });
+
+      let maxTotal = 0;
+      const positiveCandidates = candidates.filter(c => c.score > 0);
+
+      if (positiveCandidates.length > 0) {
+        maxTotal = positiveCandidates[0].value;
+      } else {
+        // Fallback: no keywords matched
+        // Filter candidates that have a score of 0 or -50 (items/details), excluding phone numbers (-150)
+        const itemCandidates = candidates.filter(c => c.score <= 0 && c.score >= -99);
+        
+        if (itemCandidates.length >= 3) {
+          // Sort item candidates descending by value
+          itemCandidates.sort((a, b) => b.value - a.value);
+          const largest = itemCandidates[0].value;
+          const sumOfOthers = itemCandidates.slice(1).reduce((sum, c) => sum + c.value, 0);
+          
+          // If the sum of other items is significantly larger than the single largest item,
+          // it means the actual total is missing, so we sum all items!
+          if (sumOfOthers > largest * 1.2) {
+            maxTotal = sumOfOthers + largest;
+          }
+        }
+        
+        if (maxTotal === 0 && candidates.length > 0) {
+          maxTotal = candidates[0].value;
         }
       }
 
@@ -427,13 +657,10 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
               Ngày
             </label>
-            <input
-              type="date"
-              name="date"
+            <DatePicker
               value={formData.date}
-              onChange={handleChange}
-              required
-              className="input w-full text-sm"
+              onChange={v => setFormData(prev => ({ ...prev, date: v }))}
+              clearable={false}
             />
           </div>
 

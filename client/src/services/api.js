@@ -92,4 +92,47 @@ api.interceptors.response.use(
   }
 );
 
+// GET Request Caching and Deduplication
+const getCache = new Map();
+const CACHE_TTL = 2000; // 2 seconds
+
+// Override api.request to intercept all calls
+const originalRequest = api.request;
+api.request = function (configOrUrl, config) {
+  let conf = {};
+  if (typeof configOrUrl === 'string') {
+    conf = config || {};
+    conf.url = configOrUrl;
+  } else {
+    conf = configOrUrl || {};
+  }
+
+  const method = (conf.method || 'get').toLowerCase();
+
+  if (method === 'get') {
+    // Create a unique key based on URL and query params
+    const key = JSON.stringify({ url: conf.url, params: conf.params });
+    const cached = getCache.get(key);
+
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.promise;
+    }
+
+    const promise = originalRequest.call(this, configOrUrl, config)
+      .catch((err) => {
+        // If the request fails, remove it from cache immediately
+        getCache.delete(key);
+        throw err;
+      });
+
+    getCache.set(key, { promise, timestamp: Date.now() });
+    return promise;
+  } else {
+    // For non-GET requests (POST, PUT, DELETE, PATCH), invalidate the entire cache
+    getCache.clear();
+    return originalRequest.call(this, configOrUrl, config);
+  }
+};
+
 export default api;
+

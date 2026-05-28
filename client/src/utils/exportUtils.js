@@ -1,50 +1,13 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-
-// Convert Vietnamese characters to basic ASCII for PDF compatibility
-const convertVietnameseToAscii = (text) => {
-  if (!text) return text;
-  
-  const map = {
-    'à': 'a', 'á': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
-    'ă': 'a', 'ằ': 'a', 'ắ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
-    'â': 'a', 'ầ': 'a', 'ấ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ậ': 'a',
-    'è': 'e', 'é': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
-    'ê': 'e', 'ề': 'e', 'ế': 'e', 'ể': 'e', 'ễ': 'e', 'ệ': 'e',
-    'ì': 'i', 'í': 'i', 'ỉ': 'i', 'ĩ': 'i', 'ị': 'i',
-    'ò': 'o', 'ó': 'o', 'ỏ': 'o', 'õ': 'o', 'ọ': 'o',
-    'ô': 'o', 'ồ': 'o', 'ố': 'o', 'ổ': 'o', 'ỗ': 'o', 'ộ': 'o',
-    'ơ': 'o', 'ờ': 'o', 'ớ': 'o', 'ở': 'o', 'ỡ': 'o', 'ợ': 'o',
-    'ù': 'u', 'ú': 'u', 'ủ': 'u', 'ũ': 'u', 'ụ': 'u',
-    'ư': 'u', 'ừ': 'u', 'ứ': 'u', 'ử': 'u', 'ữ': 'u', 'ự': 'u',
-    'ỳ': 'y', 'ý': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
-    'đ': 'd',
-    'À': 'A', 'Á': 'A', 'Ả': 'A', 'Ã': 'A', 'Ạ': 'A',
-    'Ă': 'A', 'Ằ': 'A', 'Ắ': 'A', 'Ẳ': 'A', 'Ẵ': 'A', 'Ặ': 'A',
-    'Â': 'A', 'Ầ': 'A', 'Ấ': 'A', 'Ẩ': 'A', 'Ẫ': 'A', 'Ậ': 'A',
-    'È': 'E', 'É': 'E', 'Ẻ': 'E', 'Ẽ': 'E', 'Ẹ': 'E',
-    'Ê': 'E', 'Ề': 'E', 'Ế': 'E', 'Ể': 'E', 'Ễ': 'E', 'Ệ': 'E',
-    'Ì': 'I', 'Í': 'I', 'Ỉ': 'I', 'Ĩ': 'I', 'Ị': 'I',
-    'Ò': 'O', 'Ó': 'O', 'Ỏ': 'O', 'Õ': 'O', 'Ọ': 'O',
-    'Ô': 'O', 'Ồ': 'O', 'Ố': 'O', 'Ổ': 'O', 'Ỗ': 'O', 'Ộ': 'O',
-    'Ơ': 'O', 'Ờ': 'O', 'Ớ': 'O', 'Ở': 'O', 'Ỡ': 'O', 'Ợ': 'O',
-    'Ù': 'U', 'Ú': 'U', 'Ủ': 'U', 'Ũ': 'U', 'Ụ': 'U',
-    'Ư': 'U', 'Ừ': 'U', 'Ứ': 'U', 'Ử': 'U', 'Ữ': 'U', 'Ự': 'U',
-    'Ỳ': 'Y', 'Ý': 'Y', 'Ỷ': 'Y', 'Ỹ': 'Y', 'Ỵ': 'Y',
-    'Đ': 'D'
-  };
-  
-  return text.replace(/[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴĐ]/g, function(char) {
-    return map[char] || char;
-  });
-};
+import { robotoBase64 } from './robotoFont';
 
 // Format currency for display
 const formatCurrency = (amount, currency = 'VND') => {
-  return new Intl.NumberFormat('vi-VN', { // Vietnamese locale
+  return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
-    currency: currency,
+    currency: currency || 'VND',
   }).format(amount);
 };
 
@@ -57,209 +20,378 @@ const formatDate = (date) => {
   });
 };
 
-// Export transactions to PDF
-export const exportToPDF = (transactions, user) => {
+// Helper to initialize jsPDF document with Roboto Unicode Font
+const createPdfWithFont = () => {
   const doc = new jsPDF();
-  
-  // Add title (convert Vietnamese to ASCII)
-  doc.setFontSize(20);
-  doc.text(convertVietnameseToAscii('Bao Cao Giao Dich'), 14, 20);
-  
+  doc.addFileToVFS('Roboto-Regular.ttf', robotoBase64);
+  doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+  doc.setFont('Roboto');
+  return doc;
+};
+
+const getReportTitle = (groupBy) => {
+  if (groupBy === 'day') return 'BÁO CÁO GIAO DỊCH THEO NGÀY';
+  if (groupBy === 'month') return 'BÁO CÁO GIAO DỊCH THEO THÁNG';
+  if (groupBy === 'quarter') return 'BÁO CÁO GIAO DỊCH THEO QUÝ';
+  return 'BÁO CÁO CHI TIẾT GIAO DỊCH';
+};
+
+// Export transactions to PDF
+export const exportToPDF = (transactions, user, groupBy = 'detail') => {
+  const doc = createPdfWithFont();
+  const reportTitle = getReportTitle(groupBy);
+
+  // Add title (using full Vietnamese diacritics)
+  doc.setFontSize(18);
+  doc.setTextColor(17, 24, 39); // Gray 900
+  doc.text(reportTitle, 14, 20);
+
   // Add user info and date
   doc.setFontSize(10);
-  doc.text(convertVietnameseToAscii(`Nguoi dung: ${user?.name || 'N/A'}`), 14, 30);
-  doc.text(convertVietnameseToAscii(`Ngay xuat: ${formatDate(new Date())}`), 14, 35);
-  doc.text(convertVietnameseToAscii(`Tong so giao dich: ${transactions.length}`), 14, 40);
-  
+  doc.setTextColor(107, 114, 128); // Gray 500
+  doc.text(`Người xuất: ${user?.name || 'N/A'}`, 14, 30);
+  doc.text(`Ngày xuất: ${formatDate(new Date())}`, 14, 35);
+  doc.text(`Tổng số giao dịch gốc: ${transactions.length}`, 14, 40);
+
   // Calculate totals
   const totalIncome = transactions
     .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
-  
+    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
   const totalExpense = transactions
     .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
-  
+    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
   const balance = totalIncome - totalExpense;
-  
-  // Add totals
-  doc.text(convertVietnameseToAscii(`Tong thu: ${formatCurrency(totalIncome, user?.currency)}`), 14, 45);
-  doc.text(convertVietnameseToAscii(`Tong chi: ${formatCurrency(totalExpense, user?.currency)}`), 14, 50);
-  doc.text(convertVietnameseToAscii(`So du: ${formatCurrency(balance, user?.currency)}`), 14, 55);
-  
-  // Prepare table data (convert Vietnamese text)
-  const tableData = transactions.map(t => [
-    formatDate(t.date),
-    convertVietnameseToAscii(t.type === 'income' ? 'Thu nhap' : 'Chi tieu'),
-    convertVietnameseToAscii(t.category),
-    formatCurrency(t.amount, user?.currency),
-    convertVietnameseToAscii(t.note) || '-'
-  ]);
-  
-  // Add table
+
+  // Add totals section with color highlights
+  doc.setFontSize(11);
+  doc.setTextColor(16, 185, 129); // Emerald 500
+  doc.text(`Tổng thu: ${formatCurrency(totalIncome, user?.currency)}`, 14, 48);
+  doc.setTextColor(239, 68, 68); // Red 500
+  doc.text(`Tổng chi: ${formatCurrency(totalExpense, user?.currency)}`, 14, 54);
+
+  if (balance >= 0) {
+    doc.setTextColor(16, 185, 129);
+  } else {
+    doc.setTextColor(239, 68, 68);
+  }
+  doc.text(`Số dư ròng: ${formatCurrency(balance, user?.currency)}`, 14, 60);
+
+  let headers = [];
+  let tableData = [];
+
+  if (groupBy === 'detail') {
+    headers = [['Ngày', 'Loại', 'Danh mục', 'Số tiền', 'Ghi chú']];
+    tableData = transactions.map(t => [
+      formatDate(t.date),
+      t.type === 'income' ? 'Thu nhập' : (t.type === 'expense' ? 'Chi tiêu' : 'Chuyển khoản'),
+      t.category || '-',
+      formatCurrency(t.amount, user?.currency),
+      t.note || '-'
+    ]);
+  } else if (groupBy === 'day') {
+    headers = [['Ngày', 'Tổng thu nhập', 'Tổng chi tiêu', 'Số dư ròng']];
+    const groups = {};
+    transactions.forEach(t => {
+      const key = formatDate(t.date);
+      if (!groups[key]) groups[key] = { key, income: 0, expense: 0 };
+      if (t.type === 'income') groups[key].income += (parseFloat(t.amount) || 0);
+      if (t.type === 'expense') groups[key].expense += (parseFloat(t.amount) || 0);
+    });
+
+    tableData = Object.values(groups)
+      .sort((a, b) => new Date(b.key.split('/').reverse().join('-')) - new Date(a.key.split('/').reverse().join('-')))
+      .map(g => [
+        g.key,
+        formatCurrency(g.income, user?.currency),
+        formatCurrency(g.expense, user?.currency),
+        formatCurrency(g.income - g.expense, user?.currency)
+      ]);
+  } else if (groupBy === 'month') {
+    headers = [['Tháng', 'Tổng thu nhập', 'Tổng chi tiêu', 'Số dư ròng']];
+    const groups = {};
+    transactions.forEach(t => {
+      const d = new Date(t.date);
+      const key = `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+      if (!groups[key]) groups[key] = { key, income: 0, expense: 0, year: d.getFullYear(), month: d.getMonth() };
+      if (t.type === 'income') groups[key].income += (parseFloat(t.amount) || 0);
+      if (t.type === 'expense') groups[key].expense += (parseFloat(t.amount) || 0);
+    });
+
+    tableData = Object.values(groups)
+      .sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month))
+      .map(g => [
+        g.key,
+        formatCurrency(g.income, user?.currency),
+        formatCurrency(g.expense, user?.currency),
+        formatCurrency(g.income - g.expense, user?.currency)
+      ]);
+  } else if (groupBy === 'quarter') {
+    headers = [['Quý', 'Tổng thu nhập', 'Tổng chi tiêu', 'Số dư ròng']];
+    const groups = {};
+    transactions.forEach(t => {
+      const d = new Date(t.date);
+      const q = Math.floor(d.getMonth() / 3) + 1;
+      const key = `Quý ${q}/${d.getFullYear()}`;
+      if (!groups[key]) groups[key] = { key, income: 0, expense: 0, year: d.getFullYear(), q };
+      if (t.type === 'income') groups[key].income += (parseFloat(t.amount) || 0);
+      if (t.type === 'expense') groups[key].expense += (parseFloat(t.amount) || 0);
+    });
+
+    tableData = Object.values(groups)
+      .sort((a, b) => b.year !== a.year ? b.year - a.year : b.q - a.q)
+      .map(g => [
+        g.key,
+        formatCurrency(g.income, user?.currency),
+        formatCurrency(g.expense, user?.currency),
+        formatCurrency(g.income - g.expense, user?.currency)
+      ]);
+  }
+
+  // Add Table
   autoTable(doc, {
-    startY: 65,
-    head: [[
-      convertVietnameseToAscii('Ngay'), 
-      convertVietnameseToAscii('Loai'), 
-      convertVietnameseToAscii('Danh muc'), 
-      convertVietnameseToAscii('So tien'), 
-      convertVietnameseToAscii('Ghi chu')
-    ]],
+    startY: 68,
+    head: headers,
     body: tableData,
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [14, 165, 233] }, // primary color
+    styles: { font: 'Roboto', fontSize: 8 },
+    headStyles: { fillColor: [16, 185, 129], fontStyle: 'bold' }, // Emerald 500 primary color
     alternateRowStyles: { fillColor: [245, 247, 250] },
-    margin: { top: 65 }
+    margin: { top: 68 }
   });
-  
+
   // Save the PDF
-  doc.save(`bao-cao-giao-dich-${new Date().getTime()}.pdf`);
+  doc.save(`bao-cao-giao-dich-${groupBy}-${new Date().getTime()}.pdf`);
 };
 
 // Export transactions to Excel
-export const exportToExcel = (transactions, user) => {
-  // Prepare data
-  const data = transactions.map(t => ({
-    'Ngày': formatDate(t.date),
-    'Loại': t.type === 'income' ? 'Thu nhập' : 'Chi tiêu',
-    'Danh mục': t.category,
-    'Số tiền': t.amount,
-    'Số tiền (Formatted)': formatCurrency(t.amount, user?.currency),
-    'Ghi chú': t.note || '-',
-    'Ngày tạo': formatDate(t.createdAt)
-  }));
-  
+export const exportToExcel = (transactions, user, groupBy = 'detail') => {
+  let data = [];
+
   // Calculate totals
   const totalIncome = transactions
     .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
-  
+    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
   const totalExpense = transactions
     .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
-  
+    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
   const balance = totalIncome - totalExpense;
-  
+
+  if (groupBy === 'detail') {
+    data = transactions.map(t => ({
+      'Ngày': formatDate(t.date),
+      'Loại': t.type === 'income' ? 'Thu nhập' : (t.type === 'expense' ? 'Chi tiêu' : 'Chuyển khoản'),
+      'Danh mục': t.category || '-',
+      'Số tiền': t.amount,
+      'Số tiền định dạng': formatCurrency(t.amount, user?.currency),
+      'Ghi chú': t.note || '-',
+      'Ngày tạo': formatDate(t.createdAt)
+    }));
+  } else if (groupBy === 'day') {
+    const groups = {};
+    transactions.forEach(t => {
+      const key = formatDate(t.date);
+      if (!groups[key]) groups[key] = { key, income: 0, expense: 0 };
+      if (t.type === 'income') groups[key].income += (parseFloat(t.amount) || 0);
+      if (t.type === 'expense') groups[key].expense += (parseFloat(t.amount) || 0);
+    });
+
+    data = Object.values(groups)
+      .sort((a, b) => new Date(b.key.split('/').reverse().join('-')) - new Date(a.key.split('/').reverse().join('-')))
+      .map(g => ({
+        'Ngày': g.key,
+        'Tổng thu nhập': g.income,
+        'Tổng chi tiêu': g.expense,
+        'Số dư ròng': g.income - g.expense,
+        'Tổng thu nhập (định dạng)': formatCurrency(g.income, user?.currency),
+        'Tổng chi tiêu (định dạng)': formatCurrency(g.expense, user?.currency),
+        'Số dư ròng (định dạng)': formatCurrency(g.income - g.expense, user?.currency)
+      }));
+  } else if (groupBy === 'month') {
+    const groups = {};
+    transactions.forEach(t => {
+      const d = new Date(t.date);
+      const key = `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+      if (!groups[key]) groups[key] = { key, income: 0, expense: 0, year: d.getFullYear(), month: d.getMonth() };
+      if (t.type === 'income') groups[key].income += (parseFloat(t.amount) || 0);
+      if (t.type === 'expense') groups[key].expense += (parseFloat(t.amount) || 0);
+    });
+
+    data = Object.values(groups)
+      .sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month))
+      .map(g => ({
+        'Tháng': g.key,
+        'Tổng thu nhập': g.income,
+        'Tổng chi tiêu': g.expense,
+        'Số dư ròng': g.income - g.expense,
+        'Tổng thu nhập (định dạng)': formatCurrency(g.income, user?.currency),
+        'Tổng chi tiêu (định dạng)': formatCurrency(g.expense, user?.currency),
+        'Số dư ròng (định dạng)': formatCurrency(g.income - g.expense, user?.currency)
+      }));
+  } else if (groupBy === 'quarter') {
+    const groups = {};
+    transactions.forEach(t => {
+      const d = new Date(t.date);
+      const q = Math.floor(d.getMonth() / 3) + 1;
+      const key = `Quý ${q}/${d.getFullYear()}`;
+      if (!groups[key]) groups[key] = { key, income: 0, expense: 0, year: d.getFullYear(), q };
+      if (t.type === 'income') groups[key].income += (parseFloat(t.amount) || 0);
+      if (t.type === 'expense') groups[key].expense += (parseFloat(t.amount) || 0);
+    });
+
+    data = Object.values(groups)
+      .sort((a, b) => b.year !== a.year ? b.year - a.year : b.q - a.q)
+      .map(g => ({
+        'Quý': g.key,
+        'Tổng thu nhập': g.income,
+        'Tổng chi tiêu': g.expense,
+        'Số dư ròng': g.income - g.expense,
+        'Tổng thu nhập (định dạng)': formatCurrency(g.income, user?.currency),
+        'Tổng chi tiêu (định dạng)': formatCurrency(g.expense, user?.currency),
+        'Số dư ròng (định dạng)': formatCurrency(g.income - g.expense, user?.currency)
+      }));
+  }
+
   // Add summary rows
   data.push({});
+  const timeKey = groupBy === 'detail' ? 'Ngày' : (groupBy === 'day' ? 'Ngày' : (groupBy === 'month' ? 'Tháng' : 'Quý'));
+
   data.push({
-    'Ngày': 'TỔNG KẾT',
+    [timeKey]: 'TỔNG KẾT BÁO CÁO',
     'Loại': '',
     'Danh mục': '',
     'Số tiền': '',
-    'Số tiền (Formatted)': '',
+    'Số tiền định dạng': '',
     'Ghi chú': '',
     'Ngày tạo': ''
   });
   data.push({
-    'Ngày': 'Tổng thu nhập',
+    [timeKey]: 'Tổng thu nhập',
     'Loại': '',
     'Danh mục': '',
     'Số tiền': totalIncome,
-    'Số tiền (Formatted)': formatCurrency(totalIncome, user?.currency),
+    'Số tiền định dạng': formatCurrency(totalIncome, user?.currency),
     'Ghi chú': '',
-    'Ngày tạo': ''
+    'Ngày tạo': '',
+    // also map in case of Daily/Monthly/Quarterly headers
+    'Tổng thu nhập': totalIncome,
+    'Tổng thu nhập (định dạng)': formatCurrency(totalIncome, user?.currency)
   });
   data.push({
-    'Ngày': 'Tổng chi tiêu',
+    [timeKey]: 'Tổng chi tiêu',
     'Loại': '',
     'Danh mục': '',
     'Số tiền': totalExpense,
-    'Số tiền (Formatted)': formatCurrency(totalExpense, user?.currency),
+    'Số tiền định dạng': formatCurrency(totalExpense, user?.currency),
     'Ghi chú': '',
-    'Ngày tạo': ''
+    'Ngày tạo': '',
+    // also map in case of Daily/Monthly/Quarterly headers
+    'Tổng chi tiêu': totalExpense,
+    'Tổng chi tiêu (định dạng)': formatCurrency(totalExpense, user?.currency)
   });
   data.push({
-    'Ngày': 'Số dư',
+    [timeKey]: 'Số dư ròng',
     'Loại': '',
     'Danh mục': '',
     'Số tiền': balance,
-    'Số tiền (Formatted)': formatCurrency(balance, user?.currency),
+    'Số tiền định dạng': formatCurrency(balance, user?.currency),
     'Ghi chú': '',
-    'Ngày tạo': ''
+    'Ngày tạo': '',
+    // also map in case of Daily/Monthly/Quarterly headers
+    'Số dư ròng': balance,
+    'Số dư ròng (định dạng)': formatCurrency(balance, user?.currency)
   });
-  
+
   // Create worksheet
   const ws = XLSX.utils.json_to_sheet(data);
-  
+
   // Set column widths
   ws['!cols'] = [
-    { wch: 12 }, // Ngày
-    { wch: 10 }, // Loại
-    { wch: 15 }, // Danh mục
-    { wch: 12 }, // Số tiền
-    { wch: 18 }, // Số tiền (Formatted)
-    { wch: 30 }, // Ghi chú
-    { wch: 12 }  // Ngày tạo
+    { wch: 15 }, // Time
+    { wch: 12 }, // Type
+    { wch: 18 }, // Category
+    { wch: 15 }, // Amount
+    { wch: 22 }, // Formatted
+    { wch: 30 }, // Note
+    { wch: 15 }  // Created At
   ];
-  
+
   // Create workbook
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Giao dịch');
-  
+  XLSX.utils.book_append_sheet(wb, ws, 'Báo cáo giao dịch');
+
   // Add info sheet
   const infoData = [
-    { 'Thông tin': 'Người dùng', 'Giá trị': user?.name || 'N/A' },
+    { 'Thông tin': 'Báo cáo', 'Giá trị': getReportTitle(groupBy) },
+    { 'Thông tin': 'Người xuất', 'Giá trị': user?.name || 'N/A' },
     { 'Thông tin': 'Ngày xuất', 'Giá trị': formatDate(new Date()) },
-    { 'Thông tin': 'Tổng giao dịch', 'Giá trị': transactions.length },
+    { 'Thông tin': 'Tổng giao dịch gốc', 'Giá trị': transactions.length },
     { 'Thông tin': 'Đơn vị tiền tệ', 'Giá trị': user?.currency || 'VND' }
   ];
   const wsInfo = XLSX.utils.json_to_sheet(infoData);
   XLSX.utils.book_append_sheet(wb, wsInfo, 'Thông tin');
-  
+
   // Save the file
-  XLSX.writeFile(wb, `giao-dich-${new Date().getTime()}.xlsx`);
+  XLSX.writeFile(wb, `bao-cao-giao-dich-${groupBy}-${new Date().getTime()}.xlsx`);
 };
 
 // Export statistics to PDF
 export const exportStatsToPDF = (stats, user) => {
-  const doc = new jsPDF();
-  
+  const doc = createPdfWithFont();
+
   // Add title
-  doc.setFontSize(20);
-  doc.text(convertVietnameseToAscii('Bao Cao Thong Ke'), 14, 20);
-  
+  doc.setFontSize(18);
+  doc.setTextColor(17, 24, 39);
+  doc.text('BÁO CÁO THỐNG KÊ CHI TIÊU', 14, 20);
+
   // Add user info and date
   doc.setFontSize(10);
-  doc.text(convertVietnameseToAscii(`Nguoi dung: ${user?.name || 'N/A'}`), 14, 30);
-  doc.text(convertVietnameseToAscii(`Ngay xuat: ${formatDate(new Date())}`), 14, 35);
-  
+  doc.setTextColor(107, 114, 128);
+  doc.text(`Người xuất: ${user?.name || 'N/A'}`, 14, 30);
+  doc.text(`Ngày xuất: ${formatDate(new Date())}`, 14, 35);
+
   // Add summary if available
   if (stats.summary) {
-    doc.setFontSize(14);
-    doc.text(convertVietnameseToAscii('Tong quan'), 14, 50);
+    doc.setFontSize(13);
+    doc.setTextColor(17, 24, 39);
+    doc.text('Tổng quan thời gian', 14, 48);
+
     doc.setFontSize(10);
-    
-    doc.text(convertVietnameseToAscii(`Tong thu: ${formatCurrency(stats.summary.totalIncome, user?.currency)}`), 14, 60);
-    doc.text(convertVietnameseToAscii(`Tong chi: ${formatCurrency(stats.summary.totalExpense, user?.currency)}`), 14, 65);
-    doc.text(convertVietnameseToAscii(`So du: ${formatCurrency(stats.summary.balance, user?.currency)}`), 14, 70);
+    doc.setTextColor(16, 185, 129); // Emerald 500
+    doc.text(`Tổng thu: ${formatCurrency(stats.summary.totalIncome, user?.currency)}`, 14, 58);
+    doc.setTextColor(239, 68, 68); // Red 500
+    doc.text(`Tổng chi: ${formatCurrency(stats.summary.totalExpense, user?.currency)}`, 14, 64);
+
+    const balance = stats.summary.balance ?? (stats.summary.totalIncome - stats.summary.totalExpense);
+    if (balance >= 0) {
+      doc.setTextColor(16, 185, 129);
+    } else {
+      doc.setTextColor(239, 68, 68);
+    }
+    doc.text(`Số dư ròng: ${formatCurrency(balance, user?.currency)}`, 14, 70);
   }
-  
+
   // Add category stats if available
   if (stats.categoryStats && stats.categoryStats.length > 0) {
     const tableData = stats.categoryStats.map(cat => [
-      convertVietnameseToAscii(cat.category),
-      convertVietnameseToAscii(cat.type === 'income' ? 'Thu nhap' : 'Chi tieu'),
+      cat.category || 'Khác',
+      cat.type === 'income' ? 'Thu nhập' : 'Chi tiêu',
       formatCurrency(cat.total, user?.currency),
       cat.count
     ]);
-    
+
     autoTable(doc, {
-      startY: 85,
-      head: [[
-        convertVietnameseToAscii('Danh muc'), 
-        convertVietnameseToAscii('Loai'), 
-        convertVietnameseToAscii('Tong tien'), 
-        convertVietnameseToAscii('So giao dich')
-      ]],
+      startY: 82,
+      head: [['Danh mục', 'Loại giao dịch', 'Tổng tiền', 'Số lượt giao dịch']],
       body: tableData,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [14, 165, 233] },
+      styles: { font: 'Roboto', fontSize: 8 },
+      headStyles: { fillColor: [16, 185, 129], fontStyle: 'bold' },
       alternateRowStyles: { fillColor: [245, 247, 250] }
     });
   }
-  
+
   // Save the PDF
   doc.save(`bao-cao-thong-ke-${new Date().getTime()}.pdf`);
 };

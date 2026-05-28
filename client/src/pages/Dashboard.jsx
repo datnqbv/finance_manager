@@ -33,11 +33,12 @@ const Dashboard = () => {
   const [forecastData, setForecastData] = useState(null);
 
   useEffect(() => {
+    if (!user?.id) return;
     fetchData();
     fetchCategories();
     fetchWallets();
   }, [timeFilter, user?.id, transactionRevision]);
-  
+
   // hàm dùng để tính toán phạm vi ngày tháng dựa trên bộ lọc thời gian đã chọn, trả về đối tượng chứa startDate và endDate dưới dạng chuỗi ISO, giúp xác định khoảng thời gian mà dashboard sẽ hiển thị dữ liệu
   const getDateRange = () => {
     const now = new Date();
@@ -204,7 +205,7 @@ const Dashboard = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(amount);
   };
-  
+
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit' });
   };
@@ -227,7 +228,7 @@ const Dashboard = () => {
       </div>
     );
   };
-  
+
   // hàm dùng để tạo ra một chuỗi văn bản mô tả phạm vi ngày tháng đang được hiển thị trên dashboard, dựa trên bộ lọc thời gian đã chọn, giúp người dùng dễ dàng nhận biết khoảng thời gian mà các số liệu đang phản ánh
   const greeting = getGreeting();
   const budgetAlert = getBudgetAlert();
@@ -327,8 +328,8 @@ const Dashboard = () => {
                 <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">
                   {isEnglish ? 'My Wallets' : 'Tài khoản ví'}
                 </h3>
-                <button 
-                  onClick={() => navigate('/wallets')} 
+                <button
+                  onClick={() => navigate('/wallets')}
                   className="text-xs font-semibold text-[#3a4a62] hover:underline dark:text-[#b9c3d0]"
                 >
                   {isEnglish ? 'Manage' : 'Quản lý'}
@@ -338,15 +339,15 @@ const Dashboard = () => {
               <div className="space-y-3">
                 {wallets.length > 0 ? (
                   wallets.map((wallet) => {
-                    const walletPct = totalWalletBalance > 0 
-                      ? ((parseFloat(wallet.balance) || 0) / totalWalletBalance) * 100 
+                    const walletPct = totalWalletBalance > 0
+                      ? ((parseFloat(wallet.balance) || 0) / totalWalletBalance) * 100
                       : 0;
                     return (
                       <div key={wallet.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div 
+                          <div
                             className="h-9 w-9 rounded-xl flex items-center justify-center text-lg shadow-sm"
-                            style={{ 
+                            style={{
                               backgroundColor: wallet.color ? `${wallet.color}15` : '#eceff4',
                               color: wallet.color || '#333'
                             }}
@@ -411,11 +412,10 @@ const Dashboard = () => {
         </div>
 
         {budgetAlert && (
-          <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${
-            budgetAlert.level === 'danger'
-              ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300'
-              : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300'
-          }`}>
+          <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${budgetAlert.level === 'danger'
+            ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300'
+            : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300'
+            }`}>
             <FiAlertTriangle size={16} /> {budgetAlert.message}
           </div>
         )}
@@ -522,11 +522,10 @@ const Dashboard = () => {
                 <button
                   key={filter.key}
                   onClick={() => setTxFilter(filter.key)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                    txFilter === filter.key
-                      ? 'bg-[#eceff4] text-[#1f2733] dark:bg-[#303746] dark:text-[#f1f4f8]'
-                      : 'bg-[#f8f9fb] text-[#6f7480] hover:bg-[#edf1f6] dark:bg-[#232936] dark:text-[#a4acba] dark:hover:bg-[#2d3442]'
-                  }`}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${txFilter === filter.key
+                    ? 'bg-[#eceff4] text-[#1f2733] dark:bg-[#303746] dark:text-[#f1f4f8]'
+                    : 'bg-[#f8f9fb] text-[#6f7480] hover:bg-[#edf1f6] dark:bg-[#232936] dark:text-[#a4acba] dark:hover:bg-[#2d3442]'
+                    }`}
                 >
                   {filter.label}
                 </button>
@@ -554,11 +553,11 @@ const Dashboard = () => {
                       <td className="px-5 py-4">
                         <p className="font-bold text-[#1d2430] dark:text-[#eef1f5]">{tx.note || tx.category}</p>
                         <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">
-                          {tx.type === 'income' 
-                            ? (isEnglish ? 'Income transaction' : 'Giao dịch thu') 
-                            : tx.type === 'expense' 
-                            ? (isEnglish ? 'Expense transaction' : 'Giao dịch chi') 
-                            : (isEnglish ? 'Transfer transaction' : 'Giao dịch chuyển khoản')}
+                          {tx.type === 'income'
+                            ? (isEnglish ? 'Income transaction' : 'Giao dịch thu')
+                            : tx.type === 'expense'
+                              ? (isEnglish ? 'Expense transaction' : 'Giao dịch chi')
+                              : (isEnglish ? 'Transfer transaction' : 'Giao dịch chuyển khoản')}
                         </p>
                       </td>
                       <td className="px-5 py-4">
@@ -580,13 +579,12 @@ const Dashboard = () => {
                         </div>
                       </td>
                       <td className="px-5 py-4 text-[#6f7480] dark:text-[#a4acba]">{formatDate(tx.date)}</td>
-                      <td className={`px-5 py-4 text-right font-black ${
-                        tx.type === 'income' 
-                          ? 'text-[#0c7a58] dark:text-[#54d5aa]' 
-                          : tx.type === 'expense' 
-                          ? 'text-[#1a1f29] dark:text-[#f0f3f7]' 
+                      <td className={`px-5 py-4 text-right font-black ${tx.type === 'income'
+                        ? 'text-[#0c7a58] dark:text-[#54d5aa]'
+                        : tx.type === 'expense'
+                          ? 'text-[#1a1f29] dark:text-[#f0f3f7]'
                           : 'text-blue-600 dark:text-blue-400'
-                      }`}>{tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : '⇆ '}{formatCurrency(tx.amount)}</td>
+                        }`}>{tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : '⇆ '}{formatCurrency(tx.amount)}</td>
                       <td className="px-5 py-4 text-right">
                         <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${(isEnglish ? status === 'Completed' : status === 'Hoàn tất') ? 'bg-[#e6ecfa] text-[#6177a6] dark:bg-[#313b54] dark:text-[#a9bcdf]' : 'bg-[#f4ddd7] text-[#9a5f54] dark:bg-[#4a3330] dark:text-[#d7a59b]'}`}>
                           {status}
@@ -617,13 +615,12 @@ const Dashboard = () => {
                         <p className="font-bold text-sm text-gray-900 dark:text-white">{tx.note || tx.category}</p>
                         <p className="text-[11px] text-gray-500 dark:text-gray-400">{formatDate(tx.date)}</p>
                       </div>
-                      <p className={`text-sm font-black ${
-                        tx.type === 'income' 
-                          ? 'text-[#0c7a58] dark:text-[#54d5aa]' 
-                          : tx.type === 'expense' 
-                          ? 'text-[#1a1f29] dark:text-[#f0f3f7]' 
+                      <p className={`text-sm font-black ${tx.type === 'income'
+                        ? 'text-[#0c7a58] dark:text-[#54d5aa]'
+                        : tx.type === 'expense'
+                          ? 'text-[#1a1f29] dark:text-[#f0f3f7]'
                           : 'text-blue-600 dark:text-blue-400'
-                      }`}>
+                        }`}>
                         {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : '⇆ '}{formatCurrency(tx.amount)}
                       </p>
                     </div>
