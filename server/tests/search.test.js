@@ -96,6 +96,30 @@ describe('GET /api/search', () => {
     expect(res.body.data.transactions.length).toBeGreaterThan(0);
   });
 
+  it('Tìm kiếm không dấu (accentless search) - tìm kiếm dữ liệu gốc không dấu', async () => {
+    // Gieo dữ liệu không dấu để kiểm thử
+    const now = new Date().toISOString();
+    await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ type: 'expense', category: 'an uong', amount: 150000, date: now, note: 'an trua bun bo' });
+
+    // 1. Tìm kiếm bằng từ khóa có dấu "bún bò" -> sẽ khớp với note không dấu "an trua bun bo"
+    const resAccented = await request(app)
+      .get('/api/search?q=bún bò')
+      .set('Authorization', `Bearer ${token}`);
+    expect(resAccented.status).toBe(200);
+    expect(resAccented.body.data.transactions.length).toBeGreaterThan(0);
+
+    // 2. Tìm kiếm bằng từ khóa không dấu "an uong" -> sẽ khớp với category không dấu "an uong"
+    const resUnaccented = await request(app)
+      .get('/api/search?q=an uong')
+      .set('Authorization', `Bearer ${token}`);
+    expect(resUnaccented.status).toBe(200);
+    expect(resUnaccented.body.data.transactions.length).toBeGreaterThan(0);
+    expect(resUnaccented.body.data.transactions[0].category).toBe('an uong');
+  });
+
   it('Tìm kiếm không có kết quả → total = 0', async () => {
     await seedData();
 

@@ -1,4 +1,4 @@
-import { User, Transaction, ContactMessage } from '../models/sequelize/index.js';
+import { User, Transaction, ContactMessage, VipOrder } from '../models/sequelize/index.js';
 import { Op } from 'sequelize';
 
 const sanitizeUser = (user) => ({
@@ -10,6 +10,9 @@ const sanitizeUser = (user) => ({
   currency: user.currency,
   avatar: user.avatar,
   googleId: user.googleId,
+  isVip: user.isVip,
+  vipExpire: user.vipExpire,
+  isBanned: user.isBanned,
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 });
@@ -32,6 +35,58 @@ export const getAdminDashboard = async (_req, res) => {
 
     const adminCount = await User.count({ where: { role: 'admin' } });
 
+    // ── ADVANCED ADMIN ANALYTICS ──────────────────────────────────────────────
+    // 1. VIP Revenue (completed VipOrders sum)
+    const vipRevenue = await VipOrder.sum('amount', { where: { status: 'completed' } }) || 0;
+
+    // 2. Active VIP subscribers count
+    const activeVips = await User.count({
+      where: {
+        isVip: true,
+        [Op.or]: [
+          { vipExpire: { [Op.gt]: new Date() } },
+          { vipExpire: null } // Lifetime VIP
+        ]
+      }
+    });
+
+    // 3. Monthly revenue statistics for Recharts (past 6 months)
+    const past6Months = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const year = d.getFullYear();
+      const month = d.getMonth() + 1;
+      past6Months.push({ year, month, label: `${month}/${year}`, amount: 0 });
+    }
+
+    const completedOrders = await VipOrder.findAll({
+      where: {
+        status: 'completed',
+        createdAt: {
+          [Op.gte]: new Date(new Date().setMonth(new Date().getMonth() - 5))
+        }
+      },
+      raw: true
+    });
+
+    completedOrders.forEach(order => {
+      const oDate = new Date(order.createdAt);
+      const oYear = oDate.getFullYear();
+      const oMonth = oDate.getMonth() + 1;
+      const match = past6Months.find(m => m.year === oYear && m.month === oMonth);
+      if (match) {
+        match.amount += parseFloat(order.amount) || 0;
+      }
+    });
+
+    // 4. Recent VIP registration logs (last 5)
+    const recentVipOrders = await VipOrder.findAll({
+      limit: 5,
+      order: [['createdAt', 'DESC']],
+      include: [{ model: User, as: 'user', attributes: ['name', 'email'] }]
+    });
+
     return res.json({
       success: true,
       data: {
@@ -40,8 +95,12 @@ export const getAdminDashboard = async (_req, res) => {
           transactions: transactionCount,
           contacts: contactCount,
           admins: adminCount,
+          vipRevenue,
+          activeVips,
         },
         contactSummary,
+        past6Months,
+        recentVipOrders
       }
     });
   } catch (error) {
@@ -146,5 +205,85 @@ export const deleteUser = async (req, res) => {
   } catch (error) {
     console.error('❌ deleteUser error:', error);
     return res.status(500).json({ success: false, message: 'Đã xảy ra lỗi. Vui lòng thử lại sau.' });
+  }
+};
+
+export const updateUserVip = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isVip, vipExpire } = req.body;
+
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng' });
+    }
+
+    user.isVip = !!isVip;
+    user.vipExpire = vipExpire ? new Date(vipExpire) : null;
+    await user.save({ validateBeforeSave: false });
+
+    return res.json({
+      success: true,
+      message: 'Cập nhật trạng thái VIP thành công',
+      data: sanitizeUser(user)
+    });
+  } catch (error) {
+    console.error('❌ updateUserVip error:', error);
+    return res.status(500).json({ success: false, message: 'Đã xảy ra lỗi khi cập nhật VIP' });
+  }
+};
+
+export const toggleUserBan = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isBanned } = req.body;
+
+    if (id === req.user.id) {
+      return res.status(400).json({ success: false, message: 'Bạn không thể tự khóa tài khoản của mình' });
+    }
+
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng' });
+    }
+
+    user.isBanned = !!isBanned;
+    await user.save({ validateBeforeSave: false });
+
+    return res.json({
+      success: true,
+      message: user.isBanned ? 'Đã khóa tài khoản thành công' : 'Đã mở khóa tài khoản thành công',
+      data: sanitizeUser(user)
+    });
+  } catch (error) {
+    console.error('❌ toggleUserBan error:', error);
+    return res.status(500).json({ success: false, message: 'Đã xảy ra lỗi khi khóa/mở khóa tài khoản' });
+  }
+};
+
+export const resetUserPassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (!password || password.trim().length < 6) {
+      return res.status(400).json({ success: false, message: 'Mật khẩu mới phải từ 6 ký tự trở lên' });
+    }
+
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng' });
+    }
+
+    user.password = password;
+    await user.save(); // User.beforeSave will hash this automatically
+
+    return res.json({
+      success: true,
+      message: 'Đặt lại mật khẩu thành công'
+    });
+  } catch (error) {
+    console.error('❌ resetUserPassword error:', error);
+    return res.status(500).json({ success: false, message: 'Đã xảy ra lỗi khi đặt lại mật khẩu' });
   }
 };

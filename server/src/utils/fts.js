@@ -51,6 +51,20 @@ export function formatFtsQuery(query) {
 }
 
 /**
+ * Loại bỏ dấu tiếng Việt từ một chuỗi (dành cho tìm kiếm không dấu ở Client/SQLite fallback)
+ * @param {string} str - Chuỗi tiếng Việt cần xóa dấu
+ * @returns {string} Chuỗi không dấu
+ */
+export function removeVietnameseAccents(str) {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D');
+}
+
+/**
  * Kiểm tra xem database hiện tại có dùng SQL Server hay không
  */
 export function isMssql() {
@@ -68,23 +82,53 @@ export function getSearchCondition(fields, searchQuery) {
     return {};
   }
   
-  const queryStr = formatFtsQuery(searchQuery);
   const fieldsArray = Array.isArray(fields) ? fields : [fields];
   
-  if (isMssql() && ftsEnabled && queryStr) {
-    // Escaping single quotes for SQL Server literal
-    const escapedQueryStr = queryStr.replace(/'/g, "''");
-    // Tạo câu lệnh CONTAINS cho từng trường, nối với OR
-    const clauses = fieldsArray.map(field => `CONTAINS(${field}, '${escapedQueryStr}')`);
-    return sequelize.literal(`(${clauses.join(' OR ')})`);
-  } else {
-    // Trả về điều kiện LIKE fallback (dành cho SQLite trong testing hoặc dev không có SQL Server)
-    const likeQuery = { [Op.like]: `%${searchQuery}%` };
-    if (fieldsArray.length === 1) {
-      return { [fieldsArray[0]]: likeQuery };
+  if (isMssql() && ftsEnabled) {
+    const queryStr = formatFtsQuery(searchQuery);
+    const unaccentedQueryStr = formatFtsQuery(removeVietnameseAccents(searchQuery));
+    
+    if (queryStr) {
+      const escapedQueryStr = queryStr.replace(/'/g, "''");
+      const escapedUnaccentedQueryStr = unaccentedQueryStr.replace(/'/g, "''");
+      
+      const clauses = [];
+      for (const field of fieldsArray) {
+        // Tìm có dấu trên cột gốc
+        clauses.push(`CONTAINS(${field}, '${escapedQueryStr}')`);
+        // Tìm không dấu trên cột computed _no_accent
+        clauses.push(`CONTAINS(${field}_no_accent, '${escapedUnaccentedQueryStr}')`);
+      }
+      
+      return sequelize.literal(`(${clauses.join(' OR ')})`);
+    }
+  }
+  
+  // Trả về điều kiện LIKE fallback (dành cho SQLite trong testing hoặc dev không có SQL Server)
+  const unaccentedQuery = removeVietnameseAccents(searchQuery);
+  const likeQuery = { [Op.like]: `%${searchQuery}%` };
+  const likeQueryUnaccented = { [Op.like]: `%${unaccentedQuery}%` };
+  
+  const buildLikeClause = (field) => {
+    if (searchQuery === unaccentedQuery) {
+      return { [field]: likeQuery };
     }
     return {
-      [Op.or]: fieldsArray.map(field => ({ [field]: likeQuery }))
+      [Op.or]: [
+        { [field]: likeQuery },
+        { [field]: likeQueryUnaccented }
+      ]
     };
+  };
+
+  if (fieldsArray.length === 1) {
+    return buildLikeClause(fieldsArray[0]);
   }
+  
+  return {
+    [Op.or]: fieldsArray.map(field => buildLikeClause(field))
+  };
 }
+
+// Trigger nodemon restart after FTS database configuration update
+

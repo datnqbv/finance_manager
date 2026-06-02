@@ -9,16 +9,16 @@
   body {
     @apply bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-white font-sans transition-colors duration-300;
   }
-  
+
   /* Smooth scrollbar for dark mode */
   ::-webkit-scrollbar {
     @apply w-2 h-2;
   }
-  
+
   ::-webkit-scrollbar-track {
     @apply bg-gray-100 dark:bg-[#111111];
   }
-  
+
   ::-webkit-scrollbar-thumb {
     @apply bg-gray-300 dark:bg-[#2a2a2a] rounded-full hover:bg-gray-400 dark:hover:bg-gray-600;
   }
@@ -28,101 +28,103 @@
   .btn {
     @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
+
   /* nút chính */
   .btn-primary {
-    @apply bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 
-           disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md;
+    @apply bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md;
   }
+
   /* nút phụ */
   .btn-secondary {
-    @apply bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white 
-           hover:bg-gray-200 dark:hover:bg-[#222222] border border-gray-200 dark:border-[#2a2a2a];
+    @apply bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-[#222222] border border-gray-200 dark:border-[#2a2a2a];
   }
+
   /* nút xóa nguy hiểm */
   .btn-danger {
-    @apply bg-red-600 dark:bg-red-500 text-white hover:bg-red-700 dark:hover:bg-red-600
-           shadow-sm hover:shadow-md;
+    @apply bg-red-600 dark:bg-red-500 text-white hover:bg-red-700 dark:hover:bg-red-600 shadow-sm hover:shadow-md;
   }
+
   /* mẫu ô nhập liệu */
   .input {
-    @apply w-full px-4 py-2 border border-gray-300 dark:border-[#2a2a2a] rounded-lg 
-           bg-white dark:bg-[#111111] text-gray-900 dark:text-white 
-           placeholder:text-gray-400 dark:placeholder:text-gray-500
-           focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 
-           focus:border-transparent transition-all duration-200;
+    @apply w-full px-4 py-2 border border-gray-300 dark:border-[#2a2a2a] rounded-lg bg-white dark:bg-[#111111] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent transition-all duration-200;
   }
+
   /* Fix input type=date: đảm bảo yyyy không bị ẩn trong container flex hẹp */
   input[type="date"].input {
     min-width: 130px;
     overflow: visible;
   }
+
   /* Ẩn biểu tượng lịch mặc định của input type="date" */
   .hide-picker-indicator::-webkit-calendar-picker-indicator {
     display: none;
     -webkit-appearance: none;
   }
+
   /* mẫu thẻ card */
   .card {
-    @apply bg-white dark:bg-[#111111] rounded-xl shadow-sm 
-           border border-gray-100 dark:border-[#2a2a2a] p-6 
-           transition-all duration-200 hover:shadow-md;
+    @apply bg-white dark:bg-[#111111] rounded-xl shadow-sm border border-gray-100 dark:border-[#2a2a2a] p-6 transition-all duration-200 hover:shadow-md;
   }
+
   /* mẫu badge thu nhập */
   .badge-income {
-      @apply inline-flex items-center whitespace-nowrap px-3 py-1 bg-green-100 dark:bg-green-500/20 text-green-800 dark:text-green-400 
-        text-sm font-medium rounded-full border border-green-200 dark:border-green-500/30;
+    @apply inline-flex items-center whitespace-nowrap px-3 py-1 bg-green-100 dark:bg-green-500/20 text-green-800 dark:text-green-400 text-sm font-medium rounded-full border border-green-200 dark:border-green-500/30;
   }
+
   /* mẫu badge chi tiêu */
   .badge-expense {
-      @apply inline-flex items-center whitespace-nowrap px-3 py-1 bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-400 
-        text-sm font-medium rounded-full border border-red-200 dark:border-red-500/30;
+    @apply inline-flex items-center whitespace-nowrap px-3 py-1 bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-400 text-sm font-medium rounded-full border border-red-200 dark:border-red-500/30;
   }
+
   /* mẫu badge chuyển khoản */
   .badge-transfer {
-      @apply inline-flex items-center whitespace-nowrap px-3 py-1 bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-400 
-        text-sm font-medium rounded-full border border-blue-200 dark:border-blue-500/30;
+    @apply inline-flex items-center whitespace-nowrap px-3 py-1 bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-400 text-sm font-medium rounded-full border border-blue-200 dark:border-blue-500/30;
   }
-  
-  
+
+
   /* mẫu thẻ card cho darkmode */
   .gradient-card {
     @apply relative overflow-hidden;
   }
+
   /* Mặt nạ gradient cho thẻ */
   .gradient-card::before {
     content: '';
     @apply absolute inset-0 opacity-5 dark:opacity-10;
-    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
   }
 }
+
 /* Utilities */
 @layer utilities {
+
   /* Shimmer animation for progress bar */
   @keyframes shimmer {
     0% {
       transform: translateX(-100%);
     }
+
     100% {
       transform: translateX(100%);
     }
   }
-  
+
   .animate-shimmer {
     animation: shimmer 2s infinite;
   }
-  
+
   /* Hide scrollbar nhưng vẫn scroll được */
   .hide-scrollbar::-webkit-scrollbar,
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
-  
+
   .hide-scrollbar,
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   /* Gradient text */
   .gradient-text {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -146,6 +148,7 @@ html {
   0% {
     background-position: -1000px 0;
   }
+
   100% {
     background-position: 1000px 0;
   }
@@ -153,10 +156,13 @@ html {
 
 /* Pulse glow effect */
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
     box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
   }
+
   50% {
     opacity: 0.8;
     box-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
@@ -172,20 +178,20 @@ html {
   .card {
     padding: 1rem;
   }
-  
+
   .stat-card {
     min-height: auto;
   }
-  
+
   /* Tối ưu font size cho mobile */
   h1 {
     font-size: 1.5rem !important;
   }
-  
+
   h2 {
     font-size: 1.25rem !important;
   }
-  
+
   h3 {
     font-size: 1.125rem !important;
   }
@@ -197,7 +203,7 @@ html {
     min-height: 44px;
     min-width: 44px;
   }
-  
+
   .touch-target {
     padding: 0.75rem;
   }
@@ -216,15 +222,15 @@ button {
   .safe-top {
     padding-top: max(1rem, env(safe-area-inset-top));
   }
-  
+
   .safe-bottom {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
-  
+
   .safe-left {
     padding-left: max(1rem, env(safe-area-inset-left));
   }
-  
+
   .safe-right {
     padding-right: max(1rem, env(safe-area-inset-right));
   }
@@ -239,6 +245,7 @@ button {
 
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -253,7 +260,7 @@ button {
   .backdrop-blur-xl {
     background-color: rgba(255, 255, 255, 0.95);
   }
-  
+
   .dark .backdrop-blur-xl {
     background-color: rgba(17, 17, 17, 0.95);
   }
@@ -299,6 +306,7 @@ button {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -310,6 +318,7 @@ button {
     opacity: 0;
     transform: translateY(18px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -317,20 +326,24 @@ button {
 }
 
 @keyframes loginShapeFloat {
+
   0%,
   100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-12px);
   }
 }
 
 @keyframes loginShapeFloatSlow {
+
   0%,
   100% {
     transform: translateY(0px) rotate(-28deg);
   }
+
   50% {
     transform: translateY(-10px) rotate(-24deg);
   }
@@ -340,6 +353,7 @@ button {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -663,6 +677,7 @@ button {
 }
 
 @media (min-width: 1280px) {
+
   .goal-layout-default,
   .goal-layout-empty {
     grid-template-areas:
@@ -681,13 +696,25 @@ button {
 
 /* Modal Entry Animations */
 @keyframes modalFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes modalScaleUp {
-  from { transform: scale(0.96); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .animate-modal-fade {
@@ -697,5 +724,3 @@ button {
 .animate-modal-scale {
   animation: modalScaleUp 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-
-

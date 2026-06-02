@@ -92,7 +92,9 @@ export const register = async (req, res) => {
           role: user.role,
           budget: user.budget,
           currency: user.currency,
-          avatar: user.avatar
+          avatar: user.avatar,
+          isVip: user.isVip,
+          vipExpire: user.vipExpire
         }
       }
     });
@@ -129,6 +131,13 @@ export const login = async (req, res) => {
       });
     }
 
+    if (user.isBanned) {
+      return res.status(403).json({
+        success: false,
+        message: 'Tài khoản của bạn đã bị khóa bởi quản trị viên. Vui lòng liên hệ hỗ trợ.'
+      });
+    }
+
     // Check password
     const isMatch = await user.comparePassword(password);
     
@@ -160,7 +169,9 @@ export const login = async (req, res) => {
           role: user.role,
           budget: user.budget,
           currency: user.currency,
-          avatar: user.avatar
+          avatar: user.avatar,
+          isVip: user.isVip,
+          vipExpire: user.vipExpire
         }
       }
     });
@@ -189,7 +200,9 @@ export const getMe = async (req, res) => {
           role: user.role,
           budget: user.budget,
           currency: user.currency,
-          avatar: user.avatar
+          avatar: user.avatar,
+          isVip: user.isVip,
+          vipExpire: user.vipExpire
         }
       }
     });
@@ -237,7 +250,9 @@ export const updateProfile = async (req, res) => {
           role: user.role,
           budget: user.budget,
           currency: user.currency,
-          avatar: user.avatar
+          avatar: user.avatar,
+          isVip: user.isVip,
+          vipExpire: user.vipExpire
         }
       }
     });
@@ -405,7 +420,9 @@ export const resetPassword = async (req, res) => {
           role: user.role,
           budget: user.budget,
           currency: user.currency,
-          avatar: user.avatar
+          avatar: user.avatar,
+          isVip: user.isVip,
+          vipExpire: user.vipExpire
         }
       }
     });
@@ -544,6 +561,13 @@ export const googleLogin = async (req, res) => {
       }
     }
 
+    if (user.isBanned) {
+      return res.status(403).json({
+        success: false,
+        message: 'Tài khoản của bạn đã bị khóa bởi quản trị viên. Vui lòng liên hệ hỗ trợ.'
+      });
+    }
+
     // Generate tokens
     const token = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
@@ -565,7 +589,9 @@ export const googleLogin = async (req, res) => {
           role: user.role,
           budget: user.budget,
           currency: user.currency,
-          avatar: user.avatar
+          avatar: user.avatar,
+          isVip: user.isVip,
+          vipExpire: user.vipExpire
         }
       }
     });

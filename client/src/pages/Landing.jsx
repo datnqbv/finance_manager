@@ -7,7 +7,7 @@ import {
   FaStar, FaFacebook, FaTwitter, FaLinkedin,
   FaCheckCircle, FaShieldAlt, FaUsers, FaTrophy,
   FaArrowRight, FaBars, FaTimes, FaRocket, FaChartLine,
-  FaLock, FaBell,
+  FaLock, FaBell, FaRobot, FaCamera, FaHandHoldingUsd, FaFileExcel,
 } from 'react-icons/fa';
 
 /* ── Animated counter hook ── */
@@ -446,8 +446,8 @@ const Landing = () => {
           position: absolute;
           inset: -10%;
           background:
-            repeating-radial-gradient(circle at var(--wave-x) var(--wave-y), rgba(255,255,255,.18) 0 1px, rgba(255,255,255,0) 1px 54px),
-            radial-gradient(520px 520px at var(--wave-x) var(--wave-y), rgba(255,255,255,.16) 0%, rgba(255,255,255,.08) 34%, rgba(255,255,255,0) 72%);
+            repeating-radial-gradient(circle at var(--wave-x) var(--wave-y), rgba(16,185,129,.12) 0 1px, rgba(16,185,129,0) 1px 54px),
+            radial-gradient(520px 520px at var(--wave-x) var(--wave-y), rgba(16,185,129,.1) 0%, rgba(16,185,129,.05) 34%, rgba(16,185,129,0) 72%);
           opacity: .4;
           transform: translateZ(0);
           animation: cta-water-breathe 10.5s ease-in-out infinite;
@@ -456,7 +456,7 @@ const Landing = () => {
           content: '';
           position: absolute;
           inset: 0;
-          background: linear-gradient(180deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.02) 45%, rgba(0,0,0,.06) 100%);
+          background: linear-gradient(180deg, rgba(16,185,129,.05) 0%, rgba(16,185,129,.02) 45%, rgba(16,185,129,.04) 100%);
         }
         .cta-wave-ripple {
           position: absolute;
@@ -465,7 +465,7 @@ const Landing = () => {
           width: 46px;
           height: 46px;
           border-radius: 999px;
-          border: 1px solid rgba(255,255,255,.42);
+          border: 1px solid rgba(16,185,129,.3);
           transform: translate(-50%, -50%) scale(.16);
           opacity: 0;
           will-change: transform, opacity;
@@ -481,7 +481,7 @@ const Landing = () => {
           height: 54px;
           transform: translate(-50%, -50%);
           border-radius: 999px;
-          background: radial-gradient(circle, rgba(255,255,255,.38) 0%, rgba(255,255,255,.18) 30%, rgba(255,255,255,0) 72%);
+          background: radial-gradient(circle, rgba(16,185,129,.25) 0%, rgba(16,185,129,.12) 30%, rgba(16,185,129,0) 72%);
           filter: blur(0.6px);
           opacity: .52;
         }
@@ -517,7 +517,8 @@ const Landing = () => {
             <div className="hidden md:flex items-center gap-7">
               <a href="#features" className="text-sm text-slate-500 hover:text-emerald-600 transition font-medium">{isEnglish ? 'Features' : 'Tính năng'}</a>
               <a href="#how" className="text-sm text-slate-500 hover:text-emerald-600 transition font-medium">{isEnglish ? 'How it works' : 'Cách dùng'}</a>
-              <a href="#testimonials" className="text-sm text-slate-500 hover:text-emerald-600 transition font-medium">{isEnglish ? 'Roadmap' : 'Đánh giá'}</a>
+              <a href="#pricing" className="text-sm text-slate-500 hover:text-emerald-600 transition font-medium">{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a>
+              <a href="#testimonials" className="text-sm text-slate-500 hover:text-emerald-600 transition font-medium">{isEnglish ? 'Roadmap' : 'Lộ trình'}</a>
               {/* Dropdown Công ty */}
               <div className="relative group">
                 <button className="flex items-center gap-1 text-sm text-slate-500 hover:text-emerald-600 transition font-medium">
@@ -580,6 +581,7 @@ const Landing = () => {
             <div className="md:hidden bg-white border-t border-slate-100 px-5 py-4 space-y-2 shadow-lg">
               <a href="#features" className="block text-sm text-slate-600 hover:text-emerald-600 font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'Features' : 'Tính năng'}</a>
               <a href="#how" className="block text-sm text-slate-600 hover:text-emerald-600 font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'How it works' : 'Cách dùng'}</a>
+              <a href="#pricing" className="block text-sm text-slate-600 hover:text-emerald-600 font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a>
               <a href="#testimonials" className="block text-sm text-slate-600 hover:text-emerald-600 font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'Roadmap' : 'Đánh giá'}</a>
               <div className="border-t border-slate-100 pt-2 mt-1 space-y-0.5">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-0.5 mb-1">{isEnglish ? 'Company' : 'Công ty'}</p>
@@ -800,10 +802,10 @@ const Landing = () => {
         {/* ══════════ STATS ══════════ */}
         <section ref={statsRef} className="py-14 px-5 sm:px-8 bg-white border-y border-slate-100">
           <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-            <StatItem icon={<FaUsers />} value={10000} suffix="+" label={isEnglish ? 'Users' : 'Người dùng'} delay={1} started={statsStarted} />
+            <StatItem icon={<FaUsers />} value={1000} suffix="+" label={isEnglish ? 'Users' : 'Người dùng'} delay={1} started={statsStarted} />
             <StatItem icon={<FaTrophy />} value={1000} suffix="K+" label={isEnglish ? 'Transactions' : 'Giao dịch'} delay={2} started={statsStarted} />
-            <StatItem icon={<FaCheckCircle />} value={99} suffix="%" label={isEnglish ? 'Satisfied' : 'Hài lòng'} delay={3} started={statsStarted} />
-            <StatItem icon={<FaStar />} value={49} suffix="/5" label={isEnglish ? 'Rating' : 'Đánh giá'} delay={4} started={statsStarted} />
+            <StatItem icon={<FaCheckCircle />} value={97} suffix="%" label={isEnglish ? 'Satisfied' : 'Hài lòng'} delay={3} started={statsStarted} />
+            <StatItem icon={<FaStar />} value={5} suffix="/5" label={isEnglish ? 'Rating' : 'Đánh giá'} delay={4} started={statsStarted} />
           </div>
         </section>
 
@@ -822,22 +824,26 @@ const Landing = () => {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
               {[
-                { icon: <FaWallet size={22} />, title: isEnglish ? 'Expense tracking' : 'Theo dõi chi tiêu', desc: isEnglish ? 'Record and auto-categorize daily income and expenses.' : 'Ghi chép và phân loại tự động mọi khoản thu chi hàng ngày.', color: 'emerald', border: 'hover:border-emerald-300' },
+                { icon: <FaWallet size={22} />, title: isEnglish ? 'Expense tracking' : 'Theo dõi chi tiêu', desc: isEnglish ? 'Record and auto-categorize daily income and expenses easily.' : 'Ghi chép và phân loại tự động mọi khoản thu chi hàng ngày nhanh chóng.', color: 'emerald', border: 'hover:border-emerald-300' },
                 { icon: <FaCreditCard size={22} />, title: isEnglish ? 'Budget management' : 'Quản lý ngân sách', desc: isEnglish ? 'Set budget caps and get early warnings before overspending.' : 'Đặt hạn mức ngân sách và nhận cảnh báo khi sắp vượt giới hạn.', color: 'blue', border: 'hover:border-blue-300' },
-                { icon: <FaBullseye size={22} />, title: isEnglish ? 'Financial goals' : 'Mục tiêu tài chính', desc: isEnglish ? 'Set savings goals and track progress daily.' : 'Thiết lập mục tiêu tiết kiệm và bám sát tiến độ mỗi ngày.', color: 'violet', border: 'hover:border-violet-300' },
-                { icon: <FaChartBar size={22} />, title: isEnglish ? 'Analytics & reports' : 'Thống kê & Báo cáo', desc: isEnglish ? 'Visual charts help you understand spending trends.' : 'Biểu đồ trực quan giúp bạn hiểu rõ xu hướng chi tiêu.', color: 'amber', border: 'hover:border-amber-300' },
+                { icon: <FaCamera size={22} />, title: isEnglish ? 'AI OCR Receipt Scan' : 'Quét hóa đơn AI (OCR)', desc: isEnglish ? 'Scan invoice images; AI automatically extracts amounts and categories.' : 'Tải ảnh hóa đơn lên, AI tự động phân tích và điền số tiền, danh mục cực nhanh.', color: 'violet', border: 'hover:border-violet-300' },
+                { icon: <FaRobot size={22} />, title: isEnglish ? 'AI Cashflow Forecast' : 'Dự báo tài chính AI', desc: isEnglish ? 'Predict future spending and cashflow trends using machine learning.' : 'Phát hiện thói quen, dự báo xu hướng dòng tiền tương lai của bạn bằng trí tuệ nhân tạo.', color: 'indigo', border: 'hover:border-indigo-300' },
+                { icon: <FaHandHoldingUsd size={22} />, title: isEnglish ? 'Debt Management' : 'Quản lý nợ & vay', desc: isEnglish ? 'Track personal loans, debts, and set due dates for timely repayment.' : 'Ghi chép và quản lý chi tiết các khoản vay, cho nợ và hạn thanh toán.', color: 'amber', border: 'hover:border-amber-300' },
+                { icon: <FaBullseye size={22} />, title: isEnglish ? 'Financial Goals' : 'Mục tiêu tích lũy', desc: isEnglish ? 'Establish smart savings goals and monitor daily progress step-by-step.' : 'Thiết lập các mục tiêu mua sắm, tiết kiệm và bám sát tiến độ thực tế.', color: 'rose', border: 'hover:border-rose-300' },
               ].map((f, i) => {
                 const palette = {
                   emerald: 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600',
                   blue: 'bg-blue-50 text-blue-600 group-hover:bg-blue-600',
                   violet: 'bg-violet-50 text-violet-600 group-hover:bg-violet-600',
+                  indigo: 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600',
                   amber: 'bg-amber-50 text-amber-600 group-hover:bg-amber-600',
+                  rose: 'bg-rose-50 text-rose-600 group-hover:bg-rose-600',
                 }[f.color];
                 return (
                   <div key={i}
-                    className={`reveal reveal-delay-${i + 1} group bg-white rounded-2xl p-6 border border-slate-100 ${f.border} hover:shadow-lg transition-all duration-300 cursor-default`}>
+                    className={`reveal reveal-delay-${(i % 3) + 1} group bg-white rounded-2xl p-6 border border-slate-100 ${f.border} hover:shadow-lg transition-all duration-300 cursor-default`}>
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-5 transition-all duration-300 group-hover:text-white ${palette}`}>
                       {f.icon}
                     </div>
@@ -929,38 +935,163 @@ const Landing = () => {
           </div>
         </section>
 
+        {/* ══════════ VIP PLANS PRICING ══════════ */}
+        <section id="pricing" className="py-20 px-5 sm:px-8 bg-white border-t border-slate-100 relative">
+          {/* Decorative elements */}
+          <div className="absolute top-12 left-12 w-64 h-64 bg-amber-200/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-12 right-12 w-64 h-64 bg-emerald-200/5 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="max-w-6xl mx-auto relative z-10">
+            <div className="text-center mb-14 reveal">
+              <span className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full uppercase tracking-widest">
+                {isEnglish ? 'VIP Packages' : 'Gói dịch vụ VIP'}
+              </span>
+              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-slate-900">
+                {isEnglish ? 'Upgrade to Premium VIP' : 'Nâng cấp đặc quyền VIP'}
+              </h2>
+              <p className="mt-3 text-base text-slate-500 max-w-lg mx-auto">
+                {isEnglish
+                  ? 'Unlock advanced AI forecasting, receipt scanning, and unlimited resources.'
+                  : 'Mở khóa không giới hạn tài nguyên và trải nghiệm trọn vẹn sức mạnh của trí tuệ nhân tạo AI.'}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+              {[
+                {
+                  id: '1_month',
+                  name: isEnglish ? '1 Month VIP' : '1 Tháng VIP',
+                  price: '20.000 ₫',
+                  desc: isEnglish ? 'Perfect for testing premium features' : 'Trải nghiệm đầy đủ tính năng cao cấp',
+                  isPopular: false,
+                  save: 0
+                },
+                {
+                  id: '6_months',
+                  name: isEnglish ? '6 Months VIP' : '6 Tháng VIP',
+                  price: '100.000 ₫',
+                  desc: isEnglish ? 'Optimal and cost-saving for smart users' : 'Lựa chọn tiết kiệm cho người dùng thông thái',
+                  isPopular: true,
+                  save: 16,
+                  originalPrice: '120.000 ₫'
+                },
+                {
+                  id: '12_months',
+                  name: isEnglish ? '1 Year VIP' : '1 Năm VIP',
+                  price: '180.000 ₫',
+                  desc: isEnglish ? 'Ultimate commitment for long-term planning' : 'Đồng hành lâu dài cùng kế hoạch tài chính',
+                  isPopular: false,
+                  save: 25,
+                  originalPrice: '240.000 ₫'
+                }
+              ].map((plan, i) => (
+                <div
+                  key={plan.id}
+                  className={`reveal reveal-delay-${i + 1} relative rounded-3xl border p-7 flex flex-col justify-between transition-all duration-300 bg-white dark:bg-[#191d25]
+                    ${plan.isPopular
+                      ? 'border-amber-500 shadow-xl scale-[1.02] ring-1 ring-amber-500'
+                      : 'border-slate-200 dark:border-gray-800 hover:border-slate-350 dark:hover:border-gray-700 hover:shadow-md'
+                    }`}
+                >
+                  {plan.isPopular && (
+                    <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-3.5 py-1 text-[11px] font-black uppercase text-white tracking-wider shadow-md animate-pulse">
+                      {isEnglish ? 'Most Popular' : 'Khuyên dùng'}
+                    </span>
+                  )}
+
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">{plan.name}</h3>
+                    <p className="text-xs text-slate-500 dark:text-gray-400 mb-6">{plan.desc}</p>
+
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <span className="text-3xl font-black text-slate-900 dark:text-white">
+                        {plan.price}
+                      </span>
+                      {plan.originalPrice && (
+                        <span className="text-sm line-through text-slate-400 dark:text-gray-500">
+                          {plan.originalPrice}
+                        </span>
+                      )}
+                    </div>
+
+                    {plan.save > 0 && (
+                      <span className="inline-block rounded bg-red-500/10 px-2 py-0.5 text-[11px] text-red-600 dark:text-red-400 font-bold mb-6">
+                        {isEnglish ? `Save ${plan.save}%` : `Tiết kiệm ${plan.save}%`}
+                      </span>
+                    )}
+
+                    <ul className="space-y-3 mb-8 text-xs text-slate-650 dark:text-gray-300 border-t border-slate-100 dark:border-gray-800 pt-5">
+                      <li className="flex items-center gap-2">
+                        <span className="text-amber-500 font-bold">👑</span>
+                        <span>{isEnglish ? 'Unlimited wallets & budgets' : 'Không giới hạn ví & ngân sách'}</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-amber-500 font-bold">👑</span>
+                        <span>{isEnglish ? 'Unlimited monthly transactions' : 'Không giới hạn giao dịch thu chi'}</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-amber-500 font-bold">👑</span>
+                        <span>{isEnglish ? 'Unlimited AI OCR Receipt Scan' : 'Quét ảnh hóa đơn bằng AI không giới hạn'}</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-amber-500 font-bold">👑</span>
+                        <span>{isEnglish ? 'AI Cashflow Forecast & Trends' : 'Dự báo dòng tiền & phân tích xu hướng AI'}</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-amber-500 font-bold">👑</span>
+                        <span>{isEnglish ? 'Full Debt Management & Exports' : 'Quản lý nợ & Xuất báo cáo PDF/Excel'}</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <button
+                    onClick={() => navigate(user ? '/vip' : '/register')}
+                    className={`w-full rounded-2xl py-3 text-xs font-extrabold transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm
+                      ${plan.isPopular
+                        ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white'
+                      }`}
+                  >
+                    {isEnglish ? 'Upgrade Now' : 'Đăng ký ngay'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ══════════ GROWTH ROADMAP ══════════ */}
         <section id="testimonials" className="growth-surface py-24 px-5 sm:px-8">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12 reveal">
-              <span className="text-xs font-bold text-emerald-700 bg-white/80 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-widest">
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-250 px-3 py-1 rounded-full uppercase tracking-widest">
                 {isEnglish ? 'Growth roadmap' : 'Bản đồ tăng trưởng'}
               </span>
               <h2 className="mt-4 text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
                 {isEnglish ? 'Prosperous Cashflow Roadmap' : 'Lộ trình Dòng tiền thịnh vượng'}
               </h2>
               <p className="mt-4 text-sm sm:text-base text-slate-500 max-w-2xl mx-auto">
-                {isEnglish ? 'Instead of testimonials, here is a practical action framework to move from expense control to financial freedom in clear stages.' : 'Thay vì lời khen, đây là khung hành động thực tế giúp bạn đi từ kiểm soát chi tiêu đến tự do tài chính theo từng giai đoạn rõ ràng.'}
+                {isEnglish ? 'Instead of testimonials, here is a practical action framework to move from expense control to financial freedom in clear stages.' : 'Thay vì lời khen, đây là khâu hành động thực tế giúp bạn đi từ kiểm soát chi tiêu đến tự do tài chính theo từng giai đoạn rõ ràng.'}
               </p>
             </div>
 
             <div className="grid lg:grid-cols-[1fr_1.2fr] gap-6">
               <article className="growth-card reveal rounded-3xl p-7">
                 <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">{isEnglish ? 'Mindset and pace' : 'Tư duy và nhịp độ'}</h3>
-                <p className="mt-4 text-slate-600 leading-relaxed">
+                <p className="mt-4 text-slate-500 leading-relaxed">
                   {isEnglish ? 'The goal is not extreme austerity, but healthy cash flow: know where money goes, what to prioritize, and keep monthly savings habits.' : 'Mục tiêu không phải “thắt chặt cực đoan”, mà là tạo một dòng tiền lành mạnh: biết tiền đi đâu, ưu tiên gì trước, và duy trì thói quen tích lũy mỗi tháng.'}
                 </p>
                 <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3">
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-3">
                     <p className="text-xs uppercase tracking-widest text-emerald-700 font-bold">{isEnglish ? 'Priority' : 'Ưu tiên'}</p>
                     <p className="mt-1 font-semibold text-slate-800">{isEnglish ? 'Emergency fund safety' : 'An toàn quỹ dự phòng'}</p>
                   </div>
-                  <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-3">
-                    <p className="text-xs uppercase tracking-widest text-blue-700 font-bold">{isEnglish ? 'Consistency' : 'Nhịp đều'}</p>
+                  <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-3">
+                    <p className="text-xs uppercase tracking-widest text-blue-700 font-bold">{isEnglish ? 'Consistency' : 'Nhịp độ'}</p>
                     <p className="mt-1 font-semibold text-slate-800">{isEnglish ? 'Automated monthly savings' : 'Tích lũy tự động hàng tháng'}</p>
                   </div>
-                  <div className="rounded-2xl border border-violet-100 bg-violet-50/70 p-3 col-span-2">
-                    <p className="text-xs uppercase tracking-widest text-violet-700 font-bold">{isEnglish ? 'Principle' : 'Nguyên tắc'}</p>
+                  <div className="rounded-2xl border border-violet-100 bg-violet-50/50 p-3 col-span-2">
+                    <p className="text-xs uppercase tracking-widest text-violet-400 font-bold">{isEnglish ? 'Principle' : 'Nguyên tắc'}</p>
                     <p className="mt-1 font-semibold text-slate-800">{isEnglish ? 'Track - Optimize - Improve continuously' : 'Theo dõi - Tối ưu - Nâng cấp liên tục'}</p>
                   </div>
                 </div>
@@ -971,15 +1102,15 @@ const Landing = () => {
                   { step: '01', title: isEnglish ? 'Understand cash flow' : 'Nắm dòng tiền', desc: isEnglish ? 'Categorize income/expense and find biggest leakage points.' : 'Phân loại thu/chi và xác định điểm rò rỉ lớn nhất.', icon: <FaWallet size={16} className="text-emerald-600" /> },
                   { step: '02', title: isEnglish ? 'Set budget milestones' : 'Đặt mốc ngân sách', desc: isEnglish ? 'Set spending caps by group and early warnings.' : 'Khóa trần chi tiêu theo nhóm và cảnh báo sớm.', icon: <FaCreditCard size={16} className="text-blue-600" /> },
                   { step: '03', title: isEnglish ? 'Set goals' : 'Thiết lập mục tiêu', desc: isEnglish ? 'Break long-term goals into smaller milestones.' : 'Biến mục tiêu dài hạn thành cột mốc nhỏ dễ theo.', icon: <FaBullseye size={16} className="text-violet-600" /> },
-                  { step: '04', title: isEnglish ? 'Measure and grow' : 'Đo và tăng trưởng', desc: isEnglish ? 'Track monthly charts to improve savings efficiency.' : 'Theo dõi biểu đồ tháng để nâng hiệu quả tiết kiệm.', icon: <FaChartLine size={16} className="text-amber-600" /> },
+                  { step: '04', title: isEnglish ? 'Measure and grow' : 'Đo và tăng trưởng', desc: isEnglish ? 'Track monthly charts to improve savings efficiency.' : 'Theo dõi biểu đồ tháng để nâng hiệu quả tiết kiệm.', icon: <FaChartLine size={16} className="text-slate-400" /> },
                 ].map((item, i) => (
                   <article key={item.step} className={`growth-card reveal reveal-delay-${(i % 4) + 1} rounded-3xl p-5`}>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-black tracking-widest text-slate-400">{isEnglish ? 'STAGE' : 'CHẶNG'} {item.step}</span>
+                      <span className="text-xs font-black tracking-widest text-emerald-600">{isEnglish ? 'STAGE' : 'CHẶNG'} {item.step}</span>
                       {item.icon}
                     </div>
                     <h4 className="text-lg font-extrabold text-slate-900 tracking-tight">{item.title}</h4>
-                    <p className="mt-2 text-sm text-slate-600 leading-relaxed">{item.desc}</p>
+                    <p className="mt-2 text-sm text-slate-500 leading-relaxed">{item.desc}</p>
                   </article>
                 ))}
               </div>
@@ -989,7 +1120,7 @@ const Landing = () => {
 
         {/* ══════════ CTA ══════════ */}
         <section
-          className="relative py-24 px-5 sm:px-8 overflow-hidden bg-emerald-600"
+          className="relative py-24 px-5 sm:px-8 overflow-hidden bg-emerald-50 border-t border-b border-emerald-100"
         >
           <div ref={ctaWaveLayerRef} className="cta-wave-surface" style={{ '--wave-x': '50%', '--wave-y': '50%' }}>
             <span className="cta-wave-ripple r1" />
@@ -997,24 +1128,24 @@ const Landing = () => {
             <span className="cta-wave-ripple r3" />
             <span className="cta-wave-core" />
           </div>
-          <div className="absolute top-8 left-16 text-white/10 text-8xl font-black pointer-events-none select-none">₫</div>
-          <div className="absolute bottom-8 right-16 text-white/10 text-8xl font-black pointer-events-none select-none">%</div>
+          <div className="absolute top-8 left-16 text-emerald-600/5 text-8xl font-black pointer-events-none select-none">₫</div>
+          <div className="absolute bottom-8 right-16 text-emerald-600/5 text-8xl font-black pointer-events-none select-none">%</div>
 
           <div className="relative max-w-2xl mx-auto text-center reveal">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/15 border border-white/20 rounded-full mb-6">
-              <FaRocket className="text-white" size={12} />
-              <span className="text-xs font-semibold text-white">{isEnglish ? 'Start today' : 'Bắt đầu ngay hôm nay'}</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-100/60 border border-emerald-200/80 rounded-full mb-6">
+              <FaRocket className="text-emerald-700" size={12} />
+              <span className="text-xs font-semibold text-emerald-800">{isEnglish ? 'Start today' : 'Bắt đầu ngay hôm nay'}</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4 leading-tight">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-4 leading-tight">
               {isEnglish ? 'Ready to master' : 'Sẵn sàng làm chủ'}<br />{isEnglish ? 'your finances?' : 'tài chính của bạn?'}
             </h2>
-            <p className="text-emerald-100 mb-8 text-base leading-relaxed">
+            <p className="text-slate-600 mb-8 text-base leading-relaxed">
               {isEnglish ? 'Join thousands building better financial habits every day.' : 'Tham gia hàng nghìn người đang xây dựng thói quen tài chính tốt mỗi ngày.'}
             </p>
             {user ? (
               <button
                 onClick={() => navigate('/dashboard')}
-                className="inline-flex items-center gap-2 px-9 py-4 bg-white text-emerald-700 font-bold rounded-2xl hover:bg-emerald-50 transition shadow-xl text-sm"
+                className="inline-flex items-center gap-2 px-9 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 hover:scale-[1.02] transition-all duration-200 shadow-md hover:shadow-lg text-sm"
               >
                 <FaRocket size={13} /> {isEnglish ? 'Go to Dashboard' : 'Vào Dashboard'} <FaArrowRight size={11} />
               </button>
@@ -1022,26 +1153,26 @@ const Landing = () => {
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   onClick={() => navigate('/register')}
-                  className="inline-flex items-center justify-center gap-2 px-9 py-4 bg-white text-emerald-700 font-bold rounded-2xl hover:bg-emerald-50 transition shadow-xl text-sm"
+                  className="inline-flex items-center justify-center gap-2 px-9 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 hover:scale-[1.02] transition-all duration-200 shadow-md hover:shadow-lg text-sm"
                 >
                   {isEnglish ? 'Sign up free' : 'Đăng ký miễn phí'} <FaArrowRight size={11} />
                 </button>
                 <button
                   onClick={() => navigate('/login')}
-                  className="inline-flex items-center justify-center gap-2 px-9 py-4 border border-white/30 text-white font-semibold rounded-2xl hover:bg-white/10 transition text-sm"
+                  className="inline-flex items-center justify-center gap-2 px-9 py-4 border border-emerald-200 bg-white text-emerald-700 font-semibold rounded-2xl hover:bg-emerald-50 hover:scale-[1.02] transition-all duration-200 text-sm shadow-sm"
                 >
                   {isEnglish ? 'Already have an account? Sign in' : 'Đã có tài khoản? Đăng nhập'}
                 </button>
               </div>
             )}
-            <p className="text-emerald-200 text-xs mt-5">
+            <p className="text-emerald-700 text-xs mt-5 font-medium">
               {isEnglish ? 'No credit card required · 14-day free trial · Cancel anytime' : 'Không cần thẻ tín dụng · Miễn phí 14 ngày · Hủy bất cứ lúc nào'}
             </p>
           </div>
         </section>
 
         {/* ══════════ FOOTER ══════════ */}
-        <footer className="bg-slate-900 text-slate-400 py-14 px-5 sm:px-8">
+        <footer className="bg-[#010807] text-[#718b82] border-t border-[#0b241f] py-14 px-5 sm:px-8">
           <div className="max-w-6xl mx-auto">
             <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
               <div>
@@ -1054,7 +1185,7 @@ const Landing = () => {
                 <p className="text-sm leading-relaxed">{isEnglish ? 'A smart and modern personal finance management solution.' : 'Giải pháp quản lý tài chính cá nhân thông minh và hiện đại.'}</p>
 
                 {/* Security badge */}
-                <div className="flex items-center gap-1.5 mt-4 text-xs text-slate-500">
+                <div className="flex items-center gap-1.5 mt-4 text-xs text-[#4c635b]">
                   <FaLock size={10} className="text-emerald-500" />
                   <span>{isEnglish ? '256-bit SSL encrypted data' : 'Dữ liệu mã hóa 256-bit SSL'}</span>
                 </div>
@@ -1063,17 +1194,18 @@ const Landing = () => {
               <div>
                 <h4 className="text-white text-sm font-bold mb-4">{isEnglish ? 'Product' : 'Sản phẩm'}</h4>
                 <ul className="space-y-2.5 text-sm">
-                  <li><a href="#features" className="hover:text-white transition hover:translate-x-1 inline-block">{isEnglish ? 'Features' : 'Tính năng'}</a></li>
-                  <li><a href="#how" className="hover:text-white transition hover:translate-x-1 inline-block">{isEnglish ? 'How it works' : 'Cách dùng'}</a></li>
+                  <li><a href="#features" className="hover:text-emerald-450 transition hover:translate-x-1 inline-block">{isEnglish ? 'Features' : 'Tính năng'}</a></li>
+                  <li><a href="#how" className="hover:text-emerald-450 transition hover:translate-x-1 inline-block">{isEnglish ? 'How it works' : 'Cách dùng'}</a></li>
+                  <li><a href="#pricing" className="hover:text-emerald-450 transition hover:translate-x-1 inline-block">{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a></li>
                 </ul>
               </div>
 
               <div>
                 <h4 className="text-white text-sm font-bold mb-4">{isEnglish ? 'Company' : 'Công ty'}</h4>
                 <ul className="space-y-2.5 text-sm">
-                  <li><button onClick={() => navigate('/about')} className="hover:text-white transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'About us' : 'Về chúng tôi'}</button></li>
-                  <li><button onClick={() => navigate('/contact')} className="hover:text-white transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'Contact' : 'Liên hệ'}</button></li>
-                  <li><button onClick={() => navigate('/privacy')} className="hover:text-white transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}</button></li>
+                  <li><button onClick={() => navigate('/about')} className="hover:text-emerald-450 transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'About us' : 'Về chúng tôi'}</button></li>
+                  <li><button onClick={() => navigate('/contact')} className="hover:text-emerald-450 transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'Contact' : 'Liên hệ'}</button></li>
+                  <li><button onClick={() => navigate('/privacy')} className="hover:text-emerald-450 transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}</button></li>
                 </ul>
               </div>
 
@@ -1082,20 +1214,20 @@ const Landing = () => {
                 <div className="flex gap-3 mb-5">
                   {[FaFacebook, FaTwitter, FaLinkedin].map((Icon, i) => (
                     <a key={i} href="#"
-                      className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-emerald-600 flex items-center justify-center transition-all duration-200 hover:scale-110 text-slate-400 hover:text-white">
+                      className="w-9 h-9 rounded-xl bg-[#031d17] border border-[#0d3c32]/65 hover:bg-emerald-600 flex items-center justify-center transition-all duration-200 hover:scale-110 text-[#718b82] hover:text-white">
                       <Icon size={14} />
                     </a>
                   ))}
                 </div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-[#4c635b]">
                   {isEnglish ? 'New feature updates' : 'Cập nhật tính năng mới'}<br />{isEnglish ? 'every week' : 'mỗi tuần'}
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <div className="border-t border-[#0b241f] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
               <span>&copy; 2025 Finance Manager. All rights reserved.</span>
-              <span className="text-slate-600">{isEnglish ? 'Built with ❤ in Vietnam' : 'Được xây dựng với ❤ tại Việt Nam'}</span>
+              <span className="text-[#4c635b]">{isEnglish ? 'Built with ❤ in Vietnam' : 'Được xây dựng với ❤ tại Việt Nam'}</span>
             </div>
           </div>
         </footer>

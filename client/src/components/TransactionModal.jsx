@@ -4,6 +4,7 @@ import DatePicker from './DatePicker';
 import { useTransactions } from '../context/TransactionContext';
 import { useCategories } from '../context/CategoryContext';
 import { useWallets } from '../context/WalletContext';
+import { useAuth } from '../context/AuthContext';
 import { FiX, FiAlertCircle, FiCamera, FiZap } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import Tesseract from 'tesseract.js';
@@ -13,6 +14,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
   const { createTransaction, updateTransaction } = useTransactions();
   const { categories, fetchCategories } = useCategories();
   const { wallets, fetchWallets } = useWallets();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     type: 'expense',
     category: '',
@@ -136,6 +138,31 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Check VIP daily scan limit for standard users
+    const isVip = user && user.isVip && new Date(user.vipExpire) > new Date();
+    if (!isVip) {
+      const today = new Date().toISOString().split('T')[0];
+      const scanKey = `ocr_scans_${user?.id || 'anonymous'}`;
+      let scanData = { date: '', count: 0 };
+      try {
+        scanData = JSON.parse(localStorage.getItem(scanKey) || '{"date":"","count":0}');
+      } catch (err) {
+        console.error('Error parsing scan history', err);
+      }
+
+      if (scanData.date === today) {
+        if (scanData.count >= 3) {
+          toast.error("⚠️ Bạn đã đạt giới hạn 3 lượt quét hóa đơn/ngày của tài khoản thường. Nâng cấp VIP để sử dụng không giới hạn!");
+          if (fileInputRef.current) fileInputRef.current.value = '';
+          return;
+        }
+        scanData.count += 1;
+      } else {
+        scanData = { date: today, count: 1 };
+      }
+      localStorage.setItem(scanKey, JSON.stringify(scanData));
+    }
 
     setOcrLoading(true);
     const toastId = toast.loading("🔍 Đang đọc hóa đơn...");

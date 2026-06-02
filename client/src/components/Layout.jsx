@@ -26,7 +26,8 @@ import {
   FiChevronDown,
   FiHelpCircle,
   FiSearch,
-  FiBriefcase
+  FiBriefcase,
+  FiAward
 } from 'react-icons/fi';
 import DarkModeToggle from './DarkModeToggle';
 import GlobalSearch from './GlobalSearch';
@@ -44,6 +45,7 @@ const Layout = ({ children }) => {
   const { language, setLanguage } = useLanguage();
   const { isDarkMode } = useTheme();
   const isEnglish = language === 'en';
+  const isVipActive = user?.isVip && (!user?.vipExpire || new Date(user.vipExpire) > new Date());
   const [sidebarOpen, setSidebarOpen] = useState(false); // Trạng thái mở/đóng sidebar
   const [showQuickAdd, setShowQuickAdd] = useState(false); // FAB thêm giao dịch nhanh
   const [showUserMenu, setShowUserMenu] = useState(false); // Trạng thái hiển thị menu user
@@ -74,8 +76,8 @@ const Layout = ({ children }) => {
 
   useEffect(() => {
     fetchNotifications();
-    // Poll notifications every 30 seconds for live updates
-    const interval = setInterval(fetchNotifications, 30000);
+    // Poll notifications every 3 minutes (180,000ms) for live updates
+    const interval = setInterval(fetchNotifications, 180000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
@@ -127,12 +129,14 @@ const Layout = ({ children }) => {
     { path: '/debts', icon: FiUsers, label: isEnglish ? 'Debt Management' : 'Quản lý nợ', isImg: false },
     { path: '/statistics', icon: FiBarChart2, label: isEnglish ? 'Statistics' : 'Thống kê', isImg: false },
     { path: '/profile', icon: FiUser, label: isEnglish ? 'Account' : 'Tài khoản', isImg: false },
+    { path: '/vip', icon: FiAward, label: isEnglish ? 'VIP Membership' : 'Tài khoản VIP', isImg: false },
   ];
 
   const adminMenuItems = [
     { path: '/admin/dashboard', icon: FiShield, label: isEnglish ? 'Admin dashboard' : 'Dashboard admin' },
     { path: '/admin/contacts', icon: FiUsers, label: isEnglish ? 'Contact admin' : 'Contact admin' },
     { path: '/admin/users', icon: FiSettings, label: isEnglish ? 'Auth admin' : 'Auth admin' },
+    { path: '/admin/vip-payments', icon: FiCreditCard, label: isEnglish ? 'VIP Payments' : 'Duyệt thanh toán VIP' },
   ];
 
   const currentPageLabel =
@@ -227,7 +231,12 @@ const Layout = ({ children }) => {
                     ? <img src={item.icon} alt={item.label} className="w-5 h-5 object-contain" />
                     : React.createElement(item.icon, { size: 20, className: isActive ? '' : 'group-hover:scale-110 transition-transform opacity-90' })
                   }
-                  <span className="font-semibold">{item.label}</span>
+                  <span className="font-semibold flex items-center justify-between w-full">
+                    <span>{item.label}</span>
+                    {item.path === '/debts' && !isVipActive && (
+                      <span className="text-amber-500 text-xs ml-1" title="VIP Feature">👑</span>
+                    )}
+                  </span>
                 </Link>
               );
             })}
@@ -248,7 +257,10 @@ const Layout = ({ children }) => {
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-[#2d323b] dark:text-[#eceef2] truncate">{user?.name || (isEnglish ? 'User' : 'Người dùng')}</p>
+                  <p className="text-xs font-semibold text-[#2d323b] dark:text-[#eceef2] truncate flex items-center gap-1">
+                    {user?.name || (isEnglish ? 'User' : 'Người dùng')}
+                    {isVipActive && <span className="text-amber-500" title="VIP Member">👑</span>}
+                  </p>
                   <p className="text-[11px] text-[#6a727f] dark:text-[#a0a5ad] truncate">{user?.email || ''}</p>
                 </div>
               </div>
@@ -522,8 +534,9 @@ const Layout = ({ children }) => {
                       </div>
                     )}
                     <div className="hidden xl:block text-left">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1">
                         {user?.name}
+                        {isVipActive && <span className="text-amber-500">👑</span>}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {user?.email}
@@ -548,8 +561,9 @@ const Layout = ({ children }) => {
                         <div className={`transition-transform duration-300 ${showSettings ? 'hidden' : 'block'}`}>
                           {/* User Info */}
                           <div className="px-4 py-3 border-b border-gray-200 dark:border-[#2a2a2a]">
-                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1">
                               {user?.name}
+                              {isVipActive && <span className="text-amber-500">👑</span>}
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                               {user?.email}
@@ -631,8 +645,8 @@ const Layout = ({ children }) => {
                               <button
                                 onClick={() => setLanguage('vi')}
                                 className={`rounded-xl border px-3 py-3 text-left transition-colors ${language === 'vi'
-                                    ? 'border-[#2f8e6f] bg-[#e9f7f1] text-[#0d3a2d] dark:border-[#58c39e] dark:bg-[#1f3a32] dark:text-[#bcebd9]'
-                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-[#2a2a2a] dark:bg-[#171717] dark:text-gray-300 dark:hover:bg-[#1f1f1f]'
+                                  ? 'border-[#2f8e6f] bg-[#e9f7f1] text-[#0d3a2d] dark:border-[#58c39e] dark:bg-[#1f3a32] dark:text-[#bcebd9]'
+                                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-[#2a2a2a] dark:bg-[#171717] dark:text-gray-300 dark:hover:bg-[#1f1f1f]'
                                   }`}
                               >
                                 <p className="text-sm font-semibold">Tiếng Việt</p>
@@ -641,8 +655,8 @@ const Layout = ({ children }) => {
                               <button
                                 onClick={() => setLanguage('en')}
                                 className={`rounded-xl border px-3 py-3 text-left transition-colors ${language === 'en'
-                                    ? 'border-[#2f8e6f] bg-[#e9f7f1] text-[#0d3a2d] dark:border-[#58c39e] dark:bg-[#1f3a32] dark:text-[#bcebd9]'
-                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-[#2a2a2a] dark:bg-[#171717] dark:text-gray-300 dark:hover:bg-[#1f1f1f]'
+                                  ? 'border-[#2f8e6f] bg-[#e9f7f1] text-[#0d3a2d] dark:border-[#58c39e] dark:bg-[#1f3a32] dark:text-[#bcebd9]'
+                                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-[#2a2a2a] dark:bg-[#171717] dark:text-gray-300 dark:hover:bg-[#1f1f1f]'
                                   }`}
                               >
                                 <p className="text-sm font-semibold">English</p>

@@ -1,11 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiX } from 'react-icons/fi';
-import { useTransactions } from '../context/TransactionContext';
-import { useCategories } from '../context/CategoryContext';
-import { useBudgets } from '../context/BudgetContext';
-import { useGoal } from '../context/GoalContext';
-import { useDebt } from '../context/DebtContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import searchService from '../services/search.service';
@@ -20,11 +15,6 @@ const GlobalSearch = () => {
   const { user } = useAuth();
   const { language } = useLanguage();
   const isEnglish = language === 'en';
-  const { transactions } = useTransactions();
-  const { categories } = useCategories();
-  const { budgets } = useBudgets();
-  const { goals } = useGoal();
-  const { debts, fetchDebts } = useDebt();
 
   // Close search when clicking outside
   useEffect(() => {
@@ -37,12 +27,6 @@ const GlobalSearch = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    if (!debts || debts.length === 0) {
-      fetchDebts().catch(() => {});
-    }
-  }, [debts, fetchDebts]);
 
   // Fuzzy search helper - tìm kiếm gần đúng
   const fuzzyMatch = (text, query) => {

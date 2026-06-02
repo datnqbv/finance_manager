@@ -94,7 +94,7 @@ api.interceptors.response.use(
 
 // GET Request Caching and Deduplication
 const getCache = new Map();
-const CACHE_TTL = 2000; // 2 seconds
+const CACHE_TTL = 300000; // 5 minutes
 
 // Override api.request to intercept all calls
 const originalRequest = api.request;
@@ -110,12 +110,18 @@ api.request = function (configOrUrl, config) {
   const method = (conf.method || 'get').toLowerCase();
 
   if (method === 'get') {
+    const bypassCache = conf.cache === false || conf.forceRefresh === true;
+
     // Create a unique key based on URL and query params
     const key = JSON.stringify({ url: conf.url, params: conf.params });
-    const cached = getCache.get(key);
 
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return cached.promise;
+    if (bypassCache) {
+      getCache.delete(key);
+    } else {
+      const cached = getCache.get(key);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        return cached.promise;
+      }
     }
 
     const promise = originalRequest.call(this, configOrUrl, config)
@@ -132,6 +138,23 @@ api.request = function (configOrUrl, config) {
     getCache.clear();
     return originalRequest.call(this, configOrUrl, config);
   }
+};
+
+// Bind Axios helper methods to our overridden api.request
+api.get = function (url, config) {
+  return this.request({ ...config, method: 'get', url });
+};
+api.post = function (url, data, config) {
+  return this.request({ ...config, method: 'post', url, data });
+};
+api.put = function (url, data, config) {
+  return this.request({ ...config, method: 'put', url, data });
+};
+api.delete = function (url, config) {
+  return this.request({ ...config, method: 'delete', url });
+};
+api.patch = function (url, data, config) {
+  return this.request({ ...config, method: 'patch', url, data });
 };
 
 export default api;

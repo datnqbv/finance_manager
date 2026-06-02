@@ -10,6 +10,7 @@ import {
   getBudgetOverview
 } from '../controllers/budget.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
+import { checkBudgetLimit } from '../middleware/vip.middleware.js';
 
 const router = express.Router();
 
@@ -24,7 +25,7 @@ router.get('/alerts', getAlerts);
 // CRUD operations
 router.route('/')
   .get(getBudgets)
-  .post(createBudget);
+  .post(checkBudgetLimit, createBudget);
 
 router.route('/:id')
   .get(getBudget)

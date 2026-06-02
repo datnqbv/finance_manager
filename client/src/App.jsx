@@ -29,6 +29,8 @@ import Wallets from './pages/Wallets';
 import Goals from './pages/Goals';
 import Debts from './pages/Debts';
 import Profile from './pages/Profile';
+import VipSubscription from './pages/VipSubscription';
+import AdminVipPayments from './pages/AdminVipPayments';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminContacts from './pages/AdminContacts';
 import AdminUsers from './pages/AdminUsers';
@@ -85,12 +87,16 @@ function App() {
               <Route path="/profile" element={<PrivateRoute />}> 
                 <Route index element={<Profile />} /> 
               </Route>
+              <Route path="/vip" element={<PrivateRoute />}> 
+                <Route index element={<VipSubscription />} /> 
+              </Route>
 
               <Route path="/admin" element={<PrivateRoute requiredRole="admin" />}>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="contacts" element={<AdminContacts />} />
                 <Route path="users" element={<AdminUsers />} />
+                <Route path="vip-payments" element={<AdminVipPayments />} />
               </Route>
               
               <Route path="*" element={<Navigate to="/" replace />} /> 

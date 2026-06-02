@@ -7,6 +7,7 @@ import {
   transferFunds
 } from '../controllers/wallet.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
+import { checkWalletLimit } from '../middleware/vip.middleware.js';
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.post('/transfer', transferFunds);
 // Wallet CRUD
 router.route('/')
   .get(getWallets)
-  .post(createWallet);
+  .post(checkWalletLimit, createWallet);
 
 router.route('/:id')
   .put(updateWallet)

@@ -1,7 +1,8 @@
-import { Transaction, Notification, Budget, Wallet, sequelize } from '../models/sequelize/index.js';
+import { Transaction, Notification, Budget, Wallet, User, sequelize } from '../models/sequelize/index.js';
 import { Op } from 'sequelize';
 import { getSearchCondition } from '../utils/fts.js';
 import { recalculateWalletBalance } from './wallet.controller.js';
+import { sendBudgetAlertEmail } from '../utils/sendEmail.js';
 
 // Helper function to get date range based on period
 const getDateRange = (period, startDate = new Date()) => {
@@ -33,6 +34,9 @@ const getDateRange = (period, startDate = new Date()) => {
 // Helper function to check budget and create notification if needed
 const checkBudgetAndNotify = async (userId, category, transactionDate) => {
   try {
+    const user = await User.findByPk(userId);
+    if (!user) return;
+
     // Tìm các budget liên quan (Budget stores `categoryName`)
     const budgets = await Budget.findAll({ where: { userId, isActive: true, [Op.or]: [{ categoryName: category }, { categoryName: null }] }, raw: true });
 
@@ -57,6 +61,15 @@ const checkBudgetAndNotify = async (userId, category, transactionDate) => {
         }
         if (!existsForBudget) {
           await Notification.create({ userId, type: 'error', title: '🚨 Vượt ngân sách!', message: `${budget.categoryName || 'Tổng ngân sách'}: Đã vượt ${percentage.toFixed(0)}% (${currentSpending.toLocaleString('vi-VN')}/${budget.amount.toLocaleString('vi-VN')} ₫)`, relatedId: budget.id || budget._id, relatedModel: 'Budget', read: false, metadata: { budgetId: (budget.id || budget._id).toString(), category: budget.categoryName, percentage: percentage.toFixed(0), currentSpending, budgetAmount: budget.amount } });
+          
+          // Gửi email cảnh báo vượt ngân sách (chạy ngầm không block request)
+          sendBudgetAlertEmail(user.email, user.name, {
+            categoryName: budget.categoryName,
+            period: budget.period,
+            amount: budget.amount,
+            currentSpending,
+            percentage
+          }).catch(err => console.error('Error in sendBudgetAlertEmail (100%):', err));
         }
       } else if (percentage >= 80) {
         // Kiểm tra xem đã có thông báo cảnh báo trong 24h chưa
@@ -66,6 +79,15 @@ const checkBudgetAndNotify = async (userId, category, transactionDate) => {
         if (recentWarn) { try { const meta = recentWarn.metadata || (recentWarn.get && recentWarn.get('metadata')); const bId = meta && meta.budgetId; if (bId && (bId === (budget.id || budget._id).toString())) existsWarn = true; } catch(e){} }
         if (!existsWarn) {
           await Notification.create({ userId, type: 'warning', title: '⚠️ Cảnh báo ngân sách', message: `${budget.categoryName || 'Tổng ngân sách'}: Đã sử dụng ${percentage.toFixed(0)}% (${currentSpending.toLocaleString('vi-VN')}/${budget.amount.toLocaleString('vi-VN')} ₫)`, relatedId: budget.id || budget._id, relatedModel: 'Budget', read: false, metadata: { budgetId: (budget.id || budget._id).toString(), category: budget.categoryName, percentage: percentage.toFixed(0), currentSpending, budgetAmount: budget.amount } });
+          
+          // Gửi email cảnh báo chạm ngưỡng 80% (chạy ngầm không block request)
+          sendBudgetAlertEmail(user.email, user.name, {
+            categoryName: budget.categoryName,
+            period: budget.period,
+            amount: budget.amount,
+            currentSpending,
+            percentage
+          }).catch(err => console.error('Error in sendBudgetAlertEmail (80%):', err));
         }
       }
     }
@@ -245,6 +267,7 @@ export const createTransaction = async (req, res) => {
     }
 
     // Validate transfer wallets
+    let targetWallet = null;
     if (type === 'transfer') {
       if (!toWalletId) {
         return res.status(400).json({ success: false, message: 'Ví nhận không được để trống khi chuyển khoản' });
@@ -252,7 +275,7 @@ export const createTransaction = async (req, res) => {
       if (toWalletId === actualWalletId) {
         return res.status(400).json({ success: false, message: 'Ví nhận và ví nguồn không được trùng nhau' });
       }
-      const targetWallet = await Wallet.findOne({ where: { id: toWalletId, userId: req.user.id } });
+      targetWallet = await Wallet.findOne({ where: { id: toWalletId, userId: req.user.id } });
       if (!targetWallet) {
         return res.status(400).json({ success: false, message: 'Ví nhận không hợp lệ' });
       }

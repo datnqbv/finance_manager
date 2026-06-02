@@ -59,6 +59,18 @@ User.init({
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  isVip: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  vipExpire: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  isBanned: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
   resetPasswordToken: {
     type: DataTypes.STRING,
     allowNull: true,

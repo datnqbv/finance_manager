@@ -33,6 +33,13 @@ export const protect = async (req, res, next) => {
       });
     }
 
+    if (req.user.isBanned) {
+      return res.status(403).json({
+        success: false,
+        message: 'Tài khoản của bạn đã bị khóa bởi quản trị viên. Vui lòng liên hệ hỗ trợ.'
+      });
+    }
+
     next();
   } catch (error) {
     if (error.name !== 'TokenExpiredError' && error.name !== 'JsonWebTokenError') {

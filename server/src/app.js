@@ -17,6 +17,7 @@ import debtRoutes from './routes/debt.routes.js';
 import importRoutes from './routes/import.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import walletRoutes from './routes/wallet.routes.js';
+import vipRoutes from './routes/vip.routes.js';
 import { errorHandler } from './middleware/error.middleware.js';
 
 const app = express();
@@ -44,8 +45,10 @@ app.use('/api/debts',         debtRoutes);
 app.use('/api/import',        importRoutes);
 app.use('/api/admin',         adminRoutes);
 app.use('/api/wallets',       walletRoutes);
+app.use('/api/vip',           vipRoutes);
 
 // Error handling middleware (phải đứng cuối)
 app.use(errorHandler);
 
 export default app;
+// Touch to trigger nodemon auto-restart

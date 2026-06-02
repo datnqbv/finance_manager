@@ -163,6 +163,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const data = await authService.getMe();
+      if (data.success && data.data?.user) {
+        setUser(data.data.user);
+        localStorage.setItem('user', JSON.stringify(data.data.user));
+      }
+    } catch (error) {
+      console.error('Error refreshing user:', error);
+    }
+  };
+
   const value = {
     user,
     login,
@@ -171,6 +183,7 @@ export const AuthProvider = ({ children }) => {
     updateProfile,
     changePassword,
     googleLogin,
+    refreshUser,
     isAuthenticated: !!user,
     loading,
   };

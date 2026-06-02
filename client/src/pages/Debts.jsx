@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDebt } from '../context/DebtContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import DebtModal from '../components/DebtModal';
 import {
   FiPlus, FiEdit2, FiTrash2, FiClock, FiCheck,
-  FiAlertTriangle, FiTrendingUp
+  FiAlertTriangle, FiTrendingUp, FiLock, FiAward
 } from 'react-icons/fi';
 import { DebtsSkeleton } from '../components/LoadingSkeleton';
 import CurrencyInput from '../components/CurrencyInput';
@@ -17,6 +18,8 @@ const Debts = () => {
   const { debts, stats, loading, fetchDebts, createDebt, updateDebt, deleteDebt, addPayment, settleDebt } = useDebt();
   const { t, language } = useLanguage();
   const isEnglish = language === 'en';
+  const navigate = useNavigate();
+  const isVipActive = user?.isVip && (!user?.vipExpire || new Date(user.vipExpire) > new Date());
 
   const [showModal, setShowModal] = useState(false);
   const [editingDebt, setEditingDebt] = useState(null);
@@ -94,6 +97,41 @@ const Debts = () => {
     const res = await addPayment(id, amount, payNote.trim());
     if (res.success) { setPayingId(null); setPayAmount(''); setPayNote(''); }
   };
+
+  if (!isVipActive) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-[#191d25] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-8 md:p-12 max-w-lg w-full text-center shadow-2xl relative overflow-hidden flex flex-col items-center">
+          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-amber-500/10 blur-2xl" />
+          <div className="absolute -left-16 -bottom-16 h-48 w-48 rounded-full bg-emerald-500/10 blur-2xl" />
+          
+          <div className="relative z-10">
+            <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 dark:bg-amber-950/40 text-amber-500 mb-6 shadow-sm animate-bounce">
+              <FiLock size={32} />
+            </div>
+            
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white">
+              {isEnglish ? 'Debt Management (VIP Premium)' : 'Quản lý công nợ (Tính năng VIP)'}
+            </h2>
+            
+            <p className="mt-3 text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+              {isEnglish
+                ? 'Upgrade to VIP to access the Debt Management module, track lenders & borrowers, log payments, and manage balances with statistical progress.'
+                : 'Nâng cấp tài khoản VIP để mở khóa chức năng Quản lý công nợ, theo dõi chi tiết người vay/cho vay, ghi chép lịch sử thanh toán và thống kê dư nợ.'}
+            </p>
+
+            <button
+              onClick={() => navigate('/vip')}
+              className="mt-8 w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold px-8 py-3.5 text-sm transition-all shadow-lg shadow-amber-500/20 hover:scale-[1.03]"
+            >
+              <FiAward size={18} />
+              {isEnglish ? 'Upgrade to VIP Premium' : 'Nâng cấp VIP ngay'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading && debts.length === 0) {
     return <DebtsSkeleton />;

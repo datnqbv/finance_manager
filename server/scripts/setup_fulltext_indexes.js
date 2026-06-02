@@ -35,6 +35,7 @@ async function setupFullTextIndexes() {
       END
     `);
 
+    // 3.5 Create Vietnamese Accents Removal Function (we will drop it and rebuild it along with dependencies below)
     // 4. Define target tables and columns for FTS
     const targets = [
       { table: 'transactions', columns: ['category', 'note'] },
@@ -44,8 +45,90 @@ async function setupFullTextIndexes() {
       { table: 'debts', columns: ['personName', 'description'] }
     ];
 
+    // 4.1 Drop existing FTS indexes and computed columns to resolve dependency chain before function re-creation
+    console.log('Cleaning up existing FTS indexes and computed columns to prepare for function update...');
+    for (const target of targets) {
+      // Check and drop FTS index
+      const [ftIndexExists] = await sequelize.query(`
+        SELECT 1 FROM sys.fulltext_indexes 
+        WHERE object_id = OBJECT_ID('${target.table}')
+      `);
+      if (ftIndexExists && ftIndexExists.length > 0) {
+        console.log(`Dropping FTS index on table "${target.table}"...`);
+        await sequelize.query(`DROP FULLTEXT INDEX ON ${target.table}`);
+      }
+
+      // Drop computed columns
+      for (const col of target.columns) {
+        const computedColName = `${col}_no_accent`;
+        const [colExists] = await sequelize.query(`
+          SELECT 1 FROM sys.columns 
+          WHERE object_id = OBJECT_ID('${target.table}') AND name = '${computedColName}'
+        `);
+        if (colExists && colExists.length > 0) {
+          console.log(`Dropping computed column "${computedColName}" from table "${target.table}"...`);
+          await sequelize.query(`ALTER TABLE ${target.table} DROP COLUMN ${computedColName}`);
+        }
+      }
+    }
+
+    // 4.2 Drop the old function if it exists
+    console.log('Dropping old accentless function to apply new correct mapping...');
+    await sequelize.query(`
+      IF OBJECT_ID('dbo.ufn_remove_vietnamese_accents', 'FN') IS NOT NULL
+      BEGIN
+          DROP FUNCTION dbo.ufn_remove_vietnamese_accents;
+      END
+    `);
+
+    // 4.3 Create the function with correct alignment (no mid-string 'd'/'D' typos)
+    console.log('Creating Vietnamese accents removal function with correct mappings...');
+    await sequelize.query(`
+      EXEC('
+      CREATE FUNCTION dbo.ufn_remove_vietnamese_accents(@str NVARCHAR(MAX))
+      RETURNS NVARCHAR(MAX)
+      WITH SCHEMABINDING
+      AS
+      BEGIN
+          IF @str IS NULL RETURN NULL
+          
+          DECLARE @sign_chars NVARCHAR(256)
+          DECLARE @unsign_chars NVARCHAR(256)
+          
+          SET @sign_chars = N''áàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđÁÀẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸỴĐ''
+          SET @unsign_chars = N''aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyydAAAAAAAAAAAAAAAAAEEEEEEEEEEEIIIIIOOOOOOOOOOOOOOOOOUUUUUUUUUUUYYYYYD''
+          
+          DECLARE @counter INT = 1
+          DECLARE @len INT = LEN(@str)
+          WHILE @counter <= @len
+          BEGIN
+              DECLARE @char NCHAR(1) = SUBSTRING(@str, @counter, 1)
+              DECLARE @idx INT = CHARINDEX(@char, @sign_chars COLLATE Latin1_General_BIN)
+              IF @idx > 0
+              BEGIN
+                  SET @str = STUFF(@str, @counter, 1, SUBSTRING(@unsign_chars, @idx, 1))
+              END
+              SET @counter = @counter + 1
+          END
+          RETURN @str
+      END
+      ');
+    `);
+    console.log('✅ Corrected accentless function created.');
+
+    // 4.4 Re-create computed columns and FTS indexes
+    console.log('Re-creating computed columns and FTS indexes...');
     for (const target of targets) {
       console.log(`Processing table: ${target.table}...`);
+
+      // Create PERSISTED computed columns
+      for (const col of target.columns) {
+        const computedColName = `${col}_no_accent`;
+        console.log(`Creating computed column ${computedColName} on ${target.table}...`);
+        await sequelize.query(`
+          ALTER TABLE ${target.table} ADD ${computedColName} AS dbo.ufn_remove_vietnamese_accents(${col}) PERSISTED;
+        `);
+      }
 
       // Find the primary key index/constraint name
       const [pkIndex] = await sequelize.query(`
@@ -61,20 +144,9 @@ async function setupFullTextIndexes() {
       const pkName = pkIndex[0].name;
       console.log(`Found Primary Key Index: "${pkName}"`);
 
-      // Check if full-text index already exists on this table.
-      // If it exists, drop it to ensure we recreate it with current columns.
-      const [ftIndexExists] = await sequelize.query(`
-        SELECT 1 FROM sys.fulltext_indexes 
-        WHERE object_id = OBJECT_ID('${target.table}')
-      `);
-
-      if (ftIndexExists && ftIndexExists.length > 0) {
-        console.log(`FTS index already exists on "${target.table}". Dropping to recreate...`);
-        await sequelize.query(`DROP FULLTEXT INDEX ON ${target.table}`);
-      }
-
-      // Create the FTS index
-      const columnsList = target.columns.join(', ');
+      // Create the FTS index (includes both original columns and unaccented computed columns)
+      const ftsColumns = [...target.columns, ...target.columns.map(c => `${c}_no_accent`)];
+      const columnsList = ftsColumns.join(', ');
       console.log(`Creating Full-Text Index on ${target.table}(${columnsList})...`);
       await sequelize.query(`
         CREATE FULLTEXT INDEX ON ${target.table} (${columnsList})

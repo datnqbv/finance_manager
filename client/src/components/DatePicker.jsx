@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { FiCalendar, FiX } from 'react-icons/fi';
 
-const DatePicker = ({ value, onChange, className = '', style = {}, clearable = true }) => {
+const DatePicker = ({ value, onChange, className = '', style = {}, clearable = true, disabled = false }) => {
   const [typedValue, setTypedValue] = useState('');
   const nativeInputRef = useRef(null);
 
@@ -171,7 +171,7 @@ const DatePicker = ({ value, onChange, className = '', style = {}, clearable = t
 
   return (
     <div 
-      className={`relative flex items-center justify-between px-3 py-1.5 border border-gray-300 dark:border-[#2a2a2a] rounded-lg bg-white dark:bg-[#111111] text-gray-900 dark:text-white hover:border-emerald-500 dark:hover:border-emerald-500 transition-all duration-200 ${className}`}
+      className={`relative flex items-center justify-between px-3 py-1.5 border border-gray-300 dark:border-[#2a2a2a] rounded-lg bg-white dark:bg-[#111111] text-gray-900 dark:text-white hover:border-emerald-500 dark:hover:border-emerald-500 transition-all duration-200 ${disabled ? 'opacity-55 pointer-events-none bg-gray-50 dark:bg-gray-800/20' : ''} ${className}`}
       style={style}
     >
       <input
@@ -180,6 +180,7 @@ const DatePicker = ({ value, onChange, className = '', style = {}, clearable = t
         onChange={handleTextChange}
         onBlur={handleBlur}
         placeholder="dd/mm/yyyy"
+        disabled={disabled}
         className="bg-transparent text-gray-900 dark:text-white focus:outline-none text-sm w-full cursor-text"
       />
       <div className="flex items-center gap-1 shrink-0 ml-2">

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { statsService } from '../services/stats.service';
 import { useAuth } from '../context/AuthContext';
 import { useTransactions } from '../context/TransactionContext';
@@ -9,7 +10,7 @@ import {
 } from 'recharts';
 import {
   FiBarChart2, FiTrendingUp, FiTrendingDown, FiActivity,
-  FiCalendar, FiTarget, FiMinus, FiZap
+  FiCalendar, FiTarget, FiMinus, FiZap, FiLock, FiAward
 } from 'react-icons/fi';
 import { StatisticsPageSkeleton } from '../components/LoadingSkeleton';
 import { useLanguage } from '../context/LanguageContext';
@@ -66,10 +67,42 @@ const KpiCard = ({ label, value, sub, border, icon, valueColor, loading }) => (
   </div>
 );
 
+// ── Locked Feature Placeholder component ─────────────────────────────────────
+const LockedFeaturePlaceholder = ({ featureName, description }) => {
+  const navigate = useNavigate();
+  const { language } = useLanguage();
+  const isEnglish = language === 'en';
+
+  return (
+    <div className="rounded-xl bg-white p-12 shadow-sm dark:bg-[#191d25] relative overflow-hidden flex flex-col items-center justify-center text-center min-h-[350px] border border-gray-100 dark:border-gray-800">
+      <div className="absolute inset-0 bg-white/40 dark:bg-[#191d25]/50 backdrop-blur-[1px] z-0" />
+      <div className="relative z-10 flex flex-col items-center max-w-md">
+        <div className="h-16 w-16 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-500 flex items-center justify-center mb-4 shadow-sm animate-bounce">
+          <FiLock size={30} />
+        </div>
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+          {featureName}
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
+          {description}
+        </p>
+        <button
+          onClick={() => navigate('/vip')}
+          className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold px-6 py-3 text-sm transition-all shadow-lg shadow-amber-500/20 hover:scale-105"
+        >
+          <FiAward size={16} /> {isEnglish ? 'Upgrade to VIP' : 'Nâng cấp VIP ngay'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // ── Main Component ───────────────────────────────────────────────────────────
 
 const Statistics = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const isVipActive = user?.isVip && (!user?.vipExpire || new Date(user.vipExpire) > new Date());
   const { revision: transactionRevision } = useTransactions();
   const { t, language } = useLanguage();
   const isEnglish = language === 'en';
@@ -295,8 +328,26 @@ const Statistics = () => {
   const TABS = [
     { key: 'overview',  label: isEnglish ? 'Overview' : 'Tổng quan',   icon: <FiBarChart2 size={13}/> },
     { key: 'compare',   label: isEnglish ? 'Compare' : 'So sánh',     icon: <FiActivity size={13}/> },
-    { key: 'forecast',  label: isEnglish ? 'AI Forecast' : 'Dự báo AI',   icon: <FiTarget size={13}/> },
-    { key: 'trends',    label: isEnglish ? 'Trends' : 'Xu hướng',    icon: <FiTrendingUp size={13}/> },
+    { 
+      key: 'forecast',  
+      label: (
+        <span className="flex items-center gap-1">
+          {isEnglish ? 'AI Forecast' : 'Dự báo AI'}
+          {!isVipActive && <span className="text-amber-500 text-[10px]">👑</span>}
+        </span>
+      ),   
+      icon: <FiTarget size={13}/> 
+    },
+    { 
+      key: 'trends',    
+      label: (
+        <span className="flex items-center gap-1">
+          {isEnglish ? 'Trends' : 'Xu hướng'}
+          {!isVipActive && <span className="text-amber-500 text-[10px]">👑</span>}
+        </span>
+      ),    
+      icon: <FiTrendingUp size={13}/> 
+    },
     { key: 'daily',     label: isEnglish ? 'Daily' : 'Theo ngày',   icon: <FiCalendar size={13}/> },
   ];
 
@@ -1140,8 +1191,12 @@ const Statistics = () => {
       {/* Tab content */}
       {activeTab === 'overview'  && <OverviewTab/>}
       {activeTab === 'compare'   && <CompareTab/>}
-      {activeTab === 'forecast'  && <ForecastTab/>}
-      {activeTab === 'trends'    && <TrendsTab/>}
+      {activeTab === 'forecast'  && (
+        isVipActive ? <ForecastTab/> : <LockedFeaturePlaceholder featureName={isEnglish ? 'AI Spending Forecast' : 'Dự báo chi tiêu AI'} description={isEnglish ? 'Upgrade to VIP to forecast your next month spending with AI' : 'Nâng cấp tài khoản VIP để sử dụng AI dự báo và đề xuất chi tiêu tháng tiếp theo'} />
+      )}
+      {activeTab === 'trends'    && (
+        isVipActive ? <TrendsTab/> : <LockedFeaturePlaceholder featureName={isEnglish ? 'Financial Trends Analysis' : 'Phân tích xu hướng tài chính'} description={isEnglish ? 'Upgrade to VIP to analyze long-term trends and savings rate' : 'Nâng cấp tài khoản VIP để xem phân tích xu hướng chi tiêu dài hạn'} />
+      )}
       {activeTab === 'daily'     && <DailyTab/>}
     </div>
   );

@@ -375,3 +375,182 @@ export const sendWelcomeEmail = async (email, userName) => {
     return { success: false, error: error.message };
   }
 };
+
+// Gửi email cảnh báo ngân sách
+export const sendBudgetAlertEmail = async (email, userName, budgetDetails) => {
+  try {
+    if (!isEmailConfigured()) {
+      console.log('⚠️  Email chưa được cấu hình. Bỏ qua gửi email cảnh báo ngân sách cho:', email);
+      return { success: true, mode: 'demo' };
+    }
+
+    const transporter = createTransporter();
+    const { categoryName, period, amount, currentSpending, percentage } = budgetDetails;
+    
+    const isCritical = percentage >= 100;
+    const subject = isCritical 
+      ? `🚨 CẢNH BÁO: Vượt ngân sách chi tiêu - ${categoryName || 'Tổng ngân sách'}`
+      : `⚠️ Cảnh báo: Sắp chạm hạn mức chi tiêu - ${categoryName || 'Tổng ngân sách'}`;
+
+    const color = isCritical ? '#ef4444' : '#f59e0b';
+    const title = isCritical ? '🚨 Vượt ngân sách chi tiêu!' : '⚠️ Cảnh báo ngân sách';
+    const periodText = period === 'weekly' ? 'Tuần' : period === 'monthly' ? 'Tháng' : 'Năm';
+
+    const mailOptions = {
+      from: `"Finance Manager" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+              background-color: #f9f9f9;
+            }
+            .header {
+              background-color: ${color};
+              color: white;
+              padding: 20px;
+              text-align: center;
+              border-radius: 10px 10px 0 0;
+            }
+            .content {
+              background-color: white;
+              padding: 30px;
+              border-radius: 0 0 10px 10px;
+              border: 1px solid #e2e8f0;
+              border-top: none;
+            }
+            .details {
+              background-color: #f8fafc;
+              border-radius: 8px;
+              padding: 15px;
+              margin: 20px 0;
+              border-left: 4px solid ${color};
+            }
+            .detail-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 8px;
+              border-bottom: 1px dashed #e2e8f0;
+              padding-bottom: 8px;
+            }
+            .detail-row:last-child {
+              border-bottom: none;
+              padding-bottom: 0;
+              margin-bottom: 0;
+            }
+            .label {
+              font-weight: bold;
+              color: #64748b;
+            }
+            .value {
+              font-weight: bold;
+              color: #0f172a;
+            }
+            .progress-bar-bg {
+              background-color: #e2e8f0;
+              border-radius: 9999px;
+              height: 12px;
+              width: 100%;
+              margin-top: 15px;
+              overflow: hidden;
+            }
+            .progress-bar-fill {
+              background-color: ${color};
+              height: 100%;
+              border-radius: 9999px;
+            }
+            .footer {
+              text-align: center;
+              margin-top: 20px;
+              color: #64748b;
+              font-size: 12px;
+            }
+            .btn {
+              display: inline-block;
+              background-color: #0ea5e9;
+              color: white;
+              text-decoration: none;
+              padding: 10px 20px;
+              border-radius: 5px;
+              font-weight: bold;
+              margin-top: 15px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="margin:0;">${title}</h1>
+            </div>
+            <div class="content">
+              <h2>Xin chào ${userName}!</h2>
+              <p>Chúng tôi gửi thông báo này để cập nhật về tình hình ngân sách chi tiêu của bạn.</p>
+              
+              <div class="details">
+                <div class="detail-row">
+                  <span class="label">Danh mục:</span>
+                  <span class="value">${categoryName || 'Tất cả danh mục (Tổng)'}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Chu kỳ ngân sách:</span>
+                  <span class="value">${periodText}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Hạn mức ngân sách:</span>
+                  <span class="value">${amount.toLocaleString('vi-VN')} ₫</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Đã chi tiêu:</span>
+                  <span class="value">${currentSpending.toLocaleString('vi-VN')} ₫</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Tỷ lệ sử dụng:</span>
+                  <span class="value" style="color: ${color};">${percentage.toFixed(0)}%</span>
+                </div>
+                
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" style="width: ${Math.min(percentage, 100)}%;"></div>
+                </div>
+              </div>
+
+              ${isCritical 
+                ? `<p style="color: #ef4444; font-weight: bold;">🚨 Bạn đã vượt quá hạn mức ngân sách đã đặt! Vui lòng cân đối lại các khoản chi tiêu tiếp theo để tránh thâm hụt tài chính.</p>`
+                : `<p style="color: #f59e0b; font-weight: bold;">⚠️ Bạn đã sử dụng hơn 80% hạn mức ngân sách của mình. Hãy cân nhắc chi tiêu hợp lý hơn trong thời gian còn lại của chu kỳ.</p>`
+              }
+              
+              <p>Để quản lý chi tiết và điều chỉnh ngân sách, bạn có thể truy cập ứng dụng bằng cách nhấn vào nút dưới đây:</p>
+              <div style="text-align: center;">
+                <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/budgets" class="btn" style="color: white;">Quản lý Ngân sách</a>
+              </div>
+              
+              <p>Trân trọng,<br><strong>Finance Manager Team</strong></p>
+            </div>
+            <div class="footer">
+              <p>Email này được gửi tự động từ hệ thống quản lý tài chính Finance Manager, vui lòng không phản hồi.</p>
+              <p>&copy; 2026 Finance Manager. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Budget alert email sent to ${email}:`, info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Budget alert email error:', error);
+    return { success: false, error: error.message };
+  }
+};

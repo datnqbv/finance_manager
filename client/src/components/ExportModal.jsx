@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { FiX, FiDownload, FiFileText, FiCalendar, FiPieChart } from 'react-icons/fi';
+import { FiX, FiDownload, FiFileText, FiCalendar, FiPieChart, FiLock } from 'react-icons/fi';
 import { useLanguage } from '../context/LanguageContext';
 import DatePicker from './DatePicker';
 
 const ExportModal = ({ isOpen, onClose, transactions = [], user, onExport, totalFilteredCount, filterDateFrom = '', filterDateTo = '' }) => {
   const { language } = useLanguage();
   const isEnglish = language === 'en';
+  const isVipActive = user?.isVip && (!user?.vipExpire || new Date(user.vipExpire) > new Date());
   
   const [format, setFormat] = useState('pdf'); // 'pdf' | 'excel'
   const [groupBy, setGroupBy] = useState('detail'); // 'detail' | 'day' | 'month' | 'quarter'
@@ -13,6 +14,16 @@ const ExportModal = ({ isOpen, onClose, transactions = [], user, onExport, total
   const [dateFrom, setDateFrom] = useState(filterDateFrom);
   const [dateTo, setDateTo] = useState(filterDateTo);
   const [loading, setLoading] = useState(false);
+
+  const handleGroupByChange = (mode) => {
+    if (mode === 'quarter' && !isVipActive) {
+      alert(isEnglish 
+        ? 'Quarterly report export is a VIP feature. Please upgrade to VIP!' 
+        : 'Tính năng xuất báo cáo theo quý chỉ dành cho VIP. Vui lòng nâng cấp lên tài khoản VIP!');
+      return;
+    }
+    setGroupBy(mode);
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -160,20 +171,38 @@ const ExportModal = ({ isOpen, onClose, transactions = [], user, onExport, total
               </button>
               <button
                 type="button"
-                onClick={() => setGroupBy('quarter')}
-                className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
+                onClick={() => handleGroupByChange('quarter')}
+                className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all relative ${
                   groupBy === 'quarter'
                     ? 'border-emerald-500 bg-emerald-50/50 text-emerald-700 dark:bg-emerald-500/10 dark:text-[#b9e4d2]'
                     : 'border-gray-200 dark:border-gray-850 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
-                }`}
+                } ${!isVipActive ? 'opacity-75 cursor-not-allowed bg-gray-50/50 dark:bg-gray-800/10' : ''}`}
               >
-                {isEnglish ? 'By Quarter' : 'Báo cáo theo quý'}
+                <span className="flex items-center justify-center gap-1">
+                  {!isVipActive && <FiLock className="text-amber-500" size={12} />}
+                  {isEnglish ? 'By Quarter' : 'Báo cáo theo quý'}
+                </span>
               </button>
             </div>
           </div>
 
           {/* Date Range Selection */}
-          <div>
+          <div className="relative">
+            {!isVipActive && (
+              <div 
+                className="absolute inset-0 bg-white/60 dark:bg-[#191d25]/60 z-10 flex flex-col items-center justify-center cursor-pointer rounded-xl backdrop-blur-[1px]"
+                onClick={() => {
+                  alert(isEnglish 
+                    ? 'Custom date range export is a VIP feature. Please upgrade to VIP!' 
+                    : 'Tính năng tự chọn thời gian xuất báo cáo chỉ dành cho VIP. Vui lòng nâng cấp lên tài khoản VIP!');
+                }}
+              >
+                <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 rounded-full px-3 py-1.5 text-xs font-bold shadow-sm">
+                  <FiLock size={12} />
+                  {isEnglish ? 'Unlock VIP Custom Dates' : 'Mở khóa thời gian tùy chọn (VIP)'}
+                </div>
+              </div>
+            )}
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
               <FiCalendar size={13} />
               {isEnglish ? 'Export Date Range' : 'Chọn khoảng thời gian xuất'}
@@ -186,6 +215,7 @@ const ExportModal = ({ isOpen, onClose, transactions = [], user, onExport, total
                 <DatePicker
                   value={dateFrom}
                   onChange={setDateFrom}
+                  disabled={!isVipActive}
                 />
               </div>
               <div>
@@ -195,6 +225,7 @@ const ExportModal = ({ isOpen, onClose, transactions = [], user, onExport, total
                 <DatePicker
                   value={dateTo}
                   onChange={setDateTo}
+                  disabled={!isVipActive}
                 />
               </div>
             </div>

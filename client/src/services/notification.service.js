@@ -1,7 +1,7 @@
 import api from './api';
 
 export const getNotifications = async (params = {}) => {
-  const response = await api.get('/notifications', { params });
+  const response = await api.get('/notifications', { params, cache: false });
   return response.data;
 };
 
