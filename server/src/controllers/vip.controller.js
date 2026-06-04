@@ -28,11 +28,29 @@ function getVnpayDateFormat(date) {
   return `${year}${month}${day}${hour}${minute}${second}`;
 }
 
+function getClientOrigin(req) {
+  if (req.headers.referer) {
+    try {
+      const url = new URL(req.headers.referer);
+      return url.origin;
+    } catch (e) {
+      // ignore
+    }
+  }
+  if (req.headers.origin) {
+    return req.headers.origin;
+  }
+  return 'http://localhost:5173';
+}
+
 function createVnpayUrl(req, order) {
   const tmnCode = process.env.VNP_TMN_CODE || 'VKSJBPIL';
   const secretKey = process.env.VNP_HASH_SECRET || 'W0J75BGKDUSFGHA815QB0S7HI0IKTOEZ';
   const vnpUrl = process.env.VNP_URL || 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
-  const returnUrl = process.env.VNP_RETURN_URL || 'http://localhost:5000/api/vip/vnpay-return';
+  
+  // Dynamically determine returnUrl based on client origin to support ngrok/mobile testing
+  const clientOrigin = getClientOrigin(req);
+  const returnUrl = `${clientOrigin}/api/vip/vnpay-return`;
 
   const date = new Date();
   const createDate = getVnpayDateFormat(date);
@@ -404,7 +422,8 @@ export const vipController = {
       const hmac = crypto.createHmac("sha512", secretKey);
       const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
 
-      const clientRedirectUrl = process.env.VNP_CLIENT_REDIRECT || 'http://localhost:5173/vip';
+      // Use a relative redirect to naturally preserve the origin domain (localhost or ngrok)
+      const clientRedirectUrl = '/vip';
 
       if (secureHash === signed) {
         const paymentCode = vnp_Params['vnp_TxnRef'];
@@ -445,8 +464,7 @@ export const vipController = {
       }
     } catch (error) {
       console.error('Error in vnpayReturn:', error);
-      const clientRedirectUrl = process.env.VNP_CLIENT_REDIRECT || 'http://localhost:5173/vip';
-      return res.redirect(`${clientRedirectUrl}?status=cancel`);
+      return res.redirect('/vip?status=cancel');
     }
   },
 

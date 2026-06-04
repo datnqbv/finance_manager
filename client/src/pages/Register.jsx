@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { FiMail, FiLock, FiUser, FiAlertCircle, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
@@ -73,8 +73,9 @@ const Register = () => {
   };
 
   return (
-    <div className="login-art-page min-h-screen bg-[#d9e5dc] p-4 md:p-8">
-      <div className="login-shell mx-auto max-w-6xl rounded-[28px] border border-white/50 bg-[#e9efe8] p-4 shadow-[0_22px_60px_rgba(20,20,20,0.14)] md:p-6">
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <div className="login-art-page min-h-screen bg-[#d9e5dc] p-4 md:p-8">
+        <div className="login-shell mx-auto max-w-6xl rounded-[28px] border border-white/50 bg-[#e9efe8] p-4 shadow-[0_22px_60px_rgba(20,20,20,0.14)] md:p-6">
         <div className="mb-4">
           <button
             onClick={() => navigate('/home')}
@@ -257,7 +258,8 @@ const Register = () => {
         </div>
       </div>
     </div>
-  );
+  </GoogleOAuthProvider>
+);
 };
 
 export default Register;

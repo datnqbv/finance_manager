@@ -27,8 +27,11 @@ import {
   FiHelpCircle,
   FiSearch,
   FiBriefcase,
-  FiAward
+  FiAward,
+  FiActivity,
+  FiRefreshCw
 } from 'react-icons/fi';
+import api from '../services/api';
 import DarkModeToggle from './DarkModeToggle';
 import GlobalSearch from './GlobalSearch';
 import { useTheme } from '../context/ThemeContext';
@@ -81,6 +84,21 @@ const Layout = ({ children }) => {
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
+  useEffect(() => {
+    const recordUserVisit = async () => {
+      try {
+        const recordedThisSession = sessionStorage.getItem('visit_recorded');
+        if (!recordedThisSession) {
+          await api.post('/admin/record-visit');
+          sessionStorage.setItem('visit_recorded', 'true');
+        }
+      } catch (err) {
+        console.error('Failed to record visit:', err);
+      }
+    };
+    recordUserVisit();
+  }, []);
+
   const toggleNotifications = async () => {
     const nextValue = !showNotifications;
     setShowNotifications(nextValue);
@@ -122,6 +140,7 @@ const Layout = ({ children }) => {
   const menuItems = [
     { path: '/dashboard', icon: FiHome, label: isEnglish ? 'Overview' : 'Tổng quan', isImg: false },
     { path: '/transactions', icon: FiCreditCard, label: isEnglish ? 'Transactions' : 'Giao dịch', isImg: false },
+    { path: '/recurring', icon: FiRefreshCw, label: isEnglish ? 'Recurring Trans' : 'Giao dịch định kỳ', isImg: false },
     { path: '/categories', icon: FiFolder, label: isEnglish ? 'Categories' : 'Danh mục', isImg: false },
     { path: '/budgets', icon: FiDollarSign, label: isEnglish ? 'Budgets' : 'Ngân sách', isImg: false },
     { path: '/wallets', icon: FiBriefcase, label: isEnglish ? 'Wallets' : 'Quản lý ví', isImg: false },
@@ -137,6 +156,7 @@ const Layout = ({ children }) => {
     { path: '/admin/contacts', icon: FiUsers, label: isEnglish ? 'Contact admin' : 'Contact admin' },
     { path: '/admin/users', icon: FiSettings, label: isEnglish ? 'Auth admin' : 'Auth admin' },
     { path: '/admin/vip-payments', icon: FiCreditCard, label: isEnglish ? 'VIP Payments' : 'Duyệt thanh toán VIP' },
+    { path: '/admin/visits', icon: FiActivity, label: isEnglish ? 'Visitor traffic' : 'Lịch sử truy cập' },
   ];
 
   const currentPageLabel =

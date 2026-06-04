@@ -18,6 +18,7 @@ import importRoutes from './routes/import.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import walletRoutes from './routes/wallet.routes.js';
 import vipRoutes from './routes/vip.routes.js';
+import recurringRoutes from './routes/recurring.routes.js';
 import { errorHandler } from './middleware/error.middleware.js';
 
 const app = express();
@@ -46,6 +47,7 @@ app.use('/api/import',        importRoutes);
 app.use('/api/admin',         adminRoutes);
 app.use('/api/wallets',       walletRoutes);
 app.use('/api/vip',           vipRoutes);
+app.use('/api/recurring-transactions', recurringRoutes);
 
 // Error handling middleware (phải đứng cuối)
 app.use(errorHandler);

@@ -146,7 +146,7 @@ const Goals = () => {
               <FiTarget size={18} className="text-[#b8e4d6]" />
               <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">{isEnglish ? 'Financial Goals' : 'Mục tiêu tài chính'}</p>
             </div>
-            <h1 className="mt-3 text-5xl font-black tracking-tight">{formatCurrency(totalTarget)}</h1>
+            <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight truncate">{formatCurrency(totalTarget)}</h1>
             <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-[#d8fff2]">
               {overallProgress.toFixed(1)}% {isEnglish ? 'of goals completed' : 'tổng mục tiêu đã hoàn thành'}
             </div>
@@ -216,16 +216,16 @@ const Goals = () => {
           </div>
 
           {chartGoals.length > 0 ? (
-            <div className="flex items-end gap-4 h-[220px] px-2">
+            <div className="flex items-end gap-2 sm:gap-4 h-[220px] px-2 overflow-x-auto">
               {chartGoals.map((goal) => {
                 const progress = Math.min(goal.progressPercentage || 0, 100);
                 const reachedHeight = Math.max(progress, 8);
                 const remainHeight = Math.max(100 - progress, 8);
                 return (
-                  <div key={goal.id} className="flex-1 min-w-0">
-                    <div className="h-[170px] flex items-end justify-center gap-2">
-                      <div className="w-4 rounded-t-md bg-[#003d2d]" style={{ height: `${reachedHeight}%` }} />
-                      <div className="w-4 rounded-t-md bg-[#b7c4d8]" style={{ height: `${remainHeight}%` }} />
+                  <div key={goal.id} className="flex-1 min-w-[45px] sm:min-w-0">
+                    <div className="h-[170px] flex items-end justify-center gap-1 sm:gap-2">
+                      <div className="w-2.5 sm:w-4 rounded-t-md bg-[#003d2d]" style={{ height: `${reachedHeight}%` }} />
+                      <div className="w-2.5 sm:w-4 rounded-t-md bg-[#b7c4d8]" style={{ height: `${remainHeight}%` }} />
                     </div>
                     <p className="mt-2 truncate text-center text-[11px] font-semibold text-[#6a7280] dark:text-[#aeb5c2]">
                       {goal.name}
@@ -274,7 +274,7 @@ const Goals = () => {
       <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eceff4] px-5 py-4 dark:border-[#2b313d]">
           <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Goal List' : 'Danh sách mục tiêu'}</h3>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {[
               { label: `${isEnglish ? 'All' : 'Tất cả'} (${goals.length})`, value: 'all' },
               { label: `${isEnglish ? 'Active' : 'Đang thực hiện'} (${activeCount})`, value: 'active' },
@@ -304,7 +304,8 @@ const Goals = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Desktop View (Table) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-[#eceff4] bg-[#f8f9fb] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:bg-[#232936] dark:text-[#9fa7b4]">
@@ -320,147 +321,146 @@ const Goals = () => {
             <tbody>
               {paginatedGoals.length > 0 ? paginatedGoals.map((goal, idx) => {
                 const progress = Math.min(goal.progressPercentage || 0, 100);
-                const remaining = goal.targetAmount - goal.currentAmount;
                 const daysInfo = getDaysRemaining(goal.deadline);
                 const priority = getPriorityBadge(goal.priority);
                 return [
-                    <tr key={`row-${goal.id}`} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="h-9 w-9 rounded-lg flex items-center justify-center text-lg" style={{ backgroundColor: `${goal.color || '#3b82f6'}1f` }}>
-                            {goal.icon || '🎯'}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="truncate font-bold text-[#1d2430] dark:text-[#eef1f5]">{goal.name}</p>
-                            <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{goal.description || (isEnglish ? 'Personal financial goal' : 'Mục tiêu tài chính cá nhân')}</p>
-                          </div>
+                  <tr key={`row-${goal.id}`} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-9 w-9 rounded-lg flex items-center justify-center text-lg animate-pulse-slow" style={{ backgroundColor: `${goal.color || '#3b82f6'}1f` }}>
+                          {goal.icon || '🎯'}
                         </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="w-28">
-                          <p className="text-xs font-semibold text-[#4f596b] dark:text-[#b9c3d1] mb-1">{progress.toFixed(1)}%</p>
-                          <div className="h-2 rounded-full bg-[#e3e7ee] dark:bg-[#2d3340]">
-                            <div className="h-full rounded-full" style={{ width: `${progress}%`, backgroundColor: goal.color || '#3b82f6' }} />
-                          </div>
+                        <div className="min-w-0">
+                          <p className="truncate font-bold text-[#1d2430] dark:text-[#eef1f5]">{goal.name}</p>
+                          <p className="text-xs text-[#6f7480] dark:text-[#a4acba] truncate">{goal.description || (isEnglish ? 'Personal financial goal' : 'Mục tiêu tài chính cá nhân')}</p>
                         </div>
-                      </td>
-                      <td className="px-5 py-4 text-[#303846] dark:text-[#c9d1db] font-semibold">{formatCurrency(goal.currentAmount)}</td>
-                      <td className="px-5 py-4 text-[#303846] dark:text-[#c9d1db] font-semibold">{formatCurrency(goal.targetAmount)}</td>
-                      <td className="px-5 py-4 text-xs font-semibold">
-                        <span className={daysInfo.color}>{daysInfo.text}</span>
-                      </td>
-                      <td className="px-5 py-4">
-                        {goal.isAchieved ? (
-                          <span className="rounded-full bg-[#e4f8ef] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#12724e] dark:bg-[#213c33] dark:text-[#80d6b4]">
-                            {isEnglish ? 'Completed' : 'Hoàn thành'}
-                          </span>
-                        ) : (
-                          <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${priority.bg} ${priority.text}`}>
-                            {priority.label}
-                          </span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="w-28">
+                        <p className="text-xs font-semibold text-[#4f596b] dark:text-[#b9c3d1] mb-1">{progress.toFixed(1)}%</p>
+                        <div className="h-2 rounded-full bg-[#e3e7ee] dark:bg-[#2d3340]">
+                          <div className="h-full rounded-full" style={{ width: `${progress}%`, backgroundColor: goal.color || '#3b82f6' }} />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-[#303846] dark:text-[#c9d1db] font-semibold">{formatCurrency(goal.currentAmount)}</td>
+                    <td className="px-5 py-4 text-[#303846] dark:text-[#c9d1db] font-semibold">{formatCurrency(goal.targetAmount)}</td>
+                    <td className="px-5 py-4 text-xs font-semibold">
+                      <span className={daysInfo.color}>{daysInfo.text}</span>
+                    </td>
+                    <td className="px-5 py-4">
+                      {goal.isAchieved ? (
+                        <span className="rounded-full bg-[#e4f8ef] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#12724e] dark:bg-[#213c33] dark:text-[#80d6b4]">
+                          {isEnglish ? 'Completed' : 'Hoàn thành'}
+                        </span>
+                      ) : (
+                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${priority.bg} ${priority.text}`}>
+                          {priority.label}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {!goal.isAchieved && (
+                          <button
+                            onClick={() => {
+                              setShowAddAmount(showAddAmount === goal.id ? null : goal.id);
+                              setShowHistory(null);
+                            }}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#e7f6ee] text-[#1f7d55] hover:bg-[#d7f0e4] dark:bg-[#204236] dark:text-[#8edbbb] dark:hover:bg-[#285344]"
+                            title={isEnglish ? 'Add amount' : 'Nạp thêm'}
+                          >
+                            <FiPlus size={14} />
+                          </button>
                         )}
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {!goal.isAchieved && (
-                            <button
-                              onClick={() => {
-                                setShowAddAmount(showAddAmount === goal.id ? null : goal.id);
-                                setShowHistory(null);
-                              }}
-                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#e7f6ee] text-[#1f7d55] hover:bg-[#d7f0e4] dark:bg-[#204236] dark:text-[#8edbbb] dark:hover:bg-[#285344]"
-                              title={isEnglish ? 'Add amount' : 'Nạp thêm'}
-                            >
-                              <FiPlus size={14} />
-                            </button>
-                          )}
-                          {(goal.depositHistory?.length ?? 0) > 0 && (
-                            <button
-                              onClick={() => {
-                                setShowHistory(showHistory === goal.id ? null : goal.id);
-                                setShowAddAmount(null);
-                              }}
-                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc] dark:hover:bg-[#364050]"
-                              title={isEnglish ? 'History' : 'Lịch sử'}
-                            >
-                              <FiClock size={14} />
-                            </button>
-                          )}
+                        {(goal.depositHistory?.length ?? 0) > 0 && (
                           <button
-                            onClick={() => openEditModal(goal)}
+                            onClick={() => {
+                              setShowHistory(showHistory === goal.id ? null : goal.id);
+                              setShowAddAmount(null);
+                            }}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc] dark:hover:bg-[#364050]"
-                            title={isEnglish ? 'Edit' : 'Chỉnh sửa'}
+                            title={isEnglish ? 'History' : 'Lịch sử'}
                           >
-                            <FiEdit2 size={14} />
+                            <FiClock size={14} />
                           </button>
-                          <button
-                            onClick={() => handleDeleteGoal(goal.id)}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#f8eceb] text-[#a55d56] hover:bg-[#f4dedc] dark:bg-[#3b2a2c] dark:text-[#e0a29a] dark:hover:bg-[#4a3336]"
-                            title={isEnglish ? 'Delete' : 'Xóa'}
-                          >
-                            <FiTrash2 size={14} />
-                          </button>
+                        )}
+                        <button
+                          onClick={() => openEditModal(goal)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef2f7] text-[#5c6676] hover:bg-[#dfe6ef] dark:bg-[#2a303b] dark:text-[#b8c0cc] dark:hover:bg-[#364050]"
+                          title={isEnglish ? 'Edit' : 'Chỉnh sửa'}
+                        >
+                          <FiEdit2 size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteGoal(goal.id)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#f8eceb] text-[#a55d56] hover:bg-[#f4dedc] dark:bg-[#3b2a2c] dark:text-[#e0a29a] dark:hover:bg-[#4a3336]"
+                          title={isEnglish ? 'Delete' : 'Xóa'}
+                        >
+                          <FiTrash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>,
+
+                  showAddAmount === goal.id ? (
+                    <tr key={`add-${goal.id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f8fbfa] dark:bg-[#1f2d29]">
+                      <td colSpan={7} className="px-5 py-3">
+                        <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                          <div className="md:w-64">
+                            <CurrencyInput
+                              value={addAmountValue}
+                              onChange={v => setAddAmountValue(v)}
+                              placeholder={isEnglish ? 'Additional amount' : 'Số tiền nạp thêm'}
+                              baseClass="w-full px-3 py-2 text-sm border border-gray-200 dark:border-[#334640] rounded-xl dark:bg-[#18231f] dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                            />
+                          </div>
+                          <input
+                            type="text"
+                            value={addAmountNote}
+                            onChange={(e) => setAddAmountNote(e.target.value)}
+                            placeholder={isEnglish ? 'Note (optional)...' : 'Ghi chú (tùy chọn)...'}
+                            className="md:flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-[#334640] rounded-xl dark:bg-[#18231f] dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                          />
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleAddAmount(goal.id)}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors"
+                            >
+                              {isEnglish ? 'Confirm' : 'Xác nhận'}
+                            </button>
+                            <button
+                              onClick={() => { setShowAddAmount(null); setAddAmountValue(''); setAddAmountNote(''); }}
+                              className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-400 px-3 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
+                            >
+                              {isEnglish ? 'Cancel' : 'Hủy'}
+                            </button>
+                          </div>
                         </div>
                       </td>
-                    </tr>,
+                    </tr>
+                  ) : null,
 
-                    showAddAmount === goal.id ? (
-                      <tr key={`add-${goal.id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f8fbfa] dark:bg-[#1f2d29]">
-                        <td colSpan={7} className="px-5 py-3">
-                          <div className="flex flex-col gap-2 md:flex-row md:items-center">
-                            <div className="md:w-64">
-                              <CurrencyInput
-                                value={addAmountValue}
-                                onChange={v => setAddAmountValue(v)}
-                                placeholder={isEnglish ? 'Additional amount' : 'Số tiền nạp thêm'}
-                                baseClass="w-full px-3 py-2 text-sm border border-gray-200 dark:border-[#334640] rounded-xl dark:bg-[#18231f] dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                              />
-                            </div>
-                            <input
-                              type="text"
-                              value={addAmountNote}
-                              onChange={(e) => setAddAmountNote(e.target.value)}
-                              placeholder={isEnglish ? 'Note (optional)...' : 'Ghi chú (tùy chọn)...'}
-                              className="md:flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-[#334640] rounded-xl dark:bg-[#18231f] dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                            />
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleAddAmount(goal.id)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors"
-                              >
-                                {isEnglish ? 'Confirm' : 'Xác nhận'}
-                              </button>
-                              <button
-                                onClick={() => { setShowAddAmount(null); setAddAmountValue(''); setAddAmountNote(''); }}
-                                className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-400 px-3 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
-                              >
-                                {isEnglish ? 'Cancel' : 'Hủy'}
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : null,
-
-                    showHistory === goal.id ? (
-                      <tr key={`history-${goal.id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f9fafc] dark:bg-[#212734]">
-                        <td colSpan={7} className="px-5 py-3">
-                          <div className="max-h-52 overflow-y-auto divide-y divide-gray-100 dark:divide-[#2b3241] rounded-xl border border-[#e8edf4] dark:border-[#2f3748]">
-                            {[...goal.depositHistory].reverse().map((entry, i) => (
-                              <div key={i} className="flex items-start justify-between gap-2 px-3 py-2.5">
-                                <div className="min-w-0">
-                                  <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">+{formatCurrency(entry.amount)}</p>
-                                  {entry.note && <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{entry.note}</p>}
-                                </div>
-                                <p className="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5">
-                                  {new Date(entry.date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                </p>
+                  showHistory === goal.id ? (
+                    <tr key={`history-${goal.id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f9fafc] dark:bg-[#212734]">
+                      <td colSpan={7} className="px-5 py-3">
+                        <div className="max-h-52 overflow-y-auto divide-y divide-gray-100 dark:divide-[#2b3241] rounded-xl border border-[#e8edf4] dark:border-[#2f3748]">
+                          {[...goal.depositHistory].reverse().map((entry, i) => (
+                            <div key={i} className="flex items-start justify-between gap-2 px-3 py-2.5">
+                              <div className="min-w-0">
+                                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">+{formatCurrency(entry.amount)}</p>
+                                {entry.note && <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{entry.note}</p>}
                               </div>
-                            ))}
-                          </div>
-                        </td>
-                      </tr>
-                    ) : null,
+                              <p className="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5">
+                                {new Date(entry.date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ) : null,
                 ];
               }) : (
                 <tr>
@@ -477,6 +477,221 @@ const Goals = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View (Card List) */}
+        <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
+          {paginatedGoals.length > 0 ? (
+            paginatedGoals.map((goal) => {
+              const progress = Math.min(goal.progressPercentage || 0, 100);
+              const remaining = goal.targetAmount - goal.currentAmount;
+              const daysInfo = getDaysRemaining(goal.deadline);
+              const priority = getPriorityBadge(goal.priority);
+              const isAdding = showAddAmount === goal.id;
+              const isShowingHistory = showHistory === goal.id;
+
+              return (
+                <div
+                  key={goal.id}
+                  className="rounded-xl border border-gray-150 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-[#1a202c]"
+                >
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="h-10 w-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                        style={{ backgroundColor: `${goal.color || '#3b82f6'}1f` }}
+                      >
+                        {goal.icon || '🎯'}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-gray-900 dark:text-white truncate">
+                          {goal.name}
+                        </h4>
+                        <p className="text-xs text-gray-450 dark:text-gray-400 truncate">
+                          {goal.description || (isEnglish ? 'Personal goal' : 'Mục tiêu cá nhân')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => openEditModal(goal)}
+                        className="p-1.5 text-gray-450 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
+                        title={isEnglish ? 'Edit' : 'Chỉnh sửa'}
+                      >
+                        <FiEdit2 size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteGoal(goal.id)}
+                        className="p-1.5 text-rose-500 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/20"
+                        title={isEnglish ? 'Delete' : 'Xóa'}
+                      >
+                        <FiTrash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Badges / Meta */}
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {goal.isAchieved ? (
+                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#12724e] dark:bg-emerald-500/10 dark:text-emerald-400">
+                        {isEnglish ? 'Completed' : 'Hoàn thành'}
+                      </span>
+                    ) : (
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${priority.bg} ${priority.text}`}>
+                        {priority.label}
+                      </span>
+                    )}
+                    <span className={`text-xs font-semibold ${daysInfo.color}`}>
+                      {daysInfo.text}
+                    </span>
+                  </div>
+
+                  {/* Progress */}
+                  <div className="mt-4">
+                    <div className="flex items-baseline justify-between mb-1.5">
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
+                        {isEnglish ? 'Progress' : 'Tiến độ'}
+                      </span>
+                      <span className="text-sm font-black text-gray-900 dark:text-white">
+                        {progress.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-gray-100 dark:bg-gray-800">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${progress}%`, backgroundColor: goal.color || '#3b82f6' }}
+                      />
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-xs font-semibold text-gray-500 dark:text-gray-450 gap-4">
+                      <div>
+                        <p className="text-[10px] text-gray-405 uppercase tracking-wide">
+                          {isEnglish ? 'Saved' : 'Đã đạt'}
+                        </p>
+                        <p className="font-bold text-gray-800 dark:text-gray-200 mt-0.5">
+                          {formatCurrency(goal.currentAmount)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] text-gray-405 uppercase tracking-wide">
+                          {isEnglish ? 'Target' : 'Mục tiêu'}
+                        </p>
+                        <p className="font-bold text-gray-800 dark:text-gray-200 mt-0.5">
+                          {formatCurrency(goal.targetAmount)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-4 flex gap-2 border-t border-gray-100 pt-3 dark:border-gray-800">
+                    {!goal.isAchieved && (
+                      <button
+                        onClick={() => {
+                          setShowAddAmount(isAdding ? null : goal.id);
+                          setShowHistory(null);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-100 dark:bg-[#1c382f] dark:text-[#80d6b4] dark:hover:bg-[#254b3f] transition-all"
+                      >
+                        <FiPlus size={13} /> {isEnglish ? 'Add amount' : 'Nạp thêm'}
+                      </button>
+                    )}
+                    {(goal.depositHistory?.length ?? 0) > 0 && (
+                      <button
+                        onClick={() => {
+                          setShowHistory(isShowingHistory ? null : goal.id);
+                          setShowAddAmount(null);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-gray-50 px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-450 dark:hover:bg-gray-750 transition-all"
+                      >
+                        <FiClock size={13} /> {isEnglish ? 'History' : 'Lịch sử'}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Inline Add Amount Form */}
+                  {isAdding && (
+                    <div className="mt-3 rounded-xl bg-emerald-50/50 p-3 dark:bg-emerald-500/5 border border-emerald-100/50 dark:border-emerald-500/10 space-y-2">
+                      <CurrencyInput
+                        value={addAmountValue}
+                        onChange={(v) => setAddAmountValue(v)}
+                        placeholder={isEnglish ? 'Additional amount' : 'Số tiền nạp thêm'}
+                        baseClass="w-full px-3 py-2 text-sm border border-gray-200 dark:border-emerald-950/30 rounded-xl dark:bg-[#18231f] dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                      />
+                      <input
+                        type="text"
+                        value={addAmountNote}
+                        onChange={(e) => setAddAmountNote(e.target.value)}
+                        placeholder={isEnglish ? 'Note (optional)...' : 'Ghi chú (tùy chọn)...'}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-emerald-950/30 rounded-xl dark:bg-[#18231f] dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => {
+                            setShowAddAmount(null);
+                            setAddAmountValue('');
+                            setAddAmountNote('');
+                          }}
+                          className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-405 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          {isEnglish ? 'Cancel' : 'Hủy'}
+                        </button>
+                        <button
+                          onClick={() => handleAddAmount(goal.id)}
+                          className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors"
+                        >
+                          {isEnglish ? 'Confirm' : 'Xác nhận'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Inline History List */}
+                  {isShowingHistory && (
+                    <div className="mt-3 rounded-xl border border-gray-150 bg-gray-50 p-2.5 dark:border-gray-800 dark:bg-[#1e2530] max-h-40 overflow-y-auto divide-y divide-gray-150 dark:divide-gray-850">
+                      {[...goal.depositHistory].reverse().map((entry, i) => (
+                        <div
+                          key={i}
+                          className="flex items-start justify-between gap-2 py-2 first:pt-0 last:pb-0"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                              +{formatCurrency(entry.amount)}
+                            </p>
+                            {entry.note && (
+                              <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate mt-0.5">
+                                {entry.note}
+                              </p>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-gray-405 dark:text-gray-500 mt-0.5 flex-shrink-0">
+                            {new Date(entry.date).toLocaleDateString(
+                              isEnglish ? 'en-US' : 'vi-VN',
+                              { day: '2-digit', month: '2-digit' }
+                            )}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <div className="py-12 text-center bg-white dark:bg-[#191d25] rounded-xl border border-gray-100 dark:border-gray-800">
+              <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">
+                {isEnglish
+                  ? 'No goals match the current filter.'
+                  : 'Không có mục tiêu phù hợp với bộ lọc hiện tại.'}
+              </p>
+              <button
+                onClick={openCreateModal}
+                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00523d]"
+              >
+                <FiPlus size={14} /> {isEnglish ? 'Create Goal' : 'Tạo mục tiêu'}
+              </button>
+            </div>
+          )}
         </div>
 
         {totalItems > 0 && (

@@ -214,9 +214,9 @@ const Transactions = () => {
     }
 
     if (format === 'pdf') {
-      exportToPDF(exportData, user, groupBy);
+      await exportToPDF(exportData, user, groupBy);
     } else {
-      exportToExcel(exportData, user, groupBy);
+      await exportToExcel(exportData, user, groupBy);
     }
   };
 

@@ -22,5 +22,27 @@ export default defineConfig({
         }
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@react-oauth/google')) {
+              return 'google-auth';
+            }
+            if (id.includes('recharts') || id.includes('chart.js') || id.includes('react-chartjs-2')) {
+              return 'charts';
+            }
+            if (id.includes('framer-motion') || id.includes('gsap')) {
+              return 'animations';
+            }
+            if (id.includes('react-icons')) {
+              return 'icons';
+            }
+          }
+        }
+      }
+    }
   }
 })

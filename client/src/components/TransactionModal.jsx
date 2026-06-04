@@ -7,7 +7,6 @@ import { useWallets } from '../context/WalletContext';
 import { useAuth } from '../context/AuthContext';
 import { FiX, FiAlertCircle, FiCamera, FiZap } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
-import Tesseract from 'tesseract.js';
 import { toast } from 'react-toastify';
 
 const TransactionModal = ({ transaction, onClose, isOpen }) => {
@@ -170,6 +169,9 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
     try {
       // Preprocess image to enhance OCR readability (resolves dot matrix and blur details)
       const processedFile = await preprocessImage(file);
+
+      // Dynamic import of Tesseract to optimize bundle size and startup performance
+      const Tesseract = (await import('tesseract.js')).default;
 
       // Tesseract reads image and identifies text
       const result = await Tesseract.recognize(processedFile, 'vie', { 

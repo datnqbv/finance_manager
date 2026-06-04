@@ -8,6 +8,8 @@ import Debt from './Debt.js';
 import Notification from './Notification.js';
 import ContactMessage from './ContactMessage.js';
 import VipOrder from './VipOrder.js';
+import UserVisit from './UserVisit.js';
+import RecurringTransaction from './RecurringTransaction.js';
 import { sequelize } from '../../config/sqlserver.js';
 
 function initModels() {
@@ -36,6 +38,16 @@ function initModels() {
   
   User.hasMany(VipOrder, { foreignKey: 'userId', as: 'vipOrders' });
   VipOrder.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+  
+  User.hasMany(UserVisit, { foreignKey: 'userId', as: 'visits' });
+  UserVisit.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+  User.hasMany(RecurringTransaction, { foreignKey: 'userId', as: 'recurringTransactions', onDelete: 'CASCADE' });
+  RecurringTransaction.belongsTo(User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE' });
+  Wallet.hasMany(RecurringTransaction, { foreignKey: 'walletId', as: 'recurringTransactions', onDelete: 'NO ACTION' });
+  RecurringTransaction.belongsTo(Wallet, { foreignKey: 'walletId', as: 'wallet', onDelete: 'NO ACTION' });
+  Wallet.hasMany(RecurringTransaction, { foreignKey: 'toWalletId', as: 'incomingRecurringTransfers', onDelete: 'NO ACTION' });
+  RecurringTransaction.belongsTo(Wallet, { foreignKey: 'toWalletId', as: 'toWallet', onDelete: 'NO ACTION' });
   // ContactMessage is independent (no user relation currently)
 
   // Search sync hooks removed (previously used external FTS engine).
@@ -80,4 +92,4 @@ async function syncModels({ force = false } = {}) {
   }
 }
 
-export { sequelize, initModels, syncModels, User, Wallet, Transaction, Category, Budget, Goal, Debt, Notification, ContactMessage, VipOrder };
+export { sequelize, initModels, syncModels, User, Wallet, Transaction, Category, Budget, Goal, Debt, Notification, ContactMessage, VipOrder, UserVisit, RecurringTransaction };

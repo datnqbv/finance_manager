@@ -2,33 +2,38 @@ import { Wallet, Transaction, Notification, sequelize } from '../models/sequeliz
 import { Op } from 'sequelize';
 
 // Helper function to recalculate wallet balance
-const recalculateWalletBalance = async (walletId) => {
-  const wallet = await Wallet.findByPk(walletId);
+const recalculateWalletBalance = async (walletId, options = {}) => {
+  const { transaction } = options;
+  const wallet = await Wallet.findByPk(walletId, { transaction });
   if (!wallet) return;
 
   // 1. Incomes on this wallet
   const incomeSum = await Transaction.sum('amount', {
-    where: { walletId, type: 'income' }
+    where: { walletId, type: 'income' },
+    transaction
   }) || 0;
 
   // 2. Expenses on this wallet
   const expenseSum = await Transaction.sum('amount', {
-    where: { walletId, type: 'expense' }
+    where: { walletId, type: 'expense' },
+    transaction
   }) || 0;
 
   // 3. Outgoing transfers from this wallet
   const outgoingTransferSum = await Transaction.sum('amount', {
-    where: { walletId, type: 'transfer' }
+    where: { walletId, type: 'transfer' },
+    transaction
   }) || 0;
 
   // 4. Incoming transfers to this wallet
   const incomingTransferSum = await Transaction.sum('amount', {
-    where: { toWalletId: walletId, type: 'transfer' }
+    where: { toWalletId: walletId, type: 'transfer' },
+    transaction
   }) || 0;
 
   // Final balance = initialBalance + incomes + incoming transfers - expenses - outgoing transfers
   wallet.balance = Number(wallet.initialBalance) + Number(incomeSum) + Number(incomingTransferSum) - Number(expenseSum) - Number(outgoingTransferSum);
-  await wallet.save();
+  await wallet.save({ transaction });
   return wallet.balance;
 };
 

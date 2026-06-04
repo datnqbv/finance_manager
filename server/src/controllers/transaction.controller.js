@@ -32,7 +32,7 @@ const getDateRange = (period, startDate = new Date()) => {
 };
 
 // Helper function to check budget and create notification if needed
-const checkBudgetAndNotify = async (userId, category, transactionDate) => {
+export const checkBudgetAndNotify = async (userId, category, transactionDate) => {
   try {
     const user = await User.findByPk(userId);
     if (!user) return;

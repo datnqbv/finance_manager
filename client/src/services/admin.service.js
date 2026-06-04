@@ -35,4 +35,9 @@ export const adminService = {
     const response = await api.patch(`/admin/users/${id}/password`, payload);
     return response.data;
   },
+
+  getVisits: async (params = {}) => {
+    const response = await api.get('/admin/visits', { params });
+    return response.data;
+  },
 };

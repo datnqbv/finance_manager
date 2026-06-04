@@ -1,8 +1,3 @@
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
-import { robotoBase64 } from './robotoFont';
-
 // Format currency for display
 const formatCurrency = (amount, currency = 'VND') => {
   return new Intl.NumberFormat('vi-VN', {
@@ -20,15 +15,6 @@ const formatDate = (date) => {
   });
 };
 
-// Helper to initialize jsPDF document with Roboto Unicode Font
-const createPdfWithFont = () => {
-  const doc = new jsPDF();
-  doc.addFileToVFS('Roboto-Regular.ttf', robotoBase64);
-  doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-  doc.setFont('Roboto');
-  return doc;
-};
-
 const getReportTitle = (groupBy) => {
   if (groupBy === 'day') return 'BÁO CÁO GIAO DỊCH THEO NGÀY';
   if (groupBy === 'month') return 'BÁO CÁO GIAO DỊCH THEO THÁNG';
@@ -36,9 +22,17 @@ const getReportTitle = (groupBy) => {
   return 'BÁO CÁO CHI TIẾT GIAO DỊCH';
 };
 
-// Export transactions to PDF
-export const exportToPDF = (transactions, user, groupBy = 'detail') => {
-  const doc = createPdfWithFont();
+// Export transactions to PDF (async due to dynamic imports of heavy libraries)
+export const exportToPDF = async (transactions, user, groupBy = 'detail') => {
+  const { jsPDF } = await import('jspdf');
+  const { default: autoTable } = await import('jspdf-autotable');
+  const { robotoBase64 } = await import('./robotoFont');
+
+  const doc = new jsPDF();
+  doc.addFileToVFS('Roboto-Regular.ttf', robotoBase64);
+  doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+  doc.setFont('Roboto');
+
   const reportTitle = getReportTitle(groupBy);
 
   // Add title (using full Vietnamese diacritics)
@@ -164,8 +158,10 @@ export const exportToPDF = (transactions, user, groupBy = 'detail') => {
   doc.save(`bao-cao-giao-dich-${groupBy}-${new Date().getTime()}.pdf`);
 };
 
-// Export transactions to Excel
-export const exportToExcel = (transactions, user, groupBy = 'detail') => {
+// Export transactions to Excel (async due to dynamic import of xlsx)
+export const exportToExcel = async (transactions, user, groupBy = 'detail') => {
+  const XLSX = await import('xlsx');
+
   let data = [];
 
   // Calculate totals
@@ -337,9 +333,16 @@ export const exportToExcel = (transactions, user, groupBy = 'detail') => {
   XLSX.writeFile(wb, `bao-cao-giao-dich-${groupBy}-${new Date().getTime()}.xlsx`);
 };
 
-// Export statistics to PDF
-export const exportStatsToPDF = (stats, user) => {
-  const doc = createPdfWithFont();
+// Export statistics to PDF (async due to dynamic imports of heavy libraries)
+export const exportStatsToPDF = async (stats, user) => {
+  const { jsPDF } = await import('jspdf');
+  const { default: autoTable } = await import('jspdf-autotable');
+  const { robotoBase64 } = await import('./robotoFont');
+
+  const doc = new jsPDF();
+  doc.addFileToVFS('Roboto-Regular.ttf', robotoBase64);
+  doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+  doc.setFont('Roboto');
 
   // Add title
   doc.setFontSize(18);

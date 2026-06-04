@@ -1,4 +1,4 @@
-import { User, Transaction, ContactMessage, VipOrder } from '../models/sequelize/index.js';
+import { User, Transaction, ContactMessage, VipOrder, UserVisit } from '../models/sequelize/index.js';
 import { Op } from 'sequelize';
 
 const sanitizeUser = (user) => ({
@@ -285,5 +285,69 @@ export const resetUserPassword = async (req, res) => {
   } catch (error) {
     console.error('❌ resetUserPassword error:', error);
     return res.status(500).json({ success: false, message: 'Đã xảy ra lỗi khi đặt lại mật khẩu' });
+  }
+};
+
+export const recordVisit = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Check if the user has a visit record in the last 5 minutes to prevent spam
+    const lastVisit = await UserVisit.findOne({
+      where: { userId },
+      order: [['visitedAt', 'DESC']]
+    });
+    
+    if (!lastVisit || (new Date() - new Date(lastVisit.visitedAt)) > 5 * 60 * 1000) {
+      await UserVisit.create({
+        userId,
+        ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+        userAgent: req.headers['user-agent']
+      });
+    }
+    
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('❌ recordVisit error:', error);
+    return res.status(500).json({ success: false, message: 'Lỗi ghi nhận lịch sử truy cập' });
+  }
+};
+
+export const getVisitsList = async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    
+    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+    const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+    const offset = (pageNum - 1) * limitNum;
+    
+    const { count, rows } = await UserVisit.findAndCountAll({
+      limit: limitNum,
+      offset,
+      order: [['visitedAt', 'DESC']],
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['name', 'email']
+        }
+      ]
+    });
+    
+    return res.json({
+      success: true,
+      data: {
+        items: rows,
+        pagination: {
+          total: count,
+          page: pageNum,
+          limit: limitNum,
+          totalPages: Math.max(Math.ceil(count / limitNum), 1)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('❌ getVisitsList error:', error);
+    return res.status(500).json({ success: false, message: 'Đã xảy ra lỗi khi lấy lịch sử truy cập' });
   }
 };
