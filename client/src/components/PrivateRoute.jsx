@@ -1,4 +1,5 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Suspense } from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Layout from './Layout';
 import { WalletProvider } from '../context/WalletContext';
@@ -7,6 +8,49 @@ import { BudgetProvider } from '../context/BudgetContext';
 import { GoalProvider } from '../context/GoalContext';
 import { DebtProvider } from '../context/DebtContext';
 import { TransactionProvider } from '../context/TransactionContext';
+import { 
+  DashboardSkeleton, 
+  TransactionsPageSkeleton, 
+  CategoriesSkeleton, 
+  BudgetsSkeleton, 
+  GoalsSkeleton, 
+  DebtsSkeleton, 
+  StatisticsPageSkeleton,
+  WalletsSkeleton,
+  RecurringTransactionsSkeleton,
+  ProfileSkeleton,
+  VipSubscriptionSkeleton,
+  AdminDashboardSkeleton,
+  AdminTableSkeleton
+} from './LoadingSkeleton';
+
+const PageFallback = () => {
+  const location = useLocation();
+  const path = location.pathname;
+
+  if (path.startsWith('/dashboard')) return <DashboardSkeleton />;
+  if (path.startsWith('/transactions')) return <TransactionsPageSkeleton />;
+  if (path.startsWith('/categories')) return <CategoriesSkeleton />;
+  if (path.startsWith('/budgets')) return <BudgetsSkeleton />;
+  if (path.startsWith('/goals')) return <GoalsSkeleton />;
+  if (path.startsWith('/debts')) return <DebtsSkeleton />;
+  if (path.startsWith('/statistics')) return <StatisticsPageSkeleton />;
+  if (path.startsWith('/wallets')) return <WalletsSkeleton />;
+  if (path.startsWith('/recurring')) return <RecurringTransactionsSkeleton />;
+  if (path.startsWith('/profile')) return <ProfileSkeleton />;
+  if (path.startsWith('/vip')) return <VipSubscriptionSkeleton />;
+  
+  // Admin pages fallbacks
+  if (path.startsWith('/admin/dashboard')) return <AdminDashboardSkeleton />;
+  if (path.startsWith('/admin/')) return <AdminTableSkeleton />;
+
+  // Default content spinner fallback for other routes
+  return (
+    <div className="flex h-[50vh] items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+    </div>
+  );
+};
 
 const PrivateRoute = ({ requiredRole }) => {
   const { isAuthenticated, loading, user } = useAuth();
@@ -31,7 +75,9 @@ const PrivateRoute = ({ requiredRole }) => {
             <DebtProvider>
               <TransactionProvider>
                 <Layout>
-                  <Outlet />
+                  <Suspense fallback={<PageFallback />}>
+                    <Outlet />
+                  </Suspense>
                 </Layout>
               </TransactionProvider>
             </DebtProvider>

@@ -12,6 +12,7 @@ import {
   FiSearch,
   FiFilter
 } from 'react-icons/fi';
+import Pagination from '../components/Pagination';
 
 const AdminVipPayments = () => {
   const { language } = useLanguage();
@@ -20,6 +21,10 @@ const AdminVipPayments = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   const fetchOrders = async () => {
     try {
@@ -39,6 +44,11 @@ const AdminVipPayments = () => {
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  // Reset page on filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
 
   const handleConfirm = async (orderId) => {
     if (!window.confirm(isEnglish ? 'Confirm payment receipt and activate VIP for this user?' : 'Xác nhận đã nhận tiền và kích hoạt VIP cho người dùng này?')) {
@@ -129,6 +139,13 @@ const AdminVipPayments = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const totalItems = filteredOrders.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="space-y-6">
       
@@ -184,9 +201,9 @@ const AdminVipPayments = () => {
           <div className="text-center py-10 text-sm text-gray-500">
             {isEnglish ? 'Loading payments log...' : 'Đang tải lịch sử giao dịch...'}
           </div>
-        ) : filteredOrders.length > 0 ? (
+        ) : paginatedOrders.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
+            <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-gray-100 dark:border-gray-800 text-gray-400 font-semibold text-xs uppercase tracking-wider">
                   <th className="py-3 px-4">{isEnglish ? 'Date' : 'Ngày tạo'}</th>
@@ -199,7 +216,7 @@ const AdminVipPayments = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredOrders.map((order) => (
+                {paginatedOrders.map((order) => (
                   <tr key={order.id} className="border-b border-gray-50 dark:border-gray-800/40 hover:bg-gray-50/50 dark:hover:bg-gray-800/5 transition-colors">
                     <td className="py-3.5 px-4 text-gray-500 dark:text-gray-400">
                       <span className="flex items-center gap-1.5">
@@ -266,6 +283,23 @@ const AdminVipPayments = () => {
           <div className="text-center py-10 text-gray-500 dark:text-gray-400">
             <FiCreditCard className="mx-auto text-gray-300 dark:text-gray-750 mb-3" size={48} />
             <p className="text-sm font-semibold">{isEnglish ? 'No orders matching filter' : 'Không tìm thấy hóa đơn phù hợp'}</p>
+          </div>
+        )}
+
+        {totalItems > 0 && (
+          <div className="mt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              onItemsPerPageChange={(l) => {
+                setItemsPerPage(l);
+                setCurrentPage(1);
+              }}
+              totalItems={totalItems}
+              showItemsPerPageSelector={true}
+            />
           </div>
         )}
       </div>

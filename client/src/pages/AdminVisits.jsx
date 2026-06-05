@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { adminService } from '../services/admin.service';
 import { useLanguage } from '../context/LanguageContext';
-import { FiActivity, FiClock } from 'react-icons/fi';
+import { FiActivity, FiClock, FiSearch, FiRotateCcw } from 'react-icons/fi';
+import Pagination from '../components/Pagination';
 
 const AdminVisits = () => {
   const { language } = useLanguage();
@@ -11,16 +12,33 @@ const AdminVisits = () => {
   const [pagination, setPagination] = useState({ total: 0, page: 1, totalPages: 1, limit: 20 });
   const [loading, setLoading] = useState(true);
 
-  const loadVisits = async (page = 1) => {
+  // Filter states
+  const [search, setSearch] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  const loadVisits = async (page = 1, params = {}) => {
     setLoading(true);
     try {
-      const response = await adminService.getVisits({
+      const queryParams = {
         page,
-        limit: pagination.limit,
+        limit: params.limit !== undefined ? params.limit : pagination.limit,
+        search: params.search !== undefined ? params.search : search,
+        startDate: params.startDate !== undefined ? params.startDate : startDate,
+        endDate: params.endDate !== undefined ? params.endDate : endDate,
+      };
+
+      // Clean up empty params
+      Object.keys(queryParams).forEach(key => {
+        if (queryParams[key] === undefined || queryParams[key] === '') {
+          delete queryParams[key];
+        }
       });
+
+      const response = await adminService.getVisits(queryParams);
       if (response.success) {
         setItems(response.data.items || []);
-        setPagination(response.data.pagination || { total: 0, page: 1, totalPages: 1, limit: 20 });
+        setPagination(response.data.pagination || { total: 0, page: 1, totalPages: 1, limit: queryParams.limit });
       }
     } catch (error) {
       toast.error(error.response?.data?.message || (isEnglish ? 'Cannot load traffic logs' : 'Không thể tải lịch sử truy cập'));
@@ -33,6 +51,18 @@ const AdminVisits = () => {
     loadVisits(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    loadVisits(1);
+  };
+
+  const handleReset = () => {
+    setSearch('');
+    setStartDate('');
+    setEndDate('');
+    loadVisits(1, { search: '', startDate: '', endDate: '' });
+  };
 
   const parseUserAgent = (ua) => {
     if (!ua) return 'Unknown';
@@ -71,6 +101,71 @@ const AdminVisits = () => {
             ? 'Track real-time access logs showing who is visiting the website and when.'
             : 'Theo dõi chi tiết thời gian thực lịch sử người dùng truy cập và hoạt động trên hệ thống.'}
         </p>
+      </div>
+
+      {/* Filter Form Card */}
+      <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-[#171a21] border border-gray-150 dark:border-gray-800">
+        <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-[2fr_1.2fr_1.2fr_auto] gap-4 items-end">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+              {isEnglish ? 'Search keyword' : 'Từ khóa tìm kiếm'}
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
+                <FiSearch size={16} />
+              </span>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={isEnglish ? 'Search visitor, email, OS...' : 'Tìm khách truy cập, email, OS...'}
+                className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-[#d8dde5] dark:border-gray-800 dark:bg-gray-850 dark:text-white outline-none focus:border-[#6aa386] transition-colors"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+              {isEnglish ? 'Start Date' : 'Từ ngày'}
+            </label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full px-3 py-2 text-sm rounded-xl border border-[#d8dde5] dark:border-gray-800 dark:bg-gray-850 dark:text-white outline-none focus:border-[#6aa386] transition-colors"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+              {isEnglish ? 'End Date' : 'Đến ngày'}
+            </label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full px-3 py-2 text-sm rounded-xl border border-[#d8dde5] dark:border-gray-800 dark:bg-gray-850 dark:text-white outline-none focus:border-[#6aa386] transition-colors"
+            />
+          </div>
+
+          <div className="flex gap-2 w-full md:w-auto">
+            <button
+              type="submit"
+              className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#003d2d] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#00523d] transition-colors"
+            >
+              <FiSearch size={16} />
+              {isEnglish ? 'Search' : 'Tìm'}
+            </button>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-gray-200 px-4 py-2.5 text-sm font-semibold transition-colors"
+              title={isEnglish ? 'Clear all filters' : 'Xóa bộ lọc'}
+            >
+              <FiRotateCcw size={16} />
+              {isEnglish ? 'Reset' : 'Đặt lại'}
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* Main Table Card */}
@@ -139,27 +234,17 @@ const AdminVisits = () => {
         </div>
 
         {/* Pagination bar */}
-        {pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-[#edf1f5] dark:border-gray-800 px-5 py-4 text-sm bg-[#f8fafc]/50 dark:bg-[#1b202a]/20">
-            <span className="text-[#5f6e82] dark:text-gray-400">
-              {isEnglish ? 'Page' : 'Trang'} {pagination.page}/{pagination.totalPages} ({pagination.total} {isEnglish ? 'records' : 'bản ghi'})
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                disabled={pagination.page <= 1 || loading}
-                onClick={() => loadVisits(pagination.page - 1)}
-                className="rounded-xl border border-[#d6dde6] dark:border-gray-700 dark:text-white px-3 py-1.5 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-gray-850 transition"
-              >
-                {isEnglish ? 'Prev' : 'Trước'}
-              </button>
-              <button
-                disabled={pagination.page >= pagination.totalPages || loading}
-                onClick={() => loadVisits(pagination.page + 1)}
-                className="rounded-xl border border-[#d6dde6] dark:border-gray-700 dark:text-white px-3 py-1.5 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-gray-850 transition"
-              >
-                {isEnglish ? 'Next' : 'Sau'}
-              </button>
-            </div>
+        {pagination.total > 0 && (
+          <div className="px-5 pb-4">
+            <Pagination
+              currentPage={pagination.page}
+              totalPages={pagination.totalPages}
+              onPageChange={(p) => loadVisits(p)}
+              itemsPerPage={pagination.limit}
+              onItemsPerPageChange={(l) => loadVisits(1, { limit: l })}
+              totalItems={pagination.total}
+              showItemsPerPageSelector={true}
+            />
           </div>
         )}
       </div>

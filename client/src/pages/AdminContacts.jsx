@@ -3,6 +3,7 @@ import { FiRefreshCw, FiSave, FiTrash2 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { adminContactService } from '../services/adminContact.service';
 import { useLanguage } from '../context/LanguageContext';
+import Pagination from '../components/Pagination';
 
 const statusOptions = [
   { value: 'new', label: { vi: 'Mới', en: 'New' } },
@@ -21,19 +22,19 @@ const AdminContacts = () => {
   const [status, setStatus] = useState('');
   const [drafts, setDrafts] = useState({});
 
-  const loadMessages = async (page = 1) => {
+  const loadMessages = async (page = 1, limitOverride = null) => {
     setLoading(true);
     try {
       const response = await adminContactService.getMessages({
         page,
-        limit: pagination.limit,
+        limit: limitOverride !== null ? limitOverride : pagination.limit,
         search: search || undefined,
         status: status || undefined,
       });
       const nextItems = response.items || [];
       setItems(nextItems);
       setSummary(response.summary || { new: 0, read: 0, replied: 0 });
-      setPagination(response.pagination || { total: 0, page: 1, totalPages: 1, limit: 20 });
+      setPagination(response.pagination || { total: 0, page: 1, totalPages: 1, limit: limitOverride !== null ? limitOverride : pagination.limit });
       setDrafts((current) => {
         const nextDrafts = {};
         nextItems.forEach((item) => {
@@ -199,17 +200,19 @@ const AdminContacts = () => {
           </table>
         </div>
 
-        <div className="flex items-center justify-between border-t border-[#edf1f5] px-4 py-3 text-sm">
-          <span className="text-[#5f6e82]">{isEnglish ? 'Page' : 'Trang'} {pagination.page}/{pagination.totalPages}</span>
-          <div className="flex items-center gap-2">
-            <button disabled={pagination.page <= 1 || loading} onClick={() => loadMessages(pagination.page - 1)} className="rounded-md border border-[#d6dde6] px-3 py-1.5 disabled:opacity-50">
-              {isEnglish ? 'Prev' : 'Trước'}
-            </button>
-            <button disabled={pagination.page >= pagination.totalPages || loading} onClick={() => loadMessages(pagination.page + 1)} className="rounded-md border border-[#d6dde6] px-3 py-1.5 disabled:opacity-50">
-              {isEnglish ? 'Next' : 'Sau'}
-            </button>
+        {pagination.total > 0 && (
+          <div className="px-4 pb-3">
+            <Pagination
+              currentPage={pagination.page}
+              totalPages={pagination.totalPages}
+              onPageChange={(p) => loadMessages(p)}
+              itemsPerPage={pagination.limit}
+              onItemsPerPageChange={(l) => loadMessages(1, l)}
+              totalItems={pagination.total}
+              showItemsPerPageSelector={true}
+            />
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useWallets } from '../context/WalletContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { FiPlus, FiEdit2, FiTrash2, FiBriefcase, FiTrendingUp } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiBriefcase, FiTrendingUp, FiTrendingDown, FiClock, FiCalendar } from 'react-icons/fi';
 import { BiTransfer } from 'react-icons/bi';
 import WalletModal from '../components/WalletModal';
 import api from '../services/api';
+import recurringService from '../services/recurring.service';
 
 const Wallets = () => {
   const { user } = useAuth();
@@ -23,29 +24,49 @@ const Wallets = () => {
   const [transferNote, setTransferNote] = useState('');
   const [isTransferring, setIsTransferring] = useState(false);
 
-  // Transfer History State
-  const [transfers, setTransfers] = useState([]);
-  const [transfersLoading, setTransfersLoading] = useState(false);
+  // Wallet Activity State (Replaces transfers)
+  const [activities, setActivities] = useState([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
 
-  const fetchRecentTransfers = async () => {
+  // Recurring Rules State
+  const [recurringRules, setRecurringRules] = useState([]);
+  const [recurringLoading, setRecurringLoading] = useState(false);
+
+  const fetchRecentActivity = async () => {
     try {
-      setTransfersLoading(true);
+      setActivitiesLoading(true);
+      // Fetch all transaction types (income, expense, transfer) to see general cashflows
       const response = await api.get('/transactions', {
-        params: { type: 'transfer', limit: 10 }
+        params: { limit: 10 }
       });
       if (response.data?.success) {
-        setTransfers(response.data.data || []);
+        setActivities(response.data.data || []);
       }
     } catch (err) {
-      console.error('Lỗi khi tải lịch sử chuyển tiền:', err);
+      console.error('Lỗi khi tải hoạt động ví:', err);
     } finally {
-      setTransfersLoading(false);
+      setActivitiesLoading(false);
+    }
+  };
+
+  const fetchRecurringRules = async () => {
+    try {
+      setRecurringLoading(true);
+      const response = await recurringService.getRecurring(1, 10);
+      if (response?.success) {
+        setRecurringRules(response.data || []);
+      }
+    } catch (err) {
+      console.error('Lỗi khi tải giao dịch định kỳ:', err);
+    } finally {
+      setRecurringLoading(false);
     }
   };
 
   useEffect(() => {
     fetchWallets();
-    fetchRecentTransfers();
+    fetchRecentActivity();
+    fetchRecurringRules();
   }, []);
 
   const formatCurrency = (amount) => {
@@ -98,7 +119,7 @@ const Wallets = () => {
       setTransferNote('');
       setFromWalletId('');
       setToWalletId('');
-      await fetchRecentTransfers();
+      await fetchRecentActivity();
     } catch (err) {
       console.error(err);
     } finally {
@@ -337,106 +358,161 @@ const Wallets = () => {
         </div>
       </div>
 
-      {/* Transfer History Section */}
-      <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-[#191d25] border border-gray-100 dark:border-gray-800">
-        <div className="flex items-center gap-2 mb-4">
-          <BiTransfer className="text-blue-500" size={22} />
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-            {isEnglish ? 'Recent Transfers' : 'Lịch sử chuyển tiền gần đây'}
-          </h3>
-        </div>
-
-        {transfersLoading && transfers.length === 0 ? (
-          <div className="text-center py-6 text-sm text-gray-500">
-            {isEnglish ? 'Loading history...' : 'Đang tải lịch sử...'}
+      {/* Wallet Activity & Recurring Transactions Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Left Column: Recent Activities */}
+        <div className="lg:col-span-7 rounded-2xl bg-white p-6 shadow-sm dark:bg-[#191d25] border border-gray-100 dark:border-gray-800">
+          <div className="flex items-center gap-2 mb-4">
+            <BiTransfer className="text-emerald-500" size={22} />
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              {isEnglish ? 'Recent Wallet Activity' : 'Hoạt động ví gần đây'}
+            </h3>
           </div>
-        ) : transfers.length > 0 ? (
-          <>
-            {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
+
+          {activitiesLoading && activities.length === 0 ? (
+            <div className="text-center py-10 text-sm text-gray-500">
+              {isEnglish ? 'Loading activity...' : 'Đang tải hoạt động...'}
+            </div>
+          ) : activities.length > 0 ? (
+            <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-100 dark:border-gray-800 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
-                    <th className="py-3 px-4">{isEnglish ? 'Date' : 'Ngày'}</th>
-                    <th className="py-3 px-4">{isEnglish ? 'From Wallet' : 'Ví nguồn'}</th>
-                    <th className="py-3 px-4"></th>
-                    <th className="py-3 px-4">{isEnglish ? 'To Wallet' : 'Ví nhận'}</th>
-                    <th className="py-3 px-4 text-right">{isEnglish ? 'Amount' : 'Số tiền'}</th>
-                    <th className="py-3 px-4">{isEnglish ? 'Note' : 'Ghi chú'}</th>
+                  <tr className="border-b border-gray-100 dark:border-gray-850 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
+                    <th className="py-3 px-2">{isEnglish ? 'Date' : 'Ngày'}</th>
+                    <th className="py-3 px-2">{isEnglish ? 'Description' : 'Mô tả'}</th>
+                    <th className="py-3 px-2 text-right">{isEnglish ? 'Amount' : 'Số tiền'}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {transfers.map((tx) => (
-                    <tr key={tx.id} className="border-b border-gray-50 dark:border-gray-800/40 hover:bg-gray-50 dark:hover:bg-gray-800/20 transition-colors">
-                      <td className="py-3 px-4 text-gray-500 dark:text-gray-400">
-                        {new Date(tx.date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric'
-                        })}
-                      </td>
-                      <td className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
-                        <span className="mr-1">{tx.wallet?.icon || '💳'}</span>
-                        {tx.wallet?.name || (isEnglish ? 'Source Wallet' : 'Ví nguồn')}
-                      </td>
-                      <td className="py-3 px-4 text-blue-500 text-center font-bold">→</td>
-                      <td className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
-                        <span className="mr-1">{tx.toWallet?.icon || '💳'}</span>
-                        {tx.toWallet?.name || (isEnglish ? 'Target Wallet' : 'Ví nhận')}
-                      </td>
-                      <td className="py-3 px-4 text-right font-bold text-blue-600 dark:text-blue-400">
-                        {formatCurrency(tx.amount)}
-                      </td>
-                      <td className="py-3 px-4 text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
-                        {tx.note || '-'}
-                      </td>
-                    </tr>
-                  ))}
+                  {activities.map((tx) => {
+                    const isIncome = tx.type === 'income';
+                    const isExpense = tx.type === 'expense';
+                    const isTransfer = tx.type === 'transfer';
+                    
+                    return (
+                      <tr key={tx.id} className="border-b border-gray-50 dark:border-gray-800/40 hover:bg-gray-50 dark:hover:bg-gray-800/20 transition-colors">
+                        <td className="py-3 px-2 text-gray-500 dark:text-gray-400 whitespace-nowrap text-xs">
+                          {new Date(tx.date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                          })}
+                        </td>
+                        <td className="py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">
+                          <div className="flex flex-col">
+                            <span className="text-sm flex items-center gap-1.5">
+                              {isIncome && <FiTrendingUp className="text-emerald-500" size={13} />}
+                              {isExpense && <FiTrendingDown className="text-red-500" size={13} />}
+                              {isTransfer && <BiTransfer className="text-blue-500" size={13} />}
+                              {tx.category || (isEnglish ? 'Transaction' : 'Giao dịch')}
+                            </span>
+                            <span className="text-xs font-normal text-gray-400 dark:text-gray-500 truncate max-w-[180px]" title={tx.note}>
+                              {tx.note || (isTransfer ? `${tx.wallet?.name} → ${tx.toWallet?.name}` : tx.wallet?.name)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className={`py-3 px-2 text-right font-black text-sm whitespace-nowrap ${
+                          isIncome ? 'text-emerald-600 dark:text-emerald-400' :
+                          isExpense ? 'text-red-500 dark:text-red-400' :
+                          'text-blue-600 dark:text-blue-400'
+                        }`}>
+                          {isIncome ? '+' : isExpense ? '-' : ''}
+                          {formatCurrency(tx.amount)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-
-            {/* Mobile Card List View */}
-            <div className="block md:hidden divide-y divide-gray-100 dark:divide-gray-800">
-              {transfers.map((tx) => (
-                <div key={tx.id} className="py-3 px-1 flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                    <span>
-                      {new Date(tx.date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric'
-                      })}
-                    </span>
-                    <span className="font-bold text-blue-600 dark:text-blue-400 text-sm">
-                      {formatCurrency(tx.amount)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-xs font-semibold text-gray-755 dark:text-gray-300">
-                    <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
-                      {tx.wallet?.icon || '💳'} {tx.wallet?.name || (isEnglish ? 'Source' : 'Nguồn')}
-                    </span>
-                    <span className="text-blue-550">→</span>
-                    <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
-                      {tx.toWallet?.icon || '💳'} {tx.toWallet?.name || (isEnglish ? 'Target' : 'Nhận')}
-                    </span>
-                  </div>
-
-                  {tx.note && (
-                    <p className="text-xs text-gray-400 dark:text-gray-500 italic mt-0.5">
-                      {isEnglish ? 'Note: ' : 'Ghi chú: '}{tx.note}
-                    </p>
-                  )}
-                </div>
-              ))}
+          ) : (
+            <div className="text-center py-10 text-gray-500 dark:text-gray-400 text-sm">
+              {isEnglish ? 'No transactions logged yet.' : 'Chưa có lịch sử giao dịch nào.'}
             </div>
-          </>
-        ) : (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            {isEnglish ? 'No transfers logged yet.' : 'Chưa có lịch sử chuyển khoản nào.'}
+          )}
+        </div>
+
+        {/* Right Column: Scheduled Recurring Transactions */}
+        <div className="lg:col-span-5 rounded-2xl bg-white p-6 shadow-sm dark:bg-[#191d25] border border-gray-100 dark:border-gray-800">
+          <div className="flex items-center gap-2 mb-4">
+            <FiClock className="text-blue-500" size={22} />
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              {isEnglish ? 'Scheduled Recurring' : 'Giao dịch định kỳ sắp tới'}
+            </h3>
           </div>
-        )}
+
+          {recurringLoading && recurringRules.length === 0 ? (
+            <div className="text-center py-10 text-sm text-gray-500">
+              {isEnglish ? 'Loading rules...' : 'Đang tải lịch trình...'}
+            </div>
+          ) : recurringRules.length > 0 ? (
+            <div className="space-y-3">
+              {recurringRules.filter(r => r.isActive).slice(0, 5).map((rule) => {
+                const isIncome = rule.type === 'income';
+                const isExpense = rule.type === 'expense';
+                const isTransfer = rule.type === 'transfer';
+                
+                const freqText = {
+                  daily: isEnglish ? 'Daily' : 'Hàng ngày',
+                  weekly: isEnglish ? 'Weekly' : 'Hàng tuần',
+                  monthly: isEnglish ? 'Monthly' : 'Hàng tháng',
+                  yearly: isEnglish ? 'Yearly' : 'Hàng năm'
+                }[rule.frequency] || rule.frequency;
+
+                return (
+                  <div key={rule.id} className="p-3.5 rounded-xl bg-gray-50 dark:bg-[#202530] border border-gray-100 dark:border-gray-800 flex items-center justify-between gap-3 hover:shadow-sm transition-all">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-extrabold text-sm text-gray-800 dark:text-gray-200 truncate">
+                          {rule.category}
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-955/30 text-blue-600 dark:text-blue-400">
+                          {freqText}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
+                        <FiCalendar size={12} />
+                        <span>{isEnglish ? 'Next:' : 'Tiếp theo:'}</span>
+                        <span className="font-semibold text-gray-600 dark:text-gray-400">
+                          {new Date(rule.nextExecutionDate).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                          })}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <p className={`font-black text-sm ${
+                        isIncome ? 'text-emerald-600 dark:text-emerald-400' :
+                        isExpense ? 'text-red-500 dark:text-red-400' :
+                        'text-blue-600 dark:text-blue-400'
+                      }`}>
+                        {isIncome ? '+' : isExpense ? '-' : ''}
+                        {formatCurrency(rule.amount)}
+                      </p>
+                      <p className="text-[10px] text-gray-400 mt-0.5 truncate max-w-[100px]" title={rule.wallet?.name}>
+                        {isTransfer ? `${rule.wallet?.name} → ${rule.toWallet?.name}` : rule.wallet?.name}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+              {recurringRules.filter(r => r.isActive).length === 0 && (
+                <div className="text-center py-10 text-gray-500 dark:text-gray-400 text-sm">
+                  {isEnglish ? 'No active recurring rules.' : 'Không có giao dịch định kỳ nào đang chạy.'}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-10 text-gray-500 dark:text-gray-400 text-sm">
+              {isEnglish ? 'No recurring rules scheduled.' : 'Chưa thiết lập giao dịch định kỳ nào.'}
+            </div>
+          )}
+        </div>
+        
       </div>
 
       {/* Wallet Modal */}

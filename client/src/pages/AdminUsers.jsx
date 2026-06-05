@@ -13,6 +13,7 @@ import { toast } from 'react-toastify';
 import { adminService } from '../services/admin.service';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import Pagination from '../components/Pagination';
 
 const AdminUsers = () => {
   const { user: currentUser } = useAuth();
@@ -37,18 +38,18 @@ const AdminUsers = () => {
   const [tempIsVip, setTempIsVip] = useState(false);
   const [tempVipExpire, setTempVipExpire] = useState('');
 
-  const loadUsers = async (page = 1, silent = false) => {
+  const loadUsers = async (page = 1, silent = false, limitOverride = null) => {
     if (!silent) setLoading(true);
     try {
       const response = await adminService.getUsers({
         page,
-        limit: pagination.limit,
+        limit: limitOverride !== null ? limitOverride : pagination.limit,
         search: search || undefined,
         role: role || undefined,
       });
       setItems(response.data.items || []);
       setSummary(response.data.summary || { user: 0, admin: 0 });
-      setPagination(response.data.pagination || { total: 0, page: 1, totalPages: 1, limit: 20 });
+      setPagination(response.data.pagination || { total: 0, page: 1, totalPages: 1, limit: limitOverride !== null ? limitOverride : pagination.limit });
     } catch (error) {
       toast.error(error.response?.data?.message || (isEnglish ? 'Cannot load users' : 'Không thể tải người dùng'));
     } finally {
@@ -377,17 +378,19 @@ const AdminUsers = () => {
           </table>
         </div>
 
-        <div className="flex items-center justify-between border-t border-[#edf1f5] dark:border-gray-800 px-4 py-3 text-sm">
-          <span className="text-[#5f6e82] dark:text-gray-400">{isEnglish ? 'Page' : 'Trang'} {pagination.page}/{pagination.totalPages}</span>
-          <div className="flex items-center gap-2">
-            <button disabled={pagination.page <= 1 || loading} onClick={() => loadUsers(pagination.page - 1)} className="rounded-md border border-[#d6dde6] dark:border-gray-700 dark:text-white px-3 py-1.5 disabled:opacity-50">
-              {isEnglish ? 'Prev' : 'Trước'}
-            </button>
-            <button disabled={pagination.page >= pagination.totalPages || loading} onClick={() => loadUsers(pagination.page + 1)} className="rounded-md border border-[#d6dde6] dark:border-gray-700 dark:text-white px-3 py-1.5 disabled:opacity-50">
-              {isEnglish ? 'Next' : 'Sau'}
-            </button>
+        {pagination.total > 0 && (
+          <div className="px-4 pb-3">
+            <Pagination
+              currentPage={pagination.page}
+              totalPages={pagination.totalPages}
+              onPageChange={(p) => loadUsers(p)}
+              itemsPerPage={pagination.limit}
+              onItemsPerPageChange={(l) => loadUsers(1, false, l)}
+              totalItems={pagination.total}
+              showItemsPerPageSelector={true}
+            />
           </div>
-        </div>
+        )}
       </div>
 
       {/* Password Reset Modal */}

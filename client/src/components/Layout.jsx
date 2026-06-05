@@ -58,6 +58,62 @@ const Layout = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0); // Số thông báo chưa đọc
   const [showAdminMenu, setShowAdminMenu] = useState(false); // Trạng thái hiển thị submenu admin
   const [showMobileSearch, setShowMobileSearch] = useState(false); // Trạng thái hiển thị search overlay mobile
+  const [openGroups, setOpenGroups] = useState({});
+
+  const toggleGroup = (id) => {
+    setOpenGroups(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  const menuConfig = [
+    {
+      type: 'link',
+      path: '/dashboard',
+      icon: FiHome,
+      label: isEnglish ? 'Overview' : 'Tổng quan'
+    },
+    {
+      type: 'group',
+      id: 'transactions',
+      icon: FiCreditCard,
+      label: isEnglish ? 'Finance management' : 'Quản lý tài chính',
+      children: [
+        { path: '/transactions', icon: FiCreditCard, label: isEnglish ? 'Transactions' : 'Giao dịch' },
+        { path: '/recurring', icon: FiRefreshCw, label: isEnglish ? 'Recurring Trans' : 'Giao dịch định kỳ' },
+        { path: '/categories', icon: FiFolder, label: isEnglish ? 'Categories' : 'Danh mục' },
+        { path: '/budgets', icon: FiDollarSign, label: isEnglish ? 'Budgets' : 'Ngân sách' }
+      ]
+    },
+    {
+      type: 'group',
+      id: 'assets',
+      icon: FiBriefcase,
+      label: isEnglish ? 'Asset management' : 'Quản lý tài sản',
+      children: [
+        { path: '/wallets', icon: FiBriefcase, label: isEnglish ? 'Wallets' : 'Quản lý ví' },
+        { path: '/goals', icon: FiTarget, label: isEnglish ? 'Goals' : 'Mục tiêu' },
+        { path: '/debts', icon: FiUsers, label: isEnglish ? 'Debt Management' : 'Quản lý nợ' }
+      ]
+    },
+    {
+      type: 'link',
+      path: '/statistics',
+      icon: FiBarChart2,
+      label: isEnglish ? 'Statistics' : 'Thống kê'
+    },
+    {
+      type: 'group',
+      id: 'personal',
+      icon: FiUser,
+      label: isEnglish ? 'Account' : 'Tài khoản',
+      children: [
+        { path: '/profile', icon: FiUser, label: isEnglish ? 'Account' : 'Tài khoản' },
+        { path: '/vip', icon: FiAward, label: isEnglish ? 'VIP Membership' : 'Tài khoản VIP' }
+      ]
+    }
+  ];
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -74,6 +130,19 @@ const Layout = ({ children }) => {
   useEffect(() => {
     if (location.pathname.startsWith('/admin')) {
       setShowAdminMenu(true);
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    // Auto-expand group that contains active path
+    const activeGroup = menuConfig.find(
+      item => item.type === 'group' && item.children.some(child => child.path === location.pathname)
+    );
+    if (activeGroup) {
+      setOpenGroups(prev => ({
+        ...prev,
+        [activeGroup.id]: true
+      }));
     }
   }, [location.pathname]);
 
@@ -174,16 +243,16 @@ const Layout = ({ children }) => {
   // Giao diện của Layout
   return (
     <div
-      className="min-h-screen flex bg-[#f3f4f6] dark:bg-[#111216]"
+      className="h-screen overflow-hidden flex bg-[#f3f4f6] dark:bg-[#111216]"
       style={{ fontFamily: "'Manrope', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}
     >
       {/* Mobile menu button nằm trong header — xem header bên dưới */}
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-[250px] bg-[#e9ecef] dark:bg-[#1b1e24]
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-[250px] h-screen lg:h-full bg-[#e9ecef] dark:bg-[#1b1e24]
                     border-r border-[#d8dce2] dark:border-[#2d323c]
-                    transform transition-all duration-300 ease-in-out
+                    transform transition-all duration-300 ease-in-out flex flex-col flex-shrink-0
                     ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         <div className="sidebar-nav-grid h-full">
@@ -200,7 +269,7 @@ const Layout = ({ children }) => {
                 </div>
                 <div>
                   <h1 className="text-[1.05rem] leading-5 font-bold text-[#1f2328] dark:text-[#eceef2]">
-                    Curator Pro
+                    Finance Manager
                   </h1>
                   <p className="text-[11px] text-[#6a727f] dark:text-[#a0a5ad]">
                     {isEnglish ? 'Priority banking' : 'Ngân hàng ưu tiên'}
@@ -233,32 +302,80 @@ const Layout = ({ children }) => {
             <p className="px-2 pb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#77808f] dark:text-[#8d94a1]">
               {isEnglish ? 'Quick navigation' : 'Điều hướng nhanh'}
             </p>
-            {menuItems.map((item) => {
-              const isActive = location.pathname === item.path;
+            {menuConfig.map((item) => {
+              if (item.type === 'link') {
+                const isActive = location.pathname === item.path;
 
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group border text-sm
-                    ${isActive
-                      ? 'bg-white text-[#0d3a2d] border-[#cfe2d8] shadow-sm dark:bg-[#273332] dark:text-[#b9e4d2] dark:border-[#335348]'
-                      : 'text-[#4f5662] bg-transparent border-transparent hover:bg-[#f2f4f7] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
-                    }`}
-                >
-                  {item.isImg
-                    ? <img src={item.icon} alt={item.label} className="w-5 h-5 object-contain" />
-                    : React.createElement(item.icon, { size: 20, className: isActive ? '' : 'group-hover:scale-110 transition-transform opacity-90' })
-                  }
-                  <span className="font-semibold flex items-center justify-between w-full">
-                    <span>{item.label}</span>
-                    {item.path === '/debts' && !isVipActive && (
-                      <span className="text-amber-500 text-xs ml-1" title="VIP Feature">👑</span>
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group border text-sm
+                      ${isActive
+                        ? 'bg-white text-[#0d3a2d] border-[#cfe2d8] shadow-sm dark:bg-[#273332] dark:text-[#b9e4d2] dark:border-[#335348]'
+                        : 'text-[#4f5662] bg-transparent border-transparent hover:bg-[#f2f4f7] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
+                      }`}
+                  >
+                    {React.createElement(item.icon, { size: 20, className: isActive ? '' : 'group-hover:scale-110 transition-transform opacity-90' })}
+                    <span className="font-semibold text-sm">{item.label}</span>
+                  </Link>
+                );
+              } else {
+                const isOpen = openGroups[item.id];
+                const hasActiveChild = item.children.some(child => location.pathname === child.path);
+
+                return (
+                  <div key={item.id} className="space-y-1">
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(item.id)}
+                      className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-150 group border text-sm
+                        ${hasActiveChild
+                          ? 'text-[#0d3a2d] border-[#cfe2d8]/30 bg-[#e2ede7]/30 dark:text-[#b9e4d2] dark:bg-[#273332]/30 dark:border-[#335348]/20'
+                          : 'text-[#4f5662] bg-transparent border-transparent hover:bg-[#f2f4f7] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
+                        }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {React.createElement(item.icon, { size: 20, className: 'opacity-90 group-hover:scale-110 transition-transform' })}
+                        <span className="font-semibold text-sm">{item.label}</span>
+                      </div>
+                      <FiChevronDown
+                        size={16}
+                        className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="pl-4 ml-5 border-l border-[#d8dce2] dark:border-[#2d323c] space-y-1.5 py-1">
+                        {item.children.map((child) => {
+                          const isChildActive = location.pathname === child.path;
+
+                          return (
+                            <Link
+                              key={child.path}
+                              to={child.path}
+                              onClick={() => setSidebarOpen(false)}
+                              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150 group border text-xs
+                                ${isChildActive
+                                  ? 'bg-white text-[#0d3a2d] border-[#cfe2d8] shadow-sm dark:bg-[#273332] dark:text-[#b9e4d2] dark:border-[#335348]'
+                                  : 'text-[#5c6370] bg-transparent border-transparent hover:bg-[#f2f4f7] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#9fa5b0] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
+                                }`}
+                            >
+                              {React.createElement(child.icon, { size: 16, className: isChildActive ? '' : 'group-hover:scale-110 transition-transform opacity-90' })}
+                              <span className="font-medium flex items-center justify-between w-full">
+                                <span>{child.label}</span>
+                                {child.path === '/debts' && !isVipActive && (
+                                  <span className="text-amber-500 text-[10px] ml-1" title="VIP Feature">👑</span>
+                                )}
+                              </span>
+                            </Link>
+                          );
+                        })}
+                      </div>
                     )}
-                  </span>
-                </Link>
-              );
+                  </div>
+                );
+              }
             })}
           </nav>
 
@@ -359,9 +476,9 @@ const Layout = ({ children }) => {
       )}
 
       {/* Main content wrapper */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Header */}
-        <header className="bg-[#f8fafb] dark:bg-[#191d24] border-b border-[#d8dce2] dark:border-[#2f343e] sticky top-0 z-30">
+        <header className="bg-[#f8fafb] dark:bg-[#191d24] border-b border-[#d8dce2] dark:border-[#2f343e] sticky top-0 z-30 flex-shrink-0">
           <div className="px-4 lg:px-6 py-3">
             <div className="flex items-center gap-3">
 

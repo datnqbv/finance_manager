@@ -315,13 +315,39 @@ export const recordVisit = async (req, res) => {
 
 export const getVisitsList = async (req, res) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 20, search, startDate, endDate } = req.query;
     
     const pageNum = Math.max(parseInt(page, 10) || 1, 1);
     const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
     const offset = (pageNum - 1) * limitNum;
     
+    const where = {};
+    
+    if (startDate || endDate) {
+      where.visitedAt = {};
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        where.visitedAt[Op.gte] = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.visitedAt[Op.lte] = end;
+      }
+    }
+    
+    if (search?.trim()) {
+      const term = `%${search.trim()}%`;
+      where[Op.or] = [
+        { userAgent: { [Op.like]: term } },
+        { '$user.name$': { [Op.like]: term } },
+        { '$user.email$': { [Op.like]: term } }
+      ];
+    }
+    
     const { count, rows } = await UserVisit.findAndCountAll({
+      where,
       limit: limitNum,
       offset,
       order: [['visitedAt', 'DESC']],
