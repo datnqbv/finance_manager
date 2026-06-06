@@ -20,14 +20,44 @@ vi.mock('../../context/TransactionContext', () => ({
   }),
 }));
 
+const mockCategories = [
+  { id: '1', name: 'Ăn uống',   type: 'expense', icon: '🍔' },
+  { id: '2', name: 'Lương',      type: 'income',  icon: '💰' },
+  { id: '3', name: 'Di chuyển',  type: 'expense', icon: '🚗' },
+];
+
 vi.mock('../../context/CategoryContext', () => ({
   useCategories: () => ({
-    categories: [
-      { id: '1', name: 'Ăn uống',   type: 'expense', icon: '🍔' },
-      { id: '2', name: 'Lương',      type: 'income',  icon: '💰' },
-      { id: '3', name: 'Di chuyển',  type: 'expense', icon: '🚗' },
-    ],
+    categories: mockCategories,
     fetchCategories: mockFetchCategories,
+  }),
+}));
+
+const mockWallets = [
+  { id: 'w1', name: 'Ví chính', isDefault: true, icon: '💼', color: '#64748B' },
+  { id: 'w2', name: 'Ví phụ', isDefault: false, icon: '💳', color: '#10B981' }
+];
+
+const mockFetchWallets = vi.fn();
+vi.mock('../../context/WalletContext', () => ({
+  useWallets: () => ({
+    wallets: mockWallets,
+    fetchWallets: mockFetchWallets,
+  }),
+}));
+
+const mockUser = { id: 'u1', name: 'User A', email: 'user@example.com', isVip: true, vipExpire: '2027-01-01T00:00:00.000Z' };
+
+vi.mock('../../context/AuthContext', () => ({
+  useAuth: () => ({
+    user: mockUser,
+  }),
+}));
+
+vi.mock('../../context/LanguageContext', () => ({
+  useLanguage: () => ({
+    t: (key) => key,
+    language: 'vi',
   }),
 }));
 

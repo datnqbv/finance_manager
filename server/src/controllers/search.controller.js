@@ -107,13 +107,28 @@ export const advancedSearch = async (req, res) => {
       case 'transaction': {
         const where = { userId };
         if (filters.type) where.type = filters.type;
-        if (filters.category) where.category = filters.category;
+        if (filters.category) {
+          if (sequelize.options.dialect === 'mssql') {
+            const escaped = filters.category.replace(/'/g, "''");
+            where.category = sequelize.literal(`category LIKE N'%${escaped}%' COLLATE Latin1_General_CI_AI`);
+          } else {
+            where.category = { [Op.like]: `%${filters.category}%` };
+          }
+        }
         if (filters.minAmount) where.amount = { ...(where.amount || {}), [Op.gte]: filters.minAmount };
         if (filters.maxAmount) where.amount = { ...(where.amount || {}), [Op.lte]: filters.maxAmount };
         if (filters.startDate || filters.endDate) {
           where.date = {};
-          if (filters.startDate) where.date[Op.gte] = new Date(filters.startDate);
-          if (filters.endDate) where.date[Op.lte] = new Date(filters.endDate);
+          if (filters.startDate) {
+            const start = new Date(filters.startDate);
+            start.setHours(0, 0, 0, 0);
+            where.date[Op.gte] = start;
+          }
+          if (filters.endDate) {
+            const end = new Date(filters.endDate);
+            end.setHours(23, 59, 59, 999);
+            where.date[Op.lte] = end;
+          }
         }
 
         if (query && query.trim()) {

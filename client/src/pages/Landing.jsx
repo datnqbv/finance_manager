@@ -1120,7 +1120,7 @@ const Landing = () => {
 
         {/* ══════════ CTA ══════════ */}
         <section
-          className="relative py-24 px-5 sm:px-8 overflow-hidden bg-emerald-50 border-t border-b border-emerald-100"
+          className="relative py-24 px-5 sm:px-8 overflow-hidden bg-white border-t border-b border-slate-100"
         >
           <div ref={ctaWaveLayerRef} className="cta-wave-surface" style={{ '--wave-x': '50%', '--wave-y': '50%' }}>
             <span className="cta-wave-ripple r1" />
@@ -1172,7 +1172,7 @@ const Landing = () => {
         </section>
 
         {/* ══════════ FOOTER ══════════ */}
-        <footer className="bg-[#010807] text-[#718b82] border-t border-[#0b241f] py-14 px-5 sm:px-8">
+        <footer className="bg-black text-gray-300 border-t border-gray-800 py-14 px-5 sm:px-8">
           <div className="max-w-6xl mx-auto">
             <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
               <div>
@@ -1185,7 +1185,7 @@ const Landing = () => {
                 <p className="text-sm leading-relaxed">{isEnglish ? 'A smart and modern personal finance management solution.' : 'Giải pháp quản lý tài chính cá nhân thông minh và hiện đại.'}</p>
 
                 {/* Security badge */}
-                <div className="flex items-center gap-1.5 mt-4 text-xs text-[#4c635b]">
+                <div className="flex items-center gap-1.5 mt-4 text-xs text-gray-500">
                   <FaLock size={10} className="text-emerald-500" />
                   <span>{isEnglish ? '256-bit SSL encrypted data' : 'Dữ liệu mã hóa 256-bit SSL'}</span>
                 </div>
@@ -1193,19 +1193,19 @@ const Landing = () => {
 
               <div>
                 <h4 className="text-white text-sm font-bold mb-4">{isEnglish ? 'Product' : 'Sản phẩm'}</h4>
-                <ul className="space-y-2.5 text-sm">
-                  <li><a href="#features" className="hover:text-emerald-450 transition hover:translate-x-1 inline-block">{isEnglish ? 'Features' : 'Tính năng'}</a></li>
-                  <li><a href="#how" className="hover:text-emerald-450 transition hover:translate-x-1 inline-block">{isEnglish ? 'How it works' : 'Cách dùng'}</a></li>
-                  <li><a href="#pricing" className="hover:text-emerald-450 transition hover:translate-x-1 inline-block">{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a></li>
+                <ul className="space-y-2.5 text-sm text-gray-400">
+                  <li><a href="#features" className="hover:text-white transition hover:translate-x-1 inline-block">{isEnglish ? 'Features' : 'Tính năng'}</a></li>
+                  <li><a href="#how" className="hover:text-white transition hover:translate-x-1 inline-block">{isEnglish ? 'How it works' : 'Cách dùng'}</a></li>
+                  <li><a href="#pricing" className="hover:text-white transition hover:translate-x-1 inline-block">{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a></li>
                 </ul>
               </div>
 
               <div>
                 <h4 className="text-white text-sm font-bold mb-4">{isEnglish ? 'Company' : 'Công ty'}</h4>
-                <ul className="space-y-2.5 text-sm">
-                  <li><button onClick={() => navigate('/about')} className="hover:text-emerald-450 transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'About us' : 'Về chúng tôi'}</button></li>
-                  <li><button onClick={() => navigate('/contact')} className="hover:text-emerald-450 transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'Contact' : 'Liên hệ'}</button></li>
-                  <li><button onClick={() => navigate('/privacy')} className="hover:text-emerald-450 transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}</button></li>
+                <ul className="space-y-2.5 text-sm text-gray-400">
+                  <li><button onClick={() => navigate('/about')} className="hover:text-white transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'About us' : 'Về chúng tôi'}</button></li>
+                  <li><button onClick={() => navigate('/contact')} className="hover:text-white transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'Contact' : 'Liên hệ'}</button></li>
+                  <li><button onClick={() => navigate('/privacy')} className="hover:text-white transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}</button></li>
                 </ul>
               </div>
 
@@ -1214,20 +1214,20 @@ const Landing = () => {
                 <div className="flex gap-3 mb-5">
                   {[FaFacebook, FaTwitter, FaLinkedin].map((Icon, i) => (
                     <a key={i} href="#"
-                      className="w-9 h-9 rounded-xl bg-[#031d17] border border-[#0d3c32]/65 hover:bg-emerald-600 flex items-center justify-center transition-all duration-200 hover:scale-110 text-[#718b82] hover:text-white">
+                      className="w-9 h-9 rounded-xl bg-[#121212] border border-gray-800 hover:bg-emerald-600 flex items-center justify-center transition-all duration-200 hover:scale-110 text-gray-400 hover:text-white">
                       <Icon size={14} />
                     </a>
                   ))}
                 </div>
-                <div className="text-xs text-[#4c635b]">
+                <div className="text-xs text-gray-500">
                   {isEnglish ? 'New feature updates' : 'Cập nhật tính năng mới'}<br />{isEnglish ? 'every week' : 'mỗi tuần'}
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-[#0b241f] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
               <span>&copy; 2025 Finance Manager. All rights reserved.</span>
-              <span className="text-[#4c635b]">{isEnglish ? 'Built with ❤ in Vietnam' : 'Được xây dựng với ❤ tại Việt Nam'}</span>
+              <span className="text-gray-500">{isEnglish ? 'Built with ❤ in Vietnam' : 'Được xây dựng với ❤ tại Việt Nam'}</span>
             </div>
           </div>
         </footer>

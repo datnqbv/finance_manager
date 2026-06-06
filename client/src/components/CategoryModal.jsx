@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import { FiX } from 'react-icons/fi';
 
 const EMOJI_ICONS = [
@@ -22,6 +23,9 @@ const PRESET_COLORS = [
 ];
 
 const CategoryModal = ({ category, onClose, onSave }) => {
+  const { language } = useLanguage();
+  const isEnglish = language === 'en';
+
   const [formData, setFormData] = useState({
     name: '',
     icon: '📁',
@@ -47,10 +51,10 @@ const CategoryModal = ({ category, onClose, onSave }) => {
   const validate = () => {
     const newErrors = {};
     if (!formData.name.trim()) {
-      newErrors.name = 'Vui lòng nhập tên danh mục';
+      newErrors.name = isEnglish ? 'Please enter category name' : 'Vui lòng nhập tên danh mục';
     }
     if (formData.name.trim().length > 50) {
-      newErrors.name = 'Tên danh mục không được quá 50 ký tự';
+      newErrors.name = isEnglish ? 'Category name cannot exceed 50 characters' : 'Tên danh mục không được quá 50 ký tự';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -82,7 +86,9 @@ const CategoryModal = ({ category, onClose, onSave }) => {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            {category ? 'Sửa danh mục' : 'Thêm danh mục'}
+            {category 
+              ? (isEnglish ? 'Edit Category' : 'Sửa danh mục') 
+              : (isEnglish ? 'Add Category' : 'Thêm danh mục')}
           </h2>
           <button
             onClick={onClose}
@@ -107,7 +113,7 @@ const CategoryModal = ({ category, onClose, onSave }) => {
               >
                 <span className="text-3xl">{formData.icon}</span>
                 <span className="text-xs text-gray-400 dark:text-gray-500">
-                  Bấm để chọn icon
+                  {isEnglish ? 'Click to select icon' : 'Bấm để chọn icon'}
                 </span>
               </button>
 
@@ -138,7 +144,7 @@ const CategoryModal = ({ category, onClose, onSave }) => {
           {/* Color Picker */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
-              Màu sắc
+              {isEnglish ? 'Color' : 'Màu sắc'}
             </label>
             <div className="grid grid-cols-10 gap-2">
               {PRESET_COLORS.map((color) => (
@@ -173,7 +179,7 @@ const CategoryModal = ({ category, onClose, onSave }) => {
           {/* Category Name */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Tên danh mục <span className="text-red-500">*</span>
+              {isEnglish ? 'Category Name' : 'Tên danh mục'} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -181,7 +187,7 @@ const CategoryModal = ({ category, onClose, onSave }) => {
               value={formData.name}
               onChange={handleChange}
               className={`input text-sm ${errors.name ? 'border-red-500' : ''}`}
-              placeholder="Ví dụ: Ăn uống, Lương, ..."
+              placeholder={isEnglish ? 'Example: Dining, Salary, ...' : 'Ví dụ: Ăn uống, Lương, ...'}
               maxLength={50}
             />
             {errors.name && (
@@ -192,7 +198,7 @@ const CategoryModal = ({ category, onClose, onSave }) => {
           {/* Type */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Loại danh mục
+              {isEnglish ? 'Category Type' : 'Loại danh mục'}
             </label>
             <select
               name="type"
@@ -200,16 +206,16 @@ const CategoryModal = ({ category, onClose, onSave }) => {
               onChange={handleChange}
               className="input text-sm"
             >
-              <option value="income">Thu nhập</option>
-              <option value="expense">Chi tiêu</option>
-              <option value="both">Cả hai</option>
+              <option value="income">{isEnglish ? 'Income' : 'Thu nhập'}</option>
+              <option value="expense">{isEnglish ? 'Expense' : 'Chi tiêu'}</option>
+              <option value="both">{isEnglish ? 'Both' : 'Cả hai'}</option>
             </select>
           </div>
 
           {/* Order */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Thứ tự hiển thị
+              {isEnglish ? 'Display Order' : 'Thứ tự hiển thị'}
             </label>
             <input
               type="number"
@@ -221,13 +227,15 @@ const CategoryModal = ({ category, onClose, onSave }) => {
               placeholder="0"
             />
             <p className="mt-1 text-[11px] text-gray-400">
-              Số càng nhỏ sẽ hiển thị càng trước
+              {isEnglish ? 'Smaller numbers will display first' : 'Số càng nhỏ sẽ hiển thị càng trước'}
             </p>
           </div>
 
           {/* Preview */}
           <div className="p-4 bg-gray-50 dark:bg-[#232936] rounded-xl border border-dashed border-gray-200 dark:border-gray-800">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Xem trước:</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+              {isEnglish ? 'Preview:' : 'Xem trước:'}
+            </p>
             <div className="flex items-center gap-3">
               <div 
                 className="w-11 h-11 rounded-xl flex items-center justify-center text-xl transition-all"
@@ -237,10 +245,14 @@ const CategoryModal = ({ category, onClose, onSave }) => {
               </div>
               <div>
                 <p className="font-bold text-sm text-gray-900 dark:text-white">
-                  {formData.name || 'Tên danh mục'}
+                  {formData.name || (isEnglish ? 'Category Name' : 'Tên danh mục')}
                 </p>
                 <p className="text-xs text-gray-400 dark:text-gray-500">
-                  {formData.type === 'income' ? 'Thu nhập' : formData.type === 'expense' ? 'Chi tiêu' : 'Cả hai'}
+                  {formData.type === 'income' 
+                    ? (isEnglish ? 'Income' : 'Thu nhập') 
+                    : formData.type === 'expense' 
+                      ? (isEnglish ? 'Expense' : 'Chi tiêu') 
+                      : (isEnglish ? 'Both' : 'Cả hai')}
                 </p>
               </div>
             </div>
@@ -253,13 +265,15 @@ const CategoryModal = ({ category, onClose, onSave }) => {
               onClick={onClose}
               className="flex-1 btn btn-secondary"
             >
-              Hủy
+              {isEnglish ? 'Cancel' : 'Hủy'}
             </button>
             <button
               type="submit"
               className="flex-1 btn btn-primary"
             >
-              {category ? 'Cập nhật' : 'Tạo mới'}
+              {category 
+                ? (isEnglish ? 'Update' : 'Cập nhật') 
+                : (isEnglish ? 'Create' : 'Tạo mới')}
             </button>
           </div>
         </form>

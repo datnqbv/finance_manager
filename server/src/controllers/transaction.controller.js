@@ -116,12 +116,32 @@ export const getTransactions = async (req, res) => {
       const where = { userId: req.user.id };
       where[Op.and] = [getSearchCondition(['category', 'note'], search)];
       if (type) where.type = type;
-      if (category) where.category = category;
+      if (category) {
+        if (sequelize.options.dialect === 'mssql') {
+          const escaped = category.replace(/'/g, "''");
+          where.category = sequelize.literal(`category LIKE N'%${escaped}%' COLLATE Latin1_General_CI_AI`);
+        } else {
+          where.category = { [Op.like]: `%${category}%` };
+        }
+      }
       if (walletId) {
         where[Op.or] = [
           { walletId: walletId },
           { toWalletId: walletId }
         ];
+      }
+      if (startDate || endDate) {
+        where.date = {};
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          where.date[Op.gte] = start;
+        }
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          where.date[Op.lte] = end;
+        }
       }
       if (amountMin || amountMax) {
         where.amount = {};
@@ -157,7 +177,14 @@ export const getTransactions = async (req, res) => {
     // Build Sequelize where
     const where = { userId: req.user.id };
     if (type) where.type = type;
-    if (category) where.category = category;
+    if (category) {
+      if (sequelize.options.dialect === 'mssql') {
+        const escaped = category.replace(/'/g, "''");
+        where.category = sequelize.literal(`category LIKE N'%${escaped}%' COLLATE Latin1_General_CI_AI`);
+      } else {
+        where.category = { [Op.like]: `%${category}%` };
+      }
+    }
     if (walletId) {
       where[Op.or] = [
         { walletId: walletId },
@@ -166,8 +193,16 @@ export const getTransactions = async (req, res) => {
     }
     if (startDate || endDate) {
       where.date = {};
-      if (startDate) where.date[Op.gte] = new Date(startDate);
-      if (endDate) where.date[Op.lte] = new Date(endDate);
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        where.date[Op.gte] = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.date[Op.lte] = end;
+      }
     }
     if (amountMin || amountMax) {
       where.amount = {};

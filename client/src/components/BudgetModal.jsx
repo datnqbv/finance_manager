@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import CurrencyInput from './CurrencyInput';
 import { useCategories } from '../context/CategoryContext';
+import { useLanguage } from '../context/LanguageContext';
 import { FiX } from 'react-icons/fi';
 
 const BudgetModal = ({ budget, onClose, onSave }) => {
   const { categories, fetchCategories } = useCategories();
+  const { language } = useLanguage();
+  const isEnglish = language === 'en';
+
   const [formData, setFormData] = useState({
     categoryId: '',
     categoryName: '',
@@ -37,7 +41,7 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
   const validate = () => {
     const newErrors = {};
     if (!formData.amount || formData.amount <= 0) {
-      newErrors.amount = 'Vui lòng nhập số tiền hợp lệ';
+      newErrors.amount = isEnglish ? 'Please enter a valid amount' : 'Vui lòng nhập số tiền hợp lệ';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -93,7 +97,9 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            {budget ? 'Sửa ngân sách' : 'Thêm ngân sách'}
+            {budget 
+              ? (isEnglish ? 'Edit Budget' : 'Sửa ngân sách') 
+              : (isEnglish ? 'Add Budget' : 'Thêm ngân sách')}
           </h2>
           <button
             onClick={onClose}
@@ -108,7 +114,7 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
           {/* Category */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Danh mục
+              {isEnglish ? 'Category' : 'Danh mục'}
             </label>
             <select
               value={formData.categoryId}
@@ -116,7 +122,7 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
               className="input text-sm"
               disabled={!!budget} // Không cho đổi category khi edit
             >
-              <option value="">Ngân sách tổng</option>
+              <option value="">{isEnglish ? 'Total Budget' : 'Ngân sách tổng'}</option>
               {expenseCategories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.icon} {cat.name}
@@ -124,14 +130,16 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
               ))}
             </select>
             <p className="mt-1 text-[11px] text-gray-400">
-              {formData.categoryId ? 'Ngân sách cho danh mục cụ thể' : 'Ngân sách cho tất cả chi tiêu'}
+              {formData.categoryId 
+                ? (isEnglish ? 'Budget for specific category' : 'Ngân sách cho danh mục cụ thể') 
+                : (isEnglish ? 'Budget for all expenses' : 'Ngân sách cho tất cả chi tiêu')}
             </p>
           </div>
 
           {/* Amount */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Số tiền ngân sách <span className="text-red-500">*</span>
+              {isEnglish ? 'Budget Amount' : 'Số tiền ngân sách'} <span className="text-red-500">*</span>
             </label>
             <CurrencyInput
               value={formData.amount}
@@ -150,7 +158,7 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
           {/* Period */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Chu kỳ
+              {isEnglish ? 'Period' : 'Chu kỳ'}
             </label>
             <select
               name="period"
@@ -158,16 +166,16 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
               onChange={handleChange}
               className="input text-sm"
             >
-              <option value="weekly">Hàng tuần</option>
-              <option value="monthly">Hàng tháng</option>
-              <option value="yearly">Hàng năm</option>
+              <option value="weekly">{isEnglish ? 'Weekly' : 'Hàng tuần'}</option>
+              <option value="monthly">{isEnglish ? 'Monthly' : 'Hàng tháng'}</option>
+              <option value="yearly">{isEnglish ? 'Yearly' : 'Hàng năm'}</option>
             </select>
           </div>
 
           {/* Alert Thresholds */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Ngưỡng cảnh báo (%)
+              {isEnglish ? 'Alert Thresholds (%)' : 'Ngưỡng cảnh báo (%)'}
             </label>
             <div className="grid grid-cols-3 gap-2">
               <input
@@ -205,7 +213,9 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
               />
             </div>
             <p className="mt-1 text-[11px] text-gray-400">
-              Cảnh báo khi đạt: {formData.alertThresholds[0]}%, {formData.alertThresholds[1]}%, {formData.alertThresholds[2]}%
+              {isEnglish 
+                ? `Alert when reached: ${formData.alertThresholds[0]}%, ${formData.alertThresholds[1]}%, ${formData.alertThresholds[2]}%`
+                : `Cảnh báo khi đạt: ${formData.alertThresholds[0]}%, ${formData.alertThresholds[1]}%, ${formData.alertThresholds[2]}%`}
             </p>
           </div>
 
@@ -220,7 +230,7 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
               className="h-4.5 w-4.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
             />
             <label htmlFor="notificationEnabled" className="text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">
-              Bật thông báo cảnh báo
+              {isEnglish ? 'Enable alert notifications' : 'Bật thông báo cảnh báo'}
             </label>
           </div>
 
@@ -236,11 +246,13 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
                 className="h-4.5 w-4.5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
               />
               <label htmlFor="rolloverEnabled" className="text-sm font-bold text-emerald-800 dark:text-emerald-400 cursor-pointer">
-                Bật Rollover (chuyển dư/vượt sang kỳ sau)
+                {isEnglish ? 'Enable Rollover (carry over balance)' : 'Bật Rollover (chuyển dư/vượt sang kỳ sau)'}
               </label>
             </div>
             <p className="text-[11px] text-emerald-700/80 dark:text-emerald-500/80 ml-7 leading-relaxed">
-              Nếu kỳ này chi ít, phần dư tự động cộng vào kỳ sau. Nếu vượt, sẽ bị trừ ở kỳ sau.
+              {isEnglish
+                ? 'If spending is low this period, the surplus is automatically added to the next period. If overspent, it will be deducted.'
+                : 'Nếu kỳ này chi ít, phần dư tự động cộng vào kỳ sau. Nếu vượt, sẽ bị trừ ở kỳ sau.'}
             </p>
           </div>
 
@@ -251,13 +263,15 @@ const BudgetModal = ({ budget, onClose, onSave }) => {
               onClick={onClose}
               className="flex-1 btn btn-secondary"
             >
-              Hủy
+              {isEnglish ? 'Cancel' : 'Hủy'}
             </button>
             <button
               type="submit"
               className="flex-1 btn btn-primary"
             >
-              {budget ? 'Cập nhật' : 'Tạo mới'}
+              {budget 
+                ? (isEnglish ? 'Update' : 'Cập nhật') 
+                : (isEnglish ? 'Create' : 'Tạo mới')}
             </button>
           </div>
         </form>

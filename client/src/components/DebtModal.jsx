@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { FiX } from 'react-icons/fi';
 import CurrencyInput from './CurrencyInput';
 import DatePicker from './DatePicker';
+import { useLanguage } from '../context/LanguageContext';
 
 const DebtModal = ({ debt, onClose, onSave }) => {
+  const { language } = useLanguage();
+  const isEnglish = language === 'en';
   const [form, setForm] = useState({
     type: 'borrow',
     personName: '',
@@ -27,8 +30,12 @@ const DebtModal = ({ debt, onClose, onSave }) => {
 
   const validate = () => {
     const e = {};
-    if (!form.personName.trim()) e.personName = 'Vui lòng nhập tên';
-    if (!form.amount || Number(form.amount) <= 0) e.amount = 'Vui lòng nhập số tiền hợp lệ';
+    if (!form.personName.trim()) {
+      e.personName = isEnglish ? 'Please enter name' : 'Vui lòng nhập tên';
+    }
+    if (!form.amount || Number(form.amount) <= 0) {
+      e.amount = isEnglish ? 'Please enter a valid amount' : 'Vui lòng nhập số tiền hợp lệ';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -55,7 +62,9 @@ const DebtModal = ({ debt, onClose, onSave }) => {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            {debt ? 'Sửa khoản nợ' : 'Thêm khoản nợ'}
+            {debt 
+              ? (isEnglish ? 'Edit Debt' : 'Sửa khoản nợ') 
+              : (isEnglish ? 'Add Debt' : 'Thêm khoản nợ')}
           </h2>
           <button
             onClick={onClose}
@@ -68,11 +77,23 @@ const DebtModal = ({ debt, onClose, onSave }) => {
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {/* Type toggle */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Loại</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
+              {isEnglish ? 'Type' : 'Loại'}
+            </label>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { value: 'borrow', label: '💸 Tôi đang vay', desc: 'Tôi nợ người khác', activeColor: 'border-rose-300 bg-rose-50/50 dark:border-rose-950/40 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 ring-2 ring-rose-500' },
-                { value: 'lend',   label: '🤝 Tôi cho vay', desc: 'Người khác nợ tôi', activeColor: 'border-[#cfe2d8] bg-emerald-50/50 dark:border-[#335348] dark:bg-[#273332] text-[#0d3a2d] dark:text-[#b9e4d2] ring-2 ring-emerald-500' },
+                { 
+                  value: 'borrow', 
+                  label: isEnglish ? '💸 I Borrowed' : '💸 Tôi đang vay', 
+                  desc: isEnglish ? 'I owe someone' : 'Tôi nợ người khác', 
+                  activeColor: 'border-rose-300 bg-rose-50/50 dark:border-rose-950/40 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 ring-2 ring-rose-500' 
+                },
+                { 
+                  value: 'lend',   
+                  label: isEnglish ? '🤝 I Lent' : '🤝 Tôi cho vay', 
+                  desc: isEnglish ? 'Someone owes me' : 'Người khác nợ tôi', 
+                  activeColor: 'border-[#cfe2d8] bg-emerald-50/50 dark:border-[#335348] dark:bg-[#273332] text-[#0d3a2d] dark:text-[#b9e4d2] ring-2 ring-emerald-500' 
+                },
               ].map(opt => (
                 <button
                   key={opt.value}
@@ -95,13 +116,15 @@ const DebtModal = ({ debt, onClose, onSave }) => {
           {/* Person name */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              {form.type === 'lend' ? 'Tên người vay' : 'Tên người cho vay'} <span className="text-red-500">*</span>
+              {form.type === 'lend' 
+                ? (isEnglish ? 'Borrower Name' : 'Tên người vay') 
+                : (isEnglish ? 'Lender Name' : 'Tên người cho vay')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={form.personName}
               onChange={e => change('personName', e.target.value)}
-              placeholder="Nhập tên..."
+              placeholder={isEnglish ? 'Enter name...' : 'Nhập tên...'}
               className={`input text-sm ${errors.personName ? 'border-red-500' : ''}`}
             />
             {errors.personName && <p className="text-xs text-red-500 mt-1">{errors.personName}</p>}
@@ -110,7 +133,7 @@ const DebtModal = ({ debt, onClose, onSave }) => {
           {/* Amount */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Số tiền <span className="text-red-500">*</span>
+              {isEnglish ? 'Amount' : 'Số tiền'} <span className="text-red-500">*</span>
             </label>
             <CurrencyInput
               value={form.amount}
@@ -124,7 +147,7 @@ const DebtModal = ({ debt, onClose, onSave }) => {
           {/* Due date */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Hạn trả (tùy chọn)
+              {isEnglish ? 'Due Date (optional)' : 'Hạn trả (tùy chọn)'}
             </label>
             <DatePicker
               value={form.dueDate}
@@ -135,12 +158,12 @@ const DebtModal = ({ debt, onClose, onSave }) => {
           {/* Description */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Ghi chú
+              {isEnglish ? 'Note' : 'Ghi chú'}
             </label>
             <textarea
               value={form.description}
               onChange={e => change('description', e.target.value)}
-              placeholder="Mô tả khoản nợ..."
+              placeholder={isEnglish ? 'Debt description...' : 'Mô tả khoản nợ...'}
               rows={2}
               className="input text-sm resize-none"
             />
@@ -148,8 +171,14 @@ const DebtModal = ({ debt, onClose, onSave }) => {
 
           {/* Actions */}
           <div className="flex gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
-            <button type="button" onClick={onClose} className="flex-1 btn btn-secondary">Hủy</button>
-            <button type="submit" className="flex-1 btn btn-primary">{debt ? 'Cập nhật' : 'Tạo mới'}</button>
+            <button type="button" onClick={onClose} className="flex-1 btn btn-secondary">
+              {isEnglish ? 'Cancel' : 'Hủy'}
+            </button>
+            <button type="submit" className="flex-1 btn btn-primary">
+              {debt 
+                ? (isEnglish ? 'Update' : 'Cập nhật') 
+                : (isEnglish ? 'Create' : 'Tạo mới')}
+            </button>
           </div>
         </form>
       </div>

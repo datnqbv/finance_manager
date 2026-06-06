@@ -103,14 +103,14 @@ const GlobalSearch = () => {
 
     // Add page shortcuts (highest priority)
     const pages = [
-      { title: 'Tổng quan', path: '/', icon: '🏠', keywords: ['dashboard', 'tổng quan', 'home', 'tong quan'] },
-      { title: 'Giao dịch', path: '/transactions', icon: '📝', keywords: ['transactions', 'giao dịch', 'giao dich', 'transaction'] },
-      { title: 'Danh mục', path: '/categories', icon: '📂', keywords: ['categories', 'danh mục', 'danh muc', 'category'] },
-      { title: 'Ngân sách', path: '/budgets', icon: '💰', keywords: ['budgets', 'ngân sách', 'ngan sach', 'budget'] },
-      { title: 'Mục tiêu', path: '/goals', icon: '🎯', keywords: ['goals', 'mục tiêu', 'muc tieu', 'target'] },
-      { title: 'Quản lý nợ', path: '/debts', icon: '🤝', keywords: ['debts', 'nợ', 'no', 'vay', 'borrow', 'lend', 'quản lý nợ', 'quan ly no'] },
-      { title: 'Thống kê', path: '/statistics', icon: '📊', keywords: ['statistics', 'thống kê', 'thong ke', 'stats', 'chart'] },
-      { title: 'Tài khoản', path: '/profile', icon: '👤', keywords: ['profile', 'tài khoản', 'tai khoan', 'account'] },
+      { title: isEnglish ? 'Overview' : 'Tổng quan', path: '/', icon: '🏠', keywords: ['dashboard', 'tổng quan', 'home', 'tong quan', 'overview'] },
+      { title: isEnglish ? 'Transactions' : 'Giao dịch', path: '/transactions', icon: '📝', keywords: ['transactions', 'giao dịch', 'giao dich', 'transaction'] },
+      { title: isEnglish ? 'Categories' : 'Danh mục', path: '/categories', icon: '📂', keywords: ['categories', 'danh mục', 'danh muc', 'category'] },
+      { title: isEnglish ? 'Budgets' : 'Ngân sách', path: '/budgets', icon: '💰', keywords: ['budgets', 'ngân sách', 'ngan sach', 'budget'] },
+      { title: isEnglish ? 'Goals' : 'Mục tiêu', path: '/goals', icon: '🎯', keywords: ['goals', 'mục tiêu', 'muc tieu', 'target'] },
+      { title: isEnglish ? 'Debt Management' : 'Quản lý nợ', path: '/debts', icon: '🤝', keywords: ['debts', 'nợ', 'no', 'vay', 'borrow', 'lend', 'quản lý nợ', 'quan ly no', 'debt'] },
+      { title: isEnglish ? 'Statistics' : 'Thống kê', path: '/statistics', icon: '📊', keywords: ['statistics', 'thống kê', 'thong ke', 'stats', 'chart'] },
+      { title: isEnglish ? 'Profile' : 'Tài khoản', path: '/profile', icon: '👤', keywords: ['profile', 'tài khoản', 'tai khoan', 'account'] },
     ];
 
     const pageResults = pages
@@ -119,7 +119,7 @@ const GlobalSearch = () => {
       .map(p => ({
         type: 'page',
         title: p.title,
-        subtitle: 'Trang',
+        subtitle: isEnglish ? 'Page' : 'Trang',
         path: p.path,
         icon: p.icon,
         matchText: p.title
@@ -132,28 +132,28 @@ const GlobalSearch = () => {
         
         const transactionResults = transactions.map(t => ({
           type: 'transaction', id: t.id, title: t.category,
-          subtitle: (t.note || (t.type === 'income' ? 'Thu nhập' : 'Chi tiêu')) + ' - ' + new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(t.amount),
+          subtitle: (t.note || (t.type === 'income' ? (isEnglish ? 'Income' : 'Thu nhập') : (isEnglish ? 'Expense' : 'Chi tiêu'))) + ' - ' + new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(t.amount),
           path: '/transactions', icon: t.type === 'income' ? '📈' : '📉',
-          date: new Date(t.date).toLocaleDateString('vi-VN'), matchText: t.category || t.note || ''
+          date: new Date(t.date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN'), matchText: t.category || t.note || ''
         }));
         const categoryResults = categories.map(c => ({
           type: 'category', id: c.id, title: c.name,
-          subtitle: 'Danh mục ' + (c.type === 'income' ? 'thu nhập' : (c.type === 'expense' ? 'chi tiêu' : 'cả hai')),
+          subtitle: (isEnglish ? 'Category ' : 'Danh mục ') + (c.type === 'income' ? (isEnglish ? 'income' : 'thu nhập') : (c.type === 'expense' ? (isEnglish ? 'expense' : 'chi tiêu') : (isEnglish ? 'both' : 'cả hai'))),
           path: '/categories', icon: c.icon || '📂', matchText: c.name || ''
         }));
         const budgetResults = budgets.map(b => ({
-          type: 'budget', id: b.id, title: b.category || b.categoryName || 'Tổng ngân sách',
-          subtitle: 'Ngân sách ' + (b.period === 'monthly' ? 'tháng' : (b.period === 'weekly' ? 'tuần' : 'năm')) + ' - ' + new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(b.amount),
+          type: 'budget', id: b.id, title: b.category || b.categoryName || (isEnglish ? 'Total Budget' : 'Tổng ngân sách'),
+          subtitle: (isEnglish ? 'Budget ' : 'Ngân sách ') + (b.period === 'monthly' ? (isEnglish ? 'monthly' : 'tháng') : (b.period === 'weekly' ? (isEnglish ? 'weekly' : 'tuần') : (isEnglish ? 'yearly' : 'năm'))) + ' - ' + new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(b.amount),
           path: '/budgets', icon: '💰', matchText: b.category || b.categoryName || 'Tổng ngân sách'
         }));
         const goalResults = goals.map(g => ({
           type: 'goal', id: g.id, title: g.name,
-          subtitle: 'Mục tiêu ' + (g.status === 'active' ? 'đang thực hiện' : (g.status === 'completed' ? 'đã hoàn thành' : 'tạm dừng')) + ' - ' + new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(g.currentAmount) + '/' + new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(g.targetAmount),
+          subtitle: (isEnglish ? 'Goal ' : 'Mục tiêu ') + (g.status === 'active' ? (isEnglish ? 'active' : 'đang thực hiện') : (g.status === 'completed' ? (isEnglish ? 'completed' : 'đã hoàn thành') : (isEnglish ? 'paused' : 'tạm dừng'))) + ' - ' + new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(g.currentAmount) + '/' + new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(g.targetAmount),
           path: '/goals', icon: g.status === 'completed' ? '✅' : '🎯', matchText: g.name || ''
         }));
         const debtResults = debts.map(debt => ({
           type: 'debt', id: debt.id, title: debt.personName,
-          subtitle: (debt.type === 'lend' ? 'Họ nợ tôi' : 'Tôi nợ họ') + ' - ' + new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(debt.remainingAmount ?? debt.amount ?? 0),
+          subtitle: (debt.type === 'lend' ? (isEnglish ? 'They owe me' : 'Họ nợ tôi') : (isEnglish ? 'I owe them' : 'Tôi nợ họ')) + ' - ' + new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: user?.currency || 'VND' }).format(debt.remainingAmount ?? debt.amount ?? 0),
           path: '/debts', icon: debt.status === 'settled' ? '✅' : (debt.type === 'lend' ? '🧑‍🤝‍🧑' : '🏦'),
           matchText: (debt.personName + ' ' + (debt.description || '')).trim(),
           date: debt.dueDate ? new Date(debt.dueDate).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN') : undefined
@@ -257,7 +257,7 @@ const GlobalSearch = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Tìm kiếm..."
+          placeholder={isEnglish ? 'Search...' : 'Tìm kiếm...'}
           className="w-full pl-10 pr-10 py-2.5 rounded-xl
                    bg-gray-50 dark:bg-[#1a1a1a]
                    border border-gray-200 dark:border-[#2a2a2a]
@@ -319,12 +319,12 @@ const GlobalSearch = () => {
                             ${item.type === 'goal' ? 'bg-pink-100 dark:bg-pink-500/10 text-pink-700 dark:text-pink-400' : ''}
                             ${item.type === 'debt' ? 'bg-teal-100 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400' : ''}
                           `}>
-                            {item.type === 'page' && 'Trang'}
-                            {item.type === 'transaction' && 'Giao dịch'}
-                            {item.type === 'category' && 'Danh mục'}
-                            {item.type === 'budget' && 'Ngân sách'}
-                            {item.type === 'goal' && 'Mục tiêu'}
-                            {item.type === 'debt' && 'Nợ'}
+                            {item.type === 'page' && (isEnglish ? 'Page' : 'Trang')}
+                            {item.type === 'transaction' && (isEnglish ? 'Transaction' : 'Giao dịch')}
+                            {item.type === 'category' && (isEnglish ? 'Category' : 'Danh mục')}
+                            {item.type === 'budget' && (isEnglish ? 'Budget' : 'Ngân sách')}
+                            {item.type === 'goal' && (isEnglish ? 'Goal' : 'Mục tiêu')}
+                            {item.type === 'debt' && (isEnglish ? 'Debt' : 'Nợ')}
                           </span>
                         </div>
                         <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
@@ -372,12 +372,12 @@ const GlobalSearch = () => {
                           ${result.type === 'goal' ? 'bg-pink-100 dark:bg-pink-500/10 text-pink-700 dark:text-pink-400' : ''}
                           ${result.type === 'debt' ? 'bg-teal-100 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400' : ''}
                         `}>
-                          {result.type === 'page' && 'Trang'}
-                          {result.type === 'transaction' && 'Giao dịch'}
-                          {result.type === 'category' && 'Danh mục'}
-                          {result.type === 'budget' && 'Ngân sách'}
-                          {result.type === 'goal' && 'Mục tiêu'}
-                          {result.type === 'debt' && 'Nợ'}
+                          {result.type === 'page' && (isEnglish ? 'Page' : 'Trang')}
+                          {result.type === 'transaction' && (isEnglish ? 'Transaction' : 'Giao dịch')}
+                          {result.type === 'category' && (isEnglish ? 'Category' : 'Danh mục')}
+                          {result.type === 'budget' && (isEnglish ? 'Budget' : 'Ngân sách')}
+                          {result.type === 'goal' && (isEnglish ? 'Goal' : 'Mục tiêu')}
+                          {result.type === 'debt' && (isEnglish ? 'Debt' : 'Nợ')}
                         </span>
                       </div>
                       <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
@@ -399,10 +399,10 @@ const GlobalSearch = () => {
               <div className="px-4 py-8 text-center">
                 <FiSearch className="mx-auto text-gray-300 dark:text-gray-600 mb-2" size={32} />
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Không tìm thấy kết quả cho "{searchQuery}"
+                  {isEnglish ? `No results found for "${searchQuery}"` : `Không tìm thấy kết quả cho "${searchQuery}"`}
                 </p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                  Thử tìm: giao dịch, danh mục, ngân sách, mục tiêu, nợ...
+                  {isEnglish ? 'Try searching: transaction, category, budget, goal, debt...' : 'Thử tìm: giao dịch, danh mục, ngân sách, mục tiêu, nợ...'}
                 </p>
               </div>
             )

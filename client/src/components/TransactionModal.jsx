@@ -8,8 +8,11 @@ import { useAuth } from '../context/AuthContext';
 import { FiX, FiAlertCircle, FiCamera, FiZap } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useLanguage } from '../context/LanguageContext';
 
 const TransactionModal = ({ transaction, onClose, isOpen }) => {
+  const { language } = useLanguage();
+  const isEnglish = language === 'en';
   const { createTransaction, updateTransaction } = useTransactions();
   const { categories, fetchCategories } = useCategories();
   const { wallets, fetchWallets } = useWallets();
@@ -76,7 +79,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
       note: newNote,
       category: newCategory
     }));
-    toast.success("✅ Phân tích thông minh thành công!");
+    toast.success(isEnglish ? "✅ Smart parsing successful!" : "✅ Phân tích thông minh thành công!");
     setSmartText('');
   };
 
@@ -152,7 +155,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
 
       if (scanData.date === today) {
         if (scanData.count >= 3) {
-          toast.error("⚠️ Bạn đã đạt giới hạn 3 lượt quét hóa đơn/ngày của tài khoản thường. Nâng cấp VIP để sử dụng không giới hạn!");
+          toast.error(isEnglish ? "⚠️ You have reached the limit of 3 receipt scans/day for standard accounts. Upgrade to VIP for unlimited usage!" : "⚠️ Bạn đã đạt giới hạn 3 lượt quét hóa đơn/ngày của tài khoản thường. Nâng cấp VIP để sử dụng không giới hạn!");
           if (fileInputRef.current) fileInputRef.current.value = '';
           return;
         }
@@ -164,7 +167,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
     }
 
     setOcrLoading(true);
-    const toastId = toast.loading("🔍 Đang đọc hóa đơn...");
+    const toastId = toast.loading(isEnglish ? "🔍 Scanning receipt..." : "🔍 Đang đọc hóa đơn...");
 
     try {
       // Preprocess image to enhance OCR readability (resolves dot matrix and blur details)
@@ -380,14 +383,14 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
 
       if (maxTotal > 0) {
         setFormData(prev => ({ ...prev, amount: maxTotal.toString() }));
-        toast.update(toastId, { render: "✅ Đã tìm thấy số tiền tổng!", type: "success", isLoading: false, autoClose: 3000 });
+        toast.update(toastId, { render: isEnglish ? "✅ Found total amount!" : "✅ Đã tìm thấy số tiền tổng!", type: "success", isLoading: false, autoClose: 3000 });
       } else {
-        toast.update(toastId, { render: "⚠️ Không tìm thấy số tiền tổng rõ ràng.", type: "warning", isLoading: false, autoClose: 3000 });
+        toast.update(toastId, { render: isEnglish ? "⚠️ Clear total amount not found." : "⚠️ Không tìm thấy số tiền tổng rõ ràng.", type: "warning", isLoading: false, autoClose: 3000 });
       }
 
     } catch (error) {
       console.error(error);
-      toast.update(toastId, { render: "❌ Lỗi khi đọc hóa đơn.", type: "error", isLoading: false, autoClose: 3000 });
+      toast.update(toastId, { render: isEnglish ? "❌ Error reading receipt." : "❌ Lỗi khi đọc hóa đơn.", type: "error", isLoading: false, autoClose: 3000 });
     } finally {
       setOcrLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -470,7 +473,9 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
       <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-100 dark:border-gray-800 bg-white shadow-2xl dark:bg-[#191d25] transition-all transform scale-100 animate-modal-scale">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4 dark:border-gray-800 dark:bg-[#191d25]">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            {transaction ? 'Chỉnh sửa giao dịch' : 'Thêm giao dịch mới'}
+            {transaction 
+              ? (isEnglish ? 'Edit Transaction' : 'Chỉnh sửa giao dịch') 
+              : (isEnglish ? 'Add New Transaction' : 'Thêm giao dịch mới')}
           </h2>
           <button
             onClick={onClose}
@@ -483,7 +488,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
         <form onSubmit={handleSubmit} className="space-y-4 p-6">
           <div className="bg-emerald-50/50 dark:bg-emerald-500/5 p-4 rounded-xl border border-emerald-100 dark:border-emerald-500/20">
             <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-400 mb-2">
-              <FiZap /> Nhập nhanh (Smart Parsing)
+              <FiZap /> {isEnglish ? 'Quick Input (Smart Parsing)' : 'Nhập nhanh (Smart Parsing)'}
             </label>
             <div className="flex gap-2">
               <input 
@@ -496,16 +501,18 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                     handleSmartParse();
                   }
                 }}
-                placeholder="VD: 30k cafe, 2tr đi chợ..."
+                placeholder={isEnglish ? 'e.g., 30k coffee, 2m market...' : 'VD: 30k cafe, 2tr đi chợ...'}
                 className="input w-full bg-white dark:bg-[#191d25] text-sm"
               />
               <button type="button" onClick={handleSmartParse} className="btn btn-primary px-4">
-                Phân tích
+                {isEnglish ? 'Parse' : 'Phân tích'}
               </button>
             </div>
             
             <div className="mt-3 flex items-center justify-between">
-              <span className="text-[11px] text-emerald-700/80 dark:text-emerald-500/80 font-medium">Hoặc tự động đọc hóa đơn/bill (AI):</span>
+              <span className="text-[11px] text-emerald-700/80 dark:text-emerald-500/80 font-medium">
+                {isEnglish ? 'Or automatically scan receipt (AI):' : 'Hoặc tự động đọc hóa đơn/bill (AI):'}
+              </span>
               <input 
                 type="file" 
                 accept="image/*" 
@@ -519,14 +526,14 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                 disabled={ocrLoading}
                 className={`text-[11px] flex items-center gap-1.5 py-1.5 px-3 bg-white dark:bg-[#232936] border border-emerald-200 dark:border-emerald-850 rounded-lg text-emerald-700 dark:text-[#b9e4d2] transition ${ocrLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-emerald-50 dark:hover:bg-emerald-500/10'}`}
               >
-                <FiCamera /> {ocrLoading ? 'Đang đọc...' : 'Tải ảnh hóa đơn'}
+                <FiCamera /> {ocrLoading ? (isEnglish ? 'Scanning...' : 'Đang đọc...') : (isEnglish ? 'Upload receipt image' : 'Tải ảnh hóa đơn')}
               </button>
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Loại giao dịch
+              {isEnglish ? 'Transaction Type' : 'Loại giao dịch'}
             </label>
             <div className="grid grid-cols-3 gap-1 rounded-xl bg-gray-50 p-1 dark:bg-[#232936] border border-gray-150 dark:border-gray-800">
               <button
@@ -538,7 +545,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                     : 'text-gray-500 hover:bg-gray-150/50 dark:text-gray-400 dark:hover:bg-[#191d25]/50'
                 }`}
               >
-                Thu nhập
+                {isEnglish ? 'Income' : 'Thu nhập'}
               </button>
               <button
                 type="button"
@@ -549,7 +556,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                     : 'text-gray-700 hover:bg-gray-150/50 dark:text-gray-400 dark:hover:bg-[#191d25]/50'
                 }`}
               >
-                Chi tiêu
+                {isEnglish ? 'Expense' : 'Chi tiêu'}
               </button>
               <button
                 type="button"
@@ -560,7 +567,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                     : 'text-gray-700 hover:bg-gray-150/50 dark:text-gray-400 dark:hover:bg-[#191d25]/50'
                 }`}
               >
-                Chuyển khoản
+                {isEnglish ? 'Transfer' : 'Chuyển khoản'}
               </button>
             </div>
           </div>
@@ -568,7 +575,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
           {formData.type !== 'transfer' ? (
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-                Danh mục
+                {isEnglish ? 'Category' : 'Danh mục'}
               </label>
               {availableCategories.length === 0 ? (
                 <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800/30 rounded-xl p-4">
@@ -576,14 +583,14 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                     <FiAlertCircle className="text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" size={18} />
                     <div className="flex-1">
                       <p className="text-xs text-yellow-800 dark:text-yellow-300 font-bold mb-2">
-                        Chưa có danh mục nào cho loại giao dịch này
+                        {isEnglish ? 'No categories available for this transaction type' : 'Chưa có danh mục nào cho loại giao dịch này'}
                       </p>
                       <Link
                         to="/categories"
                         onClick={onClose}
                         className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-bold underline"
                       >
-                        Tạo danh mục mới →
+                        {isEnglish ? 'Create new category →' : 'Tạo danh mục mới →'}
                       </Link>
                     </div>
                   </div>
@@ -596,7 +603,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                   required
                   className="input w-full text-sm"
                 >
-                  <option value="">Chọn danh mục</option>
+                  <option value="">{isEnglish ? 'Select category' : 'Chọn danh mục'}</option>
                   {availableCategories.map((cat) => (
                     <option key={cat.id} value={cat.name}>
                       {cat.icon} {cat.name}
@@ -612,7 +619,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-                  Ví nguồn
+                  {isEnglish ? 'Source Wallet' : 'Ví nguồn'}
                 </label>
                 <select
                   name="walletId"
@@ -621,7 +628,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                   required
                   className="input w-full text-sm"
                 >
-                  <option value="">Chọn ví nguồn</option>
+                  <option value="">{isEnglish ? 'Select source wallet' : 'Chọn ví nguồn'}</option>
                   {wallets.map((w) => (
                     <option key={w.id} value={w.id} disabled={w.id === formData.toWalletId}>
                       {w.icon} {w.name}
@@ -631,7 +638,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-                  Ví đích
+                  {isEnglish ? 'Target Wallet' : 'Ví đích'}
                 </label>
                 <select
                   name="toWalletId"
@@ -640,7 +647,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                   required
                   className="input w-full text-sm"
                 >
-                  <option value="">Chọn ví đích</option>
+                  <option value="">{isEnglish ? 'Select target wallet' : 'Chọn ví đích'}</option>
                   {wallets.map((w) => (
                     <option key={w.id} value={w.id} disabled={w.id === formData.walletId}>
                       {w.icon} {w.name}
@@ -652,7 +659,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
           ) : (
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-                Tài khoản ví
+                {isEnglish ? 'Wallet Account' : 'Tài khoản ví'}
               </label>
               <select
                 name="walletId"
@@ -661,10 +668,10 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                 required
                 className="input w-full text-sm"
               >
-                <option value="">Chọn ví thực hiện</option>
+                <option value="">{isEnglish ? 'Select execution wallet' : 'Chọn ví thực hiện'}</option>
                 {wallets.map((w) => (
                   <option key={w.id} value={w.id}>
-                    {w.icon} {w.name} ({new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(w.balance)})
+                    {w.icon} {w.name} ({new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: 'VND' }).format(w.balance)})
                   </option>
                 ))}
               </select>
@@ -673,7 +680,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Số tiền
+              {isEnglish ? 'Amount' : 'Số tiền'}
             </label>
             <CurrencyInput
               value={formData.amount}
@@ -684,7 +691,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Ngày
+              {isEnglish ? 'Date' : 'Ngày'}
             </label>
             <DatePicker
               value={formData.date}
@@ -695,7 +702,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Ghi chú
+              {isEnglish ? 'Note' : 'Ghi chú'}
             </label>
             <textarea
               name="note"
@@ -703,7 +710,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
               onChange={handleChange}
               rows="2"
               className="input w-full text-sm resize-none"
-              placeholder="Thêm ghi chú (tùy chọn)"
+              placeholder={isEnglish ? 'Add note (optional)' : 'Thêm ghi chú (tùy chọn)'}
             />
           </div>
 
@@ -713,14 +720,18 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
               onClick={onClose}
               className="btn btn-secondary flex-1"
             >
-              Hủy
+              {isEnglish ? 'Cancel' : 'Hủy'}
             </button>
             <button
               type="submit"
               disabled={loading}
               className="btn btn-primary flex-1"
             >
-              {loading ? 'Đang xử lý...' : transaction ? 'Cập nhật' : 'Thêm'}
+              {loading 
+                ? (isEnglish ? 'Processing...' : 'Đang xử lý...') 
+                : transaction 
+                  ? (isEnglish ? 'Update' : 'Cập nhật') 
+                  : (isEnglish ? 'Add' : 'Thêm')}
             </button>
           </div>
         </form>

@@ -48,7 +48,7 @@ describe('DebtModal — render', () => {
     const borrowBtn = screen.getByText(/tôi đang vay/i).closest('button');
     expect(borrowBtn).not.toBeNull();
     // button borrow được active (có class border-red-400 hoặc tương tự)
-    expect(borrowBtn?.className).toMatch(/red|active|border-opacity-100/);
+    expect(borrowBtn?.className).toMatch(/red|rose|active|border-opacity-100/);
   });
 });
 

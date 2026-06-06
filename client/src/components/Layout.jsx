@@ -37,6 +37,7 @@ import GlobalSearch from './GlobalSearch';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getNotifications, markAsRead as markNotificationAsRead, markAllAsRead as markAllNotificationsAsRead } from '../services/notification.service';
+import { motion, AnimatePresence } from 'framer-motion';
 
 
 
@@ -221,9 +222,9 @@ const Layout = ({ children }) => {
   ];
 
   const adminMenuItems = [
-    { path: '/admin/dashboard', icon: FiShield, label: isEnglish ? 'Admin dashboard' : 'Dashboard admin' },
-    { path: '/admin/contacts', icon: FiUsers, label: isEnglish ? 'Contact admin' : 'Contact admin' },
-    { path: '/admin/users', icon: FiSettings, label: isEnglish ? 'Auth admin' : 'Auth admin' },
+    { path: '/admin/dashboard', icon: FiShield, label: isEnglish ? 'Admin dashboard' : 'Tổng quan quản trị' },
+    { path: '/admin/contacts', icon: FiUsers, label: isEnglish ? 'Admin contacts' : 'Quản trị liên hệ' },
+    { path: '/admin/users', icon: FiSettings, label: isEnglish ? 'User management' : 'Quản lý người dùng' },
     { path: '/admin/vip-payments', icon: FiCreditCard, label: isEnglish ? 'VIP Payments' : 'Duyệt thanh toán VIP' },
     { path: '/admin/visits', icon: FiActivity, label: isEnglish ? 'Visitor traffic' : 'Lịch sử truy cập' },
   ];
@@ -313,7 +314,7 @@ const Layout = ({ children }) => {
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group border text-sm
                       ${isActive
-                        ? 'bg-white text-[#0d3a2d] border-[#cfe2d8] shadow-sm dark:bg-[#273332] dark:text-[#b9e4d2] dark:border-[#335348]'
+                        ? 'bg-[#004b38] text-white border-transparent shadow-sm dark:bg-[#004b38] dark:text-white dark:border-transparent'
                         : 'text-[#4f5662] bg-transparent border-transparent hover:bg-[#f2f4f7] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
                       }`}
                   >
@@ -345,34 +346,44 @@ const Layout = ({ children }) => {
                         className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
                       />
                     </button>
-                    {isOpen && (
-                      <div className="pl-4 ml-5 border-l border-[#d8dce2] dark:border-[#2d323c] space-y-1.5 py-1">
-                        {item.children.map((child) => {
-                          const isChildActive = location.pathname === child.path;
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ type: "spring", duration: 0.5, bounce: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="pl-4 ml-5 border-l border-[#d8dce2] dark:border-[#2d323c] space-y-1.5 py-1">
+                            {item.children.map((child) => {
+                              const isChildActive = location.pathname === child.path;
 
-                          return (
-                            <Link
-                              key={child.path}
-                              to={child.path}
-                              onClick={() => setSidebarOpen(false)}
-                              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150 group border text-xs
-                                ${isChildActive
-                                  ? 'bg-white text-[#0d3a2d] border-[#cfe2d8] shadow-sm dark:bg-[#273332] dark:text-[#b9e4d2] dark:border-[#335348]'
-                                  : 'text-[#5c6370] bg-transparent border-transparent hover:bg-[#f2f4f7] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#9fa5b0] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
-                                }`}
-                            >
-                              {React.createElement(child.icon, { size: 16, className: isChildActive ? '' : 'group-hover:scale-110 transition-transform opacity-90' })}
-                              <span className="font-medium flex items-center justify-between w-full">
-                                <span>{child.label}</span>
-                                {child.path === '/debts' && !isVipActive && (
-                                  <span className="text-amber-500 text-[10px] ml-1" title="VIP Feature">👑</span>
-                                )}
-                              </span>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
+                              return (
+                                <Link
+                                  key={child.path}
+                                  to={child.path}
+                                  onClick={() => setSidebarOpen(false)}
+                                  className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150 group border text-sm
+                                    ${isChildActive
+                                      ? 'bg-[#004b38] text-white border-transparent shadow-sm dark:bg-[#004b38] dark:text-white dark:border-transparent'
+                                      : 'text-[#5c6370] bg-transparent border-transparent hover:bg-[#f2f4f7] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#9fa5b0] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
+                                    }`}
+                                >
+                                  {React.createElement(child.icon, { size: 18, className: isChildActive ? '' : 'group-hover:scale-110 transition-transform opacity-90' })}
+                                  <span className="font-medium flex items-center justify-between w-full">
+                                    <span>{child.label}</span>
+                                    {child.path === '/debts' && !isVipActive && (
+                                      <span className="text-amber-500 text-[10px] ml-1" title="VIP Feature">👑</span>
+                                    )}
+                                  </span>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 );
               }
@@ -438,28 +449,38 @@ const Layout = ({ children }) => {
                   />
                 </button>
 
-                {showAdminMenu && (
-                  <div className="border-t border-[#e3e7ee] px-2 py-2 dark:border-[#2d323c]">
-                    {adminMenuItems.map((item) => {
-                      const isActive = location.pathname === item.path;
+                <AnimatePresence initial={false}>
+                  {showAdminMenu && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ type: "spring", duration: 0.5, bounce: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="border-t border-[#e3e7ee] px-2 py-2 dark:border-[#2d323c]">
+                        {adminMenuItems.map((item) => {
+                          const isActive = location.pathname === item.path;
 
-                      return (
-                        <Link
-                          key={item.path}
-                          to={item.path}
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${isActive
-                            ? 'bg-[#eef6f2] text-[#1f5d45] dark:bg-[#273332] dark:text-[#b9e4d2]'
-                            : 'text-[#4f5662] hover:bg-[#f2f4f7] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:text-[#d5d9e0]'
-                            }`}
-                        >
-                          <item.icon size={18} />
-                          <span className="font-medium">{item.label}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
+                          return (
+                            <Link
+                              key={item.path}
+                              to={item.path}
+                              onClick={() => setSidebarOpen(false)}
+                              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${isActive
+                                ? 'bg-[#eef6f2] text-[#1f5d45] dark:bg-[#273332] dark:text-[#b9e4d2]'
+                                : 'text-[#4f5662] hover:bg-[#f2f4f7] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:text-[#d5d9e0]'
+                                }`}
+                            >
+                              <item.icon size={18} />
+                              <span className="font-medium">{item.label}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
           </div>
@@ -543,12 +564,13 @@ const Layout = ({ children }) => {
                                      transition-colors duration-200 relative group">
                     <FiBell size={20} className="text-gray-700 dark:text-gray-300" />
                     {unreadCount > 0 && (
-                      <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs 
-                                     rounded-full flex items-center justify-center font-semibold
+                      <span className="absolute top-0.5 right-0.5 min-w-[14px] h-3.5 px-1 bg-red-500 text-white text-[9px] leading-none
+                                     rounded-full flex items-center justify-center font-bold
                                      animate-pulse group-hover:scale-110 transition-transform">
                         {unreadCount}
                       </span>
                     )}
+
                   </button>
 
                   {/* Notifications Dropdown */}
@@ -634,21 +656,8 @@ const Layout = ({ children }) => {
                   )}
                 </div>
 
-                <button
-                  onClick={() => {
-                    setShowUserMenu(true);
-                    setShowSettings(true);
-                  }}
-                  className="hidden sm:inline-flex p-2 rounded-md bg-white dark:bg-[#242730]
-                           hover:bg-[#eef4fb] dark:hover:bg-[#2b2f39]
-                           border border-[#d3d7df] dark:border-[#353943]
-                           transition-colors duration-200"
-                  title={isEnglish ? 'Settings' : 'Cài đặt'}
-                >
-                  <FiSettings size={18} className="text-gray-700 dark:text-gray-300" />
-                </button>
-
                 {/* User Menu */}
+
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}

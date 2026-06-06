@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { FaTimes, FaInfoCircle } from 'react-icons/fa';
 import CurrencyInput from './CurrencyInput';
 import DatePicker from './DatePicker';
+import { useLanguage } from '../context/LanguageContext';
 
 const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
+  const { language } = useLanguage();
+  const isEnglish = language === 'en';
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -25,7 +28,16 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
   ];
 
   // Color options
-  const colorOptions = [
+  const colorOptions = isEnglish ? [
+    { name: 'Blue', value: '#3b82f6' },
+    { name: 'Green', value: '#10b981' },
+    { name: 'Red', value: '#ef4444' },
+    { name: 'Yellow', value: '#f59e0b' },
+    { name: 'Purple', value: '#8b5cf6' },
+    { name: 'Pink', value: '#ec4899' },
+    { name: 'Indigo', value: '#6366f1' },
+    { name: 'Teal', value: '#14b8a6' }
+  ] : [
     { name: 'Xanh dương', value: '#3b82f6' },
     { name: 'Xanh lá', value: '#10b981' },
     { name: 'Đỏ', value: '#ef4444' },
@@ -67,25 +79,25 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Tên mục tiêu là bắt buộc';
+      newErrors.name = isEnglish ? 'Goal name is required' : 'Tên mục tiêu là bắt buộc';
     }
 
     if (!formData.targetAmount || parseFloat(formData.targetAmount) <= 0) {
-      newErrors.targetAmount = 'Số tiền mục tiêu phải lớn hơn 0';
+      newErrors.targetAmount = isEnglish ? 'Target amount must be greater than 0' : 'Số tiền mục tiêu phải lớn hơn 0';
     }
 
     if (parseFloat(formData.currentAmount) < 0) {
-      newErrors.currentAmount = 'Số tiền hiện tại không thể âm';
+      newErrors.currentAmount = isEnglish ? 'Current amount cannot be negative' : 'Số tiền hiện tại không thể âm';
     }
 
     if (parseFloat(formData.currentAmount) > parseFloat(formData.targetAmount)) {
-      newErrors.currentAmount = 'Số tiền hiện tại không thể vượt mục tiêu';
+      newErrors.currentAmount = isEnglish ? 'Current amount cannot exceed target amount' : 'Số tiền hiện tại không thể vượt mục tiêu';
     }
 
     if (!formData.deadline) {
-      newErrors.deadline = 'Hạn hoàn thành là bắt buộc';
+      newErrors.deadline = isEnglish ? 'Deadline is required' : 'Hạn hoàn thành là bắt buộc';
     } else if (new Date(formData.deadline) < new Date()) {
-      newErrors.deadline = 'Hạn hoàn thành phải trong tương lai';
+      newErrors.deadline = isEnglish ? 'Deadline must be in the future' : 'Hạn hoàn thành phải trong tương lai';
     }
 
     setErrors(newErrors);
@@ -126,7 +138,9 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            {goal ? 'Chỉnh Sửa Mục Tiêu' : 'Tạo Mục Tiêu Mới'}
+            {goal 
+              ? (isEnglish ? 'Edit Goal' : 'Chỉnh Sửa Mục Tiêu') 
+              : (isEnglish ? 'Create New Goal' : 'Tạo Mục Tiêu Mới')}
           </h2>
           <button
             onClick={onClose}
@@ -141,7 +155,7 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
           {/* Goal Name */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Tên Mục Tiêu *
+              {isEnglish ? 'Goal Name *' : 'Tên Mục Tiêu *'}
             </label>
             <input
               type="text"
@@ -149,7 +163,7 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
               value={formData.name}
               onChange={handleChange}
               className={`input text-sm ${errors.name ? 'border-red-500' : ''}`}
-              placeholder="VD: Quỹ khẩn cấp, Du lịch, Mua xe..."
+              placeholder={isEnglish ? 'e.g. Emergency Fund, Travel, Buy a Car...' : 'VD: Quỹ khẩn cấp, Du lịch, Mua xe...'}
             />
             {errors.name && (
               <p className="mt-1 text-xs text-red-500">{errors.name}</p>
@@ -159,7 +173,7 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
           {/* Description */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              Mô Tả
+              {isEnglish ? 'Description' : 'Mô Tả'}
             </label>
             <textarea
               name="description"
@@ -167,7 +181,7 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
               onChange={handleChange}
               rows="2"
               className="input text-sm resize-none"
-              placeholder="Mô tả mục tiêu của bạn..."
+              placeholder={isEnglish ? 'Describe your financial goal...' : 'Mô tả mục tiêu của bạn...'}
             />
           </div>
 
@@ -175,7 +189,7 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-                Số Tiền Mục Tiêu * (VND)
+                {isEnglish ? 'Target Amount * (VND)' : 'Số Tiền Mục Tiêu * (VND)'}
               </label>
               <CurrencyInput
                 value={formData.targetAmount}
@@ -193,7 +207,7 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-                Số Tiền Hiện Tại (VND)
+                {isEnglish ? 'Current Amount (VND)' : 'Số Tiền Hiện Tại (VND)'}
               </label>
               <CurrencyInput
                 value={formData.currentAmount}
@@ -214,7 +228,7 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-                Hạn Hoàn Thành *
+                {isEnglish ? 'Deadline *' : 'Hạn Hoàn Thành *'}
               </label>
               <DatePicker
                 value={formData.deadline}
@@ -233,7 +247,7 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-                Độ Ưu Tiên
+                {isEnglish ? 'Priority' : 'Độ Ưu Tiên'}
               </label>
               <select
                 name="priority"
@@ -241,9 +255,9 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
                 onChange={handleChange}
                 className="input text-sm"
               >
-                <option value="low">Thấp</option>
-                <option value="medium">Trung bình</option>
-                <option value="high">Cao</option>
+                <option value="low">{isEnglish ? 'Low' : 'Thấp'}</option>
+                <option value="medium">{isEnglish ? 'Medium' : 'Trung bình'}</option>
+                <option value="high">{isEnglish ? 'High' : 'Cao'}</option>
               </select>
             </div>
           </div>
@@ -251,7 +265,7 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
           {/* Icon Picker */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
-              Biểu Tượng
+              {isEnglish ? 'Icon' : 'Biểu Tượng'}
             </label>
             <div className="flex flex-wrap gap-2">
               {iconOptions.map((icon) => (
@@ -274,7 +288,7 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
           {/* Color Picker */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
-              Màu Sắc
+              {isEnglish ? 'Color' : 'Màu Sắc'}
             </label>
             <div className="flex flex-wrap gap-2">
               {colorOptions.map((color) => (
@@ -298,8 +312,12 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
           <div className="bg-emerald-50/50 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/20 rounded-xl p-4 flex gap-3">
             <FaInfoCircle className="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" size={16} />
             <div className="text-xs text-emerald-800 dark:text-emerald-300">
-              <p className="font-bold mb-1">Mẹo:</p>
-              <p>Đặt hạn hoàn thành thực tế và thường xuyên bổ sung vào mục tiêu. Bạn có thể theo dõi tiến độ và thêm tiền bất cứ lúc nào!</p>
+              <p className="font-bold mb-1">{isEnglish ? 'Tips:' : 'Mẹo:'}</p>
+              <p>
+                {isEnglish 
+                  ? 'Set a realistic deadline and contribute regularly. You can track progress and add funds anytime!'
+                  : 'Đặt hạn hoàn thành thực tế và thường xuyên bổ sung vào mục tiêu. Bạn có thể theo dõi tiến độ và thêm tiền bất cứ lúc nào!'}
+              </p>
             </div>
           </div>
 
@@ -310,13 +328,15 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
               onClick={onClose}
               className="flex-1 btn btn-secondary"
             >
-              Hủy
+              {isEnglish ? 'Cancel' : 'Hủy'}
             </button>
             <button
               type="submit"
               className="flex-1 btn btn-primary"
             >
-              {goal ? 'Cập Nhật' : 'Tạo Mục Tiêu'}
+              {goal 
+                ? (isEnglish ? 'Update' : 'Cập Nhật') 
+                : (isEnglish ? 'Create Goal' : 'Tạo Mục Tiêu')}
             </button>
           </div>
         </form>

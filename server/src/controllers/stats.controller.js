@@ -75,8 +75,16 @@ export const getCategoryStats = async (req, res) => {
     const where = { userId: req.user.id };
     if (startDate || endDate) {
       where.date = {};
-      if (startDate) where.date[Op.gte] = new Date(startDate);
-      if (endDate) where.date[Op.lte] = new Date(endDate);
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        where.date[Op.gte] = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.date[Op.lte] = end;
+      }
     }
 
     const rows = await Transaction.findAll({ where, attributes: ['category', 'type', [sequelize.fn('SUM', sequelize.col('amount')), 'total'], [sequelize.fn('COUNT', sequelize.col('id')), 'count']], group: ['category','type'], raw: true });
@@ -381,8 +389,16 @@ export const getTopCategories = async (req, res) => {
     const where = { userId: req.user.id, type };
     if (startDate || endDate) {
       where.date = {};
-      if (startDate) where.date[Op.gte] = new Date(startDate);
-      if (endDate) where.date[Op.lte] = new Date(endDate);
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        where.date[Op.gte] = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.date[Op.lte] = end;
+      }
     }
     const rows = await Transaction.findAll({ where, attributes: ['category', [sequelize.fn('SUM', sequelize.col('amount')), 'total'], [sequelize.fn('COUNT', sequelize.col('id')), 'count'], [sequelize.fn('AVG', sequelize.col('amount')), 'avgAmount']], group: ['category'], order: [[sequelize.literal('total'), 'DESC']], limit: parseInt(limit), raw: true });
     const totalAmount = rows.reduce((s,i) => s + parseFloat(i.total || 0), 0);
@@ -402,7 +418,9 @@ export const getDailyStats = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30));
+    start.setHours(0, 0, 0, 0);
     const end = endDate ? new Date(endDate) : new Date();
+    end.setHours(23, 59, 59, 999);
 
     const transactions = await Transaction.findAll({ where: { userId: req.user.id, date: { [Op.between]: [start, end] } }, order: [['date','ASC']], raw: true });
     const dailyData = {};
@@ -674,7 +692,9 @@ export const getDashboard = async (req, res) => {
 
     // Period range from query (or default to current month)
     const periodStart = startDate ? new Date(startDate) : startOfMonth;
+    periodStart.setHours(0, 0, 0, 0);
     const periodEnd = endDate ? new Date(endDate) : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    periodEnd.setHours(23, 59, 59, 999);
 
     // 6-month range for monthly chart
     const sixMonthStart = new Date(now.getFullYear(), now.getMonth() - 5, 1);

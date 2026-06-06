@@ -308,7 +308,27 @@ const Wallets = () => {
               className="relative rounded-2xl p-5 text-white shadow-lg flex flex-col justify-between min-h-[180px] overflow-hidden group hover:scale-[1.02] transition-all duration-200"
             >
               {/* Card Chip decoration */}
-              <div className="absolute right-6 top-16 h-8 w-10 rounded bg-yellow-400/20 border border-yellow-300/30 opacity-70" />
+              <div className="absolute right-6 top-16 h-8 w-10 opacity-85 hover:opacity-100 transition-opacity">
+                <svg viewBox="0 0 40 32" className="w-full h-full text-amber-900/40" fill="none" stroke="currentColor" strokeWidth="1.2">
+                  <rect x="1" y="1" width="38" height="30" rx="5" fill={`url(#chip-gradient-${wallet.id})`} stroke="#d97706" strokeWidth="1.5" />
+                  <line x1="1" y1="16" x2="39" y2="16" />
+                  <line x1="13" y1="1" x2="13" y2="31" />
+                  <line x1="27" y1="1" x2="27" y2="31" />
+                  <rect x="13" y="10" width="14" height="12" rx="2" stroke="#d97706" strokeWidth="1.2" />
+                  <line x1="1" y1="9" x2="13" y2="9" />
+                  <line x1="1" y1="23" x2="13" y2="23" />
+                  <line x1="27" y1="9" x2="39" y2="9" />
+                  <line x1="27" y1="23" x2="39" y2="23" />
+                  <defs>
+                    <linearGradient id={`chip-gradient-${wallet.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#fef08a" />
+                      <stop offset="40%" stopColor="#fbbf24" />
+                      <stop offset="100%" stopColor="#d97706" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+
               
               <div className="flex items-start justify-between relative">
                 <div className="flex items-center gap-2.5">
@@ -400,16 +420,38 @@ const Wallets = () => {
                           })}
                         </td>
                         <td className="py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">
-                          <div className="flex flex-col">
+                          <div className="flex flex-col gap-0.5">
                             <span className="text-sm flex items-center gap-1.5">
                               {isIncome && <FiTrendingUp className="text-emerald-500" size={13} />}
                               {isExpense && <FiTrendingDown className="text-red-500" size={13} />}
                               {isTransfer && <BiTransfer className="text-blue-500" size={13} />}
                               {tx.category || (isEnglish ? 'Transaction' : 'Giao dịch')}
                             </span>
-                            <span className="text-xs font-normal text-gray-400 dark:text-gray-500 truncate max-w-[180px]" title={tx.note}>
-                              {tx.note || (isTransfer ? `${tx.wallet?.name} → ${tx.toWallet?.name}` : tx.wallet?.name)}
+                            
+                            {/* Wallet Info Badge */}
+                            <span className="inline-flex items-center text-[10.5px] font-bold text-gray-500 dark:text-gray-400">
+                              <span className="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                                {isTransfer ? (
+                                  <>
+                                    <span>{tx.wallet?.name || '---'}</span>
+                                    <span className="mx-1">→</span>
+                                    <span>{tx.toWallet?.name || '---'}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="opacity-75 mr-1">{isEnglish ? 'Wallet:' : 'Ví:'}</span>
+                                    <span>{tx.wallet?.name || '---'}</span>
+                                  </>
+                                )}
+                              </span>
                             </span>
+
+                            {/* Optional Transaction Note */}
+                            {tx.note && (
+                              <span className="text-[11px] font-normal text-gray-400 dark:text-gray-500 truncate max-w-[200px]" title={tx.note}>
+                                {tx.note}
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className={`py-3 px-2 text-right font-black text-sm whitespace-nowrap ${
