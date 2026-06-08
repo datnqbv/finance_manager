@@ -22,7 +22,7 @@ export const TransactionProvider = ({ children }) => {
   const [pagination, setPagination] = useState({ total: 0, page: 1, totalPages: 1 });
   const [loading, setLoading] = useState(false);
   const [revision, setRevision] = useState(0);
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
 
   const invalidateTransactionStats = () => {
     clearStatsCache();
@@ -54,6 +54,7 @@ export const TransactionProvider = ({ children }) => {
       const data = await transactionService.createTransaction(transactionData);
       setTransactions([data.data, ...transactions]);
       invalidateTransactionStats();
+      await refreshUser();
       toast.success(data.message || 'Thêm giao dịch thành công!');
       return { success: true, data: data.data };
     } catch (error) {
@@ -84,6 +85,7 @@ export const TransactionProvider = ({ children }) => {
       const data = await transactionService.deleteTransaction(id);
       setTransactions(transactions.filter((t) => t.id !== id));
       invalidateTransactionStats();
+      await refreshUser();
       toast.success(data.message || 'Xóa thành công!');
       return { success: true };
     } catch (error) {

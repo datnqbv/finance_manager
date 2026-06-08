@@ -4,14 +4,12 @@ import { vipController } from '../controllers/vip.controller.js';
 
 const router = express.Router();
 
-// Public routes for VNPay integration (No authentication required because it is a callback/webhook)
-router.get('/vnpay-return', vipController.vnpayReturn);
-router.get('/vnpay-ipn', vipController.vnpayIpn);
+// Public routes for PayOS integration (No authentication required because it is a callback/webhook)
+router.post('/payos-webhook', vipController.payosWebhook);
 
 router.use(protect);
 
 router.post('/order', vipController.createOrder);
-router.post('/sandbox-pay', vipController.sandboxPay);
 router.get('/my-orders', vipController.getMyOrders);
 router.get('/order/:id', vipController.getOrderStatus);
 router.post('/cancel', vipController.cancelVip);

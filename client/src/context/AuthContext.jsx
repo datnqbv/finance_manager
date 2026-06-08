@@ -78,7 +78,23 @@ export const AuthProvider = ({ children }) => {
 
       if (active) {
         setUser(savedUser);
-        setLoading(false);
+      }
+
+      // Fetch fresh user details from backend to update state and cache (e.g. Level, XP)
+      try {
+        const data = await authService.getMe();
+        if (data.success && data.data?.user) {
+          if (active) {
+            setUser(data.data.user);
+          }
+          localStorage.setItem('user', JSON.stringify(data.data.user));
+        }
+      } catch (error) {
+        console.error('Error fetching fresh user stats on load:', error);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
       }
     };
 

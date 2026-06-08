@@ -3,6 +3,7 @@ import { Op } from 'sequelize';
 import { getSearchCondition } from '../utils/fts.js';
 import { recalculateWalletBalance } from './wallet.controller.js';
 import { sendBudgetAlertEmail } from '../utils/sendEmail.js';
+import { addExperience } from '../utils/gamification.js';
 
 // Helper function to get date range based on period
 const getDateRange = (period, startDate = new Date()) => {
@@ -373,6 +374,12 @@ export const createTransaction = async (req, res) => {
     // Nếu là giao dịch chi tiêu, kiểm tra ngân sách
     if (type === 'expense') {
       await checkBudgetAndNotify(req.user.id, category, transaction.date);
+    }
+
+    // Gamification: Reward XP for creating transaction
+    const userInstance = await User.findByPk(req.user.id);
+    if (userInstance) {
+      await addExperience(userInstance, 5);
     }
 
     res.status(201).json({

@@ -13,7 +13,6 @@
     "fts:reindex": "node scripts/reindex_fulltext.js",
     "db:migrate-wallets": "node scripts/migrate_wallets.js",
     "build:exe": "npx esbuild src/index.js --bundle --platform=node --format=cjs --target=node18 --outfile=bundled.cjs --external:fsevents && pkg bundled.cjs --target node18-win-x64 --no-bytecode --public --output ../dist/QuanLyChiTieu.exe"
-    
   },
   "pkg": {
     "scripts": [
@@ -34,6 +33,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@payos/node": "^2.0.5",
     "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

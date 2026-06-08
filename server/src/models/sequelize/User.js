@@ -47,6 +47,30 @@ User.init({
     allowNull: true,
     unique: false,
   },
+  level: {
+    type: DataTypes.INTEGER,
+    defaultValue: 1,
+  },
+  experience: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  streakDays: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  todayExperience: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  lastLoginDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+  },
+  lastActiveDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+  },
   budget: {
     type: DataTypes.DECIMAL(18,2),
     defaultValue: 0,

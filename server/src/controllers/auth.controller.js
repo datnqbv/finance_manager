@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { OAuth2Client } from 'google-auth-library';
 import { User, Category, Wallet } from '../models/sequelize/index.js';
 import { sendResetPasswordEmail, sendWelcomeEmail } from '../utils/sendEmail.js';
+import { addExperience } from '../utils/gamification.js';
 import { Op } from 'sequelize';
 
 // Generate short-lived access token (15 minutes)
@@ -94,7 +95,9 @@ export const register = async (req, res) => {
           currency: user.currency,
           avatar: user.avatar,
           isVip: user.isVip,
-          vipExpire: user.vipExpire
+          vipExpire: user.vipExpire,
+          level: user.level,
+          experience: user.experience
         }
       }
     });
@@ -154,7 +157,15 @@ export const login = async (req, res) => {
 
     // Save refresh token to DB
     user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
+
+    // Gamification: Daily Login XP
+    const today = new Date().toISOString().split('T')[0];
+    if (user.lastLoginDate !== today) {
+      user.lastLoginDate = today;
+      await addExperience(user, 10);
+    } else {
+      await user.save({ validateBeforeSave: false });
+    }
 
     res.json({
       success: true,
@@ -171,7 +182,9 @@ export const login = async (req, res) => {
           currency: user.currency,
           avatar: user.avatar,
           isVip: user.isVip,
-          vipExpire: user.vipExpire
+          vipExpire: user.vipExpire,
+          level: user.level,
+          experience: user.experience
         }
       }
     });
@@ -202,7 +215,9 @@ export const getMe = async (req, res) => {
           currency: user.currency,
           avatar: user.avatar,
           isVip: user.isVip,
-          vipExpire: user.vipExpire
+          vipExpire: user.vipExpire,
+          level: user.level,
+          experience: user.experience
         }
       }
     });
@@ -252,7 +267,9 @@ export const updateProfile = async (req, res) => {
           currency: user.currency,
           avatar: user.avatar,
           isVip: user.isVip,
-          vipExpire: user.vipExpire
+          vipExpire: user.vipExpire,
+          level: user.level,
+          experience: user.experience
         }
       }
     });
@@ -422,7 +439,9 @@ export const resetPassword = async (req, res) => {
           currency: user.currency,
           avatar: user.avatar,
           isVip: user.isVip,
-          vipExpire: user.vipExpire
+          vipExpire: user.vipExpire,
+          level: user.level,
+          experience: user.experience
         }
       }
     });
@@ -574,7 +593,15 @@ export const googleLogin = async (req, res) => {
 
     // Save refresh token to DB
     user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
+
+    // Gamification: Daily Login XP
+    const today = new Date().toISOString().split('T')[0];
+    if (user.lastLoginDate !== today) {
+      user.lastLoginDate = today;
+      await addExperience(user, 10);
+    } else {
+      await user.save({ validateBeforeSave: false });
+    }
 
     res.status(200).json({
       success: true,
@@ -591,7 +618,9 @@ export const googleLogin = async (req, res) => {
           currency: user.currency,
           avatar: user.avatar,
           isVip: user.isVip,
-          vipExpire: user.vipExpire
+          vipExpire: user.vipExpire,
+          level: user.level,
+          experience: user.experience
         }
       }
     });

@@ -27,8 +27,8 @@ const VipSubscription = () => {
       id: '1_month',
       durationMonths: 1,
       name: isEnglish ? '1 Month VIP' : '1 Tháng VIP',
-      price: 20000,
-      originalPrice: 20000,
+      price: 10000,
+      originalPrice: 10000,
       savePercent: 0,
       description: isEnglish ? 'Perfect for testing premium features' : 'Trải nghiệm đầy đủ các tính năng cao cấp'
     },
@@ -111,19 +111,17 @@ const VipSubscription = () => {
     fetchMyOrders();
   }, [user]);
 
-  // Handle redirect callback query parameter
+  // Handle redirect callback query parameter from PayOS
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const status = params.get('status');
-    if (status) {
-      if (status === 'success') {
-        toast.success(isEnglish ? 'VIP Account activated successfully! 👑' : 'Đã nâng cấp VIP thành công! 👑');
-        refreshUser();
-        fetchMyOrders();
-      } else if (status === 'paid_pending') {
+    const cancel = params.get('cancel');
+    
+    if (status || cancel) {
+      if (status === 'PAID' && cancel === 'false') {
         toast.success(isEnglish ? 'Payment successful! Please wait for Admin approval to activate your VIP status. 👑' : 'Thanh toán thành công! Vui lòng chờ Admin kiểm duyệt và kích hoạt tài khoản VIP. 👑');
         fetchMyOrders();
-      } else if (status === 'cancel') {
+      } else if (cancel === 'true' || status === 'CANCELLED') {
         toast.info(isEnglish ? 'Payment registration was cancelled' : 'Đơn đăng ký thanh toán đã bị hủy');
       } else if (status === 'error') {
         toast.error(isEnglish ? 'An error occurred during payment processing' : 'Có lỗi xảy ra trong quá trình thanh toán');
@@ -148,9 +146,9 @@ const VipSubscription = () => {
         amount: plan.price
       });
 
-      if (response.data?.success && response.data.data?.vnpayUrl) {
-        // Redirect directly to VNPay checkout
-        window.location.href = response.data.data.vnpayUrl;
+      if (response.data?.success && response.data.data?.checkoutUrl) {
+        // Redirect directly to PayOS checkout
+        window.location.href = response.data.data.checkoutUrl;
       } else {
         toast.error(isEnglish ? 'Failed to initiate order' : 'Lỗi khởi tạo đơn đăng ký');
       }

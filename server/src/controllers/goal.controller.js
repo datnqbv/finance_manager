@@ -1,4 +1,5 @@
-import { Goal } from '../models/sequelize/index.js';
+import { Goal, User } from '../models/sequelize/index.js';
+import { addExperience } from '../utils/gamification.js';
 import { Op } from 'sequelize';
 
 const formatGoalResponse = (goal) => {
@@ -98,6 +99,12 @@ export const createGoal = async (req, res) => {
       color: color || '#3B82F6'
     });
 
+    // Gamification: Reward XP for creating a goal
+    const userInstance = await User.findByPk(req.user.id);
+    if (userInstance) {
+      await addExperience(userInstance, 15);
+    }
+
     res.status(201).json({
       success: true,
       message: 'Tạo mục tiêu thành công',
@@ -145,13 +152,21 @@ export const updateGoal = async (req, res) => {
     if (icon) goal.icon = icon;
     if (color) goal.color = color;
 
+    let newlyAchieved = false;
     // Check if achieved after update
     if (goal.currentAmount >= goal.targetAmount && !goal.isAchieved) {
       goal.isAchieved = true;
       goal.achievedDate = new Date();
+      newlyAchieved = true;
     }
 
     await goal.save();
+
+    // Gamification: Reward XP for completing a goal
+    if (newlyAchieved) {
+      const userInstance = await User.findByPk(req.user.id);
+      if (userInstance) await addExperience(userInstance, 50);
+    }
 
     res.status(200).json({
       success: true,
@@ -219,7 +234,14 @@ export const addAmountToGoal = async (req, res) => {
       });
     }
 
+    const wasAchieved = goal.isAchieved;
     await goal.addAmount(amount, note || '');
+
+    // Gamification: Reward XP for completing a goal
+    if (!wasAchieved && goal.isAchieved) {
+      const userInstance = await User.findByPk(req.user.id);
+      if (userInstance) await addExperience(userInstance, 50);
+    }
 
     res.status(200).json({
       success: true,

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from 'react';
 import goalService from '../services/goal.service';
 import { toast } from 'react-toastify';
+import { useAuth } from './AuthContext';
 
 const GoalContext = createContext();
 
@@ -13,6 +14,7 @@ export const useGoal = () => {
 };
 
 export const GoalProvider = ({ children }) => {
+  const { refreshUser } = useAuth();
   const [goals, setGoals] = useState([]);
   const [goalStats, setGoalStats] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -52,6 +54,7 @@ export const GoalProvider = ({ children }) => {
       const data = await goalService.createGoal(goalData);
       setGoals([...goals, data.data]);
       await fetchGoalStats();
+      await refreshUser();
       toast.success(isEnglish ? 'Goal created successfully' : 'Tạo mục tiêu thành công');
       return { success: true, data: data.data };
 
@@ -91,6 +94,7 @@ export const GoalProvider = ({ children }) => {
       await goalService.deleteGoal(id);
       setGoals(goals.filter(g => g.id !== id));
       await fetchGoalStats();
+      await refreshUser();
       toast.success(isEnglish ? 'Goal deleted successfully!' : 'Mục tiêu đã được xóa thành công!');
       return { success: true };
     } catch (err) {
@@ -110,6 +114,7 @@ export const GoalProvider = ({ children }) => {
       const data = await goalService.addAmountToGoal(id, amount, note);
       setGoals(goals.map(g => g.id === id ? data.data : g));
       await fetchGoalStats();
+      await refreshUser();
       return { success: true, data: data.data, message: data.message };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to add amount';

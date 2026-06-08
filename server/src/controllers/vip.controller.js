@@ -1,31 +1,17 @@
-import crypto from 'crypto';
 import { VipOrder, User, Notification } from '../models/sequelize/index.js';
+import payosPkg from '@payos/node';
+const PayOS = payosPkg.PayOS || payosPkg;
 
-function sortObject(obj) {
-  let sorted = {};
-  let str = [];
-  let key;
-  for (key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      str.push(encodeURIComponent(key));
-    }
+let payosInstance = null;
+function getPayOS() {
+  if (!payosInstance) {
+    payosInstance = new PayOS({
+      clientId: process.env.PAYOS_CLIENT_ID,
+      apiKey: process.env.PAYOS_API_KEY,
+      checksumKey: process.env.PAYOS_CHECKSUM_KEY
+    });
   }
-  str.sort();
-  for (key = 0; key < str.length; key++) {
-    sorted[str[key]] = encodeURIComponent(obj[str[key]]).replace(/%20/g, "+");
-  }
-  return sorted;
-}
-
-function getVnpayDateFormat(date) {
-  const pad = (num) => String(num).padStart(2, '0');
-  const year = date.getFullYear();
-  const month = pad(date.getMonth() + 1);
-  const day = pad(date.getDate());
-  const hour = pad(date.getHours());
-  const minute = pad(date.getMinutes());
-  const second = pad(date.getSeconds());
-  return `${year}${month}${day}${hour}${minute}${second}`;
+  return payosInstance;
 }
 
 function getClientOrigin(req) {
@@ -41,53 +27,6 @@ function getClientOrigin(req) {
     return req.headers.origin;
   }
   return 'http://localhost:5173';
-}
-
-function createVnpayUrl(req, order) {
-  const tmnCode = process.env.VNP_TMN_CODE || 'VKSJBPIL';
-  const secretKey = process.env.VNP_HASH_SECRET || 'W0J75BGKDUSFGHA815QB0S7HI0IKTOEZ';
-  const vnpUrl = process.env.VNP_URL || 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
-  
-  // Dynamically determine returnUrl based on client origin to support ngrok/mobile testing
-  const clientOrigin = getClientOrigin(req);
-  const returnUrl = `${clientOrigin}/api/vip/vnpay-return`;
-
-  const date = new Date();
-  const createDate = getVnpayDateFormat(date);
-
-  let ipAddr = req.headers['x-forwarded-for'] ||
-    req.connection?.remoteAddress ||
-    req.socket?.remoteAddress ||
-    '127.0.0.1';
-
-  if (ipAddr.includes('::ffff:')) {
-    ipAddr = ipAddr.replace('::ffff:', '');
-  }
-
-  let vnp_Params = {};
-  vnp_Params['vnp_Version'] = '2.1.0';
-  vnp_Params['vnp_Command'] = 'pay';
-  vnp_Params['vnp_TmnCode'] = tmnCode;
-  vnp_Params['vnp_Locale'] = 'vn';
-  vnp_Params['vnp_CurrCode'] = 'VND';
-  vnp_Params['vnp_TxnRef'] = order.paymentCode;
-  vnp_Params['vnp_OrderInfo'] = 'Thanh toan dang ky VIP ' + order.paymentCode;
-  vnp_Params['vnp_OrderType'] = 'other';
-  vnp_Params['vnp_Amount'] = order.amount * 100;
-  vnp_Params['vnp_ReturnUrl'] = returnUrl;
-  vnp_Params['vnp_IpAddr'] = ipAddr;
-  vnp_Params['vnp_CreateDate'] = createDate;
-
-  const sorted = sortObject(vnp_Params);
-  const signData = Object.keys(sorted).map(key => `${key}=${sorted[key]}`).join('&');
-
-  const hmac = crypto.createHmac("sha512", secretKey);
-  const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
-
-  sorted['vnp_SecureHash'] = signed;
-  const query = Object.keys(sorted).map(key => `${key}=${sorted[key]}`).join('&');
-
-  return vnpUrl + '?' + query;
 }
 
 export const vipController = {
@@ -131,25 +70,37 @@ export const vipController = {
         });
       }
 
-      // Generate a unique payment reference code
-      const paymentCode = `VIP${Date.now().toString().slice(-6)}${Math.floor(1000 + Math.random() * 9000)}`;
+      // Generate a unique numeric orderCode for PayOS (max 53 bits integer)
+      const orderCode = Number(String(Date.now()).slice(-6) + String(Math.floor(1000 + Math.random() * 9000)));
 
       const order = await VipOrder.create({
         userId,
         amount,
         durationMonths,
-        paymentCode,
+        paymentCode: orderCode.toString(),
         status: 'pending'
       });
 
-      const vnpayUrl = createVnpayUrl(req, order);
+      const clientOrigin = getClientOrigin(req);
+      const returnUrl = `${clientOrigin}/vip`;
+
+      const body = {
+        orderCode: orderCode,
+        amount: parseInt(order.amount, 10),
+        description: 'Dang ky VIP',
+        returnUrl: returnUrl,
+        cancelUrl: returnUrl
+      };
+
+      const payos = getPayOS();
+      const paymentLinkResponse = await payos.paymentRequests.create(body);
 
       return res.status(201).json({
         success: true,
         message: 'Tạo đơn đăng ký VIP thành công',
         data: {
           ...order.toJSON(),
-          vnpayUrl
+          checkoutUrl: paymentLinkResponse.checkoutUrl
         }
       });
     } catch (error) {
@@ -158,64 +109,7 @@ export const vipController = {
     }
   },
 
-  // Sandbox Pay (Simulates Instant Webhook success)
-  sandboxPay: async (req, res) => {
-    try {
-      const { orderId } = req.body;
-      const userId = req.user.id;
 
-      const order = await VipOrder.findOne({ where: { id: orderId, userId } });
-      if (!order) {
-        return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
-      }
-
-      if (order.status !== 'pending') {
-        return res.status(400).json({ success: false, message: 'Đơn hàng này đã được xử lý' });
-      }
-
-      // Activate VIP status
-      const user = await User.findByPk(userId);
-      if (!user) {
-        return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng' });
-      }
-
-      let startFrom = new Date();
-      if (user.isVip && user.vipExpire && new Date(user.vipExpire) > new Date()) {
-        startFrom = new Date(user.vipExpire);
-      }
-
-      const endAt = new Date(startFrom);
-      endAt.setMonth(endAt.getMonth() + order.durationMonths);
-
-      user.isVip = true;
-      user.vipExpire = endAt;
-      await user.save();
-
-      order.status = 'completed';
-      await order.save();
-
-      // Send success notification
-      await Notification.create({
-        userId,
-        title: 'Kích hoạt VIP thành công 👑',
-        message: `Tài khoản của bạn đã được nâng cấp lên VIP. Thời hạn sử dụng đến hết ngày ${endAt.toLocaleDateString('vi-VN')}. Cảm ơn bạn đã đồng hành cùng chúng tôi!`,
-        type: 'success',
-        read: false
-      });
-
-      return res.status(200).json({
-        success: true,
-        message: 'Thanh toán thành công và đã kích hoạt tài khoản VIP!',
-        data: {
-          isVip: user.isVip,
-          vipExpire: user.vipExpire
-        }
-      });
-    } catch (error) {
-      console.error('Error in sandbox payment:', error);
-      return res.status(500).json({ success: false, message: 'Lỗi máy chủ khi xử lý thanh toán' });
-    }
-  },
 
   // Admin Manual Approve
   confirmOrder: async (req, res) => {
@@ -406,118 +300,38 @@ export const vipController = {
     }
   },
 
-  // Return URL callback from VNPay (GET /api/vip/vnpay-return)
-  vnpayReturn: async (req, res) => {
+  // PayOS Webhook (POST /api/vip/payos-webhook)
+  payosWebhook: async (req, res) => {
     try {
-      let vnp_Params = { ...req.query };
-      const secureHash = vnp_Params['vnp_SecureHash'];
-
-      delete vnp_Params['vnp_SecureHash'];
-      delete vnp_Params['vnp_SecureHashType'];
-
-      const secretKey = process.env.VNP_HASH_SECRET || 'W0J75BGKDUSFGHA815QB0S7HI0IKTOEZ';
-      const sorted = sortObject(vnp_Params);
-      const signData = Object.keys(sorted).map(key => `${key}=${sorted[key]}`).join('&');
-
-      const hmac = crypto.createHmac("sha512", secretKey);
-      const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
-
-      // Use a relative redirect to naturally preserve the origin domain (localhost or ngrok)
-      const clientRedirectUrl = '/vip';
-
-      if (secureHash === signed) {
-        const paymentCode = vnp_Params['vnp_TxnRef'];
-        const responseCode = vnp_Params['vnp_ResponseCode'];
-
-        const order = await VipOrder.findOne({ where: { paymentCode } });
-        if (!order) {
-          console.error(`Order not found for payment code: ${paymentCode}`);
-          return res.redirect(`${clientRedirectUrl}?status=cancel`);
-        }
-
-        if (responseCode === '00') {
-          if (order.status === 'pending') {
-            order.isPaid = true;
-            await order.save();
-
-            // Send notification to user that payment is received and pending activation
-            await Notification.create({
-              userId: order.userId,
-              title: 'Thanh toán VIP thành công 💳',
-              message: `Chúng tôi đã nhận được thanh toán cho đơn hàng ${order.paymentCode}. Vui lòng chờ quản trị viên duyệt và kích hoạt tài khoản VIP của bạn.`,
-              type: 'info',
-              read: false
-            });
-          }
-          return res.redirect(`${clientRedirectUrl}?status=paid_pending`);
-        } else {
-          // If transaction was canceled or failed
-          if (order.status === 'pending') {
-            order.status = 'cancelled';
-            await order.save();
-          }
-          return res.redirect(`${clientRedirectUrl}?status=cancel`);
-        }
-      } else {
-        console.error('Invalid checksum for VNPay Return');
-        return res.redirect(`${clientRedirectUrl}?status=cancel`);
+      const payos = getPayOS();
+      const webhookData = payos.webhooks.verify(req.body);
+      const orderCode = webhookData.orderCode;
+      const order = await VipOrder.findOne({ where: { paymentCode: orderCode.toString() } });
+      
+      if (!order) {
+        return res.status(200).json({ success: true, message: 'Order not found' });
       }
-    } catch (error) {
-      console.error('Error in vnpayReturn:', error);
-      return res.redirect('/vip?status=cancel');
-    }
-  },
 
-  // IPN Webhook callback from VNPay (GET /api/vip/vnpay-ipn)
-  vnpayIpn: async (req, res) => {
-    try {
-      let vnp_Params = { ...req.query };
-      const secureHash = vnp_Params['vnp_SecureHash'];
+      if (order.status === 'pending') {
+        order.isPaid = true;
+        await order.save();
 
-      delete vnp_Params['vnp_SecureHash'];
-      delete vnp_Params['vnp_SecureHashType'];
-
-      const secretKey = process.env.VNP_HASH_SECRET || 'W0J75BGKDUSFGHA815QB0S7HI0IKTOEZ';
-      const sorted = sortObject(vnp_Params);
-      const signData = Object.keys(sorted).map(key => `${key}=${sorted[key]}`).join('&');
-
-      const hmac = crypto.createHmac("sha512", secretKey);
-      const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
-
-      if (secureHash === signed) {
-        const paymentCode = vnp_Params['vnp_TxnRef'];
-        const responseCode = vnp_Params['vnp_ResponseCode'];
-        const vnpAmount = parseInt(vnp_Params['vnp_Amount'], 10);
-
-        const order = await VipOrder.findOne({ where: { paymentCode } });
-        if (!order) {
-          return res.status(200).json({ RspCode: '01', Message: 'Order not found' });
-        }
-
-        // Verify amount
-        if (order.amount * 100 !== vnpAmount) {
-          return res.status(200).json({ RspCode: '04', Message: 'Invalid amount' });
-        }
-
-        if (order.status !== 'pending') {
-          return res.status(200).json({ RspCode: '02', Message: 'Order already confirmed' });
-        }
-
-        if (responseCode === '00') {
-          order.isPaid = true;
-          await order.save();
-        } else {
-          order.status = 'cancelled';
-          await order.save();
-        }
-
-        return res.status(200).json({ RspCode: '00', Message: 'Confirm success' });
-      } else {
-        return res.status(200).json({ RspCode: '97', Message: 'Invalid checksum' });
+        await Notification.create({
+          userId: order.userId,
+          title: 'Thanh toán VIP thành công 💳',
+          message: `Chúng tôi đã nhận được thanh toán cho đơn hàng ${order.paymentCode}. Vui lòng chờ quản trị viên duyệt và kích hoạt tài khoản VIP của bạn.`,
+          type: 'info',
+          read: false
+        });
       }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Webhook processed'
+      });
     } catch (error) {
-      console.error('Error in vnpayIpn:', error);
-      return res.status(500).json({ RspCode: '99', Message: 'Internal error' });
+      console.error('Error processing PayOS webhook:', error);
+      return res.status(400).json({ success: false, message: 'Invalid webhook' });
     }
   }
 };
