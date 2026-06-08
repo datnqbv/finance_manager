@@ -29,6 +29,9 @@ import {
   FiBriefcase,
   FiAward,
   FiActivity,
+  FiCheckCircle,
+  FiInfo,
+  FiAlertTriangle,
   FiRefreshCw
 } from 'react-icons/fi';
 import api from '../services/api';
@@ -40,6 +43,30 @@ import { getNotifications, markAsRead as markNotificationAsRead, markAllAsRead a
 import { motion, AnimatePresence } from 'framer-motion';
 
 
+
+const getNotificationIcon = (type) => {
+  switch (type) {
+    case 'success':
+      return <FiCheckCircle className="text-emerald-600 dark:text-emerald-400" size={18} />;
+    case 'warning':
+      return <FiAlertTriangle className="text-rose-600 dark:text-rose-400" size={18} />;
+    case 'info':
+    default:
+      return <FiInfo className="text-sky-600 dark:text-sky-400" size={18} />;
+  }
+};
+
+const getNotificationIconBg = (type) => {
+  switch (type) {
+    case 'success':
+      return 'bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-500/5 dark:ring-emerald-400/20';
+    case 'warning':
+      return 'bg-rose-50 dark:bg-rose-500/10 ring-1 ring-rose-500/5 dark:ring-rose-400/20';
+    case 'info':
+    default:
+      return 'bg-sky-50 dark:bg-sky-500/10 ring-1 ring-sky-500/5 dark:ring-sky-400/20';
+  }
+};
 
 //layout component chua sidebar va header
 const Layout = ({ children }) => {
@@ -179,6 +206,9 @@ const Layout = ({ children }) => {
   };
 
   const markAsRead = async (id) => { // Đánh dấu một thông báo là đã đọc
+    const notification = notifications.find(n => n.id === id);
+    if (!notification || notification.read) return;
+
     try {
       // Gọi API để đánh dấu đã đọc
       await markNotificationAsRead(id);
@@ -580,73 +610,73 @@ const Layout = ({ children }) => {
                         className="fixed inset-0 z-40"
                         onClick={() => setShowNotifications(false)}
                       />
-                      <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#111111] 
-                                    rounded-xl shadow-2xl border border-gray-200 dark:border-[#2a2a2a]
+                      <div className="absolute right-0 mt-2.5 w-[350px] bg-white/95 dark:bg-[#1a1f2c]/95 
+                                    backdrop-blur-md rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_15px_50px_rgba(0,0,0,0.3)]
+                                    border border-gray-150 dark:border-gray-800/80
                                     z-50 animate-in fade-in slide-in-from-top-2 duration-200 max-h-96 overflow-hidden flex flex-col">
                         {/* Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[#2a2a2a]">
-                          <h3 className="font-semibold text-gray-900 dark:text-white">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800/60 bg-gray-50/50 dark:bg-gray-900/30 flex-shrink-0">
+                          <h3 className="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
                             {isEnglish ? 'Notifications' : 'Thông báo'}
+                            {unreadCount > 0 && (
+                              <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">
+                                {unreadCount} {isEnglish ? 'new' : 'mới'}
+                              </span>
+                            )}
                           </h3>
                           {unreadCount > 0 && (
                             <button
                               onClick={markAllAsRead}
-                              className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
+                              className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
                             >
-                              {isEnglish ? 'Mark all as read' : 'Đánh dấu đã đọc'}
+                              {isEnglish ? 'Mark all as read' : 'Đọc tất cả'}
                             </button>
                           )}
                         </div>
 
                         {/* Notifications List */}
-                        <div className="overflow-y-auto flex-1">
+                        <div className="overflow-y-auto flex-1 divide-y divide-gray-50 dark:divide-gray-800/40">
                           {notifications.length > 0 ? (
                             notifications.map((notification) => (
                               <div
                                 key={notification.id}
                                 onClick={() => markAsRead(notification.id)}
-                                className={`p-4 border-b border-gray-100 dark:border-[#1a1a1a] 
-                                          hover:bg-gray-50 dark:hover:bg-[#1a1a1a] cursor-pointer
-                                          transition-colors ${!notification.read ? 'bg-blue-50 dark:bg-blue-500/5' : ''}`}
+                                className={`p-4 cursor-pointer hover:bg-slate-50/80 dark:hover:bg-gray-800/30 transition-all duration-150 relative
+                                          ${!notification.read ? 'bg-emerald-500/[0.02] border-l-4 border-emerald-500 pl-3' : 'border-l-4 border-transparent pl-3'}`}
                               >
                                 <div className="flex items-start gap-3">
-                                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
-                                                ${notification.type === 'warning' ? 'bg-yellow-100 dark:bg-yellow-500/10' : ''}
-                                                ${notification.type === 'success' ? 'bg-green-100 dark:bg-green-500/10' : ''}
-                                                ${notification.type === 'info' ? 'bg-blue-100 dark:bg-blue-500/10' : ''}`}>
-                                    <FiAlertCircle
-                                      className={`
-                                        ${notification.type === 'warning' ? 'text-yellow-600 dark:text-yellow-400' : ''}
-                                        ${notification.type === 'success' ? 'text-green-600 dark:text-green-400' : ''}
-                                        ${notification.type === 'info' ? 'text-blue-600 dark:text-blue-400' : ''}
-                                      `}
-                                      size={20}
-                                    />
+                                  <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${getNotificationIconBg(notification.type)}`}>
+                                    {getNotificationIcon(notification.type)}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                    <div className="flex items-center justify-between gap-1.5">
+                                      <p className={`text-sm font-bold truncate ${!notification.read ? 'text-gray-900 dark:text-white' : 'text-gray-650 dark:text-gray-350'}`}>
                                         {notification.title}
                                       </p>
                                       {!notification.read && (
-                                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full flex-shrink-0 shadow-sm shadow-emerald-500/50"></span>
                                       )}
                                     </div>
-                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                    <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1 leading-relaxed break-words">
                                       {notification.message}
                                     </p>
-                                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                    <span className="text-xs text-gray-400 dark:text-gray-500 mt-2 block font-medium">
                                       {notification.time}
-                                    </p>
+                                    </span>
                                   </div>
                                 </div>
                               </div>
                             ))
                           ) : (
-                            <div className="p-8 text-center">
-                              <FiBell className="mx-auto text-gray-300 dark:text-gray-600 mb-2" size={48} />
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {isEnglish ? 'No new notifications' : 'Không có thông báo mới'}
+                            <div className="p-8 text-center flex flex-col items-center justify-center">
+                              <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-gray-800/30 flex items-center justify-center mb-2.5">
+                                <FiBell className="text-gray-400 dark:text-gray-500" size={22} />
+                              </div>
+                              <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                {isEnglish ? 'No notifications yet' : 'Chưa có thông báo'}
+                              </h4>
+                              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 max-w-[180px] mx-auto leading-relaxed">
+                                {isEnglish ? 'Reminders and updates will appear here.' : 'Mọi nhắc nhở và cập nhật sẽ hiển thị ở đây.'}
                               </p>
                             </div>
                           )}
