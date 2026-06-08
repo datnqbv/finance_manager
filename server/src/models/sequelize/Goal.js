@@ -8,16 +8,21 @@ class Goal extends Model {
   }
 
   get remainingAmount() {
-    return Math.max(Number(this.targetAmount) - Number(this.currentAmount), 0);
+    const target = Number(this.targetAmount) || 0;
+    const current = Number(this.currentAmount) || 0;
+    return Math.max(target - current, 0);
   }
 
   get daysRemaining() {
     if (this.isAchieved) return 0;
+    if (!this.deadline) return 0;
     const now = new Date();
     const deadline = new Date(this.deadline);
+    if (isNaN(deadline.getTime())) return 0;
     const diff = deadline - now;
     return Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 0);
   }
+
 
   async addAmount(amount, note = '') {
     this.currentAmount = Number(this.currentAmount) + Number(amount);
@@ -34,9 +39,26 @@ class Goal extends Model {
     return this;
   }
 
+  get dailySaving() {
+    if (this.isAchieved) return 0;
+    const remaining = this.remainingAmount;
+    const daysLeft = this.daysRemaining;
+    if (daysLeft <= 0) return remaining;
+    return Math.ceil(remaining / daysLeft);
+  }
+
+  get weeklySaving() {
+    if (this.isAchieved) return 0;
+    const remaining = this.remainingAmount;
+    const daysLeft = this.daysRemaining;
+    if (daysLeft <= 0) return remaining;
+    const weeksLeft = daysLeft / 7;
+    return Math.ceil(remaining / weeksLeft);
+  }
+
   calculateMonthlySaving() {
     if (this.isAchieved) return 0;
-    const remaining = Number(this.targetAmount) - Number(this.currentAmount);
+    const remaining = this.remainingAmount;
     const daysLeft = this.daysRemaining;
     if (daysLeft <= 0) return remaining;
     const monthsLeft = daysLeft / 30;

@@ -507,8 +507,8 @@ const Landing = () => {
           <nav className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
             {/* Logo */}
             <button onClick={() => navigate('/home')} className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                <img src="/icons/money-bag.png" alt="logo" className="w-5 h-5 object-contain" />
+              <div className="w-9 h-9 bg-transparent rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <img src="/LogoD.png" alt="logo" className="w-5 h-5 object-contain" />
               </div>
               <span className="text-base font-bold text-slate-800 tracking-tight">Finance Manager</span>
             </button>
@@ -728,8 +728,8 @@ const Landing = () => {
                       <p className="text-xs text-slate-400">{isEnglish ? 'June · 2025' : 'Tháng 6 · 2025'}</p>
                       <h3 className="text-base font-bold text-slate-800">{isEnglish ? 'Financial overview' : 'Tổng quan tài chính'}</h3>
                     </div>
-                    <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center shadow-sm">
-                      <img src="/icons/money-bag.png" alt="" className="w-5 h-5 object-contain" />
+                    <div className="w-9 h-9 bg-transparent rounded-xl flex items-center justify-center">
+                      <img src="/LogoD.png" alt="" className="w-5 h-5 object-contain" />
                     </div>
                   </div>
 
@@ -1177,8 +1177,8 @@ const Landing = () => {
             <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center">
-                    <img src="/icons/money-bag.png" alt="" className="w-5 h-5 object-contain" />
+                  <div className="w-9 h-9 bg-transparent rounded-xl flex items-center justify-center">
+                    <img src="/LogoD.png" alt="" className="w-5 h-5 object-contain" />
                   </div>
                   <span className="text-white font-bold text-sm">Finance Manager</span>
                 </div>

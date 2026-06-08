@@ -58,9 +58,12 @@ const AdminUsers = () => {
   };
 
   useEffect(() => {
-    loadUsers(1);
+    const timer = setTimeout(() => {
+      loadUsers(1);
+    }, 400);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role]);
+  }, [search, role]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -230,7 +233,7 @@ const AdminUsers = () => {
       </div>
 
       <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-[#171a21]">
-        <form onSubmit={handleSearch} className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px_auto]">
+        <form onSubmit={handleSearch} className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px]">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -246,9 +249,6 @@ const AdminUsers = () => {
             <option value="user">{isEnglish ? 'User' : 'Người dùng'}</option>
             <option value="admin">{isEnglish ? 'Admin' : 'Quản trị viên'}</option>
           </select>
-          <button type="submit" className="rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00523d]">
-            {isEnglish ? 'Search' : 'Tìm'}
-          </button>
         </form>
       </div>
 

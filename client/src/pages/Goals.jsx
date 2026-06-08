@@ -91,7 +91,12 @@ const Goals = () => {
   };
 
   const getDaysRemaining = (deadline) => {
-    const days = Math.ceil((new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24));
+    if (!deadline) return { text: isEnglish ? 'No deadline' : 'Chưa đặt hạn', color: 'text-gray-500' };
+    const parsedDate = new Date(deadline);
+    if (isNaN(parsedDate.getTime())) {
+      return { text: isEnglish ? 'No deadline' : 'Chưa đặt hạn', color: 'text-gray-500' };
+    }
+    const days = Math.ceil((parsedDate - new Date()) / (1000 * 60 * 60 * 24));
     if (days < 0)  return { text: isEnglish ? 'Overdue' : 'Quá hạn',       color: 'text-red-600 dark:text-red-400' };
     if (days === 0) return { text: isEnglish ? 'Today' : 'Hôm nay',       color: 'text-red-600 dark:text-red-400' };
     if (days === 1) return { text: isEnglish ? '1 day left' : 'Còn 1 ngày',    color: 'text-amber-600 dark:text-amber-400' };
@@ -99,6 +104,7 @@ const Goals = () => {
     if (days <= 30) return { text: isEnglish ? `${days} days left` : `Còn ${days} ngày`, color: 'text-yellow-600 dark:text-yellow-400' };
     return              { text: isEnglish ? `${days} days left` : `Còn ${days} ngày`, color: 'text-emerald-600 dark:text-emerald-400' };
   };
+
 
   const filteredGoals = goals.filter(goal => {
     if (filter === 'active')   return !goal.isAchieved;
@@ -313,6 +319,7 @@ const Goals = () => {
                 <th className="px-5 py-3">{isEnglish ? 'Progress' : 'Tiến độ'}</th>
                 <th className="px-5 py-3">{isEnglish ? 'Saved' : 'Đã đạt'}</th>
                 <th className="px-5 py-3">{isEnglish ? 'Target' : 'Mục tiêu'}</th>
+                <th className="px-5 py-3">{isEnglish ? 'Savings Target' : 'Cần tích lũy'}</th>
                 <th className="px-5 py-3">{isEnglish ? 'Deadline' : 'Hạn'}</th>
                 <th className="px-5 py-3">{isEnglish ? 'Status' : 'Trạng thái'}</th>
                 <th className="px-5 py-3 text-right">{isEnglish ? 'Actions' : 'Thao tác'}</th>
@@ -346,6 +353,20 @@ const Goals = () => {
                     </td>
                     <td className="px-5 py-4 text-[#303846] dark:text-[#c9d1db] font-semibold">{formatCurrency(goal.currentAmount)}</td>
                     <td className="px-5 py-4 text-[#303846] dark:text-[#c9d1db] font-semibold">{formatCurrency(goal.targetAmount)}</td>
+                    <td className="px-5 py-4">
+                      {goal.isAchieved ? (
+                        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">{isEnglish ? 'Completed' : 'Hoàn thành'}</span>
+                      ) : (
+                        <div>
+                          <p className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                            {formatCurrency(goal.dailySaving)} <span className="text-[10px] text-gray-500 font-normal">/ {isEnglish ? 'day' : 'ngày'}</span>
+                          </p>
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                            {formatCurrency(goal.weeklySaving)} / {isEnglish ? 'week' : 'tuần'}
+                          </p>
+                        </div>
+                      )}
+                    </td>
                     <td className="px-5 py-4 text-xs font-semibold">
                       <span className={daysInfo.color}>{daysInfo.text}</span>
                     </td>
@@ -406,7 +427,7 @@ const Goals = () => {
 
                   showAddAmount === goal.id ? (
                     <tr key={`add-${goal.id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f8fbfa] dark:bg-[#1f2d29]">
-                      <td colSpan={7} className="px-5 py-3">
+                      <td colSpan={8} className="px-5 py-3">
                         <div className="flex flex-col gap-2 md:flex-row md:items-center">
                           <div className="md:w-64">
                             <CurrencyInput
@@ -444,7 +465,7 @@ const Goals = () => {
 
                   showHistory === goal.id ? (
                     <tr key={`history-${goal.id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f9fafc] dark:bg-[#212734]">
-                      <td colSpan={7} className="px-5 py-3">
+                      <td colSpan={8} className="px-5 py-3">
                         <div className="max-h-52 overflow-y-auto divide-y divide-gray-100 dark:divide-[#2b3241] rounded-xl border border-[#e8edf4] dark:border-[#2f3748]">
                           {[...goal.depositHistory].reverse().map((entry, i) => (
                             <div key={i} className="flex items-start justify-between gap-2 px-3 py-2.5">
@@ -464,7 +485,7 @@ const Goals = () => {
                 ];
               }) : (
                 <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center">
+                  <td colSpan={8} className="px-5 py-12 text-center">
                     <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'No goals match the current filter.' : 'Không có mục tiêu phù hợp với bộ lọc hiện tại.'}</p>
                     <button
                       onClick={openCreateModal}
@@ -581,7 +602,29 @@ const Goals = () => {
                         </p>
                       </div>
                     </div>
+
+                    {!goal.isAchieved && (
+                      <div className="mt-3 bg-amber-50/40 dark:bg-amber-500/5 rounded-lg border border-amber-200/20 p-2.5 flex items-center justify-between">
+                        <div>
+                          <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider">
+                            {isEnglish ? 'Savings Target' : 'Cần tích lũy'}
+                          </p>
+                          <p className="text-xs font-black text-amber-600 dark:text-amber-400 mt-0.5">
+                            {formatCurrency(goal.dailySaving)} / {isEnglish ? 'day' : 'ngày'}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wider">
+                            {isEnglish ? 'Weekly Target' : 'Hoặc theo tuần'}
+                          </p>
+                          <p className="text-xs font-bold text-gray-700 dark:text-gray-300 mt-0.5">
+                            {formatCurrency(goal.weeklySaving)} / {isEnglish ? 'week' : 'tuần'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
+
 
                   {/* Action Buttons */}
                   <div className="mt-4 flex gap-2 border-t border-gray-100 pt-3 dark:border-gray-800">

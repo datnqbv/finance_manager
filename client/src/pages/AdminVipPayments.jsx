@@ -127,12 +127,22 @@ const AdminVipPayments = () => {
     }).format(amount);
   };
 
+  const removeVietnameseTones = (str) => {
+    if (!str) return '';
+    return str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D');
+  };
+
   // Filter & Search logic
   const filteredOrders = orders.filter(order => {
+    const searchLower = removeVietnameseTones(searchQuery.toLowerCase());
     const matchesSearch = 
-      order.paymentCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.user?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.user?.email.toLowerCase().includes(searchQuery.toLowerCase());
+      removeVietnameseTones(order.paymentCode?.toLowerCase() || '').includes(searchLower) ||
+      removeVietnameseTones(order.user?.name?.toLowerCase() || '').includes(searchLower) ||
+      removeVietnameseTones(order.user?.email?.toLowerCase() || '').includes(searchLower);
       
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     

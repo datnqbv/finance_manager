@@ -4,6 +4,7 @@ import {
   sendContactConfirmationToUser,
 } from '../utils/sendEmail.js';
 import { Op } from 'sequelize';
+import { getSearchCondition } from '../utils/fts.js';
 
 // POST /api/contact
 export const submitContact = async (req, res) => {
@@ -87,13 +88,7 @@ export const getContactMessages = async (req, res) => {
     const where = {};
     if (status && ['new', 'read', 'replied'].includes(status)) where.status = status;
     if (search?.trim()) {
-      const term = `%${search.trim()}%`;
-      where[Op.or] = [
-        { name: { [Op.like]: term } },
-        { email: { [Op.like]: term } },
-        { subject: { [Op.like]: term } },
-        { message: { [Op.like]: term } },
-      ];
+      where[Op.and] = [getSearchCondition(['name', 'email', 'subject', 'message'], search.trim(), true)];
     }
 
     const pageNum = Math.max(parseInt(page, 10) || 1, 1);

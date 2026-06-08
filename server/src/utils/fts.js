@@ -77,14 +77,14 @@ export function isMssql() {
  * @param {string} searchQuery - Từ khóa tìm kiếm của người dùng
  * @returns {object} Trả về Sequelize where condition
  */
-export function getSearchCondition(fields, searchQuery) {
+export function getSearchCondition(fields, searchQuery, forceLike = false) {
   if (!searchQuery || typeof searchQuery !== 'string' || !searchQuery.trim()) {
     return {};
   }
   
   const fieldsArray = Array.isArray(fields) ? fields : [fields];
   
-  if (isMssql() && ftsEnabled) {
+  if (!forceLike && isMssql() && ftsEnabled) {
     const queryStr = formatFtsQuery(searchQuery);
     const unaccentedQueryStr = formatFtsQuery(removeVietnameseAccents(searchQuery));
     

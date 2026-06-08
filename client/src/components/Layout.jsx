@@ -261,9 +261,9 @@ const Layout = ({ children }) => {
           <div className="sidebar-brand p-4 border-b border-[#d8dce2] dark:border-[#2d323c]">
             <div className="rounded-xl border border-[#d8dce2] bg-[#f1f3f5] p-3 dark:border-[#323844] dark:bg-[#242936]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-[#d9efe4] dark:bg-[#244236] flex items-center justify-center text-2xl">
+                <div className="w-10 h-10 rounded-lg bg-transparent flex items-center justify-center text-2xl">
                   <img
-                    src="/icons/money-bag.png"
+                    src="/LogoD.png"
                     alt="Finance Manager Logo"
                     className="w-6 h-6 object-contain"
                   />

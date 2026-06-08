@@ -20,6 +20,36 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
 
   const [errors, setErrors] = useState({});
 
+  const targetVal = parseFloat(formData.targetAmount) || 0;
+  const currentVal = parseFloat(formData.currentAmount) || 0;
+  const remainingVal = Math.max(targetVal - currentVal, 0);
+
+  let daysRemaining = 0;
+  if (formData.deadline) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dlDate = new Date(formData.deadline);
+    if (!isNaN(dlDate.getTime())) {
+      dlDate.setHours(0, 0, 0, 0);
+      const diff = dlDate - today;
+      daysRemaining = Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 0);
+    }
+  }
+
+
+  const dailySavingRate = daysRemaining > 0 ? Math.ceil(remainingVal / daysRemaining) : remainingVal;
+  const weeklySavingRate = daysRemaining > 0 ? Math.ceil(remainingVal / (daysRemaining / 7)) : remainingVal;
+  const monthlySavingRate = daysRemaining > 0 ? Math.ceil(remainingVal / (daysRemaining / 30)) : remainingVal;
+  const monthsRemaining = daysRemaining > 0 ? (daysRemaining / 30).toFixed(1) : 0;
+  const weeksRemaining = daysRemaining > 0 ? (daysRemaining / 7).toFixed(1) : 0;
+
+  const formatValue = (val) => {
+    return new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(val);
+  };
+
   // Icon options
   const iconOptions = [
     '🎯', '💰', '🏠', '🚗', '✈️', '🎓', '💍', '📱', 
@@ -307,6 +337,46 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
               ))}
             </div>
           </div>
+
+          {/* Real-time estimation box */}
+          {targetVal > 0 && formData.deadline && (
+            <div className="bg-amber-50/50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/20 rounded-xl p-4 space-y-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                {isEnglish ? 'Required Savings Calculations' : 'Tính toán tích lũy dự kiến'}
+              </h4>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                {isEnglish
+                  ? `To reach your goal of ${formatValue(targetVal)} in ${daysRemaining} days (approx. ${monthsRemaining} months / ${weeksRemaining} weeks):`
+                  : `Để đạt mục tiêu tích lũy ${formatValue(targetVal)} trong ${daysRemaining} ngày (khoảng ${monthsRemaining} tháng / ${weeksRemaining} tuần):`}
+              </p>
+              <div className="grid grid-cols-3 gap-3 pt-1">
+                <div className="bg-white dark:bg-gray-800/40 p-2.5 rounded-lg border border-amber-200/40 dark:border-amber-500/10">
+                  <p className="text-[10px] text-gray-500 dark:text-gray-450 uppercase tracking-wide">
+                    {isEnglish ? 'Daily' : 'Mỗi ngày'}
+                  </p>
+                  <p className="text-sm font-bold text-amber-750 dark:text-amber-400 mt-0.5">
+                    {formatValue(dailySavingRate)}
+                  </p>
+                </div>
+                <div className="bg-white dark:bg-gray-800/40 p-2.5 rounded-lg border border-amber-200/40 dark:border-amber-500/10">
+                  <p className="text-[10px] text-gray-500 dark:text-gray-450 uppercase tracking-wide">
+                    {isEnglish ? 'Weekly' : 'Mỗi tuần'}
+                  </p>
+                  <p className="text-sm font-bold text-amber-750 dark:text-amber-400 mt-0.5">
+                    {formatValue(weeklySavingRate)}
+                  </p>
+                </div>
+                <div className="bg-white dark:bg-gray-800/40 p-2.5 rounded-lg border border-amber-200/40 dark:border-amber-500/10">
+                  <p className="text-[10px] text-gray-500 dark:text-gray-450 uppercase tracking-wide">
+                    {isEnglish ? 'Monthly' : 'Mỗi tháng'}
+                  </p>
+                  <p className="text-sm font-bold text-amber-750 dark:text-amber-400 mt-0.5">
+                    {formatValue(monthlySavingRate)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Info Box */}
           <div className="bg-emerald-50/50 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/20 rounded-xl p-4 flex gap-3">

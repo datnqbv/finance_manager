@@ -53,9 +53,12 @@ const AdminContacts = () => {
   };
 
   useEffect(() => {
-    loadMessages(1);
+    const timer = setTimeout(() => {
+      loadMessages(1);
+    }, 400);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [search, status]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -108,7 +111,7 @@ const AdminContacts = () => {
       </div>
 
       <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-[#171a21]">
-        <form onSubmit={handleSearch} className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px_auto_auto]">
+        <form onSubmit={handleSearch} className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px]">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -125,12 +128,6 @@ const AdminContacts = () => {
               <option key={option.value} value={option.value}>{statusLabel(option.value)}</option>
             ))}
           </select>
-          <button type="submit" className="rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00523d]">
-            {isEnglish ? 'Search' : 'Tìm'}
-          </button>
-          <button type="button" onClick={() => loadMessages(pagination.page)} className="inline-flex items-center justify-center gap-1 rounded-xl border border-[#ccd6d1] px-4 py-2 text-sm font-semibold text-[#244d3f] hover:bg-[#edf5f1]">
-            <FiRefreshCw size={14} /> {isEnglish ? 'Refresh' : 'Làm mới'}
-          </button>
         </form>
       </div>
 

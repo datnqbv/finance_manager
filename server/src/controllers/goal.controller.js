@@ -1,6 +1,18 @@
 import { Goal } from '../models/sequelize/index.js';
 import { Op } from 'sequelize';
 
+const formatGoalResponse = (goal) => {
+  if (!goal) return null;
+  const data = goal.get ? goal.get({ plain: true }) : goal;
+  data.progressPercentage = goal.progressPercentage;
+  data.remainingAmount = goal.remainingAmount;
+  data.daysRemaining = goal.daysRemaining;
+  data.monthlySaving = goal.calculateMonthlySaving();
+  data.dailySaving = goal.dailySaving;
+  data.weeklySaving = goal.weeklySaving;
+  return data;
+};
+
 // @desc    Get all goals
 // @route   GET /api/goals
 // @access  Private
@@ -15,14 +27,7 @@ export const getGoals = async (req, res) => {
 
     const goals = await Goal.findAll({ where: filter, order: [['deadline','ASC'], ['priority','DESC']] });
 
-    const goalsData = goals.map(goal => {
-      const data = goal.get({ plain: true });
-      data.progressPercentage = goal.progressPercentage;
-      data.remainingAmount = goal.remainingAmount;
-      data.daysRemaining = goal.daysRemaining;
-      data.monthlySaving = goal.calculateMonthlySaving();
-      return data;
-    });
+    const goalsData = goals.map(formatGoalResponse);
 
     res.status(200).json({
       success: true,
@@ -52,13 +57,9 @@ export const getGoal = async (req, res) => {
       });
     }
 
-    // Add calculated fields
-    const goalData = goal.get ? goal.get({ plain: true }) : goal;
-    goalData.monthlySaving = goal.calculateMonthlySaving();
-
     res.status(200).json({
       success: true,
-      data: goalData
+      data: formatGoalResponse(goal)
     });
   } catch (error) {
     res.status(500).json({
@@ -100,7 +101,7 @@ export const createGoal = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Tạo mục tiêu thành công',
-      data: goal
+      data: formatGoalResponse(goal)
     });
   } catch (error) {
     res.status(400).json({
@@ -155,7 +156,7 @@ export const updateGoal = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Cập nhật mục tiêu thành công',
-      data: goal
+      data: formatGoalResponse(goal)
     });
   } catch (error) {
     res.status(400).json({
@@ -223,7 +224,7 @@ export const addAmountToGoal = async (req, res) => {
     res.status(200).json({
       success: true,
       message: goal.isAchieved ? '🎉 Chúc mừng! Bạn đã đạt được mục tiêu!' : 'Thêm tiền thành công',
-      data: goal
+      data: formatGoalResponse(goal)
     });
   } catch (error) {
     res.status(400).json({

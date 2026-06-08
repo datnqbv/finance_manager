@@ -1,5 +1,6 @@
 import { User, Transaction, ContactMessage, VipOrder, UserVisit } from '../models/sequelize/index.js';
 import { Op } from 'sequelize';
+import { getSearchCondition } from '../utils/fts.js';
 
 const sanitizeUser = (user) => ({
   id: user.id,
@@ -123,8 +124,7 @@ export const getAdminUsers = async (req, res) => {
     const where = {};
     if (role && ['user', 'admin'].includes(role)) where.role = role;
     if (search?.trim()) {
-      const term = `%${search.trim()}%`;
-      where[Op.or] = [ { name: { [Op.like]: term } }, { email: { [Op.like]: term } } ];
+      where[Op.and] = [getSearchCondition(['name', 'email'], search.trim(), true)];
     }
 
     const pageNum = Math.max(parseInt(page, 10) || 1, 1);
@@ -338,12 +338,7 @@ export const getVisitsList = async (req, res) => {
     }
     
     if (search?.trim()) {
-      const term = `%${search.trim()}%`;
-      where[Op.or] = [
-        { userAgent: { [Op.like]: term } },
-        { '$user.name$': { [Op.like]: term } },
-        { '$user.email$': { [Op.like]: term } }
-      ];
+      where[Op.and] = [getSearchCondition(['userAgent', '$user.name$', '$user.email$'], search.trim(), true)];
     }
     
     const { count, rows } = await UserVisit.findAndCountAll({
