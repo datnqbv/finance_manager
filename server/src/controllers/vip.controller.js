@@ -4,6 +4,20 @@ const PayOS = payosPkg.PayOS || payosPkg;
 
 let payosInstance = null;
 function getPayOS() {
+  if (process.env.NODE_ENV === 'test') {
+    return {
+      paymentRequests: {
+        create: async (body) => {
+          return { checkoutUrl: 'https://checkout.payos.vn/web/test-sandbox-checkout' };
+        }
+      },
+      webhooks: {
+        verify: (body) => {
+          return { orderCode: body.orderCode || 123456 };
+        }
+      }
+    };
+  }
   if (!payosInstance) {
     payosInstance = new PayOS({
       clientId: process.env.PAYOS_CLIENT_ID,

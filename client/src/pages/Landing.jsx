@@ -32,13 +32,13 @@ function StatItem({ icon, value, suffix, label, delay, started }) {
   const num = useCounter(value, 1400, started);
   return (
     <div className={`reveal reveal-delay-${delay} text-center group`}>
-      <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl mb-3 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+      <div className="inline-flex items-center justify-center w-12 h-12 bg-[#fbf9f4] text-[#ca8a04] border border-[#e8dfc5]/30 rounded-2xl mb-3 group-hover:bg-[#005c45] group-hover:text-white transition-all duration-300">
         {icon}
       </div>
-      <div className="text-3xl font-extrabold text-slate-900 tabular-nums">
+      <div className="text-3xl font-extrabold text-[#0c211c] tabular-nums">
         {started ? num : 0}{suffix}
       </div>
-      <div className="text-sm text-slate-500 mt-1">{label}</div>
+      <div className="text-sm text-slate-650 mt-1">{label}</div>
     </div>
   );
 }
@@ -82,6 +82,7 @@ function ConstellationCanvas({ className = '' }) {
             vx: random(-0.24, 0.24),
             vy: random(-0.24, 0.24),
             r: random(0.8, 2),
+            isGold: Math.random() > 0.45,
           });
         }
       }
@@ -117,7 +118,7 @@ function ConstellationCanvas({ className = '' }) {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(6, 148, 108, 0.92)';
+        ctx.fillStyle = p.isGold ? 'rgba(202, 138, 4, 0.72)' : 'rgba(0, 92, 69, 0.72)';
         ctx.fill();
       }
 
@@ -132,11 +133,11 @@ function ConstellationCanvas({ className = '' }) {
 
           if (dist > maxLinkDistance) continue;
 
-          const alpha = (1 - dist / maxLinkDistance) * 0.58;
+          const alpha = (1 - dist / maxLinkDistance) * 0.48;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
-          ctx.strokeStyle = `rgba(6, 120, 96, ${alpha.toFixed(4)})`;
+          ctx.strokeStyle = `rgba(202, 138, 4, ${alpha.toFixed(4)})`;
           ctx.lineWidth = 1;
           ctx.stroke();
         }
@@ -150,11 +151,11 @@ function ConstellationCanvas({ className = '' }) {
 
         if (dist > pointerRadius) continue;
 
-        const alpha = (1 - dist / pointerRadius) * 0.55;
+        const alpha = (1 - dist / pointerRadius) * 0.45;
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
         ctx.lineTo(pointer.x, pointer.y);
-        ctx.strokeStyle = `rgba(5, 130, 102, ${alpha.toFixed(4)})`;
+        ctx.strokeStyle = `rgba(0, 92, 69, ${alpha.toFixed(4)})`;
         ctx.lineWidth = 1;
         ctx.stroke();
       }
@@ -306,9 +307,9 @@ const Landing = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-white text-slate-900 antialiased">
+    <div className="relative min-h-screen bg-[#f5f2eb] text-[#0c211c] antialiased">
       <ConstellationCanvas className="fixed inset-0 z-0 opacity-100" />
-      <div className="pointer-events-none fixed inset-0 z-[1] bg-[radial-gradient(circle_at_14%_16%,rgba(16,185,129,0.13)_0,rgba(16,185,129,0)_36%),radial-gradient(circle_at_86%_12%,rgba(20,184,166,0.11)_0,rgba(20,184,166,0)_38%),linear-gradient(180deg,rgba(255,255,255,0.22)_0%,rgba(255,255,255,0.32)_58%,rgba(255,255,255,0.40)_100%)]" />
+      <div className="pointer-events-none fixed inset-0 z-[1] bg-[radial-gradient(circle_at_14%_16%,rgba(0,92,69,0.06)_0,rgba(0,92,69,0)_40%),radial-gradient(circle_at_86%_12%,rgba(202,138,4,0.06)_0,rgba(202,138,4,0)_40%)]" />
       <div className="relative z-10">
         <style>{`
         /* ── Reveal ── */
@@ -335,7 +336,7 @@ const Landing = () => {
 
         /* ── Dot grid bg ── */
         .dot-grid {
-          background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+          background-image: radial-gradient(circle, #e8dfc5 1.5px, transparent 1.5px);
           background-size: 22px 22px;
         }
 
@@ -363,7 +364,7 @@ const Landing = () => {
           content:'';
           position:absolute; top:24px; left:calc(50% + 28px);
           width:calc(100% - 56px); height:2px;
-          background:linear-gradient(90deg,#d1fae5,#a7f3d0);
+          background:linear-gradient(90deg,#e8dfc5,#c8b991);
         }
         @media(max-width:767px){ .step-line::after { display:none; } }
 
@@ -405,30 +406,30 @@ const Landing = () => {
         /* ── Growth roadmap mood ── */
         .growth-surface {
           background:
-            radial-gradient(1200px 420px at 50% -10%, rgba(16,185,129,0.14), rgba(16,185,129,0) 62%),
-            linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+            radial-gradient(1200px 420px at 50% -10%, rgba(0,92,69,0.08), rgba(0,92,69,0) 62%),
+            linear-gradient(180deg, #f5f2eb 0%, #ebe7de 100%);
         }
         .growth-card {
           position: relative;
           overflow: hidden;
-          border: 1px solid #e2e8f0;
-          background: linear-gradient(165deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.88) 100%);
-          box-shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
+          border: 1px solid #e8dfc5;
+          background: linear-gradient(165deg, rgba(253,251,247,0.96) 0%, rgba(251,248,242,0.88) 100%);
+          box-shadow: 0 10px 30px rgba(12, 33, 28, 0.05);
           transition: transform .36s cubic-bezier(.22,.61,.36,1), box-shadow .36s ease, border-color .36s ease;
         }
         .growth-card::before {
           content: '';
           position: absolute;
           inset: 0;
-          background: linear-gradient(110deg, rgba(16,185,129,0) 0%, rgba(16,185,129,0.08) 40%, rgba(16,185,129,0) 82%);
+          background: linear-gradient(110deg, rgba(0,92,69,0) 0%, rgba(0,92,69,0.04) 40%, rgba(0,92,69,0) 82%);
           transform: translateX(-100%);
           transition: transform .7s ease;
           pointer-events: none;
         }
         .growth-card:hover {
           transform: translateY(-8px);
-          border-color: #a7f3d0;
-          box-shadow: 0 18px 44px rgba(15, 23, 42, 0.14);
+          border-color: #ca8a04;
+          box-shadow: 0 18px 44px rgba(12, 33, 28, 0.1);
         }
         .growth-card:hover::before { transform: translateX(100%); }
 
@@ -446,8 +447,8 @@ const Landing = () => {
           position: absolute;
           inset: -10%;
           background:
-            repeating-radial-gradient(circle at var(--wave-x) var(--wave-y), rgba(16,185,129,.12) 0 1px, rgba(16,185,129,0) 1px 54px),
-            radial-gradient(520px 520px at var(--wave-x) var(--wave-y), rgba(16,185,129,.1) 0%, rgba(16,185,129,.05) 34%, rgba(16,185,129,0) 72%);
+            repeating-radial-gradient(circle at var(--wave-x) var(--wave-y), rgba(202,138,4,.1) 0 1px, rgba(202,138,4,0) 1px 54px),
+            radial-gradient(520px 520px at var(--wave-x) var(--wave-y), rgba(202,138,4,.08) 0%, rgba(202,138,4,.04) 34%, rgba(202,138,4,0) 72%);
           opacity: .4;
           transform: translateZ(0);
           animation: cta-water-breathe 10.5s ease-in-out infinite;
@@ -456,7 +457,7 @@ const Landing = () => {
           content: '';
           position: absolute;
           inset: 0;
-          background: linear-gradient(180deg, rgba(16,185,129,.05) 0%, rgba(16,185,129,.02) 45%, rgba(16,185,129,.04) 100%);
+          background: linear-gradient(180deg, rgba(0,92,69,.03) 0%, rgba(0,92,69,.01) 45%, rgba(0,92,69,.02) 100%);
         }
         .cta-wave-ripple {
           position: absolute;
@@ -465,7 +466,7 @@ const Landing = () => {
           width: 46px;
           height: 46px;
           border-radius: 999px;
-          border: 1px solid rgba(16,185,129,.3);
+          border: 1px solid rgba(202,138,4,.35);
           transform: translate(-50%, -50%) scale(.16);
           opacity: 0;
           will-change: transform, opacity;
@@ -481,7 +482,7 @@ const Landing = () => {
           height: 54px;
           transform: translate(-50%, -50%);
           border-radius: 999px;
-          background: radial-gradient(circle, rgba(16,185,129,.25) 0%, rgba(16,185,129,.12) 30%, rgba(16,185,129,0) 72%);
+          background: radial-gradient(circle, rgba(202,138,4,.25) 0%, rgba(202,138,4,.12) 30%, rgba(202,138,4,0) 72%);
           filter: blur(0.6px);
           opacity: .52;
         }
@@ -502,7 +503,7 @@ const Landing = () => {
       `}</style>
 
         {/* ══════════ HEADER ══════════ */}
-        <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100' : 'bg-transparent'
+        <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#f5f2eb]/95 backdrop-blur-md shadow-sm border-b border-[#e8dfc5]' : 'bg-transparent'
           }`}>
           <nav className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
             {/* Logo */}
@@ -510,34 +511,36 @@ const Landing = () => {
               <div className="w-9 h-9 bg-transparent rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                 <img src="/LogoD.png" alt="logo" className="w-5 h-5 object-contain" />
               </div>
-              <span className="text-base font-bold text-slate-800 tracking-tight">Finance Manager</span>
+              <span className="text-base font-bold text-[#0c211c] tracking-tight">Finance Manager</span>
             </button>
 
             {/* Desktop links */}
             <div className="hidden md:flex items-center gap-7">
-              <a href="#features" className="text-sm text-slate-500 hover:text-emerald-600 transition font-medium">{isEnglish ? 'Features' : 'Tính năng'}</a>
-              <a href="#how" className="text-sm text-slate-500 hover:text-emerald-600 transition font-medium">{isEnglish ? 'How it works' : 'Cách dùng'}</a>
-              <a href="#pricing" className="text-sm text-slate-500 hover:text-emerald-600 transition font-medium">{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a>
-              <a href="#testimonials" className="text-sm text-slate-500 hover:text-emerald-600 transition font-medium">{isEnglish ? 'Roadmap' : 'Lộ trình'}</a>
+              <a href="#features" className="text-sm text-slate-650 hover:text-[#005c45] transition font-medium">{isEnglish ? 'Features' : 'Tính năng'}</a>
+              <a href="#how" className="text-sm text-slate-650 hover:text-[#005c45] transition font-medium">{isEnglish ? 'How it works' : 'Cách dùng'}</a>
+              <a href="#pricing" className="text-sm text-slate-655 hover:text-[#005c45] transition font-medium flex items-center gap-1">
+                <span className="text-[#ca8a04]">👑</span> {isEnglish ? 'VIP' : 'Gói VIP'}
+              </a>
+              <a href="#testimonials" className="text-sm text-slate-650 hover:text-[#005c45] transition font-medium">{isEnglish ? 'Roadmap' : 'Lộ trình'}</a>
               {/* Dropdown Công ty */}
               <div className="relative group">
-                <button className="flex items-center gap-1 text-sm text-slate-500 hover:text-emerald-600 transition font-medium">
+                <button className="flex items-center gap-1 text-sm text-slate-655 hover:text-[#005c45] transition font-medium">
                   {isEnglish ? 'Company' : 'Công ty'}
                   <svg className="w-3.5 h-3.5 mt-0.5 group-hover:rotate-180 transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                   </svg>
                 </button>
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-white border border-slate-100 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
-                  <button onClick={() => navigate('/about')} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 transition text-left">
-                    <span className="w-6 h-6 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 text-xs">👥</span>
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-[#fdfbf9] border border-[#e8dfc5] rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
+                  <button onClick={() => navigate('/about')} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-slate-600 hover:bg-[#f4eee1] hover:text-[#005c45] transition text-left">
+                    <span className="w-6 h-6 bg-[#f4eee1] rounded-lg flex items-center justify-center text-[#ca8a04] text-xs">👥</span>
                     {isEnglish ? 'About us' : 'Về chúng tôi'}
                   </button>
-                  <button onClick={() => navigate('/contact')} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 transition text-left">
-                    <span className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 text-xs">✉️</span>
+                  <button onClick={() => navigate('/contact')} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-slate-600 hover:bg-[#f4eee1] hover:text-[#005c45] transition text-left">
+                    <span className="w-6 h-6 bg-teal-50 rounded-lg flex items-center justify-center text-teal-700 text-xs">✉️</span>
                     {isEnglish ? 'Contact' : 'Liên hệ'}
                   </button>
-                  <button onClick={() => navigate('/privacy')} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 transition text-left">
-                    <span className="w-6 h-6 bg-violet-100 rounded-lg flex items-center justify-center text-violet-600 text-xs">🔒</span>
+                  <button onClick={() => navigate('/privacy')} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-slate-600 hover:bg-[#f4eee1] hover:text-[#005c45] transition text-left">
+                    <span className="w-6 h-6 bg-amber-50 rounded-lg flex items-center justify-center text-[#ca8a04] text-xs">🔒</span>
                     {isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}
                   </button>
                 </div>
@@ -549,7 +552,7 @@ const Landing = () => {
               {user ? (
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="flex items-center gap-2 text-sm font-semibold px-5 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition shadow-sm"
+                  className="flex items-center gap-2 text-sm font-semibold px-5 py-2 bg-[#005c45] text-white rounded-xl hover:bg-[#004d3e] transition shadow-sm"
                 >
                   <FaRocket size={12} /> {isEnglish ? 'Go to Dashboard' : 'Vào Dashboard'}
                 </button>
@@ -557,13 +560,13 @@ const Landing = () => {
                 <>
                   <button
                     onClick={() => navigate('/login')}
-                    className="text-sm font-medium text-slate-600 hover:text-slate-900 transition px-3 py-1.5 rounded-lg hover:bg-slate-100"
+                    className="text-sm font-medium text-slate-650 hover:text-[#0c211c] hover:bg-[#e8dfc5]/40 transition px-3 py-1.5 rounded-lg"
                   >
                     {isEnglish ? 'Sign in' : 'Đăng nhập'}
                   </button>
                   <button
                     onClick={() => navigate('/register')}
-                    className="text-sm font-semibold px-5 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition shadow-sm"
+                    className="text-sm font-semibold px-5 py-2 bg-[#005c45] text-white rounded-xl hover:bg-[#004d3e] transition shadow-sm"
                   >
                     {isEnglish ? 'Sign up free' : 'Đăng ký miễn phí'}
                   </button>
@@ -578,31 +581,31 @@ const Landing = () => {
 
           {/* Mobile menu */}
           {mobileOpen && (
-            <div className="md:hidden bg-white border-t border-slate-100 px-5 py-4 space-y-2 shadow-lg">
-              <a href="#features" className="block text-sm text-slate-600 hover:text-emerald-600 font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'Features' : 'Tính năng'}</a>
-              <a href="#how" className="block text-sm text-slate-600 hover:text-emerald-600 font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'How it works' : 'Cách dùng'}</a>
-              <a href="#pricing" className="block text-sm text-slate-600 hover:text-emerald-600 font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a>
-              <a href="#testimonials" className="block text-sm text-slate-600 hover:text-emerald-600 font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'Roadmap' : 'Đánh giá'}</a>
-              <div className="border-t border-slate-100 pt-2 mt-1 space-y-0.5">
+            <div className="md:hidden bg-[#f5f2eb] border-t border-[#e8dfc5] px-5 py-4 space-y-2 shadow-lg">
+              <a href="#features" className="block text-sm text-slate-655 hover:text-[#005c45] font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'Features' : 'Tính năng'}</a>
+              <a href="#how" className="block text-sm text-slate-655 hover:text-[#005c45] font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'How it works' : 'Cách dùng'}</a>
+              <a href="#pricing" className="block text-sm text-[#ca8a04] hover:text-[#005c45] font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a>
+              <a href="#testimonials" className="block text-sm text-slate-650 hover:text-[#005c45] font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'Roadmap' : 'Đánh giá'}</a>
+              <div className="border-t border-[#e8dfc5] pt-2 mt-1 space-y-0.5">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-0.5 mb-1">{isEnglish ? 'Company' : 'Công ty'}</p>
-                <button onClick={() => { navigate('/about'); setMobileOpen(false); }} className="block w-full text-left text-sm text-slate-600 hover:text-emerald-600 font-medium py-1.5">{isEnglish ? 'About us' : 'Về chúng tôi'}</button>
-                <button onClick={() => { navigate('/contact'); setMobileOpen(false); }} className="block w-full text-left text-sm text-slate-600 hover:text-emerald-600 font-medium py-1.5">{isEnglish ? 'Contact' : 'Liên hệ'}</button>
-                <button onClick={() => { navigate('/privacy'); setMobileOpen(false); }} className="block w-full text-left text-sm text-slate-600 hover:text-emerald-600 font-medium py-1.5">{isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}</button>
+                <button onClick={() => { navigate('/about'); setMobileOpen(false); }} className="block w-full text-left text-sm text-slate-600 hover:text-[#005c45] font-medium py-1.5">{isEnglish ? 'About us' : 'Về chúng tôi'}</button>
+                <button onClick={() => { navigate('/contact'); setMobileOpen(false); }} className="block w-full text-left text-sm text-slate-600 hover:text-[#005c45] font-medium py-1.5">{isEnglish ? 'Contact' : 'Liên hệ'}</button>
+                <button onClick={() => { navigate('/privacy'); setMobileOpen(false); }} className="block w-full text-left text-sm text-slate-600 hover:text-[#005c45] font-medium py-1.5">{isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}</button>
               </div>
-              <div className="pt-2 border-t border-slate-100 space-y-2">
+              <div className="pt-2 border-t border-[#e8dfc5] space-y-2">
                 {user ? (
                   <button onClick={() => { navigate('/dashboard'); setMobileOpen(false); }}
-                    className="w-full flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2.5 bg-emerald-600 text-white rounded-xl">
+                    className="w-full flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2.5 bg-[#005c45] text-white rounded-xl">
                     <FaRocket size={12} /> {isEnglish ? 'Go to Dashboard' : 'Vào Dashboard'}
                   </button>
                 ) : (
                   <>
                     <button onClick={() => { navigate('/login'); setMobileOpen(false); }}
-                      className="w-full text-sm font-medium px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl">
+                      className="w-full text-sm font-medium px-4 py-2.5 border border-[#e8dfc5] text-slate-700 rounded-xl hover:bg-[#e8dfc5]/40 transition">
                       {isEnglish ? 'Sign in' : 'Đăng nhập'}
                     </button>
                     <button onClick={() => { navigate('/register'); setMobileOpen(false); }}
-                      className="w-full text-sm font-semibold px-4 py-2.5 bg-emerald-600 text-white rounded-xl">
+                      className="w-full text-sm font-semibold px-4 py-2.5 bg-[#005c45] text-white rounded-xl">
                       {isEnglish ? 'Sign up free' : 'Đăng ký miễn phí'}
                     </button>
                   </>
@@ -689,35 +692,35 @@ const Landing = () => {
             {/* ── Right: App mockup ── */}
             <div className="relative float-y">
               {/* Glow ring behind card */}
-              <div className="absolute inset-4 bg-emerald-400/20 rounded-3xl blur-2xl pointer-events-none" />
+              <div className="absolute inset-4 bg-[#005c45]/10 rounded-3xl blur-2xl pointer-events-none" />
 
               {/* Floating badges */}
-              <div className="absolute -top-4 -left-4 z-20 flex items-center gap-2 bg-white border border-slate-100 shadow-lg rounded-2xl px-3 py-2">
-                <div className="w-8 h-8 bg-emerald-100 rounded-xl flex items-center justify-center">
-                  <FaChartLine className="text-emerald-600" size={14} />
+              <div className="absolute -top-4 -left-4 z-20 flex items-center gap-2 bg-white border border-[#e8dfc5] shadow-lg rounded-2xl px-3 py-2">
+                <div className="w-8 h-8 bg-[#005c45]/10 rounded-xl flex items-center justify-center">
+                  <FaChartLine className="text-[#005c45]" size={14} />
                 </div>
                 <div>
-                  <div className="text-[10px] text-slate-400 leading-none">{isEnglish ? 'Savings this month' : 'Tiết kiệm tháng này'}</div>
-                  <div className="text-sm font-bold text-emerald-600">+12.4M đ</div>
+                  <div className="text-[10px] text-slate-450 leading-none">{isEnglish ? 'Savings this month' : 'Tiết kiệm tháng này'}</div>
+                  <div className="text-sm font-bold text-[#005c45]">+12.4M đ</div>
                 </div>
               </div>
-              <div className="absolute -bottom-3 -right-4 z-20 flex items-center gap-2 bg-white border border-slate-100 shadow-lg rounded-2xl px-3 py-2">
-                <div className="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center">
-                  <FaBell className="text-amber-500" size={13} />
+              <div className="absolute -bottom-3 -right-4 z-20 flex items-center gap-2 bg-white border border-[#e8dfc5] shadow-lg rounded-2xl px-3 py-2">
+                <div className="w-8 h-8 bg-[#ca8a04]/10 rounded-xl flex items-center justify-center">
+                  <FaBell className="text-[#ca8a04]" size={13} />
                 </div>
                 <div>
-                  <div className="text-[10px] text-slate-400 leading-none">{isEnglish ? 'Budget alert' : 'Cảnh báo ngân sách'}</div>
-                  <div className="text-xs font-semibold text-amber-600">{isEnglish ? 'Food: 85%' : 'Ăn uống: 85%'}</div>
+                  <div className="text-[10px] text-slate-455 leading-none">{isEnglish ? 'Budget alert' : 'Cảnh báo ngân sách'}</div>
+                  <div className="text-xs font-semibold text-[#ca8a04]">{isEnglish ? 'Food: 85%' : 'Ăn uống: 85%'}</div>
                 </div>
               </div>
 
               {/* Main card */}
-              <div className="relative bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
+              <div className="relative bg-white rounded-3xl shadow-2xl border border-[#e8dfc5] overflow-hidden">
                 {/* macOS topbar */}
-                <div className="flex items-center gap-1.5 px-4 py-3 border-b border-slate-100 bg-slate-50/80">
+                <div className="flex items-center gap-1.5 px-4 py-3 border-b border-[#e8dfc5] bg-slate-50/80">
                   <div className="w-3 h-3 rounded-full bg-red-400" />
                   <div className="w-3 h-3 rounded-full bg-amber-400" />
-                  <div className="w-3 h-3 rounded-full bg-emerald-400" />
+                  <div className="w-3 h-3 rounded-full bg-[#005c45]" />
                   <div className="ml-3 flex-1 bg-slate-200 h-2 rounded-full max-w-[140px]" />
                 </div>
 
@@ -735,15 +738,15 @@ const Landing = () => {
 
                   {/* Cards */}
                   <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl p-4 text-white shadow-md shadow-emerald-500/20">
+                    <div className="bg-gradient-to-br from-[#005c45] to-[#004d3e] rounded-2xl p-4 text-white shadow-md shadow-[#005c45]/20">
                       <div className="text-[11px] opacity-75 mb-1 font-medium">{isEnglish ? 'Income' : 'Thu nhập'}</div>
                       <div className="text-xl font-extrabold">45.2M</div>
                       <div className="flex items-center gap-1 mt-1">
-                        <span className="text-emerald-200 text-[10px]">▲ 12%</span>
-                        <span className="text-emerald-200 text-[10px]">{isEnglish ? 'vs previous month' : 'so tháng trước'}</span>
+                        <span className="text-[#a7f3d0] text-[10px]">▲ 12%</span>
+                        <span className="text-[#a7f3d0] text-[10px]">{isEnglish ? 'vs previous month' : 'so tháng trước'}</span>
                       </div>
                     </div>
-                    <div className="bg-gradient-to-br from-slate-600 to-slate-800 rounded-2xl p-4 text-white shadow-md">
+                    <div className="bg-gradient-to-br from-slate-650 to-slate-800 rounded-2xl p-4 text-white shadow-md">
                       <div className="text-[11px] opacity-75 mb-1 font-medium">{isEnglish ? 'Expense' : 'Chi tiêu'}</div>
                       <div className="text-xl font-extrabold">32.8M</div>
                       <div className="flex items-center gap-1 mt-1">
@@ -754,16 +757,16 @@ const Landing = () => {
                   </div>
 
                   {/* Mini chart */}
-                  <div className="bg-slate-50 rounded-2xl p-3.5 mb-4">
+                  <div className="bg-[#fcfbf9] rounded-2xl p-3.5 mb-4 border border-[#e8dfc5]/50">
                     <div className="flex items-center justify-between mb-2.5">
-                      <span className="text-xs font-semibold text-slate-600">{isEnglish ? '7-day expense' : 'Chi tiêu 7 ngày'}</span>
-                      <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full">{isEnglish ? 'This week' : 'Tuần này'}</span>
+                      <span className="text-xs font-semibold text-slate-700">{isEnglish ? '7-day expense' : 'Chi tiêu 7 ngày'}</span>
+                      <span className="text-[10px] text-[#005c45] font-semibold bg-[#005c45]/10 px-2 py-0.5 rounded-full">{isEnglish ? 'This week' : 'Tuần này'}</span>
                     </div>
                     <div className="flex items-end justify-between gap-1.5 h-16">
                       {[38, 65, 48, 80, 55, 92, 68].map((h, i) => (
                         <div key={i} className="flex-1 flex flex-col items-center gap-1">
                           <div
-                            className={`w-full rounded-t-lg grow-bar ${i === 5 ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                            className={`w-full rounded-t-lg grow-bar ${i === 5 ? 'bg-[#005c45]' : 'bg-slate-200'}`}
                             style={{ height: `${h}%`, animationDelay: `${i * 0.07 + 0.3}s` }}
                           />
                           <span className="text-[8px] text-slate-400 font-medium">
@@ -777,8 +780,8 @@ const Landing = () => {
                   {/* Transactions */}
                   <div className="space-y-2.5">
                     {[
-                      { label: isEnglish ? 'June salary' : 'Lương tháng 6', cat: isEnglish ? 'Income' : 'Thu nhập', amount: '+45.2M', dot: 'bg-emerald-500' },
-                      { label: isEnglish ? 'Coffee & breakfast' : 'Cà phê & Ăn sáng', cat: isEnglish ? 'Food' : 'Ăn uống', amount: '-85K', dot: 'bg-amber-400' },
+                      { label: isEnglish ? 'June salary' : 'Lương tháng 6', cat: isEnglish ? 'Income' : 'Thu nhập', amount: '+45.2M', dot: 'bg-[#005c45]' },
+                      { label: isEnglish ? 'Coffee & breakfast' : 'Cà phê & Ăn sáng', cat: isEnglish ? 'Food' : 'Ăn uống', amount: '-85K', dot: 'bg-[#ca8a04]' },
                       { label: isEnglish ? 'Utilities bill' : 'Tiền điện nước', cat: isEnglish ? 'Bills' : 'Hóa đơn', amount: '-450K', dot: 'bg-blue-400' },
                     ].map((tx, i) => (
                       <div key={i} className="flex items-center gap-3 py-1">
@@ -787,7 +790,7 @@ const Landing = () => {
                           <div className="text-xs font-medium text-slate-700 truncate">{tx.label}</div>
                           <div className="text-[10px] text-slate-400">{tx.cat}</div>
                         </div>
-                        <div className={`text-xs font-bold tabular-nums ${tx.amount.startsWith('+') ? 'text-emerald-600' : 'text-slate-600'}`}>
+                        <div className={`text-xs font-bold tabular-nums ${tx.amount.startsWith('+') ? 'text-[#005c45]' : 'text-slate-650'}`}>
                           {tx.amount}
                         </div>
                       </div>
@@ -800,7 +803,7 @@ const Landing = () => {
         </section>
 
         {/* ══════════ STATS ══════════ */}
-        <section ref={statsRef} className="py-14 px-5 sm:px-8 bg-white border-y border-slate-100">
+        <section ref={statsRef} className="py-14 px-5 sm:px-8 bg-[#fcfbf9] border-y border-[#e8dfc5]">
           <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
             <StatItem icon={<FaUsers />} value={1000} suffix="+" label={isEnglish ? 'Users' : 'Người dùng'} delay={1} started={statsStarted} />
             <StatItem icon={<FaTrophy />} value={1000} suffix="K+" label={isEnglish ? 'Transactions' : 'Giao dịch'} delay={2} started={statsStarted} />
@@ -810,16 +813,16 @@ const Landing = () => {
         </section>
 
         {/* ══════════ FEATURES ══════════ */}
-        <section id="features" className="py-20 px-5 sm:px-8 bg-slate-50">
+        <section id="features" className="py-20 px-5 sm:px-8 bg-[#f5f2eb]">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-14 reveal">
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-widest">
+              <span className="text-xs font-bold text-[#005c45] bg-[#005c45]/5 border border-[#005c45]/20 px-3 py-1 rounded-full uppercase tracking-widest">
                 {isEnglish ? 'Key features' : 'Tính năng nổi bật'}
               </span>
-              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-slate-900">
+              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#0c211c]">
                 {isEnglish ? 'Everything you need' : 'Mọi thứ bạn cần'}
               </h2>
-              <p className="mt-3 text-base text-slate-500 max-w-lg mx-auto">
+              <p className="mt-3 text-base text-slate-650 max-w-lg mx-auto">
                 {isEnglish ? 'A complete toolkit to control personal finance: simple yet powerful.' : 'Bộ công cụ hoàn chỉnh để kiểm soát tài chính cá nhân — đơn giản nhưng mạnh mẽ.'}
               </p>
             </div>
@@ -834,21 +837,21 @@ const Landing = () => {
                 { icon: <FaBullseye size={22} />, title: isEnglish ? 'Financial Goals' : 'Mục tiêu tích lũy', desc: isEnglish ? 'Establish smart savings goals and monitor daily progress step-by-step.' : 'Thiết lập các mục tiêu mua sắm, tiết kiệm và bám sát tiến độ thực tế.', color: 'rose', border: 'hover:border-rose-300' },
               ].map((f, i) => {
                 const palette = {
-                  emerald: 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600',
-                  blue: 'bg-blue-50 text-blue-600 group-hover:bg-blue-600',
-                  violet: 'bg-violet-50 text-violet-600 group-hover:bg-violet-600',
-                  indigo: 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600',
-                  amber: 'bg-amber-50 text-amber-600 group-hover:bg-amber-600',
-                  rose: 'bg-rose-50 text-rose-600 group-hover:bg-rose-600',
+                  emerald: 'bg-[#005c45]/10 text-[#005c45] group-hover:bg-[#005c45]',
+                  blue: 'bg-teal-50 text-teal-700 group-hover:bg-teal-700',
+                  violet: 'bg-[#ca8a04]/10 text-[#ca8a04] group-hover:bg-[#ca8a04]',
+                  indigo: 'bg-[#005c45]/10 text-[#005c45] group-hover:bg-[#005c45]',
+                  amber: 'bg-[#ca8a04]/10 text-[#ca8a04] group-hover:bg-[#ca8a04]',
+                  rose: 'bg-orange-50 text-orange-700 group-hover:bg-orange-750',
                 }[f.color];
                 return (
                   <div key={i}
-                    className={`reveal reveal-delay-${(i % 3) + 1} group bg-white rounded-2xl p-6 border border-slate-100 ${f.border} hover:shadow-lg transition-all duration-300 cursor-default`}>
+                    className={`reveal reveal-delay-${(i % 3) + 1} group bg-white rounded-2xl p-6 border border-[#e8dfc5] hover:border-[#ca8a04] hover:shadow-lg transition-all duration-300 cursor-default`}>
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-5 transition-all duration-300 group-hover:text-white ${palette}`}>
                       {f.icon}
                     </div>
-                    <h3 className="text-sm font-bold text-slate-800 mb-2 group-hover:text-slate-900">{f.title}</h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
+                    <h3 className="text-sm font-bold text-[#0c211c] mb-2 group-hover:text-[#005c45]">{f.title}</h3>
+                    <p className="text-sm text-slate-655 leading-relaxed">{f.desc}</p>
                   </div>
                 );
               })}
@@ -857,13 +860,13 @@ const Landing = () => {
         </section>
 
         {/* ══════════ HOW IT WORKS ══════════ */}
-        <section id="how" className="py-20 px-5 sm:px-8 bg-white">
+        <section id="how" className="py-20 px-5 sm:px-8 bg-[#fcfbf9]">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-14 reveal">
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-widest">
+              <span className="text-xs font-bold text-[#005c45] bg-[#005c45]/5 border border-[#005c45]/20 px-3 py-1 rounded-full uppercase tracking-widest">
                 {isEnglish ? 'How it works' : 'Cách hoạt động'}
               </span>
-              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-slate-900">
+              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#0c211c]">
                 {isEnglish ? 'Start in 3 steps' : 'Bắt đầu trong 3 bước'}
               </h2>
             </div>
@@ -875,12 +878,12 @@ const Landing = () => {
                 { n: 3, title: isEnglish ? 'Review and optimize' : 'Xem báo cáo & tối ưu', desc: isEnglish ? 'Analyze trends and improve spending habits.' : 'Phân tích xu hướng và cải thiện thói quen chi tiêu.', icon: <FaChartLine /> },
               ].map((s, i) => (
                 <div key={i} className={`reveal reveal-delay-${i + 1} relative flex flex-col items-center text-center group ${i < 2 ? 'step-line' : ''}`}>
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-xl shadow-lg shadow-emerald-600/30 mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-14 h-14 rounded-2xl bg-[#005c45] text-white flex items-center justify-center text-xl shadow-lg shadow-[#005c45]/20 mb-4 group-hover:scale-110 transition-transform duration-300">
                     {s.icon}
                   </div>
-                  <div className="text-xs font-bold text-emerald-600 mb-1 uppercase tracking-widest">{isEnglish ? 'Step' : 'Bước'} {s.n}</div>
-                  <h3 className="text-base font-bold text-slate-800 mb-2">{s.title}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">{s.desc}</p>
+                  <div className="text-xs font-bold text-[#ca8a04] mb-1 uppercase tracking-widest">{isEnglish ? 'Step' : 'Bước'} {s.n}</div>
+                  <h3 className="text-base font-bold text-[#0c211c] mb-2">{s.title}</h3>
+                  <p className="text-sm text-slate-655 leading-relaxed">{s.desc}</p>
                 </div>
               ))}
             </div>
@@ -888,29 +891,29 @@ const Landing = () => {
         </section>
 
         {/* ══════════ FEATURED INSPIRATION ART ══════════ */}
-        <section className="py-20 px-5 sm:px-8 bg-slate-50 border-y border-slate-100">
+        <section className="py-20 px-5 sm:px-8 bg-[#f5f2eb] border-y border-[#e8dfc5]">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-10 reveal">
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-widest">
+              <span className="text-xs font-bold text-[#005c45] bg-[#005c45]/5 border border-[#005c45]/20 px-3 py-1 rounded-full uppercase tracking-widest">
                 {isEnglish ? 'Art inspiration' : 'Cảm hứng nghệ thuật'}
               </span>
-              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-slate-900">
+              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#0c211c]">
                 {isEnglish ? 'Cash flow and life goals' : 'Dòng tiền và mục tiêu cuộc sống'}
               </h2>
             </div>
 
             <div className="grid lg:grid-cols-[1fr_1.45fr] gap-8 lg:gap-10 items-center">
               <article className="reveal">
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-[#0c211c] leading-tight">
                   {FEATURED_ARTWORK.title}
                 </h3>
-                <p className="mt-3 text-sm font-semibold text-emerald-700 uppercase tracking-widest">
+                <p className="mt-3 text-sm font-semibold text-[#ca8a04] uppercase tracking-widest">
                   {FEATURED_ARTWORK.subtitle}
                 </p>
-                <p className="mt-5 text-base text-slate-600 leading-relaxed">
+                <p className="mt-5 text-base text-slate-655 leading-relaxed">
                   {FEATURED_ARTWORK.desc1}
                 </p>
-                <p className="mt-4 text-base text-slate-600 leading-relaxed">
+                <p className="mt-4 text-base text-slate-655 leading-relaxed">
                   {FEATURED_ARTWORK.desc2}
                 </p>
               </article>
@@ -918,7 +921,7 @@ const Landing = () => {
               <figure
                 onMouseMove={handleArtCardMove}
                 onMouseLeave={handleArtCardLeave}
-                className="ai-art-card reveal reveal-delay-2 group rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-2xl transition-all duration-500"
+                className="ai-art-card reveal reveal-delay-2 group rounded-3xl overflow-hidden border border-[#e8dfc5] bg-white shadow-sm hover:shadow-2xl transition-all duration-500"
               >
                 <div className="ai-art-media relative aspect-[16/10] overflow-hidden">
                   <img
@@ -936,20 +939,20 @@ const Landing = () => {
         </section>
 
         {/* ══════════ VIP PLANS PRICING ══════════ */}
-        <section id="pricing" className="py-20 px-5 sm:px-8 bg-white border-t border-slate-100 relative">
+        <section id="pricing" className="py-20 px-5 sm:px-8 bg-[#fcfbf9] border-t border-[#e8dfc5] relative">
           {/* Decorative elements */}
-          <div className="absolute top-12 left-12 w-64 h-64 bg-amber-200/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-12 right-12 w-64 h-64 bg-emerald-200/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-12 left-12 w-64 h-64 bg-[#ca8a04]/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-12 right-12 w-64 h-64 bg-[#005c45]/5 rounded-full blur-3xl pointer-events-none" />
 
           <div className="max-w-6xl mx-auto relative z-10">
             <div className="text-center mb-14 reveal">
-              <span className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full uppercase tracking-widest">
+              <span className="text-xs font-bold text-[#ca8a04] bg-[#ca8a04]/5 border border-[#ca8a04]/20 px-3 py-1 rounded-full uppercase tracking-widest">
                 {isEnglish ? 'VIP Packages' : 'Gói dịch vụ VIP'}
               </span>
-              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-slate-900">
+              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#0c211c]">
                 {isEnglish ? 'Upgrade to Premium VIP' : 'Nâng cấp đặc quyền VIP'}
               </h2>
-              <p className="mt-3 text-base text-slate-500 max-w-lg mx-auto">
+              <p className="mt-3 text-base text-slate-650 max-w-lg mx-auto">
                 {isEnglish
                   ? 'Unlock advanced AI forecasting, receipt scanning, and unlimited resources.'
                   : 'Mở khóa không giới hạn tài nguyên và trải nghiệm trọn vẹn sức mạnh của trí tuệ nhân tạo AI.'}
@@ -961,7 +964,7 @@ const Landing = () => {
                 {
                   id: '1_month',
                   name: isEnglish ? '1 Month VIP' : '1 Tháng VIP',
-                  price: '20.000 ₫',
+                  price: '10.000 ₫',
                   desc: isEnglish ? 'Perfect for testing premium features' : 'Trải nghiệm đầy đủ tính năng cao cấp',
                   isPopular: false,
                   save: 0
@@ -969,46 +972,46 @@ const Landing = () => {
                 {
                   id: '6_months',
                   name: isEnglish ? '6 Months VIP' : '6 Tháng VIP',
-                  price: '100.000 ₫',
+                  price: '50.000 ₫',
                   desc: isEnglish ? 'Optimal and cost-saving for smart users' : 'Lựa chọn tiết kiệm cho người dùng thông thái',
                   isPopular: true,
                   save: 16,
-                  originalPrice: '120.000 ₫'
+                  originalPrice: '60.000 ₫'
                 },
                 {
                   id: '12_months',
                   name: isEnglish ? '1 Year VIP' : '1 Năm VIP',
-                  price: '180.000 ₫',
+                  price: '90.000 ₫',
                   desc: isEnglish ? 'Ultimate commitment for long-term planning' : 'Đồng hành lâu dài cùng kế hoạch tài chính',
                   isPopular: false,
                   save: 25,
-                  originalPrice: '240.000 ₫'
+                  originalPrice: '120.000 ₫'
                 }
               ].map((plan, i) => (
                 <div
                   key={plan.id}
-                  className={`reveal reveal-delay-${i + 1} relative rounded-3xl border p-7 flex flex-col justify-between transition-all duration-300 bg-white dark:bg-[#191d25]
+                  className={`reveal reveal-delay-${i + 1} relative rounded-3xl border p-7 flex flex-col justify-between transition-all duration-300 bg-[#fdfbf9] dark:bg-[#191d25]
                     ${plan.isPopular
-                      ? 'border-amber-500 shadow-xl scale-[1.02] ring-1 ring-amber-500'
-                      : 'border-slate-200 dark:border-gray-800 hover:border-slate-350 dark:hover:border-gray-700 hover:shadow-md'
+                      ? 'border-[#ca8a04] shadow-xl scale-[1.02] ring-1 ring-[#ca8a04]'
+                      : 'border-[#e8dfc5] dark:border-gray-800 hover:border-[#ca8a04] hover:shadow-md'
                     }`}
                 >
                   {plan.isPopular && (
-                    <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-3.5 py-1 text-[11px] font-black uppercase text-white tracking-wider shadow-md animate-pulse">
+                    <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#ca8a04] px-3.5 py-1 text-[11px] font-black uppercase text-white tracking-wider shadow-md animate-pulse">
                       {isEnglish ? 'Most Popular' : 'Khuyên dùng'}
                     </span>
                   )}
 
                   <div>
-                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">{plan.name}</h3>
-                    <p className="text-xs text-slate-500 dark:text-gray-400 mb-6">{plan.desc}</p>
+                    <h3 className="text-xl font-bold text-[#0c211c] dark:text-white mb-2">{plan.name}</h3>
+                    <p className="text-xs text-slate-650 dark:text-gray-400 mb-6">{plan.desc}</p>
 
                     <div className="flex items-baseline gap-2 mb-2">
-                      <span className="text-3xl font-black text-slate-900 dark:text-white">
+                      <span className="text-3xl font-black text-[#0c211c] dark:text-white">
                         {plan.price}
                       </span>
                       {plan.originalPrice && (
-                        <span className="text-sm line-through text-slate-400 dark:text-gray-500">
+                        <span className="text-sm line-through text-slate-500 dark:text-gray-500">
                           {plan.originalPrice}
                         </span>
                       )}
@@ -1020,25 +1023,25 @@ const Landing = () => {
                       </span>
                     )}
 
-                    <ul className="space-y-3 mb-8 text-xs text-slate-650 dark:text-gray-300 border-t border-slate-100 dark:border-gray-800 pt-5">
+                    <ul className="space-y-3 mb-8 text-xs text-slate-650 dark:text-gray-300 border-t border-[#e8dfc5] dark:border-gray-800 pt-5">
                       <li className="flex items-center gap-2">
-                        <span className="text-amber-500 font-bold">👑</span>
+                        <span className="text-[#ca8a04] font-bold">👑</span>
                         <span>{isEnglish ? 'Unlimited wallets & budgets' : 'Không giới hạn ví & ngân sách'}</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="text-amber-500 font-bold">👑</span>
+                        <span className="text-[#ca8a04] font-bold">👑</span>
                         <span>{isEnglish ? 'Unlimited monthly transactions' : 'Không giới hạn giao dịch thu chi'}</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="text-amber-500 font-bold">👑</span>
+                        <span className="text-[#ca8a04] font-bold">👑</span>
                         <span>{isEnglish ? 'Unlimited AI OCR Receipt Scan' : 'Quét ảnh hóa đơn bằng AI không giới hạn'}</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="text-amber-500 font-bold">👑</span>
+                        <span className="text-[#ca8a04] font-bold">👑</span>
                         <span>{isEnglish ? 'AI Cashflow Forecast & Trends' : 'Dự báo dòng tiền & phân tích xu hướng AI'}</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="text-amber-500 font-bold">👑</span>
+                        <span className="text-[#ca8a04] font-bold">👑</span>
                         <span>{isEnglish ? 'Full Debt Management & Exports' : 'Quản lý nợ & Xuất báo cáo PDF/Excel'}</span>
                       </li>
                     </ul>
@@ -1048,8 +1051,8 @@ const Landing = () => {
                     onClick={() => navigate(user ? '/vip' : '/register')}
                     className={`w-full rounded-2xl py-3 text-xs font-extrabold transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm
                       ${plan.isPopular
-                        ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20'
-                        : 'bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white'
+                        ? 'bg-[#ca8a04] hover:bg-[#b07803] text-white shadow-lg shadow-[#ca8a04]/20'
+                        : 'bg-[#e8dfc5]/60 hover:bg-[#e8dfc5] text-[#0c211c] dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white'
                       }`}
                   >
                     {isEnglish ? 'Upgrade Now' : 'Đăng ký ngay'}
@@ -1064,53 +1067,53 @@ const Landing = () => {
         <section id="testimonials" className="growth-surface py-24 px-5 sm:px-8">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12 reveal">
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-250 px-3 py-1 rounded-full uppercase tracking-widest">
+              <span className="text-xs font-bold text-[#005c45] bg-[#005c45]/5 border border-[#005c45]/20 px-3 py-1 rounded-full uppercase tracking-widest">
                 {isEnglish ? 'Growth roadmap' : 'Bản đồ tăng trưởng'}
               </span>
-              <h2 className="mt-4 text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
+              <h2 className="mt-4 text-3xl sm:text-5xl font-extrabold text-[#0c211c] tracking-tight">
                 {isEnglish ? 'Prosperous Cashflow Roadmap' : 'Lộ trình Dòng tiền thịnh vượng'}
               </h2>
-              <p className="mt-4 text-sm sm:text-base text-slate-500 max-w-2xl mx-auto">
+              <p className="mt-4 text-sm sm:text-base text-slate-650 max-w-2xl mx-auto">
                 {isEnglish ? 'Instead of testimonials, here is a practical action framework to move from expense control to financial freedom in clear stages.' : 'Thay vì lời khen, đây là khâu hành động thực tế giúp bạn đi từ kiểm soát chi tiêu đến tự do tài chính theo từng giai đoạn rõ ràng.'}
               </p>
             </div>
 
             <div className="grid lg:grid-cols-[1fr_1.2fr] gap-6">
               <article className="growth-card reveal rounded-3xl p-7">
-                <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">{isEnglish ? 'Mindset and pace' : 'Tư duy và nhịp độ'}</h3>
-                <p className="mt-4 text-slate-500 leading-relaxed">
+                <h3 className="text-2xl font-extrabold text-[#0c211c] tracking-tight">{isEnglish ? 'Mindset and pace' : 'Tư duy và nhịp độ'}</h3>
+                <p className="mt-4 text-slate-655 leading-relaxed">
                   {isEnglish ? 'The goal is not extreme austerity, but healthy cash flow: know where money goes, what to prioritize, and keep monthly savings habits.' : 'Mục tiêu không phải “thắt chặt cực đoan”, mà là tạo một dòng tiền lành mạnh: biết tiền đi đâu, ưu tiên gì trước, và duy trì thói quen tích lũy mỗi tháng.'}
                 </p>
                 <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-3">
-                    <p className="text-xs uppercase tracking-widest text-emerald-700 font-bold">{isEnglish ? 'Priority' : 'Ưu tiên'}</p>
-                    <p className="mt-1 font-semibold text-slate-800">{isEnglish ? 'Emergency fund safety' : 'An toàn quỹ dự phòng'}</p>
+                  <div className="rounded-2xl border border-[#005c45]/20 bg-[#005c45]/5 p-3">
+                    <p className="text-xs uppercase tracking-widest text-[#005c45] font-bold">{isEnglish ? 'Priority' : 'Ưu tiên'}</p>
+                    <p className="mt-1 font-semibold text-[#0c211c]">{isEnglish ? 'Emergency fund safety' : 'An toàn quỹ dự phòng'}</p>
                   </div>
-                  <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-3">
-                    <p className="text-xs uppercase tracking-widest text-blue-700 font-bold">{isEnglish ? 'Consistency' : 'Nhịp độ'}</p>
-                    <p className="mt-1 font-semibold text-slate-800">{isEnglish ? 'Automated monthly savings' : 'Tích lũy tự động hàng tháng'}</p>
+                  <div className="rounded-2xl border border-[#ca8a04]/20 bg-[#ca8a04]/5 p-3">
+                    <p className="text-xs uppercase tracking-widest text-[#ca8a04] font-bold">{isEnglish ? 'Consistency' : 'Nhịp độ'}</p>
+                    <p className="mt-1 font-semibold text-[#0c211c]">{isEnglish ? 'Automated monthly savings' : 'Tích lũy tự động hàng tháng'}</p>
                   </div>
-                  <div className="rounded-2xl border border-violet-100 bg-violet-50/50 p-3 col-span-2">
-                    <p className="text-xs uppercase tracking-widest text-violet-400 font-bold">{isEnglish ? 'Principle' : 'Nguyên tắc'}</p>
-                    <p className="mt-1 font-semibold text-slate-800">{isEnglish ? 'Track - Optimize - Improve continuously' : 'Theo dõi - Tối ưu - Nâng cấp liên tục'}</p>
+                  <div className="rounded-2xl border border-[#e8dfc5] bg-[#fcfbf9] p-3 col-span-2">
+                    <p className="text-xs uppercase tracking-widest text-[#ca8a04] font-bold">{isEnglish ? 'Principle' : 'Nguyên tắc'}</p>
+                    <p className="mt-1 font-semibold text-[#0c211c]">{isEnglish ? 'Track - Optimize - Improve continuously' : 'Theo dõi - Tối ưu - Nâng cấp liên tục'}</p>
                   </div>
                 </div>
               </article>
 
               <div className="grid sm:grid-cols-2 gap-4">
                 {[
-                  { step: '01', title: isEnglish ? 'Understand cash flow' : 'Nắm dòng tiền', desc: isEnglish ? 'Categorize income/expense and find biggest leakage points.' : 'Phân loại thu/chi và xác định điểm rò rỉ lớn nhất.', icon: <FaWallet size={16} className="text-emerald-600" /> },
-                  { step: '02', title: isEnglish ? 'Set budget milestones' : 'Đặt mốc ngân sách', desc: isEnglish ? 'Set spending caps by group and early warnings.' : 'Khóa trần chi tiêu theo nhóm và cảnh báo sớm.', icon: <FaCreditCard size={16} className="text-blue-600" /> },
-                  { step: '03', title: isEnglish ? 'Set goals' : 'Thiết lập mục tiêu', desc: isEnglish ? 'Break long-term goals into smaller milestones.' : 'Biến mục tiêu dài hạn thành cột mốc nhỏ dễ theo.', icon: <FaBullseye size={16} className="text-violet-600" /> },
-                  { step: '04', title: isEnglish ? 'Measure and grow' : 'Đo và tăng trưởng', desc: isEnglish ? 'Track monthly charts to improve savings efficiency.' : 'Theo dõi biểu đồ tháng để nâng hiệu quả tiết kiệm.', icon: <FaChartLine size={16} className="text-slate-400" /> },
+                  { step: '01', title: isEnglish ? 'Understand cash flow' : 'Nắm dòng tiền', desc: isEnglish ? 'Categorize income/expense and find biggest leakage points.' : 'Phân loại thu/chi và xác định điểm rò rỉ lớn nhất.', icon: <FaWallet size={16} className="text-[#005c45]" /> },
+                  { step: '02', title: isEnglish ? 'Set budget milestones' : 'Đặt mốc ngân sách', desc: isEnglish ? 'Set spending caps by group and early warnings.' : 'Khóa trần chi tiêu theo nhóm và cảnh báo sớm.', icon: <FaCreditCard size={16} className="text-[#ca8a04]" /> },
+                  { step: '03', title: isEnglish ? 'Set goals' : 'Thiết lập mục tiêu', desc: isEnglish ? 'Break long-term goals into smaller milestones.' : 'Biến mục tiêu dài hạn thành cột mốc nhỏ dễ theo.', icon: <FaBullseye size={16} className="text-[#005c45]" /> },
+                  { step: '04', title: isEnglish ? 'Measure and grow' : 'Đo và tăng trưởng', desc: isEnglish ? 'Track monthly charts to improve savings efficiency.' : 'Theo dõi biểu đồ tháng để nâng hiệu quả tiết kiệm.', icon: <FaChartLine size={16} className="text-[#ca8a04]" /> },
                 ].map((item, i) => (
                   <article key={item.step} className={`growth-card reveal reveal-delay-${(i % 4) + 1} rounded-3xl p-5`}>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-black tracking-widest text-emerald-600">{isEnglish ? 'STAGE' : 'CHẶNG'} {item.step}</span>
+                      <span className="text-xs font-black tracking-widest text-[#005c45]">{isEnglish ? 'STAGE' : 'CHẶNG'} {item.step}</span>
                       {item.icon}
                     </div>
-                    <h4 className="text-lg font-extrabold text-slate-900 tracking-tight">{item.title}</h4>
-                    <p className="mt-2 text-sm text-slate-500 leading-relaxed">{item.desc}</p>
+                    <h4 className="text-lg font-extrabold text-[#0c211c] tracking-tight">{item.title}</h4>
+                    <p className="mt-2 text-sm text-slate-655 leading-relaxed">{item.desc}</p>
                   </article>
                 ))}
               </div>
@@ -1120,7 +1123,7 @@ const Landing = () => {
 
         {/* ══════════ CTA ══════════ */}
         <section
-          className="relative py-24 px-5 sm:px-8 overflow-hidden bg-white border-t border-b border-slate-100"
+          className="relative py-24 px-5 sm:px-8 overflow-hidden bg-[#f5f2eb] border-t border-b border-[#e8dfc5]"
         >
           <div ref={ctaWaveLayerRef} className="cta-wave-surface" style={{ '--wave-x': '50%', '--wave-y': '50%' }}>
             <span className="cta-wave-ripple r1" />
@@ -1128,24 +1131,24 @@ const Landing = () => {
             <span className="cta-wave-ripple r3" />
             <span className="cta-wave-core" />
           </div>
-          <div className="absolute top-8 left-16 text-emerald-600/5 text-8xl font-black pointer-events-none select-none">₫</div>
-          <div className="absolute bottom-8 right-16 text-emerald-600/5 text-8xl font-black pointer-events-none select-none">%</div>
+          <div className="absolute top-8 left-16 text-[#005c45]/5 text-8xl font-black pointer-events-none select-none">₫</div>
+          <div className="absolute bottom-8 right-16 text-[#005c45]/5 text-8xl font-black pointer-events-none select-none">%</div>
 
           <div className="relative max-w-2xl mx-auto text-center reveal">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-100/60 border border-emerald-200/80 rounded-full mb-6">
-              <FaRocket className="text-emerald-700" size={12} />
-              <span className="text-xs font-semibold text-emerald-800">{isEnglish ? 'Start today' : 'Bắt đầu ngay hôm nay'}</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#005c45]/10 border border-[#005c45]/20 rounded-full mb-6">
+              <FaRocket className="text-[#005c45]" size={12} />
+              <span className="text-xs font-semibold text-[#005c45]">{isEnglish ? 'Start today' : 'Bắt đầu ngay hôm nay'}</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-4 leading-tight">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0c211c] mb-4 leading-tight">
               {isEnglish ? 'Ready to master' : 'Sẵn sàng làm chủ'}<br />{isEnglish ? 'your finances?' : 'tài chính của bạn?'}
             </h2>
-            <p className="text-slate-600 mb-8 text-base leading-relaxed">
+            <p className="text-slate-655 mb-8 text-base leading-relaxed">
               {isEnglish ? 'Join thousands building better financial habits every day.' : 'Tham gia hàng nghìn người đang xây dựng thói quen tài chính tốt mỗi ngày.'}
             </p>
             {user ? (
               <button
                 onClick={() => navigate('/dashboard')}
-                className="inline-flex items-center gap-2 px-9 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 hover:scale-[1.02] transition-all duration-200 shadow-md hover:shadow-lg text-sm"
+                className="inline-flex items-center gap-2 px-9 py-4 bg-[#005c45] text-white font-bold rounded-2xl hover:bg-[#004d3e] hover:scale-[1.02] transition-all duration-200 shadow-md hover:shadow-lg text-sm"
               >
                 <FaRocket size={13} /> {isEnglish ? 'Go to Dashboard' : 'Vào Dashboard'} <FaArrowRight size={11} />
               </button>
@@ -1153,26 +1156,26 @@ const Landing = () => {
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   onClick={() => navigate('/register')}
-                  className="inline-flex items-center justify-center gap-2 px-9 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 hover:scale-[1.02] transition-all duration-200 shadow-md hover:shadow-lg text-sm"
+                  className="inline-flex items-center justify-center gap-2 px-9 py-4 bg-[#005c45] text-white font-bold rounded-2xl hover:bg-[#004d3e] hover:scale-[1.02] transition-all duration-200 shadow-md hover:shadow-lg text-sm"
                 >
                   {isEnglish ? 'Sign up free' : 'Đăng ký miễn phí'} <FaArrowRight size={11} />
                 </button>
                 <button
                   onClick={() => navigate('/login')}
-                  className="inline-flex items-center justify-center gap-2 px-9 py-4 border border-emerald-200 bg-white text-emerald-700 font-semibold rounded-2xl hover:bg-emerald-50 hover:scale-[1.02] transition-all duration-200 text-sm shadow-sm"
+                  className="inline-flex items-center justify-center gap-2 px-9 py-4 border border-[#005c45]/30 bg-[#fdfbf9] text-[#005c45] font-semibold rounded-2xl hover:bg-[#e8dfc5]/30 hover:scale-[1.02] transition-all duration-200 text-sm shadow-sm"
                 >
                   {isEnglish ? 'Already have an account? Sign in' : 'Đã có tài khoản? Đăng nhập'}
                 </button>
               </div>
             )}
-            <p className="text-emerald-700 text-xs mt-5 font-medium">
+            <p className="text-[#005c45] text-xs mt-5 font-medium">
               {isEnglish ? 'No credit card required · 14-day free trial · Cancel anytime' : 'Không cần thẻ tín dụng · Miễn phí 14 ngày · Hủy bất cứ lúc nào'}
             </p>
           </div>
         </section>
 
         {/* ══════════ FOOTER ══════════ */}
-        <footer className="bg-black text-gray-300 border-t border-gray-800 py-14 px-5 sm:px-8">
+        <footer className="bg-[#051f19] text-[#e8dfc5]/80 border-t border-[#0c211c] py-14 px-5 sm:px-8">
           <div className="max-w-6xl mx-auto">
             <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
               <div>
@@ -1180,54 +1183,54 @@ const Landing = () => {
                   <div className="w-9 h-9 bg-transparent rounded-xl flex items-center justify-center">
                     <img src="/LogoD.png" alt="" className="w-5 h-5 object-contain" />
                   </div>
-                  <span className="text-white font-bold text-sm">Finance Manager</span>
+                  <span className="text-[#fdfbf9] font-bold text-sm">Finance Manager</span>
                 </div>
                 <p className="text-sm leading-relaxed">{isEnglish ? 'A smart and modern personal finance management solution.' : 'Giải pháp quản lý tài chính cá nhân thông minh và hiện đại.'}</p>
 
                 {/* Security badge */}
-                <div className="flex items-center gap-1.5 mt-4 text-xs text-gray-500">
-                  <FaLock size={10} className="text-emerald-500" />
+                <div className="flex items-center gap-1.5 mt-4 text-xs text-[#e8dfc5]/50">
+                  <FaLock size={10} className="text-[#ca8a04]" />
                   <span>{isEnglish ? '256-bit SSL encrypted data' : 'Dữ liệu mã hóa 256-bit SSL'}</span>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-white text-sm font-bold mb-4">{isEnglish ? 'Product' : 'Sản phẩm'}</h4>
-                <ul className="space-y-2.5 text-sm text-gray-400">
-                  <li><a href="#features" className="hover:text-white transition hover:translate-x-1 inline-block">{isEnglish ? 'Features' : 'Tính năng'}</a></li>
-                  <li><a href="#how" className="hover:text-white transition hover:translate-x-1 inline-block">{isEnglish ? 'How it works' : 'Cách dùng'}</a></li>
-                  <li><a href="#pricing" className="hover:text-white transition hover:translate-x-1 inline-block">{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a></li>
+                <h4 className="text-[#fdfbf9] text-sm font-bold mb-4">{isEnglish ? 'Product' : 'Sản phẩm'}</h4>
+                <ul className="space-y-2.5 text-sm text-[#e8dfc5]/70">
+                  <li><a href="#features" className="hover:text-[#ca8a04] transition hover:translate-x-1 inline-block">{isEnglish ? 'Features' : 'Tính năng'}</a></li>
+                  <li><a href="#how" className="hover:text-[#ca8a04] transition hover:translate-x-1 inline-block">{isEnglish ? 'How it works' : 'Cách dùng'}</a></li>
+                  <li><a href="#pricing" className="hover:text-[#ca8a04] transition hover:translate-x-1 inline-block">{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a></li>
                 </ul>
               </div>
 
               <div>
-                <h4 className="text-white text-sm font-bold mb-4">{isEnglish ? 'Company' : 'Công ty'}</h4>
-                <ul className="space-y-2.5 text-sm text-gray-400">
-                  <li><button onClick={() => navigate('/about')} className="hover:text-white transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'About us' : 'Về chúng tôi'}</button></li>
-                  <li><button onClick={() => navigate('/contact')} className="hover:text-white transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'Contact' : 'Liên hệ'}</button></li>
-                  <li><button onClick={() => navigate('/privacy')} className="hover:text-white transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}</button></li>
+                <h4 className="text-[#fdfbf9] text-sm font-bold mb-4">{isEnglish ? 'Company' : 'Công ty'}</h4>
+                <ul className="space-y-2.5 text-sm text-[#e8dfc5]/70">
+                  <li><button onClick={() => navigate('/about')} className="hover:text-[#ca8a04] transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'About us' : 'Về chúng tôi'}</button></li>
+                  <li><button onClick={() => navigate('/contact')} className="hover:text-[#ca8a04] transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'Contact' : 'Liên hệ'}</button></li>
+                  <li><button onClick={() => navigate('/privacy')} className="hover:text-[#ca8a04] transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}</button></li>
                 </ul>
               </div>
 
               <div>
-                <h4 className="text-white text-sm font-bold mb-4">{isEnglish ? 'Follow' : 'Theo dõi'}</h4>
+                <h4 className="text-[#fdfbf9] text-sm font-bold mb-4">{isEnglish ? 'Follow' : 'Theo dõi'}</h4>
                 <div className="flex gap-3 mb-5">
                   {[FaFacebook, FaTwitter, FaLinkedin].map((Icon, i) => (
                     <a key={i} href="#"
-                      className="w-9 h-9 rounded-xl bg-[#121212] border border-gray-800 hover:bg-emerald-600 flex items-center justify-center transition-all duration-200 hover:scale-110 text-gray-400 hover:text-white">
+                      className="w-9 h-9 rounded-xl bg-[#0c211c] border border-[#0c211c] hover:bg-[#ca8a04] hover:border-[#ca8a04] flex items-center justify-center transition-all duration-200 hover:scale-110 text-[#e8dfc5] hover:text-white">
                       <Icon size={14} />
                     </a>
                   ))}
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-[#e8dfc5]/50">
                   {isEnglish ? 'New feature updates' : 'Cập nhật tính năng mới'}<br />{isEnglish ? 'every week' : 'mỗi tuần'}
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <div className="border-t border-[#0c211c] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
               <span>&copy; 2025 Finance Manager. All rights reserved.</span>
-              <span className="text-gray-500">{isEnglish ? 'Built with ❤ in Vietnam' : 'Được xây dựng với ❤ tại Việt Nam'}</span>
+              <span className="text-[#e8dfc5]/50">{isEnglish ? 'Built with ❤ in Vietnam' : 'Được xây dựng với ❤ tại Việt Nam'}</span>
             </div>
           </div>
         </footer>

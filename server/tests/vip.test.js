@@ -132,17 +132,22 @@ describe('VIP limits & Payments flow', () => {
     expect(orderRes.body.success).toBe(true);
     const orderId = orderRes.body.data.id;
 
-    // 2. Kích hoạt qua Sandbox webhook giả lập
-    const payRes = await request(app)
-      .post('/api/vip/sandbox-pay')
-      .set('Authorization', `Bearer ${userToken}`)
-      .send({ orderId });
+    // 2. Kích hoạt qua PayOS Webhook (giả lập thanh toán)
+    const webhookRes = await request(app)
+      .post('/api/vip/payos-webhook')
+      .send({ orderCode: orderRes.body.data.paymentCode });
+    
+    expect(webhookRes.status).toBe(200);
 
-    expect(payRes.status).toBe(200);
-    expect(payRes.body.success).toBe(true);
-    expect(payRes.body.data.isVip).toBe(true);
+    // 3. Admin duyệt đơn hàng để kích hoạt VIP
+    const confirmRes = await request(app)
+      .put(`/api/vip/order/${orderId}/confirm`)
+      .set('Authorization', `Bearer ${adminToken}`);
 
-    // 3. Xác nhận tài khoản được nâng cấp và bypass giới hạn ví (Tạo ví thứ 4 thành công)
+    expect(confirmRes.status).toBe(200);
+    expect(confirmRes.body.success).toBe(true);
+
+    // 4. Xác nhận tài khoản được nâng cấp và bypass giới hạn ví (Tạo ví thứ 4 thành công)
     // Ví 2
     await request(app)
       .post('/api/wallets')
@@ -206,10 +211,10 @@ describe('VIP limits & Payments flow', () => {
       .send({ durationMonths: 6, amount: 100000 });
     const order1Id = order1Res.body.data.id;
 
+    // Admin duyệt để kích hoạt gói VIP
     await request(app)
-      .post('/api/vip/sandbox-pay')
-      .set('Authorization', `Bearer ${userToken}`)
-      .send({ orderId: order1Id });
+      .put(`/api/vip/order/${order1Id}/confirm`)
+      .set('Authorization', `Bearer ${adminToken}`);
 
     // 2. Thử tạo tiếp gói 1 tháng -> Bị chặn (hạ cấp)
     const order2Res = await request(app)
@@ -270,10 +275,10 @@ describe('VIP limits & Payments flow', () => {
       .send({ durationMonths: 1, amount: 20000 });
     const orderId = orderRes.body.data.id;
 
+    // Admin duyệt để kích hoạt gói VIP
     await request(app)
-      .post('/api/vip/sandbox-pay')
-      .set('Authorization', `Bearer ${userToken}`)
-      .send({ orderId });
+      .put(`/api/vip/order/${orderId}/confirm`)
+      .set('Authorization', `Bearer ${adminToken}`);
 
     // 2. Hủy VIP
     const cancelRes = await request(app)
@@ -328,9 +333,8 @@ describe('VIP limits & Payments flow', () => {
 
     // Duyệt đơn hàng 2 thành completed
     await request(app)
-      .post('/api/vip/sandbox-pay')
-      .set('Authorization', `Bearer ${userToken}`)
-      .send({ orderId: order2Id });
+      .put(`/api/vip/order/${order2Id}/confirm`)
+      .set('Authorization', `Bearer ${adminToken}`);
 
     // 4. User xóa đơn hàng 2 (đã completed) -> Thất bại
     const userDelCompleted = await request(app)

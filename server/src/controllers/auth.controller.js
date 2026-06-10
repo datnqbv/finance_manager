@@ -159,7 +159,8 @@ export const login = async (req, res) => {
     user.refreshToken = refreshToken;
 
     // Gamification: Daily Login XP
-    const today = new Date().toISOString().split('T')[0];
+    const tzOffset = new Date().getTimezoneOffset() * 60000;
+    const today = (new Date(Date.now() - tzOffset)).toISOString().split('T')[0];
     if (user.lastLoginDate !== today) {
       user.lastLoginDate = today;
       await addExperience(user, 10);
@@ -202,6 +203,17 @@ export const login = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Người dùng không tồn tại' });
+    }
+
+    // Gamification: Daily Login XP (when fetching user profile/status on page load)
+    const tzOffset = new Date().getTimezoneOffset() * 60000;
+    const today = (new Date(Date.now() - tzOffset)).toISOString().split('T')[0];
+    if (user.lastLoginDate !== today) {
+      user.lastLoginDate = today;
+      await addExperience(user, 10);
+    }
 
     res.json({
       success: true,
@@ -595,7 +607,8 @@ export const googleLogin = async (req, res) => {
     user.refreshToken = refreshToken;
 
     // Gamification: Daily Login XP
-    const today = new Date().toISOString().split('T')[0];
+    const tzOffset = new Date().getTimezoneOffset() * 60000;
+    const today = (new Date(Date.now() - tzOffset)).toISOString().split('T')[0];
     if (user.lastLoginDate !== today) {
       user.lastLoginDate = today;
       await addExperience(user, 10);
@@ -632,3 +645,6 @@ export const googleLogin = async (req, res) => {
     });
   }
 };
+
+// Trigger nodemon reload
+

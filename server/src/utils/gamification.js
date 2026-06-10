@@ -13,14 +13,15 @@ export const addExperience = async (user, xpAmount) => {
     user.experience += xpAmount;
     
     // Streak & Daily XP Logic
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+    const tzOffset = new Date().getTimezoneOffset() * 60000;
+    const todayStr = (new Date(Date.now() - tzOffset)).toISOString().split('T')[0];
     
     if (user.lastActiveDate !== todayStr) {
       if (user.lastActiveDate) {
+        const todayDateOnly = new Date(todayStr);
         const lastActive = new Date(user.lastActiveDate);
-        const diffTime = Math.abs(today - lastActive);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+        const diffTime = Math.abs(todayDateOnly - lastActive);
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
         
         if (diffDays === 1) {
           user.streakDays = (user.streakDays || 0) + 1;

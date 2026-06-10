@@ -30,26 +30,26 @@ const VipSubscription = () => {
       price: 10000,
       originalPrice: 10000,
       savePercent: 0,
-      description: isEnglish ? 'Perfect for testing premium features' : 'Trải nghiệm đầy đủ các tính năng cao cấp'
+      description: isEnglish ? 'Perfect for testing premium features' : 'Trải nghiệm đầy đủ tính năng cao cấp'
     },
     {
       id: '6_months',
       durationMonths: 6,
       name: isEnglish ? '6 Months VIP' : '6 Tháng VIP',
-      price: 100000,
-      originalPrice: 120000,
+      price: 50000,
+      originalPrice: 60000,
       savePercent: 16,
-      description: isEnglish ? 'Great value for budget planning' : 'Lựa chọn tiết kiệm cho người dùng thông thái',
+      description: isEnglish ? 'Optimal and cost-saving for smart users' : 'Lựa chọn tiết kiệm cho người dùng thông thái',
       isPopular: true
     },
     {
       id: '12_months',
       durationMonths: 12,
       name: isEnglish ? '1 Year VIP' : '1 Năm VIP',
-      price: 180000,
-      originalPrice: 240000,
+      price: 90000,
+      originalPrice: 120000,
       savePercent: 25,
-      description: isEnglish ? 'Ultimate experience for long-term planning' : 'Đồng hành lâu dài cùng kế hoạch tài chính'
+      description: isEnglish ? 'Ultimate commitment for long-term planning' : 'Đồng hành lâu dài cùng kế hoạch tài chính'
     }
   ];
 

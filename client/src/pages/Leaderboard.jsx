@@ -277,28 +277,60 @@ const Leaderboard = () => {
                 </div>
 
                 {/* Streak details */}
-                <div className="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 border-t border-gray-100 dark:border-gray-800 pt-3 pb-2">
+                <div className="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 border-t border-gray-100 dark:border-gray-800 pt-3 pb-3">
                   <span>{isEnglish ? 'Active Streak' : 'Chuỗi đăng nhập'}</span>
                   <span className="flex items-center gap-1 text-orange-550 font-bold bg-orange-500/10 px-2 py-0.5 rounded-lg border border-orange-500/15">
                     <FaFire className="animate-pulse" />
-                    {currentUserRank.streakDays || 0} {isEnglish ? 'Days' : 'Ngày'}
+                    {currentUserRank.streakDays || 0}
                   </span>
                 </div>
-                
-                <div className="flex justify-between items-center px-1">
+
+                {/* Weekdays check-in grid */}
+                <div className="flex justify-between items-center px-1 pt-1 pb-1">
                   {['Hai', 'Ba', 'Tư', 'Năm', 'Sáu', 'Bảy', 'CN'].map((day, idx) => {
                     const streakCount = currentUserRank.streakDays || 0;
-                    const isLit = streakCount >= (7 - idx);
+                    
+                    // Get current day of the week index (0 = Monday, ..., 6 = Sunday)
+                    const dayOfWeek = new Date().getDay();
+                    const currentDayIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                    
+                    // Calculate distance backwards in a circular week
+                    const diff = (currentDayIdx - idx + 7) % 7;
+                    
+                    // The day is lit if it falls within the streakCount range going backwards from today
+                    const isLit = diff < streakCount;
+                    const isToday = idx === currentDayIdx;
+
                     return (
                       <div key={idx} className="flex flex-col items-center gap-1.5">
-                        <div className={`w-7 h-7 rounded-xl flex items-center justify-center font-bold text-xs border transition-all ${
-                          isLit 
-                            ? 'bg-gradient-to-tr from-orange-400 to-red-500 border-orange-500 text-white shadow-sm' 
-                            : 'bg-transparent border-gray-200 dark:border-gray-800 text-gray-400 dark:text-gray-600'
-                        }`}>
-                          {isLit ? <FaFire size={11} /> : day.charAt(0)}
+                        <div 
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs border transition-all duration-300 ${
+                            isToday 
+                              ? isLit
+                                ? 'bg-gradient-to-tr from-amber-500 via-orange-500 to-red-650 border-orange-600 text-white shadow-md shadow-orange-500/50 scale-110 ring-2 ring-orange-500/30' 
+                                : 'bg-transparent border-orange-500 text-orange-500 ring-2 ring-orange-500/20'
+                              : isLit 
+                                ? 'bg-gradient-to-tr from-orange-400 to-red-500 border-orange-400 text-white shadow-sm' 
+                                : 'bg-transparent border-gray-200 dark:border-gray-800 text-gray-400 dark:text-gray-600'
+                          }`}
+                        >
+                          {isLit ? (
+                            <FaFire 
+                              className={`${
+                                isToday 
+                                  ? 'animate-bounce text-sm drop-shadow-[0_2px_8px_rgba(251,146,60,0.9)] text-yellow-300' 
+                                  : 'text-xs'
+                              }`} 
+                            />
+                          ) : (
+                            day.charAt(0)
+                          )}
                         </div>
-                        <span className="text-[8.5px] text-gray-400 font-bold">
+                        <span className={`text-[8.5px] font-bold ${
+                          isToday 
+                            ? 'text-orange-600 dark:text-orange-400 font-extrabold' 
+                            : 'text-gray-400 dark:text-gray-500'
+                        }`}>
                           {isEnglish ? ['M','T','W','T','F','S','S'][idx] : day}
                         </span>
                       </div>
