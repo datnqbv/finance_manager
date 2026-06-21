@@ -1,650 +1,124 @@
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import { OAuth2Client } from 'google-auth-library';
-import { User, Category, Wallet } from '../models/sequelize/index.js';
-import { sendResetPasswordEmail, sendWelcomeEmail } from '../utils/sendEmail.js';
-import { addExperience } from '../utils/gamification.js';
-import { Op } from 'sequelize';
-
-// Generate short-lived access token (15 minutes)
-const generateAccessToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '15m'
-  });
-};
-
-// Generate long-lived refresh token (30 days)
-const generateRefreshToken = (id) => {
-  const secret = process.env.JWT_REFRESH_SECRET || (process.env.JWT_SECRET + '_refresh_v1');
-  return jwt.sign({ id }, secret, {
-    expiresIn: '30d'
-  });
-};
-
-// Keep backward compat alias used by resetPassword
-const generateToken = generateAccessToken;
+import { asyncHandler } from '../utils/asyncHandler.js';
+import * as authService from '../services/auth.service.js';
 
 // @desc    Register new user
 // @route   POST /api/auth/register
 // @access  Public
-export const register = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-
-    // Check if user exists
-    const userExists = await User.findOne({ where: { email } });
-    if (userExists) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email đã được sử dụng'
-      });
-    }
-
-    // Validate password length
-    if (!password || password.length < 6) {
-      return res.status(400).json({ success: false, message: 'Mật khẩu phải có ít nhất 6 ký tự' });
-    }
-
-    // Create user
-    const user = await User.create({ name, email, password });
-
-    // Create default categories and default wallet for the new user
-    try {
-      await Promise.all([
-        Category.createDefaultCategories(user.id),
-        Wallet.create({
-          userId: user.id,
-          name: 'Ví chính',
-          isDefault: true,
-          icon: '💼',
-          color: '#3B82F6',
-          balance: 0,
-          initialBalance: 0
-        })
-      ]);
-    } catch (err) {
-      console.error('Failed to create default categories or wallet:', err);
-      // Don't fail registration if default assets creation fails
-    }
-
-    // Generate tokens
-    const token = generateAccessToken(user.id);
-    const refreshToken = generateRefreshToken(user.id);
-
-    // Save refresh token to DB
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
-
-    // Gửi email chào mừng (không chờ, chạy background)
-    sendWelcomeEmail(user.email, user.name).catch(err => 
-      console.error('Failed to send welcome email:', err)
-    );
-
-    res.status(201).json({
-      success: true,
-      message: 'Đăng ký thành công',
-      data: {
-        token,
-        refreshToken,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          budget: user.budget,
-          currency: user.currency,
-          avatar: user.avatar,
-          isVip: user.isVip,
-          vipExpire: user.vipExpire,
-          level: user.level,
-          experience: user.experience
-        }
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
+export const register = asyncHandler(async (req, res) => {
+  const data = await authService.register(req.body);
+  res.status(201).json({
+    success: true,
+    message: 'Đăng ký thành công',
+    data
+  });
+});
 
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
-export const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // Validate input
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Vui lòng nhập email và mật khẩu'
-      });
-    }
-
-    // Check for user (include password field)
-    const user = await User.findOne({ where: { email }, attributes: { include: ['password'] } });
-    
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Email hoặc mật khẩu không đúng'
-      });
-    }
-
-    if (user.isBanned) {
-      return res.status(403).json({
-        success: false,
-        message: 'Tài khoản của bạn đã bị khóa bởi quản trị viên. Vui lòng liên hệ hỗ trợ.'
-      });
-    }
-
-    // Check password
-    const isMatch = await user.comparePassword(password);
-    
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Email hoặc mật khẩu không đúng'
-      });
-    }
-
-    // Generate tokens
-    const token = generateAccessToken(user.id);
-    const refreshToken = generateRefreshToken(user.id);
-
-    // Save refresh token to DB
-    user.refreshToken = refreshToken;
-
-    // Gamification: Daily Login XP
-    const tzOffset = new Date().getTimezoneOffset() * 60000;
-    const today = (new Date(Date.now() - tzOffset)).toISOString().split('T')[0];
-    if (user.lastLoginDate !== today) {
-      user.lastLoginDate = today;
-      await addExperience(user, 10);
-    } else {
-      await user.save({ validateBeforeSave: false });
-    }
-
-    res.json({
-      success: true,
-      message: 'Đăng nhập thành công',
-      data: {
-        token,
-        refreshToken,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          budget: user.budget,
-          currency: user.currency,
-          avatar: user.avatar,
-          isVip: user.isVip,
-          vipExpire: user.vipExpire,
-          level: user.level,
-          experience: user.experience
-        }
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
+export const login = asyncHandler(async (req, res) => {
+  const data = await authService.login(req.body);
+  res.json({
+    success: true,
+    message: 'Đăng nhập thành công',
+    data
+  });
+});
 
 // @desc    Get current user
 // @route   GET /api/auth/me
 // @access  Private
-export const getMe = async (req, res) => {
-  try {
-    const user = await User.findByPk(req.user.id);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'Người dùng không tồn tại' });
-    }
-
-    // Gamification: Daily Login XP (when fetching user profile/status on page load)
-    const tzOffset = new Date().getTimezoneOffset() * 60000;
-    const today = (new Date(Date.now() - tzOffset)).toISOString().split('T')[0];
-    if (user.lastLoginDate !== today) {
-      user.lastLoginDate = today;
-      await addExperience(user, 10);
-    }
-
-    res.json({
-      success: true,
-      data: {
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          budget: user.budget,
-          currency: user.currency,
-          avatar: user.avatar,
-          isVip: user.isVip,
-          vipExpire: user.vipExpire,
-          level: user.level,
-          experience: user.experience
-        }
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
+export const getMe = asyncHandler(async (req, res) => {
+  const data = await authService.getMe(req.user.id);
+  res.json({
+    success: true,
+    data
+  });
+});
 
 // @desc    Update user profile
 // @route   PUT /api/auth/profile
 // @access  Private
-export const updateProfile = async (req, res) => {
-  try {
-    const { name, budget, currency, avatar } = req.body;
-
-    const user = await User.findByPk(req.user.id);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'Người dùng không tồn tại'
-      });
-    }
-
-    user.name = name || user.name;
-    user.budget = budget !== undefined ? budget : user.budget;
-    user.currency = currency || user.currency;
-    if (avatar !== undefined) {
-      user.avatar = avatar;
-    }
-
-    await user.save();
-
-    res.json({
-      success: true,
-      message: 'Cập nhật thành công',
-      data: {
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          budget: user.budget,
-          currency: user.currency,
-          avatar: user.avatar,
-          isVip: user.isVip,
-          vipExpire: user.vipExpire,
-          level: user.level,
-          experience: user.experience
-        }
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
+export const updateProfile = asyncHandler(async (req, res) => {
+  const data = await authService.updateProfile(req.user.id, req.body);
+  res.json({
+    success: true,
+    message: 'Cập nhật thành công',
+    data
+  });
+});
 
 // @desc    Change password (authenticated user)
 // @route   PUT /api/auth/change-password
 // @access  Private
-export const changePassword = async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ success: false, message: 'Vui lòng nhập đầy đủ thông tin' });
-    }
-    if (newPassword.length < 6) {
-      return res.status(400).json({ success: false, message: 'Mật khẩu mới phải có ít nhất 6 ký tự' });
-    }
-
-    const user = await User.findByPk(req.user.id, { attributes: { include: ['password'] } });
-    const isMatch = await user.comparePassword(currentPassword);
-    if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Mật khẩu hiện tại không đúng' });
-    }
-
-    user.password = newPassword;
-    await user.save();
-
-    res.json({ success: true, message: 'Đổi mật khẩu thành công' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+export const changePassword = asyncHandler(async (req, res) => {
+  await authService.changePassword(req.user.id, req.body);
+  res.json({ success: true, message: 'Đổi mật khẩu thành công' });
+});
 
 // @desc    Request password reset (generate token)
 // @route   POST /api/auth/forgot-password
 // @access  Public
-export const forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    const user = await User.findOne({ where: { email } });
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy tài khoản với email này'
-      });
-    }
-
-    // Tạo reset token
-    const resetToken = user.createPasswordResetToken();
-    await user.save({ validateBeforeSave: false });
-
-    // Gửi email với mã reset
-    const emailResult = await sendResetPasswordEmail(user.email, resetToken, user.name);
-
-    if (!emailResult.success) {
-      // Nếu gửi email thất bại, xóa token
-      user.resetPasswordToken = undefined;
-      user.resetPasswordExpire = undefined;
-      await user.save({ validateBeforeSave: false });
-
-      return res.status(500).json({
-        success: false,
-        message: 'Không thể gửi email. Vui lòng thử lại sau.'
-      });
-    }
-
-    // Nếu ở chế độ demo (email chưa cấu hình), trả về mã
-    if (emailResult.mode === 'demo') {
-      return res.json({
-        success: true,
-        message: 'Mã xác thực đã được tạo (Demo mode - Email chưa cấu hình)',
-        data: {
-          email: user.email,
-          resetToken, // Trả về mã khi demo
-          demo: true
-        }
-      });
-    }
-
-    // Nếu gửi email thành công
-    res.json({
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const data = await authService.forgotPassword(req.body);
+  
+  if (data.emailResult.mode === 'demo') {
+    return res.json({
       success: true,
-      message: 'Mã xác thực đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.',
+      message: 'Mã xác thực đã được tạo (Demo mode - Email chưa cấu hình)',
       data: {
-        email: user.email
+        email: data.user.email,
+        resetToken: data.resetToken,
+        demo: true
       }
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
   }
-};
+
+  res.json({
+    success: true,
+    message: 'Mã xác thực đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.',
+    data: {
+      email: data.user.email
+    }
+  });
+});
 
 // @desc    Reset password with token
 // @route   POST /api/auth/reset-password
 // @access  Public
-export const resetPassword = async (req, res) => {
-  try {
-    const { email, resetToken, newPassword } = req.body;
-
-    if (!email || !resetToken || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'Vui lòng cung cấp đầy đủ thông tin'
-      });
-    }
-
-    // Tìm user và lấy resetPasswordToken
-    const user = await User.findOne({
-      where: { email, resetPasswordExpire: { [Op.gt]: new Date() } },
-      attributes: { include: ['resetPasswordToken','resetPasswordExpire'] }
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: 'Mã xác thực không hợp lệ hoặc đã hết hạn'
-      });
-    }
-
-    // Verify token
-    const isValid = await bcrypt.compare(resetToken, user.resetPasswordToken);
-
-    if (!isValid) {
-      return res.status(400).json({
-        success: false,
-        message: 'Mã xác thực không đúng'
-      });
-    }
-
-    // Update password
-    user.password = newPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
-    await user.save();
-
-    // Generate new tokens
-    const token = generateAccessToken(user.id);
-    const refreshToken = generateRefreshToken(user.id);
-
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
-
-    res.json({
-      success: true,
-      message: 'Đặt lại mật khẩu thành công',
-      data: {
-        token,
-        refreshToken,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          budget: user.budget,
-          currency: user.currency,
-          avatar: user.avatar,
-          isVip: user.isVip,
-          vipExpire: user.vipExpire,
-          level: user.level,
-          experience: user.experience
-        }
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
+export const resetPassword = asyncHandler(async (req, res) => {
+  const data = await authService.resetPassword(req.body);
+  res.json({
+    success: true,
+    message: 'Đặt lại mật khẩu thành công',
+    data
+  });
+});
 
 // @desc    Refresh access token using refresh token
 // @route   POST /api/auth/refresh-token
 // @access  Public
-export const refreshTokenHandler = async (req, res) => {
-  try {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(401).json({ success: false, message: 'Không có refresh token' });
-    }
-
-    const refreshSecret = process.env.JWT_REFRESH_SECRET || (process.env.JWT_SECRET + '_refresh_v1');
-    let decoded;
-    try {
-      decoded = jwt.verify(refreshToken, refreshSecret);
-    } catch (err) {
-      return res.status(401).json({ success: false, message: 'Refresh token hết hạn hoặc không hợp lệ, vui lòng đăng nhập lại' });
-    }
-
-    const user = await User.findByPk(decoded.id, { attributes: { include: ['refreshToken'] } });
-    if (!user || user.refreshToken !== refreshToken) {
-      return res.status(401).json({ success: false, message: 'Refresh token không hợp lệ' });
-    }
-
-    const newAccessToken = generateAccessToken(user.id);
-    res.json({ success: true, data: { token: newAccessToken } });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+export const refreshTokenHandler = asyncHandler(async (req, res) => {
+  const data = await authService.refreshTokenHandler(req.body);
+  res.json({ success: true, data });
+});
 
 // @desc    Logout - invalidate refresh token
 // @route   POST /api/auth/logout
 // @access  Public
-export const logoutHandler = async (req, res) => {
-  try {
-    const { refreshToken } = req.body;
-    if (refreshToken) {
-      await User.update({ refreshToken: null }, { where: { refreshToken } });
-    }
-    res.json({ success: true, message: 'Đăng xuất thành công' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+export const logoutHandler = asyncHandler(async (req, res) => {
+  await authService.logoutHandler(req.body);
+  res.json({ success: true, message: 'Đăng xuất thành công' });
+});
 
 // @desc    Google OAuth Login
 // @route   POST /api/auth/google
 // @access  Public
-// Hàm này để xử lý đăng nhập bằng Google OAuth. Nó nhận token từ client, xác thực với Google, sau đó tạo hoặc tìm người dùng trong DB, và cuối cùng trả về token JWT cho client. Nếu người dùng mới được tạo, nó cũng sẽ tạo các danh mục mặc định và gửi email chào mừng.
-export const googleLogin = async (req, res) => {
-  try {
-    const { googleToken } = req.body;
-
-    if (!googleToken) {
-      return res.status(400).json({
-        success: false,
-        message: 'Google token không được cung cấp'
-      });
-    }
-
-    // Tạo client OAuth2 để xác thực token với Google
-    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-    let googleData;
-
-    try {
-      const ticket = await client.verifyIdToken({
-        idToken: googleToken,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-      googleData = ticket.getPayload();
-    } catch (error) {
-      console.error('Google token verification failed:', error);
-      return res.status(401).json({
-        success: false,
-        message: 'Google token không hợp lệ'
-      });
-    }
-    // Bóc tách thông tin cần thiết từ token (googleId, email, name, picture)
-    const { sub: googleId, email, name, picture } = googleData;
-
-    // Check if user exists by googleId
-    let user = await User.findOne({ where: { googleId } });
-
-    if (!user) {
-      // Check if user exists by email (to link accounts)
-      user = await User.findOne({ where: { email } });
-
-      if (!user) {
-        // Create new user
-        user = await User.create({
-          name,
-          email,
-          googleId,
-          avatar: picture || null,
-          password: null // No password for Google SSO
-        });
-
-        // Create default categories and default wallet for the new user
-        try {
-          await Promise.all([
-            Category.createDefaultCategories(user.id),
-            Wallet.create({
-              userId: user.id,
-              name: 'Ví chính',
-              isDefault: true,
-              icon: '💼',
-              color: '#3B82F6',
-              balance: 0,
-              initialBalance: 0
-            })
-          ]);
-        } catch (err) {
-          console.error('Failed to create default categories or wallet:', err);
-        }
-
-        // Send welcome email
-        sendWelcomeEmail(user.email, user.name).catch(err => 
-          console.error('Failed to send welcome email:', err)
-        );
-      } else {
-        // Link existing account with Google
-        user.googleId = googleId;
-        await user.save();
-      }
-    }
-
-    if (user.isBanned) {
-      return res.status(403).json({
-        success: false,
-        message: 'Tài khoản của bạn đã bị khóa bởi quản trị viên. Vui lòng liên hệ hỗ trợ.'
-      });
-    }
-
-    // Generate tokens
-    const token = generateAccessToken(user.id);
-    const refreshToken = generateRefreshToken(user.id);
-
-    // Save refresh token to DB
-    user.refreshToken = refreshToken;
-
-    // Gamification: Daily Login XP
-    const tzOffset = new Date().getTimezoneOffset() * 60000;
-    const today = (new Date(Date.now() - tzOffset)).toISOString().split('T')[0];
-    if (user.lastLoginDate !== today) {
-      user.lastLoginDate = today;
-      await addExperience(user, 10);
-    } else {
-      await user.save({ validateBeforeSave: false });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Đăng nhập bằng Google thành công',
-      data: {
-        token,
-        refreshToken,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          budget: user.budget,
-          currency: user.currency,
-          avatar: user.avatar,
-          isVip: user.isVip,
-          vipExpire: user.vipExpire,
-          level: user.level,
-          experience: user.experience
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Google login error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Lỗi đăng nhập với Google'
-    });
-  }
-};
-
-// Trigger nodemon reload
-
+export const googleLogin = asyncHandler(async (req, res) => {
+  const data = await authService.googleLogin(req.body);
+  res.status(200).json({
+    success: true,
+    message: 'Đăng nhập bằng Google thành công',
+    data
+  });
+});

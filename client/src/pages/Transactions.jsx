@@ -238,8 +238,8 @@ const Transactions = () => {
               <button
                 onClick={() => switchViewMode('list')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${viewMode === 'list'
-                    ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                   }`}
               >
                 <FiList size={15} /> {isEnglish ? 'List' : 'Danh sách'}
@@ -247,8 +247,8 @@ const Transactions = () => {
               <button
                 onClick={() => switchViewMode('calendar')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${viewMode === 'calendar'
-                    ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                   }`}
               >
                 <FiCalendar size={15} /> {isEnglish ? 'Calendar' : 'Lịch'}
@@ -517,10 +517,10 @@ const Transactions = () => {
                           {transaction.note || '-'}
                         </td>
                         <td className={`py-3 px-4 text-right font-semibold ${transaction.type === 'income'
-                            ? 'text-green-600 dark:text-green-400'
-                            : transaction.type === 'expense'
-                              ? 'text-red-600 dark:text-red-400'
-                              : 'text-blue-600 dark:text-blue-400'
+                          ? 'text-green-600 dark:text-green-400'
+                          : transaction.type === 'expense'
+                            ? 'text-red-600 dark:text-red-400'
+                            : 'text-blue-600 dark:text-blue-400'
                           }`}>
                           {transaction.type === 'income' ? '+' : transaction.type === 'expense' ? '-' : '⇆ '}
                           {formatCurrency(transaction.amount)}
@@ -561,10 +561,10 @@ const Transactions = () => {
                         </p>
                       </div>
                       <p className={`text-sm font-black ${transaction.type === 'income'
-                          ? 'text-green-600 dark:text-green-400'
-                          : transaction.type === 'expense'
-                            ? 'text-red-600 dark:text-red-400'
-                            : 'text-blue-600 dark:text-blue-400'
+                        ? 'text-green-600 dark:text-green-400'
+                        : transaction.type === 'expense'
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-blue-600 dark:text-blue-400'
                         }`}>
                         {transaction.type === 'income' ? '+' : transaction.type === 'expense' ? '-' : '⇆ '}
                         {formatCurrency(transaction.amount)}

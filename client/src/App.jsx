@@ -25,7 +25,6 @@ const Goals = lazy(() => import('./pages/Goals'));
 const Debts = lazy(() => import('./pages/Debts'));
 const Profile = lazy(() => import('./pages/Profile'));
 const VipSubscription = lazy(() => import('./pages/VipSubscription'));
-const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 const AdminVipPayments = lazy(() => import('./pages/AdminVipPayments'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminContacts = lazy(() => import('./pages/AdminContacts'));
@@ -87,9 +86,6 @@ function App() {
                 </Route>
                 <Route path="/vip" element={<PrivateRoute />}> 
                   <Route index element={<VipSubscription />} /> 
-                </Route>
-                <Route path="/leaderboard" element={<PrivateRoute />}> 
-                  <Route index element={<Leaderboard />} /> 
                 </Route>
 
                 <Route path="/admin" element={<PrivateRoute requiredRole="admin" />}>

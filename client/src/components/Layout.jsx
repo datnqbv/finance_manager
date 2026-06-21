@@ -138,8 +138,7 @@ const Layout = ({ children }) => {
       label: isEnglish ? 'Account' : 'Tài khoản',
       children: [
         { path: '/profile', icon: FiUser, label: isEnglish ? 'Account' : 'Tài khoản' },
-        { path: '/vip', icon: FiAward, label: isEnglish ? 'VIP Membership' : 'Tài khoản VIP' },
-        { path: '/leaderboard', icon: FiAward, label: isEnglish ? 'Leaderboard' : 'Bảng xếp hạng' }
+        { path: '/vip', icon: FiAward, label: isEnglish ? 'VIP Membership' : 'Tài khoản VIP' }
       ]
     }
   ];
@@ -250,7 +249,6 @@ const Layout = ({ children }) => {
     { path: '/statistics', icon: FiBarChart2, label: isEnglish ? 'Statistics' : 'Thống kê', isImg: false },
     { path: '/profile', icon: FiUser, label: isEnglish ? 'Account' : 'Tài khoản', isImg: false },
     { path: '/vip', icon: FiAward, label: isEnglish ? 'VIP Membership' : 'Tài khoản VIP', isImg: false },
-    { path: '/leaderboard', icon: FiAward, label: isEnglish ? 'Leaderboard' : 'Bảng xếp hạng', isImg: false },
   ];
 
   const adminMenuItems = [
@@ -445,19 +443,6 @@ const Layout = ({ children }) => {
                 </div>
               </div>
 
-              {/* Gamification Level & XP */}
-              <div className="mb-3 px-1">
-                <div className="flex justify-between text-[10px] font-bold mb-1 text-[#4f5662] dark:text-[#a8adb6] uppercase tracking-wider">
-                  <span>{isEnglish ? 'Level' : 'Cấp'} {user?.level || 1}</span>
-                  <span>{user?.experience || 0} / {(user?.level || 1) * 100} XP</span>
-                </div>
-                <div className="h-1.5 w-full bg-[#e3e7ee] dark:bg-[#30333b] rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-500 ease-out" 
-                    style={{ width: `${Math.min(((user?.experience || 0) / ((user?.level || 1) * 100)) * 100, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <Link

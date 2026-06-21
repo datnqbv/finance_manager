@@ -38,7 +38,7 @@ export const executeRecurringTransactions = async () => {
   const transaction = await sequelize.transaction();
   try {
     const todayStr = getLocalDateString();
-    
+
     // Find all active recurring transactions where nextExecutionDate is today or in the past
     const recurringList = await RecurringTransaction.findAll({
       where: {
@@ -49,18 +49,18 @@ export const executeRecurringTransactions = async () => {
       },
       transaction
     });
-    
+
     if (recurringList.length === 0) {
       await transaction.commit();
       return;
     }
-    
+
     console.log(`🔄 [Recurring Scheduler] Found ${recurringList.length} recurring rules due for execution.`);
-    
+
     for (const rec of recurringList) {
       let nextDateStr = rec.nextExecutionDate;
       let executedCount = 0;
-      
+
       // Catch up missed execution dates (in case server was offline)
       while (nextDateStr <= todayStr) {
         // Create the transaction
@@ -74,29 +74,29 @@ export const executeRecurringTransactions = async () => {
           note: rec.note || `Giao dịch định kỳ (${rec.frequency})`,
           date: parseLocalDate(nextDateStr) // Set exact execution date
         }, { transaction });
-        
+
         // Advance nextDate
         nextDateStr = getNextDateString(nextDateStr, rec.frequency);
         executedCount++;
-        
+
         // Deactivate if end date is reached
         if (rec.endDate && nextDateStr > rec.endDate) {
           rec.isActive = false;
           break;
         }
       }
-      
+
       if (executedCount > 0) {
         rec.nextExecutionDate = nextDateStr;
         rec.lastExecutedAt = new Date();
         await rec.save({ transaction });
-        
+
         // Recalculate balances
         await recalculateWalletBalance(rec.walletId, { transaction });
         if (rec.type === 'transfer' && rec.toWalletId) {
           await recalculateWalletBalance(rec.toWalletId, { transaction });
         }
-        
+
         // Budget warnings check for expenses
         if (rec.type === 'expense') {
           // Trigger budget alerts in the background
@@ -104,7 +104,7 @@ export const executeRecurringTransactions = async () => {
             console.error('Error running budget alerts from scheduler:', err);
           });
         }
-        
+
         // Create execution notification
         const freqText = {
           daily: 'hàng ngày',
@@ -112,7 +112,7 @@ export const executeRecurringTransactions = async () => {
           monthly: 'hàng tháng',
           yearly: 'hàng năm'
         }[rec.frequency] || rec.frequency;
-        
+
         await Notification.create({
           userId: rec.userId,
           type: 'info',
@@ -122,7 +122,7 @@ export const executeRecurringTransactions = async () => {
         }, { transaction });
       }
     }
-    
+
     await transaction.commit();
     console.log(`✅ [Recurring Scheduler] Processing completed successfully.`);
   } catch (error) {
@@ -134,7 +134,7 @@ export const executeRecurringTransactions = async () => {
 export const startRecurringTransactionScheduler = () => {
   // Run immediately on server start
   executeRecurringTransactions();
-  
+
   // Repeat every 30 minutes
   setInterval(executeRecurringTransactions, 1800000);
   console.log('🔄 [Scheduler] Registered recurring transaction check (every 30m).');

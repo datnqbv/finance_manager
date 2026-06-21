@@ -13,7 +13,7 @@ import { useLanguage } from '../context/LanguageContext';
 const TransactionModal = ({ transaction, onClose, isOpen }) => {
   const { language } = useLanguage();
   const isEnglish = language === 'en';
-  const { createTransaction, updateTransaction } = useTransactions();
+  const { transactions, createTransaction, updateTransaction } = useTransactions();
   const { categories, fetchCategories } = useCategories();
   const { wallets, fetchWallets } = useWallets();
   const { user } = useAuth();
@@ -29,6 +29,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
   const [loading, setLoading] = useState(false);
   const [smartText, setSmartText] = useState('');
   const [ocrLoading, setOcrLoading] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
   const fileInputRef = useRef(null);
 
   // Get categories for current type
@@ -38,47 +39,66 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
 
   const handleSmartParse = () => {
     if (!smartText.trim()) return;
+
+    let newType = formData.type;
+    const textLower = smartText.toLowerCase();
+
+    // 1. Detect transaction type based on keywords
+    if (/\b(chuyển|chuyển khoản|ck|chuyen|transfer|sang|qua)\b/i.test(textLower)) {
+      newType = 'transfer';
+    } else if (/\b(nhận|lương|luong|thu nhập|thu nhap|được|duoc|lãi|lai|income)\b/i.test(textLower)) {
+      newType = 'income';
+    } else if (/\b(chi|mua|ăn|an|thanh toán|thanh toan|trả|tra|chi tiêu|expense)\b/i.test(textLower)) {
+      newType = 'expense';
+    }
     
-    // Pattern: capture amount and unit (k, tr, m)
-    // VD: 30k, 50.5k, 1.5tr, 30000
+    // 2. Parse amount and unit (k, tr, m)
     const amountMatch = smartText.match(/(\d+([.,]\d+)*)\s*(k|tr|m|đ)?/i);
     let newAmount = formData.amount;
     let newNote = smartText;
-    let newCategory = formData.category;
 
     if (amountMatch) {
       let numStr = amountMatch[1].replace(/[,]/g, '.'); 
       let value = parseFloat(numStr);
       const unit = amountMatch[3]?.toLowerCase();
       
-      if (unit === 'k') value *= 1000;
-      else if (unit === 'tr' || unit === 'm') value *= 1000000;
-      else if (value < 1000 && !unit && numStr.length <= 3) {
-        // Nếu nhập số nhỏ hơn 1000 không có đơn vị, ngầm định là nghìn hoặc người dùng lười gõ
-        // Thôi chúng ta lấy số tự thân, người Việt thường gõ thẳng 30000. 
+      if (unit === 'k') {
+        value *= 1000;
+      } else if (unit === 'tr' || unit === 'm') {
+        value *= 1000000;
+      } else if (value < 1000 && !unit && numStr.length <= 3) {
+        // Nhập số ngắn < 1000 không đơn vị -> tự hiểu là nghìn đồng (k)
+        value *= 1000;
       }
       
       newAmount = value.toString();
       newNote = newNote.replace(amountMatch[0], '').trim();
     }
 
-    // Try to match popular category keywords (Tìm danh mục)
+    // 3. Match categories based on the new/detected type
+    let newCategory = formData.category;
+    const catsForNewType = categories.filter(cat => 
+      cat.type === newType || cat.type === 'both'
+    );
     const lowerNote = newNote.toLowerCase();
-    for (const cat of availableCategories) {
+    for (const cat of catsForNewType) {
       if (lowerNote.includes(cat.name.toLowerCase())) {
         newCategory = cat.name;
-        // Bỏ keyword danh mục khỏi ghi chú để gọn gàng hơn
+        // Strip category keyword from note for cleaner text
         newNote = newNote.replace(new RegExp(cat.name, 'i'), '').trim();
         break;
       }
     }
 
+    // 4. Update form data
     setFormData(prev => ({
       ...prev,
+      type: newType,
       amount: newAmount,
       note: newNote,
-      category: newCategory
+      category: newType === 'transfer' ? 'Chuyển khoản' : newCategory
     }));
+
     toast.success(isEnglish ? "✅ Smart parsing successful!" : "✅ Phân tích thông minh thành công!");
     setSmartText('');
   };
@@ -140,6 +160,10 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Set preview image URL
+    const imageUrl = URL.createObjectURL(file);
+    setPreviewImage(imageUrl);
 
     // Check VIP daily scan limit for standard users
     const isVip = user && user.isVip && new Date(user.vipExpire) > new Date();
@@ -402,6 +426,8 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
     if (isOpen) {
       fetchCategories();
       fetchWallets();
+    } else {
+      setPreviewImage(null);
     }
   }, [isOpen]);
 
@@ -447,9 +473,55 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
     e.preventDefault();
     setLoading(true);
 
+    const parsedAmount = parseFloat(formData.amount);
+
+    // 1. Wallet Balance Overdraft warning (Cảnh báo chi tiêu/chuyển vượt số dư ví)
+    const selectedWallet = wallets.find(w => w.id === formData.walletId);
+    if ((formData.type === 'expense' || formData.type === 'transfer') && selectedWallet) {
+      if (Number(selectedWallet.balance) < parsedAmount) {
+        const confirmOverdraft = window.confirm(
+          isEnglish
+            ? `⚠️ Warning: Selected wallet "${selectedWallet.name}" does not have enough balance (${selectedWallet.balance.toLocaleString('en-US')} VND) for this transaction. Do you want to proceed anyway?`
+            : `⚠️ Cảnh báo: Ví "${selectedWallet.name}" của bạn không đủ số dư (${selectedWallet.balance.toLocaleString('vi-VN')} ₫) để thực hiện giao dịch này. Bạn có muốn tiếp tục ghi nhận không?`
+        );
+        if (!confirmOverdraft) {
+          setLoading(false);
+          return;
+        }
+      }
+    }
+
+    // 2. Prevent accidental duplicate transactions in the last 2 minutes
+    if (!transaction) { // Only check for new creations, not edits
+      const now = new Date();
+      const isDuplicate = transactions && transactions.some(t => {
+        const tDate = new Date(t.date);
+        const diffMinutes = Math.abs(now - tDate) / (1000 * 60);
+        return (
+          diffMinutes <= 2 &&
+          Number(t.amount) === parsedAmount &&
+          t.walletId === formData.walletId &&
+          t.type === formData.type &&
+          (formData.type === 'transfer' ? t.toWalletId === formData.toWalletId : t.category === formData.category)
+        );
+      });
+
+      if (isDuplicate) {
+        const confirmDuplicate = window.confirm(
+          isEnglish
+            ? "⚠️ It looks like you recently created a similar transaction in the last 2 minutes. Are you sure you want to add this duplicate?"
+            : "⚠️ Hệ thống phát hiện bạn vừa thêm một giao dịch tương tự trong vòng 2 phút qua. Bạn có chắc chắn muốn tiếp tục thêm giao dịch trùng lặp này không?"
+        );
+        if (!confirmDuplicate) {
+          setLoading(false);
+          return;
+        }
+      }
+    }
+
     const data = {
       ...formData,
-      amount: parseFloat(formData.amount),
+      amount: parsedAmount,
     };
 
     let result;
@@ -529,6 +601,45 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                 <FiCamera /> {ocrLoading ? (isEnglish ? 'Scanning...' : 'Đang đọc...') : (isEnglish ? 'Upload receipt image' : 'Tải ảnh hóa đơn')}
               </button>
             </div>
+
+            {previewImage && (
+              <div className="mt-3 p-2 bg-white dark:bg-[#202530] rounded-lg border border-emerald-100 dark:border-emerald-900/40">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-semibold text-emerald-800 dark:text-[#9fd7be]">
+                    {isEnglish ? 'Selected Receipt Image:' : 'Ảnh hóa đơn đã chọn:'}
+                  </span>
+                  <div className="flex gap-2 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => window.open(previewImage, '_blank')}
+                      className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+                    >
+                      {isEnglish ? 'View Full' : 'Xem ảnh gốc'}
+                    </button>
+                    <span className="text-gray-300 dark:text-gray-700">|</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPreviewImage(null);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      className="font-bold text-red-500 hover:underline"
+                    >
+                      {isEnglish ? 'Clear' : 'Xóa ảnh'}
+                    </button>
+                  </div>
+                </div>
+                <div className="relative w-full h-32 rounded-lg overflow-hidden border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-950/10 flex items-center justify-center">
+                  <img
+                    src={previewImage}
+                    alt="Receipt Preview"
+                    className="max-w-full max-h-full object-contain cursor-pointer transition-transform hover:scale-105"
+                    onClick={() => window.open(previewImage, '_blank')}
+                    title={isEnglish ? 'Click to view full image' : 'Click để xem ảnh kích thước lớn'}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
