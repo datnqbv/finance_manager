@@ -530,7 +530,7 @@ button {
       'header header'
       'summary summary'
       'table filters';
-    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
   }
 
@@ -556,6 +556,244 @@ button {
     top: 88px;
   }
 }
+
+/* ========================================
+   COLLAPSIBLE FILTER DRAWER STYLES
+   ======================================== */
+
+.tx-filter-card {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease, background-color 0.3s ease;
+  width: 350px;
+  overflow: hidden;
+}
+
+/* Collapsed and Expanded States for Desktop */
+@media (min-width: 1280px) {
+  .tx-filter-card.is-collapsed {
+    width: 64px;
+    padding: 1.25rem 0.5rem !important;
+    cursor: pointer;
+  }
+  
+  .tx-filter-card.is-collapsed:hover {
+    background-color: #f9fafb;
+  }
+  
+  .dark .tx-filter-card.is-collapsed:hover {
+    background-color: #161616;
+  }
+
+  .tx-filter-card.is-expanded {
+    width: 350px;
+  }
+}
+
+/* Show/Hide content based on toggle state */
+.tx-filter-collapsed-content {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.tx-filter-card.is-collapsed .tx-filter-collapsed-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  opacity: 1;
+}
+
+.tx-filter-expanded-content {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.tx-filter-card.is-expanded .tx-filter-expanded-content {
+  display: block;
+  opacity: 1;
+}
+
+/* Collapsed Toggle Button */
+.tx-filter-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f3f4f6;
+  color: #374151;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.dark .tx-filter-toggle-btn {
+  background-color: #1a1a1a;
+  color: #e5e7eb;
+}
+
+.tx-filter-toggle-btn:hover {
+  background-color: #e5e7eb;
+  color: #111827;
+  transform: scale(1.05);
+}
+
+.dark .tx-filter-toggle-btn:hover {
+  background-color: #222222;
+  color: white;
+}
+
+/* Active Filters Badge */
+.tx-filter-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background-color: #003d2d;
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  border: 2px solid white;
+}
+
+.dark .tx-filter-badge {
+  background-color: #10b981;
+  border-color: #111111;
+}
+
+/* Vertical text label in collapsed mode */
+.tx-filter-vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  margin: 1.5rem 0;
+}
+
+/* Indicators in collapsed mode */
+.tx-filter-quick-indicators {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #3b82f6; /* search: xanh dương */
+  transition: transform 0.2s ease;
+}
+
+.indicator-dot.type {
+  background-color: #10b981; /* type: xanh lá */
+}
+
+.indicator-dot.wallet {
+  background-color: #f59e0b; /* wallet: cam */
+}
+
+.indicator-dot.advanced {
+  background-color: #8b5cf6; /* advanced: tím */
+}
+
+.indicator-dot:hover {
+  transform: scale(1.3);
+}
+
+/* Close/Collapse Button in Expanded Mode */
+.tx-filter-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.tx-filter-close-btn:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.dark .tx-filter-close-btn:hover {
+  background-color: #1a1a1a;
+  color: white;
+}
+
+/* Mobile & Tablet Drawer Styles */
+@media (max-width: 1279px) {
+  .tx-filter-card {
+    position: fixed !important;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 350px;
+    max-width: calc(100vw - 40px);
+    z-index: 1000;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: -4px 0 25px rgba(0, 0, 0, 0.15) !important;
+    transform: translateX(105%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .dark .tx-filter-card {
+    box-shadow: -4px 0 25px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .tx-filter-card.is-expanded {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  .tx-filter-card.is-collapsed {
+    transform: translateX(105%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .tx-filter-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .tx-filter-backdrop.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Disable collapsed view on mobile */
+  .tx-filter-collapsed-content {
+    display: none !important;
+  }
+
+  .tx-filter-card.is-collapsed .tx-filter-expanded-content {
+    display: block !important;
+  }
+}
+
 
 /* Grid-area layout for Categories page */
 .cat-layout-grid {

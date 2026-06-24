@@ -14,10 +14,18 @@ export const getMonthlyStats = async (userId, query) => {
 
   const transactions = await Transaction.findAll({ where: { userId, date: { [Op.between]: [startDate, endDate] } }, raw: true });
 
-  const income = transactions.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
-  const expense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
+  // Chỉ tính tổng thu/chi từ giao dịch gốc (không có parentId) để tránh đếm trùng
+  const rootTransactions = transactions.filter(t => !t.parentId);
+  const income = rootTransactions.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
+  const expense = rootTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
 
-  const byCategory = transactions.reduce((acc, t) => {
+  // Phân loại theo danh mục: dùng giao dịch con nếu cha đã tách, ngược lại dùng giao dịch gốc
+  const splitParentIds = new Set(transactions.filter(t => t.parentId).map(t => t.parentId));
+  const categoryTransactions = transactions.filter(t => {
+    if (t.parentId) return true;
+    return !splitParentIds.has(t.id);
+  });
+  const byCategory = categoryTransactions.reduce((acc, t) => {
     const cat = t.category || 'Uncategorized';
     if (!acc[cat]) acc[cat] = { income: 0, expense: 0 };
     acc[cat][t.type] += Number(t.amount);
@@ -31,18 +39,19 @@ export const getSummary = async (userId) => {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const overallRows = await Transaction.findAll({ where: { userId }, attributes: ['type', [sequelize.fn('SUM', sequelize.col('amount')), 'total'], [sequelize.fn('COUNT', sequelize.col('id')), 'count']], group: ['type'], raw: true });
+  // Chỉ tính giao dịch gốc (parentId = null) cho tổng thu/chi
+  const overallRows = await Transaction.findAll({ where: { userId, parentId: null }, attributes: ['type', [sequelize.fn('SUM', sequelize.col('amount')), 'total'], [sequelize.fn('COUNT', sequelize.col('id')), 'count']], group: ['type'], raw: true });
   const overallMap = {}; overallRows.forEach(r => overallMap[r.type] = r);
   const totalIncome = parseFloat(overallMap.income?.total || 0);
   const totalExpense = parseFloat(overallMap.expense?.total || 0);
   const totalCount = parseInt(overallMap.income?.count || 0) + parseInt(overallMap.expense?.count || 0);
 
-  const monthlyRows = await Transaction.findAll({ where: { userId, date: { [Op.gte]: startOfMonth } }, attributes: ['type', [sequelize.fn('SUM', sequelize.col('amount')), 'total']], group: ['type'], raw: true });
+  const monthlyRows = await Transaction.findAll({ where: { userId, parentId: null, date: { [Op.gte]: startOfMonth } }, attributes: ['type', [sequelize.fn('SUM', sequelize.col('amount')), 'total']], group: ['type'], raw: true });
   const monthlyMap = {}; monthlyRows.forEach(r => monthlyMap[r.type] = r);
   const monthlyIncome = parseFloat(monthlyMap.income?.total || 0);
   const monthlyExpense = parseFloat(monthlyMap.expense?.total || 0);
 
-  const recent = await Transaction.findAll({ where: { userId }, order: [['date','DESC']], limit: 5, raw: true });
+  const recent = await Transaction.findAll({ where: { userId, parentId: null }, order: [['date','DESC']], limit: 5, raw: true });
 
   return { overall: { totalIncome, totalExpense, balance: totalIncome - totalExpense, transactionCount: totalCount }, thisMonth: { income: monthlyIncome, expense: monthlyExpense, balance: monthlyIncome - monthlyExpense }, recentTransactions: recent };
 };

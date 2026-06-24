@@ -5,10 +5,11 @@ import { useTransactions } from '../context/TransactionContext';
 import { useCategories } from '../context/CategoryContext';
 import { useWallets } from '../context/WalletContext';
 import { useAuth } from '../context/AuthContext';
-import { FiX, FiAlertCircle, FiCamera, FiZap } from 'react-icons/fi';
+import { FiX, FiAlertCircle, FiCamera, FiZap, FiPaperclip, FiExternalLink, FiDownload } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useLanguage } from '../context/LanguageContext';
+import { transactionService } from '../services/transaction.service';
 
 const TransactionModal = ({ transaction, onClose, isOpen }) => {
   const { language } = useLanguage();
@@ -25,12 +26,16 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
     date: new Date().toISOString().split('T')[0],
     walletId: '',
     toWalletId: '',
+    receiptUrl: '',
   });
   const [loading, setLoading] = useState(false);
   const [smartText, setSmartText] = useState('');
   const [ocrLoading, setOcrLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [receiptFile, setReceiptFile] = useState(null);
   const fileInputRef = useRef(null);
+  const attachInputRef = useRef(null);
+  const [showLightbox, setShowLightbox] = useState(false);
 
   // Get categories for current type
   const availableCategories = categories.filter(cat => 
@@ -157,13 +162,61 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
     });
   };
 
+  const compressImageForUpload = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX_DIMENSION = 1200;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+            if (width > height) {
+              height = Math.round((height * MAX_DIMENSION) / width);
+              width = MAX_DIMENSION;
+            } else {
+              width = Math.round((width * MAX_DIMENSION) / height);
+              height = MAX_DIMENSION;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+            } else {
+              resolve(file);
+            }
+          }, 'image/jpeg', 0.6); // 60% quality JPEG is very small
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAttachUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPreviewImage(URL.createObjectURL(file));
+    const compressed = await compressImageForUpload(file);
+    setReceiptFile(compressed);
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Set preview image URL
-    const imageUrl = URL.createObjectURL(file);
-    setPreviewImage(imageUrl);
+    setPreviewImage(URL.createObjectURL(file));
+    const compressed = await compressImageForUpload(file);
+    setReceiptFile(compressed);
 
     // Check VIP daily scan limit for standard users
     const isVip = user && user.isVip && new Date(user.vipExpire) > new Date();
@@ -432,6 +485,20 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
   }, [isOpen]);
 
   useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowLightbox(false);
+      }
+    };
+    if (showLightbox) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showLightbox]);
+
+  useEffect(() => {
     if (transaction) {
       setFormData({
         type: transaction.type,
@@ -441,7 +508,11 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
         date: new Date(transaction.date).toISOString().split('T')[0],
         walletId: transaction.walletId || '',
         toWalletId: transaction.toWalletId || '',
+        receiptUrl: transaction.receiptUrl || '',
       });
+      if (transaction.receiptUrl) {
+        setPreviewImage(transaction.receiptUrl);
+      }
     } else {
       const defaultWallet = wallets.find(w => w.isDefault) || wallets[0];
       // Reset form when creating new transaction
@@ -453,7 +524,10 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
         date: new Date().toISOString().split('T')[0],
         walletId: defaultWallet ? defaultWallet.id : '',
         toWalletId: '',
+        receiptUrl: '',
       });
+      setPreviewImage(null);
+      setReceiptFile(null);
     }
   }, [transaction, isOpen, wallets]);
 
@@ -524,17 +598,31 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
       amount: parsedAmount,
     };
 
-    let result;
-    if (transaction) {
-      result = await updateTransaction(transaction.id, data);
-    } else {
-      result = await createTransaction(data);
-    }
+    try {
+      if (receiptFile) {
+        toast.info(isEnglish ? "Uploading receipt..." : "Đang tải ảnh lên Cloudinary...", { autoClose: 1500 });
+        const uploadRes = await transactionService.uploadReceipt(receiptFile);
+        if (uploadRes.success) {
+          data.receiptUrl = uploadRes.receiptUrl;
+        }
+      }
 
-    setLoading(false);
+      let result;
+      if (transaction) {
+        result = await updateTransaction(transaction.id, data);
+      } else {
+        result = await createTransaction(data);
+      }
 
-    if (result.success) {
-      onClose();
+      setLoading(false);
+
+      if (result.success) {
+        onClose();
+      }
+    } catch (error) {
+      setLoading(false);
+      console.error(error);
+      toast.error(isEnglish ? "Error saving transaction" : "Lỗi khi lưu giao dịch");
     }
   };
 
@@ -601,45 +689,6 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                 <FiCamera /> {ocrLoading ? (isEnglish ? 'Scanning...' : 'Đang đọc...') : (isEnglish ? 'Upload receipt image' : 'Tải ảnh hóa đơn')}
               </button>
             </div>
-
-            {previewImage && (
-              <div className="mt-3 p-2 bg-white dark:bg-[#202530] rounded-lg border border-emerald-100 dark:border-emerald-900/40">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-semibold text-emerald-800 dark:text-[#9fd7be]">
-                    {isEnglish ? 'Selected Receipt Image:' : 'Ảnh hóa đơn đã chọn:'}
-                  </span>
-                  <div className="flex gap-2 text-[10px]">
-                    <button
-                      type="button"
-                      onClick={() => window.open(previewImage, '_blank')}
-                      className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
-                    >
-                      {isEnglish ? 'View Full' : 'Xem ảnh gốc'}
-                    </button>
-                    <span className="text-gray-300 dark:text-gray-700">|</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPreviewImage(null);
-                        if (fileInputRef.current) fileInputRef.current.value = '';
-                      }}
-                      className="font-bold text-red-500 hover:underline"
-                    >
-                      {isEnglish ? 'Clear' : 'Xóa ảnh'}
-                    </button>
-                  </div>
-                </div>
-                <div className="relative w-full h-32 rounded-lg overflow-hidden border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-950/10 flex items-center justify-center">
-                  <img
-                    src={previewImage}
-                    alt="Receipt Preview"
-                    className="max-w-full max-h-full object-contain cursor-pointer transition-transform hover:scale-105"
-                    onClick={() => window.open(previewImage, '_blank')}
-                    title={isEnglish ? 'Click to view full image' : 'Click để xem ảnh kích thước lớn'}
-                  />
-                </div>
-              </div>
-            )}
           </div>
 
           <div>
@@ -825,6 +874,73 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
             />
           </div>
 
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {isEnglish ? 'Receipt Image' : 'Ảnh đính kèm'}
+              </label>
+              {!previewImage && (
+                <button
+                  type="button"
+                  onClick={() => attachInputRef.current?.click()}
+                  className="text-xs flex items-center gap-1 font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+                >
+                  <FiPaperclip size={14} /> {isEnglish ? 'Attach Image' : 'Đính kèm ảnh'}
+                </button>
+              )}
+            </div>
+            
+            <input 
+              type="file" 
+              accept="image/*" 
+              ref={attachInputRef} 
+              onChange={handleAttachUpload} 
+              className="hidden" 
+            />
+
+            {previewImage && (
+              <div className="mt-2 p-2 bg-gray-50 dark:bg-[#202530] rounded-lg border border-gray-200 dark:border-gray-800">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-400">
+                    {isEnglish ? 'Selected Image:' : 'Ảnh đã đính kèm:'}
+                  </span>
+                  <div className="flex gap-2 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => setShowLightbox(true)}
+                      className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+                    >
+                      {isEnglish ? 'View Full' : 'Xem phóng to'}
+                    </button>
+                    <span className="text-gray-300 dark:text-gray-700">|</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPreviewImage(null);
+                        setReceiptFile(null);
+                        setFormData(prev => ({ ...prev, receiptUrl: '' }));
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                        if (attachInputRef.current) attachInputRef.current.value = '';
+                      }}
+                      className="font-bold text-red-500 hover:underline"
+                    >
+                      {isEnglish ? 'Clear' : 'Xóa ảnh'}
+                    </button>
+                  </div>
+                </div>
+                <div className="relative w-full h-32 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#191d25] flex items-center justify-center">
+                  <img
+                    src={previewImage}
+                    alt="Receipt Preview"
+                    className="max-w-full max-h-full object-contain cursor-pointer transition-transform hover:scale-105"
+                    onClick={() => setShowLightbox(true)}
+                    title={isEnglish ? 'Click to view full image' : 'Click để xem ảnh phóng to'}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="flex gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
             <button
               type="button"
@@ -847,6 +963,58 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
           </div>
         </form>
       </div>
+
+      {/* Preview Lightbox on top of Transaction Modal */}
+      {showLightbox && (
+        <div 
+          className="fixed inset-0 z-[120] flex flex-col items-center justify-center bg-black/85 backdrop-blur-md animate-modal-fade"
+          onClick={() => setShowLightbox(false)}
+        >
+          <div 
+            className="relative max-w-4xl w-[90%] md:w-auto max-h-[85vh] flex flex-col items-center justify-center animate-modal-scale"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowLightbox(false)}
+              className="absolute -top-12 right-0 md:-right-12 text-white hover:text-emerald-400 p-2 bg-black/40 rounded-full hover:bg-black/60 transition duration-200 flex items-center justify-center"
+              title={isEnglish ? "Close" : "Đóng"}
+            >
+              <FiX size={24} />
+            </button>
+
+            {/* Image display */}
+            <div className="relative group overflow-hidden rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl flex items-center justify-center p-1">
+              <img
+                src={previewImage}
+                alt="Receipt Full View"
+                className="max-h-[65vh] md:max-h-[75vh] max-w-full md:max-w-3xl object-contain rounded-lg transition-transform duration-300 hover:scale-[1.02]"
+              />
+            </div>
+
+            {/* Action controls */}
+            <div className="mt-4 flex gap-3">
+              <a
+                href={previewImage}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 text-white rounded-xl text-sm font-semibold transition duration-200 shadow-lg"
+              >
+                <FiExternalLink size={14} /> {isEnglish ? "Open Original" : "Mở ảnh gốc"}
+              </a>
+              <a
+                href={previewImage}
+                download="receipt_upload.jpg"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#003d2d] hover:bg-[#00523d] text-white rounded-xl text-sm font-semibold transition duration-200 shadow-lg"
+              >
+                <FiDownload size={14} /> {isEnglish ? "Download" : "Tải xuống"}
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

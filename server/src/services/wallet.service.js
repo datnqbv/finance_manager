@@ -10,27 +10,28 @@ export const recalculateWalletBalance = async (walletId, options = {}) => {
   const wallet = await Wallet.findByPk(walletId, { transaction });
   if (!wallet) return 0;
 
+  // Chỉ tính giao dịch gốc (parentId = null), bỏ qua giao dịch con tách
   // 1. Incomes on this wallet
   const incomeSum = await Transaction.sum('amount', {
-    where: { walletId, type: 'income' },
+    where: { walletId, type: 'income', parentId: null },
     transaction
   }) || 0;
 
   // 2. Expenses on this wallet
   const expenseSum = await Transaction.sum('amount', {
-    where: { walletId, type: 'expense' },
+    where: { walletId, type: 'expense', parentId: null },
     transaction
   }) || 0;
 
   // 3. Outgoing transfers from this wallet
   const outgoingTransferSum = await Transaction.sum('amount', {
-    where: { walletId, type: 'transfer' },
+    where: { walletId, type: 'transfer', parentId: null },
     transaction
   }) || 0;
 
   // 4. Incoming transfers to this wallet
   const incomingTransferSum = await Transaction.sum('amount', {
-    where: { toWalletId: walletId, type: 'transfer' },
+    where: { toWalletId: walletId, type: 'transfer', parentId: null },
     transaction
   }) || 0;
 

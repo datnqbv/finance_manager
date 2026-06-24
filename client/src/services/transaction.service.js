@@ -25,4 +25,37 @@ export const transactionService = {
     const response = await api.delete(`/transactions/${id}`);
     return response.data;
   },
+
+  // Tách giao dịch thành nhiều danh mục
+  splitTransaction: async (id, splits) => {
+    const response = await api.post(`/transactions/${id}/split`, { splits });
+    return response.data;
+  },
+
+  // Gỡ tách giao dịch
+  unsplitTransaction: async (id) => {
+    const response = await api.delete(`/transactions/${id}/split`);
+    return response.data;
+  },
+
+  // Upload hóa đơn
+  uploadReceipt: async (file) => {
+    const formData = new FormData();
+    formData.append('receipt', file);
+    const response = await api.post('/upload/receipt', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  },
+
+  // Bulk Actions
+  bulkDeleteTransactions: async (ids) => {
+    const response = await api.post('/transactions/bulk-delete', { ids });
+    return response.data;
+  },
+
+  bulkUpdateTransactions: async (ids, updateData) => {
+    const response = await api.post('/transactions/bulk-update', { ids, updateData });
+    return response.data;
+  },
 };

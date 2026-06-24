@@ -48,6 +48,10 @@ function initModels() {
   RecurringTransaction.belongsTo(Wallet, { foreignKey: 'walletId', as: 'wallet', onDelete: 'NO ACTION' });
   Wallet.hasMany(RecurringTransaction, { foreignKey: 'toWalletId', as: 'incomingRecurringTransfers', onDelete: 'NO ACTION' });
   RecurringTransaction.belongsTo(Wallet, { foreignKey: 'toWalletId', as: 'toWallet', onDelete: 'NO ACTION' });
+  // Tách giao dịch: quan hệ cha-con (self-referencing)
+  Transaction.hasMany(Transaction, { foreignKey: 'parentId', as: 'splitChildren' });
+  Transaction.belongsTo(Transaction, { foreignKey: 'parentId', as: 'parentTransaction' });
+
   // ContactMessage is independent (no user relation currently)
 
   // Search sync hooks removed (previously used external FTS engine).
@@ -56,6 +60,52 @@ function initModels() {
 
 async function syncModels({ force = false } = {}) {
   initModels();
+
+  // Run pre-sync migrations (adding parentId to transactions if table exists but column doesn't)
+  if (process.env.FORCE_SQLITE_IN_TESTS !== 'true') {
+    try {
+      await sequelize.query(`
+        IF EXISTS (
+          SELECT * FROM sys.objects 
+          WHERE object_id = OBJECT_ID('transactions') AND type = 'U'
+        )
+        BEGIN
+          IF NOT EXISTS (
+            SELECT * FROM sys.columns 
+            WHERE object_id = OBJECT_ID('transactions') AND name = 'parentId'
+          )
+          BEGIN
+            ALTER TABLE transactions ADD parentId UNIQUEIDENTIFIER NULL;
+          END
+        END
+      `);
+      console.log('✅ Checked transactions table: parentId column exists or has been added.');
+    } catch (err) {
+      console.warn('⚠️ Could not run transactions table pre-sync migration for parentId:', err.message);
+    }
+
+    try {
+      await sequelize.query(`
+        IF EXISTS (
+          SELECT * FROM sys.objects 
+          WHERE object_id = OBJECT_ID('transactions') AND type = 'U'
+        )
+        BEGIN
+          IF NOT EXISTS (
+            SELECT * FROM sys.columns 
+            WHERE object_id = OBJECT_ID('transactions') AND name = 'receiptUrl'
+          )
+          BEGIN
+            ALTER TABLE transactions ADD receiptUrl NVARCHAR(500) NULL;
+          END
+        END
+      `);
+      console.log('✅ Checked transactions table: receiptUrl column exists or has been added.');
+    } catch (err) {
+      console.warn('⚠️ Could not run transactions table pre-sync migration for receiptUrl:', err.message);
+    }
+  }
+
   await sequelize.sync({ force });
   
   // Custom schema migrations for existing database tables

@@ -58,5 +58,52 @@ export const deleteTransaction = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Tách giao dịch thành nhiều danh mục
+// @route   POST /api/transactions/:id/split
+// @access  Private
+export const splitTransaction = asyncHandler(async (req, res) => {
+  const result = await transactionService.splitTransaction(req.user.id, req.params.id, req.body.splits);
+  res.status(201).json({
+    success: true,
+    message: 'Tách giao dịch thành công',
+    data: result
+  });
+});
+
+// @desc    Gỡ tách giao dịch
+// @route   DELETE /api/transactions/:id/split
+// @access  Private
+export const unsplitTransaction = asyncHandler(async (req, res) => {
+  await transactionService.unsplitTransaction(req.user.id, req.params.id);
+  res.json({
+    success: true,
+    message: 'Đã gỡ tách giao dịch'
+  });
+});
+
+// @desc    Bulk delete transactions
+// @route   POST /api/transactions/bulk-delete
+// @access  Private
+export const bulkDeleteTransactions = asyncHandler(async (req, res) => {
+  const result = await transactionService.bulkDeleteTransactions(req.user.id, req.body.ids);
+  res.json({
+    success: true,
+    message: `Đã xóa ${result.deletedCount} giao dịch thành công`,
+    data: result
+  });
+});
+
+// @desc    Bulk update transactions
+// @route   POST /api/transactions/bulk-update
+// @access  Private
+export const bulkUpdateTransactions = asyncHandler(async (req, res) => {
+  const result = await transactionService.bulkUpdateTransactions(req.user.id, req.body.ids, req.body.updateData);
+  res.json({
+    success: true,
+    message: `Đã cập nhật ${result.updatedCount} giao dịch thành công`,
+    data: result
+  });
+});
+
 // Export helper for use in other places (if needed)
 export const checkBudgetAndNotify = transactionService.checkBudgetAndNotify;

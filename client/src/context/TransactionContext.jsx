@@ -79,6 +79,34 @@ export const TransactionProvider = ({ children }) => {
       return { success: false, message };
     }
   };
+  // Tách giao dịch thành nhiều danh mục
+  const splitTransaction = async (id, splits) => {
+    try {
+      const data = await transactionService.splitTransaction(id, splits);
+      invalidateTransactionStats();
+      toast.success(data.message || 'Tách giao dịch thành công!');
+      return { success: true, data: data.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Tách giao dịch thất bại';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  // Gỡ tách giao dịch
+  const unsplitTransaction = async (id) => {
+    try {
+      const data = await transactionService.unsplitTransaction(id);
+      invalidateTransactionStats();
+      toast.success(data.message || 'Đã gỡ tách giao dịch!');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Gỡ tách thất bại';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
   // Delete transaction by id
   const deleteTransaction = async (id) => {
     try {
@@ -95,6 +123,37 @@ export const TransactionProvider = ({ children }) => {
     }
   };
 
+  // Bulk Delete Transactions
+  const bulkDeleteTransactions = async (ids) => {
+    try {
+      const data = await transactionService.bulkDeleteTransactions(ids);
+      setTransactions(transactions.filter((t) => !ids.includes(t.id)));
+      invalidateTransactionStats();
+      await refreshUser();
+      toast.success(data.message || `Đã xóa ${ids.length} giao dịch thành công!`);
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Xóa hàng loạt thất bại';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  // Bulk Update Transactions
+  const bulkUpdateTransactions = async (ids, updateData) => {
+    try {
+      const data = await transactionService.bulkUpdateTransactions(ids, updateData);
+      invalidateTransactionStats();
+      await refreshUser();
+      toast.success(data.message || `Đã cập nhật ${ids.length} giao dịch thành công!`);
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Cập nhật hàng loạt thất bại';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
   const value = {
     transactions,
     pagination,
@@ -104,6 +163,10 @@ export const TransactionProvider = ({ children }) => {
     createTransaction,
     updateTransaction,
     deleteTransaction,
+    splitTransaction,
+    unsplitTransaction,
+    bulkDeleteTransactions,
+    bulkUpdateTransactions,
   };
 
   useEffect(() => {

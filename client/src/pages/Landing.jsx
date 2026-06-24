@@ -2,12 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import {
-  FaWallet, FaCreditCard, FaBullseye, FaChartBar,
+  FaWallet, FaCreditCard, FaBullseye,
   FaStar, FaFacebook, FaTwitter, FaLinkedin,
   FaCheckCircle, FaShieldAlt, FaUsers, FaTrophy,
-  FaArrowRight, FaBars, FaTimes, FaRocket, FaChartLine,
-  FaLock, FaBell, FaRobot, FaCamera, FaHandHoldingUsd, FaFileExcel,
+  FaArrowRight, FaBars, FaTimes, FaRocket,
+  FaLock,
 } from 'react-icons/fa';
 
 /* ── Animated counter hook ── */
@@ -31,1210 +32,1112 @@ function useCounter(target, duration = 1600, start = false) {
 function StatItem({ icon, value, suffix, label, delay, started }) {
   const num = useCounter(value, 1400, started);
   return (
-    <div className={`reveal reveal-delay-${delay} text-center group`}>
-      <div className="inline-flex items-center justify-center w-12 h-12 bg-[#fbf9f4] text-[#ca8a04] border border-[#e8dfc5]/30 rounded-2xl mb-3 group-hover:bg-[#005c45] group-hover:text-white transition-all duration-300">
+    <div className={`reveal reveal-delay-${delay} text-center group p-6 rounded-2xl bg-white dark:bg-[#111915] border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-300`}>
+      <div className="inline-flex items-center justify-center w-12 h-12 bg-[#9FEF00]/10 text-[#004b38] dark:text-[#9FEF00] rounded-2xl mb-4 group-hover:bg-[#004b38] group-hover:text-[#9FEF00] dark:group-hover:bg-[#9FEF00] dark:group-hover:text-[#004b38] transition-all duration-300">
         {icon}
       </div>
-      <div className="text-3xl font-extrabold text-[#0c211c] tabular-nums">
+      <div className="text-3xl font-extrabold text-[#004b38] dark:text-white tabular-nums">
         {started ? num : 0}{suffix}
       </div>
-      <div className="text-sm text-slate-650 mt-1">{label}</div>
+      <div className="text-xs font-semibold text-gray-500 mt-2 uppercase tracking-wider">{label}</div>
     </div>
   );
 }
 
-/* ── Constellation effect for hero ── */
-function ConstellationCanvas({ className = '' }) {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return undefined;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return undefined;
-
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const pointer = { x: -1000, y: -1000 };
-    let particles = [];
-    let rafId;
-
-    const random = (min, max) => Math.random() * (max - min) + min;
-
-    const initParticles = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      const density = prefersReducedMotion ? 1.25 : 4.8;
-      const count = Math.max(48, Math.min(240, Math.floor((width * height) / (16000 / density))));
-
-      const cols = Math.max(8, Math.floor(Math.sqrt(count * (width / Math.max(height, 1)))));
-      const rows = Math.max(6, Math.ceil(count / cols));
-      const cellW = width / cols;
-      const cellH = height / rows;
-
-      const arr = [];
-      for (let r = 0; r < rows; r += 1) {
-        for (let c = 0; c < cols; c += 1) {
-          if (arr.length >= count) break;
-          arr.push({
-            x: c * cellW + random(cellW * 0.12, cellW * 0.88),
-            y: r * cellH + random(cellH * 0.12, cellH * 0.88),
-            vx: random(-0.24, 0.24),
-            vy: random(-0.24, 0.24),
-            r: random(0.8, 2),
-            isGold: Math.random() > 0.45,
-          });
-        }
-      }
-      particles = arr;
-    };
-
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-
-      canvas.width = Math.floor(width * dpr);
-      canvas.height = Math.floor(height * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      initParticles();
-    };
-
-    const draw = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-
-      ctx.clearRect(0, 0, width, height);
-
-      for (const p of particles) {
-        p.x += p.vx;
-        p.y += p.vy;
-
-        if (p.x < -12) p.x = width + 12;
-        if (p.x > width + 12) p.x = -12;
-        if (p.y < -12) p.y = height + 12;
-        if (p.y > height + 12) p.y = -12;
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = p.isGold ? 'rgba(202, 138, 4, 0.72)' : 'rgba(0, 92, 69, 0.72)';
-        ctx.fill();
-      }
-
-      const maxLinkDistance = 165;
-      for (let i = 0; i < particles.length; i += 1) {
-        for (let j = i + 1; j < particles.length; j += 1) {
-          const a = particles[i];
-          const b = particles[j];
-          const dx = a.x - b.x;
-          const dy = a.y - b.y;
-          const dist = Math.hypot(dx, dy);
-
-          if (dist > maxLinkDistance) continue;
-
-          const alpha = (1 - dist / maxLinkDistance) * 0.48;
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.strokeStyle = `rgba(202, 138, 4, ${alpha.toFixed(4)})`;
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        }
-      }
-
-      const pointerRadius = 220;
-      for (const p of particles) {
-        const dx = p.x - pointer.x;
-        const dy = p.y - pointer.y;
-        const dist = Math.hypot(dx, dy);
-
-        if (dist > pointerRadius) continue;
-
-        const alpha = (1 - dist / pointerRadius) * 0.45;
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(pointer.x, pointer.y);
-        ctx.strokeStyle = `rgba(0, 92, 69, ${alpha.toFixed(4)})`;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
-
-      if (!prefersReducedMotion) {
-        rafId = requestAnimationFrame(draw);
-      }
-    };
-
-    const onPointerMove = (event) => {
-      const rect = canvas.getBoundingClientRect();
-      pointer.x = event.clientX - rect.left;
-      pointer.y = event.clientY - rect.top;
-    };
-
-    const onPointerLeave = () => {
-      pointer.x = -1000;
-      pointer.y = -1000;
-    };
-
-    resize();
-    draw();
-
-    window.addEventListener('resize', resize);
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerout', onPointerLeave);
-
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerout', onPointerLeave);
-    };
-  }, []);
-
-  return <canvas ref={canvasRef} className={`pointer-events-none ${className}`} style={{ width: '100%', height: '100%' }} aria-hidden="true" />;
-}
-
-const getFeaturedArtwork = (isEnglish) => ({
-  title: isEnglish ? 'Prosperous cash flow' : 'Dòng tiền thịnh vượng',
-  subtitle: isEnglish ? 'Discipline creates financial freedom' : 'Kỷ luật tạo nên tự do tài chính',
-  desc1: isEnglish
-    ? 'The carp crossing the waterfall symbolizes rising cash flow through discipline, clear budgeting, and timely decisions.'
-    : 'Hình ảnh cá chép vượt thác trước long môn tượng trưng cho dòng tiền đi lên nhờ sự bền bỉ, quản lý ngân sách rõ ràng và quyết định đúng lúc.',
-  desc2: isEnglish
-    ? 'When income, expenses, and savings are planned, cash flow becomes stable and opens bigger opportunities for life goals.'
-    : 'Khi thu nhập, chi tiêu và tiết kiệm được vận hành có kế hoạch, dòng tiền sẽ không chỉ ổn định mà còn mở ra nhiều cơ hội lớn cho mục tiêu cuộc sống.',
-  image: '/art/dragon.png',
-});
-
 const Landing = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
+  const { isDarkMode, toggleTheme } = useTheme();
   const isEnglish = language === 'en';
-  const FEATURED_ARTWORK = getFeaturedArtwork(isEnglish);
+  
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [statsStarted, setStatsStarted] = useState(false);
   const statsRef = useRef(null);
-  const ctaWaveLayerRef = useRef(null);
-  const ctaWaveRafRef = useRef(null);
-  const ctaWavePosRef = useRef({ x: 50, y: 50, tx: 50, ty: 50, active: false });
+
+  // Budget Estimator State
+  const defaultIncome = isEnglish ? 3000 : 20000000;
+  const [incomeInput, setIncomeInput] = useState(defaultIncome);
+  
+  // FAQ Accordion State
+  const [activeFaq, setActiveFaq] = useState(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
+    const onScroll = () => setScrolled(window.scrollY > 15);
     window.addEventListener('scroll', onScroll);
 
     // Scroll reveal
     const revealObserver = new IntersectionObserver(
       (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('is-visible'); }),
-      { threshold: 0.12 }
+      { threshold: 0.1 }
     );
     document.querySelectorAll('.reveal').forEach((el) => revealObserver.observe(el));
 
     // Stats counter trigger
     const statsObserver = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) setStatsStarted(true); },
-      { threshold: 0.3 }
+      { threshold: 0.2 }
     );
     if (statsRef.current) statsObserver.observe(statsRef.current);
 
     return () => {
       window.removeEventListener('scroll', onScroll);
-      if (ctaWaveRafRef.current) cancelAnimationFrame(ctaWaveRafRef.current);
     };
   }, []);
 
-  const runWaveAnimation = () => {
-    if (ctaWaveRafRef.current) return;
-
-    const tick = () => {
-      const p = ctaWavePosRef.current;
-      p.x += (p.tx - p.x) * 0.07;
-      p.y += (p.ty - p.y) * 0.07;
-
-      if (ctaWaveLayerRef.current) {
-        ctaWaveLayerRef.current.style.setProperty('--wave-x', `${p.x}%`);
-        ctaWaveLayerRef.current.style.setProperty('--wave-y', `${p.y}%`);
-      }
-
-      const nearTarget = Math.abs(p.tx - p.x) < 0.03 && Math.abs(p.ty - p.y) < 0.03;
-      if (!p.active && nearTarget) {
-        ctaWaveRafRef.current = null;
-        return;
-      }
-
-      ctaWaveRafRef.current = requestAnimationFrame(tick);
-    };
-
-    ctaWaveRafRef.current = requestAnimationFrame(tick);
+  const formatWidgetCurrency = (amount) => {
+    return new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', {
+      style: 'currency',
+      currency: isEnglish ? 'USD' : 'VND',
+      maximumFractionDigits: 0
+    }).format(amount);
   };
 
-  const handleCtaWaveMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    ctaWavePosRef.current.tx = Math.max(0, Math.min(100, x));
-    ctaWavePosRef.current.ty = Math.max(0, Math.min(100, y));
-    ctaWavePosRef.current.active = true;
-    runWaveAnimation();
+  const handleFaqToggle = (index) => {
+    setActiveFaq(activeFaq === index ? null : index);
   };
 
-  const handleCtaWaveLeave = () => {
-    ctaWavePosRef.current.tx = 50;
-    ctaWavePosRef.current.ty = 50;
-    ctaWavePosRef.current.active = false;
-    runWaveAnimation();
-  };
-
-  const handleArtCardMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    const rx = ((50 - y) / 50) * 3.2;
-    const ry = ((x - 50) / 50) * 4;
-
-    e.currentTarget.style.setProperty('--mx', `${x}%`);
-    e.currentTarget.style.setProperty('--my', `${y}%`);
-    e.currentTarget.style.setProperty('--rx', `${rx.toFixed(2)}deg`);
-    e.currentTarget.style.setProperty('--ry', `${ry.toFixed(2)}deg`);
-  };
-
-  const handleArtCardLeave = (e) => {
-    e.currentTarget.style.setProperty('--mx', '50%');
-    e.currentTarget.style.setProperty('--my', '50%');
-    e.currentTarget.style.setProperty('--rx', '0deg');
-    e.currentTarget.style.setProperty('--ry', '0deg');
-  };
+  const faqs = [
+    {
+      q: isEnglish ? "What is Finance Manager?" : "Finance Manager là gì?",
+      a: isEnglish
+        ? "Finance Manager is a smart personal finance assistant that helps you monitor income, expenses, set automated budgets based on the 50/30/20 rule, and easily achieve savings goals."
+        : "Finance Manager là ứng dụng quản lý tài chính cá nhân thông minh giúp bạn theo dõi thu nhập, chi tiêu, lập ngân sách tự động theo quy tắc 50/30/20 và đạt các mục tiêu tiết kiệm một cách kỷ luật."
+    },
+    {
+      q: isEnglish ? "How does AI OCR Receipt Scanning work?" : "Tính năng quét hóa đơn hoạt động như thế nào?",
+      a: isEnglish
+        ? "Simply snap a photo of any shopping receipt and upload it. Our advanced AI automatically parses the image to extract the total bill amount, date, and automatically categorizes it."
+        : "Chỉ cần tải ảnh hóa đơn chi tiêu lên, AI OCR của chúng tôi sẽ tự động trích xuất thông tin về số tiền, ngày giao dịch và tự động phân loại danh mục phù hợp trong vài giây."
+    },
+    {
+      q: isEnglish ? "Is my financial data secure?" : "Dữ liệu của tôi có được bảo mật không?",
+      a: isEnglish
+        ? "Yes. We take privacy seriously. Your data is encrypted using industry-standard 256-bit SSL encryption, ensuring your financial information remains private and secure."
+        : "Có, toàn bộ dữ liệu giao dịch và thông tin tài chính của bạn được mã hóa và bảo mật bằng giao thức SSL 256-bit tiêu chuẩn công nghiệp, cam kết an toàn tuyệt đối."
+    },
+    {
+      q: isEnglish ? "Do I have to pay to use this app?" : "Tôi có cần trả phí để sử dụng không?",
+      a: isEnglish
+        ? "The basic personal finance tools are 100% free forever. To access advanced features like AI OCR receipt scanning, AI cashflow forecasting, and PDF/Excel exports, you can upgrade to VIP starting at very low costs."
+        : "Gói cơ bản là miễn phí mãi mãi. Nếu bạn muốn sử dụng các tính năng cao cấp như quét hóa đơn AI, dự báo chi tiêu AI và xuất báo cáo Excel/PDF, bạn có thể nâng cấp lên VIP với mức phí cực kỳ hấp dẫn."
+    }
+  ];
 
   return (
-    <div className="relative min-h-screen bg-[#f5f2eb] text-[#0c211c] antialiased">
-      <ConstellationCanvas className="fixed inset-0 z-0 opacity-100" />
-      <div className="pointer-events-none fixed inset-0 z-[1] bg-[radial-gradient(circle_at_14%_16%,rgba(0,92,69,0.06)_0,rgba(0,92,69,0)_40%),radial-gradient(circle_at_86%_12%,rgba(202,138,4,0.06)_0,rgba(202,138,4,0)_40%)]" />
-      <div className="relative z-10">
-        <style>{`
-        /* ── Reveal ── */
-        .reveal { opacity:0; transform:translateY(28px); transition:opacity .65s ease, transform .65s ease; }
-        .reveal.is-visible { opacity:1; transform:translateY(0); }
-        .reveal-delay-1 { transition-delay:.07s; }
-        .reveal-delay-2 { transition-delay:.14s; }
-        .reveal-delay-3 { transition-delay:.21s; }
-        .reveal-delay-4 { transition-delay:.28s; }
+    <div className="relative min-h-screen bg-[#F2F5F3] dark:bg-[#0a0f0d] text-[#1E2522] dark:text-gray-200 antialiased"
+         style={{ fontFamily: "'Manrope', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+      <style>{`
+        /* ── Scroll reveal animation classes ── */
+        .reveal { opacity: 0; transform: translateY(22px); transition: opacity .6s ease, transform .6s ease; }
+        .reveal.is-visible { opacity: 1; transform: translateY(0); }
+        .reveal-delay-1 { transition-delay: .05s; }
+        .reveal-delay-2 { transition-delay: .12s; }
+        .reveal-delay-3 { transition-delay: .19s; }
+        .reveal-delay-4 { transition-delay: .26s; }
 
-        /* ── Float mockup ── */
+        /* ── Stark Wise-style font settings ── */
+        .wise-headline {
+          font-family: 'Manrope', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          letter-spacing: -0.02em;
+        }
+
+        /* ── Micro-animations ── */
+        @keyframes subtle-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.03); }
+        }
+        .pulse-lime {
+          animation: subtle-pulse 3s infinite ease-in-out;
+        }
+
         @keyframes float-y {
-          0%,100% { transform:translateY(0); }
-          50%      { transform:translateY(-10px); }
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
         }
-        .float-y { animation:float-y 4.5s ease-in-out infinite; }
-
-        /* ── Bars ── */
-        @keyframes grow-bar {
-          from { transform:scaleY(0); }
-          to   { transform:scaleY(1); }
-        }
-        .grow-bar { transform-origin:bottom; animation:grow-bar .9s cubic-bezier(.22,.61,.36,1) forwards; }
-
-        /* ── Dot grid bg ── */
-        .dot-grid {
-          background-image: radial-gradient(circle, #e8dfc5 1.5px, transparent 1.5px);
-          background-size: 22px 22px;
+        .float-card {
+          animation: float-y 4s ease-in-out infinite;
         }
 
-        /* ── Glow blob ── */
-        @keyframes blob-drift {
-          0%,100% { border-radius:60% 40% 55% 45%/55% 45% 60% 40%; transform:translate(0,0) scale(1); }
-          33%      { border-radius:45% 55% 40% 60%/60% 40% 55% 45%; transform:translate(18px,-14px) scale(1.04); }
-          66%      { border-radius:55% 45% 60% 40%/45% 60% 40% 55%; transform:translate(-12px,16px) scale(.97); }
-        }
-        .blob-drift { animation:blob-drift 10s ease-in-out infinite; }
-
-        /* ── Spin slow ── */
-        @keyframes spin-slow { to { transform:rotate(360deg); } }
-        .spin-slow { animation:spin-slow 18s linear infinite; }
-
-        /* ── Ping badge ── */
-        @keyframes ping-soft {
-          0%,100% { transform:scale(1); opacity:1; }
-          50%      { transform:scale(1.08); opacity:.8; }
-        }
-        .ping-soft { animation:ping-soft 2.5s ease-in-out infinite; }
-
-        /* ── Step line ── */
-        .step-line::after {
-          content:'';
-          position:absolute; top:24px; left:calc(50% + 28px);
-          width:calc(100% - 56px); height:2px;
-          background:linear-gradient(90deg,#e8dfc5,#c8b991);
-        }
-        @media(max-width:767px){ .step-line::after { display:none; } }
-
-        /* ── Ticker ── */
-        @keyframes ticker {
-          0%   { transform:translateY(0); }
-          33%  { transform:translateY(-33.33%); }
-          66%  { transform:translateY(-66.66%); }
-          100% { transform:translateY(-100%); }
-        }
-        .ticker-inner { animation:ticker 6s steps(1) infinite; }
-
-        /* ── AI artwork hover ── */
-        .ai-art-card {
-          --mx: 50%;
-          --my: 50%;
-          --rx: 0deg;
-          --ry: 0deg;
-        }
-        .ai-art-media {
-          transform: perspective(1000px) rotateX(var(--rx)) rotateY(var(--ry)) scale(1.01);
-          transition: transform .45s cubic-bezier(.22,.61,.36,1);
-          will-change: transform;
-        }
-        .ai-art-card:hover .ai-art-media {
-          transform: perspective(1000px) rotateX(var(--rx)) rotateY(var(--ry)) scale(1.045);
-        }
-        .ai-art-shine {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(260px 180px at var(--mx) var(--my), rgba(255,255,255,.32), rgba(255,255,255,0) 72%);
-          opacity: .55;
-          mix-blend-mode: screen;
-          pointer-events: none;
-          transition: opacity .35s ease;
-        }
-        .ai-art-card:hover .ai-art-shine { opacity: .78; }
-
-        /* ── Growth roadmap mood ── */
-        .growth-surface {
-          background:
-            radial-gradient(1200px 420px at 50% -10%, rgba(0,92,69,0.08), rgba(0,92,69,0) 62%),
-            linear-gradient(180deg, #f5f2eb 0%, #ebe7de 100%);
-        }
-        .growth-card {
-          position: relative;
-          overflow: hidden;
-          border: 1px solid #e8dfc5;
-          background: linear-gradient(165deg, rgba(253,251,247,0.96) 0%, rgba(251,248,242,0.88) 100%);
-          box-shadow: 0 10px 30px rgba(12, 33, 28, 0.05);
-          transition: transform .36s cubic-bezier(.22,.61,.36,1), box-shadow .36s ease, border-color .36s ease;
-        }
-        .growth-card::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(110deg, rgba(0,92,69,0) 0%, rgba(0,92,69,0.04) 40%, rgba(0,92,69,0) 82%);
-          transform: translateX(-100%);
-          transition: transform .7s ease;
-          pointer-events: none;
-        }
-        .growth-card:hover {
-          transform: translateY(-8px);
-          border-color: #ca8a04;
-          box-shadow: 0 18px 44px rgba(12, 33, 28, 0.1);
-        }
-        .growth-card:hover::before { transform: translateX(100%); }
-
-        /* ── Water wave field on CTA ── */
-        .cta-wave-surface {
-          position: absolute;
-          inset: 0;
-          overflow: hidden;
-          pointer-events: none;
-          --wave-x: 50%;
-          --wave-y: 50%;
-        }
-        .cta-wave-surface::before {
-          content: '';
-          position: absolute;
-          inset: -10%;
-          background:
-            repeating-radial-gradient(circle at var(--wave-x) var(--wave-y), rgba(202,138,4,.1) 0 1px, rgba(202,138,4,0) 1px 54px),
-            radial-gradient(520px 520px at var(--wave-x) var(--wave-y), rgba(202,138,4,.08) 0%, rgba(202,138,4,.04) 34%, rgba(202,138,4,0) 72%);
-          opacity: .4;
-          transform: translateZ(0);
-          animation: cta-water-breathe 10.5s ease-in-out infinite;
-        }
-        .cta-wave-surface::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(180deg, rgba(0,92,69,.03) 0%, rgba(0,92,69,.01) 45%, rgba(0,92,69,.02) 100%);
-        }
-        .cta-wave-ripple {
-          position: absolute;
-          left: var(--wave-x);
-          top: var(--wave-y);
-          width: 46px;
-          height: 46px;
-          border-radius: 999px;
-          border: 1px solid rgba(202,138,4,.35);
-          transform: translate(-50%, -50%) scale(.16);
-          opacity: 0;
-          will-change: transform, opacity;
-        }
-        .cta-wave-ripple.r1 { animation: cta-water-ripple 6.8s ease-out infinite; }
-        .cta-wave-ripple.r2 { animation: cta-water-ripple 6.8s ease-out 2.4s infinite; }
-        .cta-wave-ripple.r3 { animation: cta-water-ripple 6.8s ease-out 4.8s infinite; }
-        .cta-wave-core {
-          position: absolute;
-          left: var(--wave-x);
-          top: var(--wave-y);
-          width: 54px;
-          height: 54px;
-          transform: translate(-50%, -50%);
-          border-radius: 999px;
-          background: radial-gradient(circle, rgba(202,138,4,.25) 0%, rgba(202,138,4,.12) 30%, rgba(202,138,4,0) 72%);
-          filter: blur(0.6px);
-          opacity: .52;
-        }
-        @keyframes cta-water-ripple {
-          0%   { transform: translate(-50%, -50%) scale(.2); opacity: .45; }
-          75%  { opacity: .18; }
-          100% { transform: translate(-50%, -50%) scale(9.5); opacity: 0; }
-        }
-        @keyframes cta-water-breathe {
-          0%,100% { transform: scale(1) translate3d(0,0,0); }
-          50%     { transform: scale(1.01) translate3d(0,-2px,0); }
-        }
-        @media (hover:none) {
-          .cta-wave-surface::before { opacity: .38; }
-          .cta-wave-ripple,
-          .cta-wave-core { display: none; }
+        /* ── Custom scroll behavior ── */
+        html {
+          scroll-behavior: smooth;
         }
       `}</style>
 
-        {/* ══════════ HEADER ══════════ */}
-        <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#f5f2eb]/95 backdrop-blur-md shadow-sm border-b border-[#e8dfc5]' : 'bg-transparent'
-          }`}>
-          <nav className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
-            {/* Logo */}
-            <button onClick={() => navigate('/home')} className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 bg-transparent rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <img src="/LogoD.png" alt="logo" className="w-5 h-5 object-contain" />
+      {/* ══════════ NAVBAR (Header) ══════════ */}
+      <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-305 ${
+        scrolled
+          ? 'bg-white dark:bg-[#0c1310] shadow-sm border-b border-gray-150 dark:border-gray-800 py-3 text-[#1E2522] dark:text-white'
+          : 'bg-[#004b38] py-5 text-white'
+      }`}>
+        <nav className="max-w-6xl mx-auto px-5 sm:px-8 flex items-center justify-between">
+          {/* Logo */}
+          <button onClick={() => navigate('/home')} className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 bg-transparent rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <img src="/LogoD.png" alt="logo" className="w-5 h-5 object-contain" />
+            </div>
+            <span className={`text-base font-extrabold tracking-tight wise-headline ${
+              scrolled ? 'text-[#1E2522] dark:text-white' : 'text-white'
+            }`}>Finance Manager</span>
+          </button>
+
+          {/* Nav links */}
+          <div className="hidden md:flex items-center gap-8">
+            <a href="#features" className={`text-sm font-semibold transition ${
+              scrolled ? 'text-gray-650 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
+            }`}>{isEnglish ? 'Features' : 'Tính năng'}</a>
+            <a href="#how" className={`text-sm font-semibold transition ${
+              scrolled ? 'text-gray-655 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
+            }`}>{isEnglish ? 'How it works' : 'Cách dùng'}</a>
+            <a href="#pricing" className={`text-sm font-semibold transition ${
+              scrolled ? 'text-gray-650 hover:text-[#1ca063] dark:text-gray-305 dark:hover:text-[#9FEF00]' : 'text-gray-303 hover:text-[#9FEF00]'
+            }`}>{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a>
+            <a href="#faq" className={`text-sm font-semibold transition ${
+              scrolled ? 'text-gray-650 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-303 hover:text-white'
+            }`}>{isEnglish ? 'FAQ' : 'Hỏi đáp'}</a>
+            
+            {/* Scoped subpages */}
+            <div className="relative group">
+              <button className={`flex items-center gap-1 text-sm font-semibold transition ${
+                scrolled ? 'text-gray-655 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
+              }`}>
+                {isEnglish ? 'Company' : 'Công ty'}
+                <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                </svg>
+              </button>
+              <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-[#111915] border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden text-[#1E2522] dark:text-white">
+                <button onClick={() => navigate('/about')} className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-gray-850 hover:text-[#004b38] dark:hover:text-white transition text-left">
+                  <span>👥</span> {isEnglish ? 'About us' : 'Về chúng tôi'}
+                </button>
+                <button onClick={() => navigate('/contact')} className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-gray-850 hover:text-[#004b38] dark:hover:text-white transition text-left">
+                  <span>✉️</span> {isEnglish ? 'Contact' : 'Liên hệ'}
+                </button>
+                <button onClick={() => navigate('/privacy')} className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-gray-850 hover:text-[#004b38] dark:hover:text-white transition text-left">
+                  <span>🔒</span> {isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}
+                </button>
               </div>
-              <span className="text-base font-bold text-[#0c211c] tracking-tight">Finance Manager</span>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="hidden md:flex items-center gap-4">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-xl transition ${
+                scrolled
+                  ? 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-850'
+                  : 'text-gray-300 hover:text-white hover:bg-white/10'
+              }`}
+              title={isEnglish ? 'Toggle theme' : 'Thay đổi giao diện'}
+            >
+              {isDarkMode ? '☀️' : '🌙'}
             </button>
 
-            {/* Desktop links */}
-            <div className="hidden md:flex items-center gap-7">
-              <a href="#features" className="text-sm text-slate-650 hover:text-[#005c45] transition font-medium">{isEnglish ? 'Features' : 'Tính năng'}</a>
-              <a href="#how" className="text-sm text-slate-650 hover:text-[#005c45] transition font-medium">{isEnglish ? 'How it works' : 'Cách dùng'}</a>
-              <a href="#pricing" className="text-sm text-slate-655 hover:text-[#005c45] transition font-medium flex items-center gap-1">
-                <span className="text-[#ca8a04]">👑</span> {isEnglish ? 'VIP' : 'Gói VIP'}
-              </a>
-              <a href="#testimonials" className="text-sm text-slate-650 hover:text-[#005c45] transition font-medium">{isEnglish ? 'Roadmap' : 'Lộ trình'}</a>
-              {/* Dropdown Công ty */}
-              <div className="relative group">
-                <button className="flex items-center gap-1 text-sm text-slate-655 hover:text-[#005c45] transition font-medium">
-                  {isEnglish ? 'Company' : 'Công ty'}
-                  <svg className="w-3.5 h-3.5 mt-0.5 group-hover:rotate-180 transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-                  </svg>
+            {/* Language Toggle */}
+            <button
+              onClick={() => setLanguage(language === 'en' ? 'vi' : 'en')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition border ${
+                scrolled
+                  ? 'text-gray-600 border-gray-250 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-850'
+                  : 'text-gray-300 border-gray-600 hover:text-white hover:bg-white/10'
+              }`}
+              title={isEnglish ? 'Switch to Vietnamese' : 'Chuyển sang Tiếng Anh'}
+            >
+              <span>🌐</span>
+              <span>{language === 'en' ? 'EN' : 'VI'}</span>
+            </button>
+
+            {user ? (
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2 text-xs font-black uppercase tracking-wider px-5 py-2.5 bg-[#9FEF00] text-[#004b38] rounded-xl hover:bg-[#8ade00] transition"
+              >
+                <FaRocket size={11} /> {isEnglish ? 'Go to Dashboard' : 'Vào Dashboard'}
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => navigate('/login')}
+                  className={`text-sm font-semibold transition px-3 py-1.5 rounded-lg ${
+                    scrolled ? 'text-gray-655 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  {isEnglish ? 'Login' : 'Đăng nhập'}
                 </button>
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-[#fdfbf9] border border-[#e8dfc5] rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
-                  <button onClick={() => navigate('/about')} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-slate-600 hover:bg-[#f4eee1] hover:text-[#005c45] transition text-left">
-                    <span className="w-6 h-6 bg-[#f4eee1] rounded-lg flex items-center justify-center text-[#ca8a04] text-xs">👥</span>
-                    {isEnglish ? 'About us' : 'Về chúng tôi'}
-                  </button>
-                  <button onClick={() => navigate('/contact')} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-slate-600 hover:bg-[#f4eee1] hover:text-[#005c45] transition text-left">
-                    <span className="w-6 h-6 bg-teal-50 rounded-lg flex items-center justify-center text-teal-700 text-xs">✉️</span>
-                    {isEnglish ? 'Contact' : 'Liên hệ'}
-                  </button>
-                  <button onClick={() => navigate('/privacy')} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-slate-600 hover:bg-[#f4eee1] hover:text-[#005c45] transition text-left">
-                    <span className="w-6 h-6 bg-amber-50 rounded-lg flex items-center justify-center text-[#ca8a04] text-xs">🔒</span>
-                    {isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}
-                  </button>
-                </div>
+                <button
+                  onClick={() => navigate('/register')}
+                  className={`text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-xl transition ${
+                    scrolled
+                      ? 'bg-[#004b38] text-white hover:bg-[#003d2d]'
+                      : 'bg-[#9FEF00] text-[#004b38] hover:bg-[#8ade00]'
+                  }`}
+                >
+                  {isEnglish ? 'Sign up free' : 'Đăng ký miễn phí'}
+                </button>
+              </>
+            )}
+          </div>
+
+          <button
+            className="md:hidden p-2 text-[#004b38] dark:text-white"
+            onClick={() => setMobileOpen(!mobileOpen)}
+          >
+            {mobileOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+          </button>
+        </nav>
+
+        {/* Mobile menu */}
+        {mobileOpen && (
+          <div className="md:hidden bg-white dark:bg-[#0c1310] border-t border-gray-100 dark:border-gray-800 text-[#1E2522] dark:text-white px-6 py-5 space-y-3 shadow-lg">
+            <a href="#features" className="block text-sm font-bold py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'Features' : 'Tính năng'}</a>
+            <a href="#how" className="block text-sm font-bold py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'How it works' : 'Cách dùng'}</a>
+            <a href="#pricing" className="block text-sm font-bold py-1.5 text-emerald-600" onClick={() => setMobileOpen(false)}>{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a>
+            <a href="#faq" className="block text-sm font-bold py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'FAQ' : 'Hỏi đáp'}</a>
+            <div className="border-t border-gray-100 dark:border-gray-800 pt-3 space-y-1">
+              <button onClick={() => { navigate('/about'); setMobileOpen(false); }} className="block w-full text-left text-sm font-semibold py-1.5">{isEnglish ? 'About us' : 'Về chúng tôi'}</button>
+              <button onClick={() => { navigate('/contact'); setMobileOpen(false); }} className="block w-full text-left text-sm font-semibold py-1.5">{isEnglish ? 'Contact' : 'Liên hệ'}</button>
+              <button onClick={() => { navigate('/privacy'); setMobileOpen(false); }} className="block w-full text-left text-sm font-semibold py-1.5">{isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}</button>
+            </div>
+            
+            {/* Mobile Switchers */}
+            <div className="flex items-center justify-between pt-2 pb-1 border-t border-b border-gray-100 dark:border-gray-800">
+              <span className="text-sm font-bold text-gray-500">{isEnglish ? 'Settings' : 'Cài đặt'}</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={toggleTheme}
+                  className="p-2.5 rounded-xl border border-gray-250 dark:border-gray-700 text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-850 flex items-center justify-center"
+                >
+                  {isDarkMode ? '☀️' : '🌙'}
+                </button>
+                <button
+                  onClick={() => setLanguage(language === 'en' ? 'vi' : 'en')}
+                  className="px-3.5 py-2.5 rounded-xl border border-gray-255 dark:border-gray-700 text-gray-750 dark:text-gray-300 bg-gray-50 dark:bg-gray-850 font-bold text-xs flex items-center gap-1.5"
+                >
+                  <span>🌐</span>
+                  <span>{language === 'en' ? 'EN' : 'VI'}</span>
+                </button>
               </div>
             </div>
 
-            {/* Desktop CTA */}
-            <div className="hidden md:flex items-center gap-3">
+            <div className="pt-3 space-y-2">
               {user ? (
-                <button
-                  onClick={() => navigate('/dashboard')}
-                  className="flex items-center gap-2 text-sm font-semibold px-5 py-2 bg-[#005c45] text-white rounded-xl hover:bg-[#004d3e] transition shadow-sm"
-                >
+                <button onClick={() => { navigate('/dashboard'); setMobileOpen(false); }}
+                  className="w-full flex items-center justify-center gap-2 text-sm font-bold px-4 py-3 bg-[#004b38] text-white rounded-xl">
                   <FaRocket size={12} /> {isEnglish ? 'Go to Dashboard' : 'Vào Dashboard'}
                 </button>
               ) : (
                 <>
-                  <button
-                    onClick={() => navigate('/login')}
-                    className="text-sm font-medium text-slate-650 hover:text-[#0c211c] hover:bg-[#e8dfc5]/40 transition px-3 py-1.5 rounded-lg"
-                  >
-                    {isEnglish ? 'Sign in' : 'Đăng nhập'}
+                  <button onClick={() => { navigate('/login'); setMobileOpen(false); }}
+                    className="w-full text-sm font-bold px-4 py-3 border border-gray-200 dark:border-gray-700 text-gray-750 dark:text-gray-300 rounded-xl hover:bg-gray-50">
+                    {isEnglish ? 'Login' : 'Đăng nhập'}
                   </button>
-                  <button
-                    onClick={() => navigate('/register')}
-                    className="text-sm font-semibold px-5 py-2 bg-[#005c45] text-white rounded-xl hover:bg-[#004d3e] transition shadow-sm"
-                  >
+                  <button onClick={() => { navigate('/register'); setMobileOpen(false); }}
+                    className="w-full text-sm font-bold px-4 py-3 bg-[#9FEF00] text-[#004b38] rounded-xl text-center">
                     {isEnglish ? 'Sign up free' : 'Đăng ký miễn phí'}
                   </button>
                 </>
               )}
             </div>
+          </div>
+        )}
+      </header>
 
-            <button className="md:hidden p-2 text-slate-500" onClick={() => setMobileOpen(!mobileOpen)}>
-              {mobileOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
-            </button>
-          </nav>
+      {/* ══════════ HERO SECTION (Deep Brand Green `#004b38`) ══════════ */}
+      <section className="relative bg-[#004b38] text-white pt-32 pb-24 px-5 sm:px-8 overflow-hidden">
+        {/* Abstract shapes matching Wise card design */}
+        <div className="absolute right-0 top-0 w-[45%] h-full bg-[#003d2d] opacity-65 rounded-l-[150px] pointer-events-none" />
+        <div className="absolute -bottom-16 left-12 w-64 h-64 bg-[#9FEF00] opacity-5 blur-3xl pointer-events-none" />
 
-          {/* Mobile menu */}
-          {mobileOpen && (
-            <div className="md:hidden bg-[#f5f2eb] border-t border-[#e8dfc5] px-5 py-4 space-y-2 shadow-lg">
-              <a href="#features" className="block text-sm text-slate-655 hover:text-[#005c45] font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'Features' : 'Tính năng'}</a>
-              <a href="#how" className="block text-sm text-slate-655 hover:text-[#005c45] font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'How it works' : 'Cách dùng'}</a>
-              <a href="#pricing" className="block text-sm text-[#ca8a04] hover:text-[#005c45] font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a>
-              <a href="#testimonials" className="block text-sm text-slate-650 hover:text-[#005c45] font-medium py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'Roadmap' : 'Đánh giá'}</a>
-              <div className="border-t border-[#e8dfc5] pt-2 mt-1 space-y-0.5">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-0.5 mb-1">{isEnglish ? 'Company' : 'Công ty'}</p>
-                <button onClick={() => { navigate('/about'); setMobileOpen(false); }} className="block w-full text-left text-sm text-slate-600 hover:text-[#005c45] font-medium py-1.5">{isEnglish ? 'About us' : 'Về chúng tôi'}</button>
-                <button onClick={() => { navigate('/contact'); setMobileOpen(false); }} className="block w-full text-left text-sm text-slate-600 hover:text-[#005c45] font-medium py-1.5">{isEnglish ? 'Contact' : 'Liên hệ'}</button>
-                <button onClick={() => { navigate('/privacy'); setMobileOpen(false); }} className="block w-full text-left text-sm text-slate-600 hover:text-[#005c45] font-medium py-1.5">{isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}</button>
-              </div>
-              <div className="pt-2 border-t border-[#e8dfc5] space-y-2">
-                {user ? (
-                  <button onClick={() => { navigate('/dashboard'); setMobileOpen(false); }}
-                    className="w-full flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2.5 bg-[#005c45] text-white rounded-xl">
-                    <FaRocket size={12} /> {isEnglish ? 'Go to Dashboard' : 'Vào Dashboard'}
-                  </button>
-                ) : (
-                  <>
-                    <button onClick={() => { navigate('/login'); setMobileOpen(false); }}
-                      className="w-full text-sm font-medium px-4 py-2.5 border border-[#e8dfc5] text-slate-700 rounded-xl hover:bg-[#e8dfc5]/40 transition">
-                      {isEnglish ? 'Sign in' : 'Đăng nhập'}
-                    </button>
-                    <button onClick={() => { navigate('/register'); setMobileOpen(false); }}
-                      className="w-full text-sm font-semibold px-4 py-2.5 bg-[#005c45] text-white rounded-xl">
-                      {isEnglish ? 'Sign up free' : 'Đăng ký miễn phí'}
-                    </button>
-                  </>
-                )}
-              </div>
+        <div className="max-w-6xl mx-auto relative z-10 grid lg:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
+          
+          {/* Left Column: Heading */}
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#9FEF00]/10 border border-[#9FEF00]/30 rounded-full">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#9FEF00] animate-pulse" />
+              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#9FEF00]">
+                {isEnglish ? 'SMART FINANCIAL MANAGER' : 'ỨNG DỤNG LẬP KẾ HOẠCH CHI TIÊU'}
+              </span>
             </div>
-          )}
-        </header>
 
-        {/* ══════════ HERO ══════════ */}
-        <section className="relative pt-24 pb-20 px-5 sm:px-8 overflow-hidden bg-gradient-to-br from-slate-50/20 via-white/20 to-emerald-50/12">
-          {/* Decorative dot grid */}
-          <div className="absolute -inset-12 dot-grid opacity-14 pointer-events-none" />
+            <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold tracking-tight leading-[1.08] wise-headline text-white">
+              {isEnglish ? 'CONTROL YOUR BUDGET,' : 'KIỂM SOÁT CHI TIÊU,'}<br />
+              <span className="text-[#9FEF00]">
+                {isEnglish ? 'GROW YOUR ASSETS.' : 'TÍCH LŨY THỊNH VƯỢNG.'}
+              </span>
+            </h1>
 
-          {/* Blob accent */}
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-emerald-400/10 blob-drift pointer-events-none" />
-          <div className="absolute bottom-0 -left-16 w-72 h-72 bg-teal-300/10 blob-drift pointer-events-none" style={{ animationDelay: '3s' }} />
+            <p className="text-base sm:text-lg text-gray-300 leading-relaxed max-w-md">
+              {isEnglish
+                ? 'Automate budgeting under the 50/30/20 rule, extract bills with AI receipt scanning, and make your money work for you.'
+                : 'Lập ngân sách chi tiêu tối ưu theo quy tắc 50/30/20, tự động quét hóa đơn bằng công nghệ AI OCR và theo dõi dòng tiền thông minh.'}
+            </p>
 
-          <div className="max-w-6xl mx-auto relative z-10 grid lg:grid-cols-2 gap-14 items-center">
-            {/* ── Left ── */}
-            <div>
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full mb-7 ping-soft">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-semibold text-emerald-700 tracking-wide">{isEnglish ? 'Free • No credit card required' : 'Miễn phí • Không cần thẻ tín dụng'}</span>
-              </div>
+            {/* Trust highlights */}
+            <div className="flex flex-wrap gap-4 pt-2">
+              {[
+                { icon: <FaUsers size={12} />, label: isEnglish ? '10k+ Active Users' : '10,000+ Người dùng' },
+                { icon: <FaShieldAlt size={12} />, label: isEnglish ? '256-bit SSL Cryptography' : 'Mã hóa 256-bit SSL' },
+                { icon: <FaStar size={12} className="text-[#9FEF00]" />, label: isEnglish ? '4.9 App Rating' : '4.9 Đánh giá ứng dụng' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 bg-[#003d2d] border border-emerald-900/40 rounded-full px-4 py-2 text-xs font-semibold">
+                  {item.icon}
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
 
-              <h1 className="text-4xl sm:text-[3.2rem] font-extrabold text-slate-900 leading-[1.13] mb-5">
-                {isEnglish ? 'Control your finances' : 'Kiểm soát tài chính'}<br />
-                <span className="relative">
-                  <span className="text-emerald-600">{isEnglish ? 'more intelligently' : 'thông minh hơn'}</span>
-                  <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 300 10" preserveAspectRatio="none">
-                    <path d="M0 8 Q150 0 300 8" stroke="#6ee7b7" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                  </svg>
-                </span>
-                <br />{isEnglish ? 'every day' : 'mỗi ngày'}
-              </h1>
-
-              <p className="text-lg text-slate-500 leading-relaxed mb-8 max-w-md">
-                {isEnglish ? 'Track income and expenses, set budgets, and reach financial goals with a simple interface and clear data.' : 'Theo dõi thu chi, lập ngân sách và đạt mục tiêu tài chính — giao diện đơn giản, dữ liệu rõ ràng.'}
-              </p>
-
-              {/* Trust badges */}
-              <div className="flex flex-wrap gap-4 mb-9">
-                {[
-                  { icon: <FaUsers className="text-emerald-600" size={13} />, label: isEnglish ? '10,000+ users' : '10,000+ người dùng' },
-                  { icon: <FaShieldAlt className="text-emerald-600" size={13} />, label: isEnglish ? '256-bit security' : 'Bảo mật 256-bit' },
-                  { icon: <FaStar className="text-amber-400" size={13} />, label: isEnglish ? '4.9 / 5 stars' : '4.9 / 5 sao' },
-                ].map(({ icon, label }, i) => (
-                  <span key={i} className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-full shadow-sm">
-                    {icon} {label}
-                  </span>
-                ))}
-              </div>
-
-              {/* CTA row */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                {user ? (
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              {user ? (
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#9FEF00] text-[#004b38] font-extrabold rounded-xl hover:bg-[#8ade00] hover:scale-[1.01] active:scale-95 transition-all text-sm uppercase tracking-wider"
+                >
+                  {isEnglish ? 'Go to Dashboard' : 'Vào Dashboard'} <FaArrowRight size={11} />
+                </button>
+              ) : (
+                <>
                   <button
-                    onClick={() => navigate('/dashboard')}
-                    className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/25 text-sm"
+                    onClick={() => navigate('/register')}
+                    className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#9FEF00] text-[#004b38] font-extrabold rounded-xl hover:bg-[#8ade00] hover:scale-[1.01] active:scale-95 transition-all text-sm uppercase tracking-wider"
                   >
-                    <FaRocket size={13} /> {isEnglish ? 'Go to Dashboard' : 'Vào Dashboard'} <FaArrowRight size={11} />
+                    {isEnglish ? 'Start For Free' : 'Bắt đầu miễn phí'} <FaArrowRight size={11} />
                   </button>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => navigate('/register')}
-                      className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/25 text-sm"
-                    >
-                      {isEnglish ? 'Start for free' : 'Bắt đầu miễn phí'} <FaArrowRight size={11} />
-                    </button>
-                    <button
-                      onClick={() => navigate('/login')}
-                      className="inline-flex items-center justify-center gap-2 px-7 py-3.5 border border-slate-200 bg-white text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition text-sm shadow-sm"
-                    >
-                      {isEnglish ? 'Sign in' : 'Đăng nhập'}
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* ── Right: App mockup ── */}
-            <div className="relative float-y">
-              {/* Glow ring behind card */}
-              <div className="absolute inset-4 bg-[#005c45]/10 rounded-3xl blur-2xl pointer-events-none" />
-
-              {/* Floating badges */}
-              <div className="absolute -top-4 -left-4 z-20 flex items-center gap-2 bg-white border border-[#e8dfc5] shadow-lg rounded-2xl px-3 py-2">
-                <div className="w-8 h-8 bg-[#005c45]/10 rounded-xl flex items-center justify-center">
-                  <FaChartLine className="text-[#005c45]" size={14} />
-                </div>
-                <div>
-                  <div className="text-[10px] text-slate-450 leading-none">{isEnglish ? 'Savings this month' : 'Tiết kiệm tháng này'}</div>
-                  <div className="text-sm font-bold text-[#005c45]">+12.4M đ</div>
-                </div>
-              </div>
-              <div className="absolute -bottom-3 -right-4 z-20 flex items-center gap-2 bg-white border border-[#e8dfc5] shadow-lg rounded-2xl px-3 py-2">
-                <div className="w-8 h-8 bg-[#ca8a04]/10 rounded-xl flex items-center justify-center">
-                  <FaBell className="text-[#ca8a04]" size={13} />
-                </div>
-                <div>
-                  <div className="text-[10px] text-slate-455 leading-none">{isEnglish ? 'Budget alert' : 'Cảnh báo ngân sách'}</div>
-                  <div className="text-xs font-semibold text-[#ca8a04]">{isEnglish ? 'Food: 85%' : 'Ăn uống: 85%'}</div>
-                </div>
-              </div>
-
-              {/* Main card */}
-              <div className="relative bg-white rounded-3xl shadow-2xl border border-[#e8dfc5] overflow-hidden">
-                {/* macOS topbar */}
-                <div className="flex items-center gap-1.5 px-4 py-3 border-b border-[#e8dfc5] bg-slate-50/80">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-amber-400" />
-                  <div className="w-3 h-3 rounded-full bg-[#005c45]" />
-                  <div className="ml-3 flex-1 bg-slate-200 h-2 rounded-full max-w-[140px]" />
-                </div>
-
-                <div className="p-5">
-                  {/* Greeting */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-xs text-slate-400">{isEnglish ? 'June · 2025' : 'Tháng 6 · 2025'}</p>
-                      <h3 className="text-base font-bold text-slate-800">{isEnglish ? 'Financial overview' : 'Tổng quan tài chính'}</h3>
-                    </div>
-                    <div className="w-9 h-9 bg-transparent rounded-xl flex items-center justify-center">
-                      <img src="/LogoD.png" alt="" className="w-5 h-5 object-contain" />
-                    </div>
-                  </div>
-
-                  {/* Cards */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-gradient-to-br from-[#005c45] to-[#004d3e] rounded-2xl p-4 text-white shadow-md shadow-[#005c45]/20">
-                      <div className="text-[11px] opacity-75 mb-1 font-medium">{isEnglish ? 'Income' : 'Thu nhập'}</div>
-                      <div className="text-xl font-extrabold">45.2M</div>
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className="text-[#a7f3d0] text-[10px]">▲ 12%</span>
-                        <span className="text-[#a7f3d0] text-[10px]">{isEnglish ? 'vs previous month' : 'so tháng trước'}</span>
-                      </div>
-                    </div>
-                    <div className="bg-gradient-to-br from-slate-650 to-slate-800 rounded-2xl p-4 text-white shadow-md">
-                      <div className="text-[11px] opacity-75 mb-1 font-medium">{isEnglish ? 'Expense' : 'Chi tiêu'}</div>
-                      <div className="text-xl font-extrabold">32.8M</div>
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className="text-slate-300 text-[10px]">▼ 5%</span>
-                        <span className="text-slate-300 text-[10px]">{isEnglish ? 'vs previous month' : 'so tháng trước'}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Mini chart */}
-                  <div className="bg-[#fcfbf9] rounded-2xl p-3.5 mb-4 border border-[#e8dfc5]/50">
-                    <div className="flex items-center justify-between mb-2.5">
-                      <span className="text-xs font-semibold text-slate-700">{isEnglish ? '7-day expense' : 'Chi tiêu 7 ngày'}</span>
-                      <span className="text-[10px] text-[#005c45] font-semibold bg-[#005c45]/10 px-2 py-0.5 rounded-full">{isEnglish ? 'This week' : 'Tuần này'}</span>
-                    </div>
-                    <div className="flex items-end justify-between gap-1.5 h-16">
-                      {[38, 65, 48, 80, 55, 92, 68].map((h, i) => (
-                        <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                          <div
-                            className={`w-full rounded-t-lg grow-bar ${i === 5 ? 'bg-[#005c45]' : 'bg-slate-200'}`}
-                            style={{ height: `${h}%`, animationDelay: `${i * 0.07 + 0.3}s` }}
-                          />
-                          <span className="text-[8px] text-slate-400 font-medium">
-                            {isEnglish ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i] : ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][i]}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Transactions */}
-                  <div className="space-y-2.5">
-                    {[
-                      { label: isEnglish ? 'June salary' : 'Lương tháng 6', cat: isEnglish ? 'Income' : 'Thu nhập', amount: '+45.2M', dot: 'bg-[#005c45]' },
-                      { label: isEnglish ? 'Coffee & breakfast' : 'Cà phê & Ăn sáng', cat: isEnglish ? 'Food' : 'Ăn uống', amount: '-85K', dot: 'bg-[#ca8a04]' },
-                      { label: isEnglish ? 'Utilities bill' : 'Tiền điện nước', cat: isEnglish ? 'Bills' : 'Hóa đơn', amount: '-450K', dot: 'bg-blue-400' },
-                    ].map((tx, i) => (
-                      <div key={i} className="flex items-center gap-3 py-1">
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${tx.dot}`} />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-medium text-slate-700 truncate">{tx.label}</div>
-                          <div className="text-[10px] text-slate-400">{tx.cat}</div>
-                        </div>
-                        <div className={`text-xs font-bold tabular-nums ${tx.amount.startsWith('+') ? 'text-[#005c45]' : 'text-slate-650'}`}>
-                          {tx.amount}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+                  <button
+                    onClick={() => navigate('/login')}
+                    className="inline-flex items-center justify-center px-8 py-4 border border-gray-600 hover:border-white text-white font-bold rounded-xl transition text-sm"
+                  >
+                    {isEnglish ? 'Login' : 'Đăng nhập'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
-        </section>
 
-        {/* ══════════ STATS ══════════ */}
-        <section ref={statsRef} className="py-14 px-5 sm:px-8 bg-[#fcfbf9] border-y border-[#e8dfc5]">
-          <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-            <StatItem icon={<FaUsers />} value={1000} suffix="+" label={isEnglish ? 'Users' : 'Người dùng'} delay={1} started={statsStarted} />
-            <StatItem icon={<FaTrophy />} value={1000} suffix="K+" label={isEnglish ? 'Transactions' : 'Giao dịch'} delay={2} started={statsStarted} />
-            <StatItem icon={<FaCheckCircle />} value={97} suffix="%" label={isEnglish ? 'Satisfied' : 'Hài lòng'} delay={3} started={statsStarted} />
-            <StatItem icon={<FaStar />} value={5} suffix="/5" label={isEnglish ? 'Rating' : 'Đánh giá'} delay={4} started={statsStarted} />
-          </div>
-        </section>
+          {/* Right Column: Interactive Budget Estimator Card */}
+          <div className="relative">
+            {/* Background design glow */}
+            <div className="absolute inset-2 bg-[#9FEF00]/10 rounded-[28px] blur-xl pointer-events-none" />
 
-        {/* ══════════ FEATURES ══════════ */}
-        <section id="features" className="py-20 px-5 sm:px-8 bg-[#f5f2eb]">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-14 reveal">
-              <span className="text-xs font-bold text-[#005c45] bg-[#005c45]/5 border border-[#005c45]/20 px-3 py-1 rounded-full uppercase tracking-widest">
-                {isEnglish ? 'Key features' : 'Tính năng nổi bật'}
-              </span>
-              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#0c211c]">
-                {isEnglish ? 'Everything you need' : 'Mọi thứ bạn cần'}
-              </h2>
-              <p className="mt-3 text-base text-slate-650 max-w-lg mx-auto">
-                {isEnglish ? 'A complete toolkit to control personal finance: simple yet powerful.' : 'Bộ công cụ hoàn chỉnh để kiểm soát tài chính cá nhân — đơn giản nhưng mạnh mẽ.'}
+            <div className="relative bg-white dark:bg-[#111915] rounded-3xl p-6 sm:p-7 shadow-2xl text-[#1E2522] dark:text-white border border-gray-100 dark:border-gray-800">
+              <h3 className="text-lg font-black text-[#004b38] dark:text-white mb-2 wise-headline">
+                {isEnglish ? '50/30/20 Budget Estimator' : 'Công cụ tính ngân sách 50/30/20'}
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">
+                {isEnglish ? 'Enter income to instantly view recommended budget allocation' : 'Nhập thu nhập để xem gợi ý phân bổ ngân sách lập tức'}
               </p>
-            </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {[
-                { icon: <FaWallet size={22} />, title: isEnglish ? 'Expense tracking' : 'Theo dõi chi tiêu', desc: isEnglish ? 'Record and auto-categorize daily income and expenses easily.' : 'Ghi chép và phân loại tự động mọi khoản thu chi hàng ngày nhanh chóng.', color: 'emerald', border: 'hover:border-emerald-300' },
-                { icon: <FaCreditCard size={22} />, title: isEnglish ? 'Budget management' : 'Quản lý ngân sách', desc: isEnglish ? 'Set budget caps and get early warnings before overspending.' : 'Đặt hạn mức ngân sách và nhận cảnh báo khi sắp vượt giới hạn.', color: 'blue', border: 'hover:border-blue-300' },
-                { icon: <FaCamera size={22} />, title: isEnglish ? 'AI OCR Receipt Scan' : 'Quét hóa đơn AI (OCR)', desc: isEnglish ? 'Scan invoice images; AI automatically extracts amounts and categories.' : 'Tải ảnh hóa đơn lên, AI tự động phân tích và điền số tiền, danh mục cực nhanh.', color: 'violet', border: 'hover:border-violet-300' },
-                { icon: <FaRobot size={22} />, title: isEnglish ? 'AI Cashflow Forecast' : 'Dự báo tài chính AI', desc: isEnglish ? 'Predict future spending and cashflow trends using machine learning.' : 'Phát hiện thói quen, dự báo xu hướng dòng tiền tương lai của bạn bằng trí tuệ nhân tạo.', color: 'indigo', border: 'hover:border-indigo-300' },
-                { icon: <FaHandHoldingUsd size={22} />, title: isEnglish ? 'Debt Management' : 'Quản lý nợ & vay', desc: isEnglish ? 'Track personal loans, debts, and set due dates for timely repayment.' : 'Ghi chép và quản lý chi tiết các khoản vay, cho nợ và hạn thanh toán.', color: 'amber', border: 'hover:border-amber-300' },
-                { icon: <FaBullseye size={22} />, title: isEnglish ? 'Financial Goals' : 'Mục tiêu tích lũy', desc: isEnglish ? 'Establish smart savings goals and monitor daily progress step-by-step.' : 'Thiết lập các mục tiêu mua sắm, tiết kiệm và bám sát tiến độ thực tế.', color: 'rose', border: 'hover:border-rose-300' },
-              ].map((f, i) => {
-                const palette = {
-                  emerald: 'bg-[#005c45]/10 text-[#005c45] group-hover:bg-[#005c45]',
-                  blue: 'bg-teal-50 text-teal-700 group-hover:bg-teal-700',
-                  violet: 'bg-[#ca8a04]/10 text-[#ca8a04] group-hover:bg-[#ca8a04]',
-                  indigo: 'bg-[#005c45]/10 text-[#005c45] group-hover:bg-[#005c45]',
-                  amber: 'bg-[#ca8a04]/10 text-[#ca8a04] group-hover:bg-[#ca8a04]',
-                  rose: 'bg-orange-50 text-orange-700 group-hover:bg-orange-750',
-                }[f.color];
-                return (
-                  <div key={i}
-                    className={`reveal reveal-delay-${(i % 3) + 1} group bg-white rounded-2xl p-6 border border-[#e8dfc5] hover:border-[#ca8a04] hover:shadow-lg transition-all duration-300 cursor-default`}>
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-5 transition-all duration-300 group-hover:text-white ${palette}`}>
-                      {f.icon}
-                    </div>
-                    <h3 className="text-sm font-bold text-[#0c211c] mb-2 group-hover:text-[#005c45]">{f.title}</h3>
-                    <p className="text-sm text-slate-655 leading-relaxed">{f.desc}</p>
+              {/* Input section */}
+              <div className="relative mb-6">
+                <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">
+                  {isEnglish ? 'Monthly Income' : 'Thu nhập hàng tháng'}
+                </label>
+                <div className="flex items-center bg-[#F2F5F3] dark:bg-[#0c1310] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden focus-within:ring-2 focus-within:ring-[#004b38] transition-all">
+                  <input
+                    type="number"
+                    value={incomeInput}
+                    onChange={(e) => setIncomeInput(Math.max(0, parseFloat(e.target.value) || 0))}
+                    className="w-full bg-transparent px-4 py-3 text-lg font-bold text-[#004b38] dark:text-white outline-none"
+                    placeholder="0"
+                    min="0"
+                    step={isEnglish ? 100 : 1000000}
+                  />
+                  <span className="bg-gray-200 dark:bg-gray-800 px-4 py-3 font-extrabold text-sm text-[#004b38] dark:text-white">
+                    {isEnglish ? 'USD' : 'VND'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Connecting Vertical Graph / Results */}
+              <div className="space-y-4 relative pl-7 border-l-2 border-dashed border-[#004b38]/20 dark:border-emerald-800/40">
+                {/* Visual branch nodes */}
+                <div className="absolute top-3 -left-[7px] w-3 h-3 rounded-full bg-[#004b38] dark:bg-[#9FEF00]" />
+                <div className="absolute top-1/2 -translate-y-1/2 -left-[7px] w-3 h-3 rounded-full bg-[#9FEF00] border-2 border-[#004b38] dark:border-[#0c1310]" />
+                <div className="absolute bottom-3 -left-[7px] w-3 h-3 rounded-full bg-emerald-600" />
+
+                {/* 1. Needs (50%) */}
+                <div className="p-3 bg-gray-50 dark:bg-[#0c1310] rounded-xl hover:shadow-sm transition-shadow">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="font-extrabold text-gray-700 dark:text-gray-300">{isEnglish ? 'Needs (50%)' : 'Thiết yếu (50%)'}</span>
+                    <span className="font-black text-[#004b38] dark:text-[#9FEF00]">{formatWidgetCurrency(incomeInput * 0.5)}</span>
                   </div>
-                );
-              })}
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400">
+                    {isEnglish ? 'Rent, utilities, groceries, bills' : 'Nhà ở, điện nước, ăn uống, hóa đơn'}
+                  </div>
+                </div>
+
+                {/* 2. Wants (30%) */}
+                <div className="p-3 bg-gray-50 dark:bg-[#0c1310] rounded-xl hover:shadow-sm transition-shadow">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="font-extrabold text-gray-700 dark:text-gray-300">{isEnglish ? 'Wants (30%)' : 'Cá nhân (30%)'}</span>
+                    <span className="font-black text-emerald-600 dark:text-emerald-400">{formatWidgetCurrency(incomeInput * 0.3)}</span>
+                  </div>
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400">
+                    {isEnglish ? 'Dining out, shopping, coffee, travel' : 'Ăn tiệm, mua sắm, giải trí, cà phê'}
+                  </div>
+                </div>
+
+                {/* 3. Savings (20%) */}
+                <div className="p-3 bg-gray-50 dark:bg-[#0c1310] rounded-xl hover:shadow-sm transition-shadow">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="font-extrabold text-gray-700 dark:text-gray-300">{isEnglish ? 'Savings & Debts (20%)' : 'Tích lũy & Trả nợ (20%)'}</span>
+                    <span className="font-black text-[#004b38] dark:text-[#9FEF00]">{formatWidgetCurrency(incomeInput * 0.2)}</span>
+                  </div>
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400">
+                    {isEnglish ? 'Emergency fund, investments, loan payments' : 'Quỹ dự phòng, tiết kiệm, trả nợ'}
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA bottom */}
+              <button
+                onClick={() => navigate(user ? '/dashboard' : '/register')}
+                className="w-full mt-6 bg-[#004b38] hover:bg-[#003d2d] text-white font-extrabold uppercase py-3 rounded-xl text-xs tracking-wider transition-all"
+              >
+                {user 
+                  ? (isEnglish ? 'View your real budget' : 'Xem ngân sách của bạn')
+                  : (isEnglish ? 'Start budgeting now' : 'Bắt đầu phân bổ ngân sách')}
+              </button>
             </div>
           </div>
-        </section>
 
-        {/* ══════════ HOW IT WORKS ══════════ */}
-        <section id="how" className="py-20 px-5 sm:px-8 bg-[#fcfbf9]">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-14 reveal">
-              <span className="text-xs font-bold text-[#005c45] bg-[#005c45]/5 border border-[#005c45]/20 px-3 py-1 rounded-full uppercase tracking-widest">
-                {isEnglish ? 'How it works' : 'Cách hoạt động'}
-              </span>
-              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#0c211c]">
-                {isEnglish ? 'Start in 3 steps' : 'Bắt đầu trong 3 bước'}
-              </h2>
-            </div>
+        </div>
+      </section>
 
-            <div className="grid md:grid-cols-3 gap-10">
+      {/* ══════════ STATS SECTION ══════════ */}
+      <section ref={statsRef} className="py-14 px-5 sm:px-8 bg-white dark:bg-[#0a0f0d] border-b border-gray-150 dark:border-gray-800">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
+          <StatItem icon={<FaUsers size={20} />} value={10000} suffix="+" label={isEnglish ? 'Active Users' : 'Người dùng'} delay={1} started={statsStarted} />
+          <StatItem icon={<FaTrophy size={20} />} value={1500} suffix="K+" label={isEnglish ? 'Transactions' : 'Giao dịch đã nhập'} delay={2} started={statsStarted} />
+          <StatItem icon={<FaCheckCircle size={20} />} value={98} suffix="%" label={isEnglish ? 'Satisfaction' : 'Hài lòng'} delay={3} started={statsStarted} />
+          <StatItem icon={<FaStar size={20} />} value={5} suffix="/5" label={isEnglish ? 'App Rating' : 'Đánh giá ứng dụng'} delay={4} started={statsStarted} />
+        </div>
+      </section>
+
+      {/* ══════════ VALUE PROP SECTION (Save when you spend) ══════════ */}
+      <section id="features" className="py-20 px-5 sm:px-8 bg-white dark:bg-[#0a0f0d]">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-14 items-center">
+          
+          {/* Left: Bullet list */}
+          <div className="space-y-6 reveal">
+            <span className="text-xs font-extrabold uppercase tracking-widest text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1.5 rounded-full">
+              {isEnglish ? 'Save when you spend' : 'Chi tiêu thông minh, tích lũy vượt trội'}
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#004b38] dark:text-white wise-headline">
+              {isEnglish ? 'Budget without boundary.' : 'Quản lý tài chính cá nhân không rào cản.'}
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
+              {isEnglish
+                ? 'We simplify your personal finance setup. Monitor cashflow across all of your wallets, evaluate budget leaks and build savings discipline.'
+                : 'Chúng tôi đơn giản hóa việc quản lý tài sản của bạn. Theo dõi dòng tiền của tất cả các tài khoản ví, đo lường các khoản rò rỉ chi tiêu và thiết lập kỷ luật tiết kiệm.'}
+            </p>
+
+            <ul className="space-y-4 pt-2">
               {[
-                { n: 1, title: isEnglish ? 'Sign up for free' : 'Đăng ký miễn phí', desc: isEnglish ? 'Create an account in 30 seconds. No credit card needed.' : 'Tạo tài khoản 30 giây. Không cần thẻ tín dụng.', icon: <FaCheckCircle /> },
-                { n: 2, title: isEnglish ? 'Add transactions' : 'Nhập giao dịch', desc: isEnglish ? 'Record daily income and expenses easily.' : 'Ghi thu nhập và chi tiêu hàng ngày dễ dàng.', icon: <FaWallet /> },
-                { n: 3, title: isEnglish ? 'Review and optimize' : 'Xem báo cáo & tối ưu', desc: isEnglish ? 'Analyze trends and improve spending habits.' : 'Phân tích xu hướng và cải thiện thói quen chi tiêu.', icon: <FaChartLine /> },
-              ].map((s, i) => (
-                <div key={i} className={`reveal reveal-delay-${i + 1} relative flex flex-col items-center text-center group ${i < 2 ? 'step-line' : ''}`}>
-                  <div className="w-14 h-14 rounded-2xl bg-[#005c45] text-white flex items-center justify-center text-xl shadow-lg shadow-[#005c45]/20 mb-4 group-hover:scale-110 transition-transform duration-300">
-                    {s.icon}
+                { title: isEnglish ? 'AI OCR Receipt Scan' : 'Quét ảnh hóa đơn bằng AI', desc: isEnglish ? 'Auto trích xuất thông tin, điền số tiền và danh mục giao dịch lập tức.' : 'Chụp ảnh hóa đơn mua sắm, AI trích xuất và lưu giao dịch lập tức.' },
+                { title: isEnglish ? 'Global Incognito Mode' : 'Chế độ ẩn số dư bảo mật', desc: isEnglish ? 'One click to blur all sensitive amounts on public devices.' : 'Nhấp chuột ẩn toàn bộ số tiền nhạy cảm khi mở ứng dụng nơi công cộng.' },
+                { title: isEnglish ? 'Dynamic Multi-Wallet Accounts' : 'Liên kết ví linh hoạt', desc: isEnglish ? 'Track assets across multiple physical cash wallets and bank accounts.' : 'Quản lý nhiều ví vật lý, tài khoản ngân hàng và chuyển tiền nội bộ.' }
+              ].map((item, index) => (
+                <li key={index} className="flex gap-3">
+                  <div className="w-5 h-5 rounded-full bg-[#004b38] dark:bg-[#9FEF00] text-[#9FEF00] dark:text-[#004b38] flex items-center justify-center mt-1 flex-shrink-0">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
                   </div>
-                  <div className="text-xs font-bold text-[#ca8a04] mb-1 uppercase tracking-widest">{isEnglish ? 'Step' : 'Bước'} {s.n}</div>
-                  <h3 className="text-base font-bold text-[#0c211c] mb-2">{s.title}</h3>
-                  <p className="text-sm text-slate-655 leading-relaxed">{s.desc}</p>
+                  <div>
+                    <h4 className="text-sm font-extrabold text-[#004b38] dark:text-white">{item.title}</h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{item.desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Right: Premium CSS Mockup of Web App Dashboard */}
+          <div className="relative reveal reveal-delay-2 float-card">
+            <div className="absolute inset-4 bg-[#9FEF00]/10 rounded-[32px] blur-xl" />
+            
+            <div className="relative bg-[#004b38] rounded-3xl p-5 text-white shadow-2xl border border-emerald-900">
+              {/* Header mockup */}
+              <div className="flex items-center justify-between border-b border-emerald-800/80 pb-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 bg-transparent rounded flex items-center justify-center">
+                    <img src="/LogoD.png" alt="logo" className="w-4 h-4 object-contain" />
+                  </div>
+                  <span className="text-xs font-bold">My Dashboard</span>
+                </div>
+                <span className="text-[10px] text-gray-300 font-bold bg-white/10 px-2 py-0.5 rounded-full">Incognito Enabled</span>
+              </div>
+
+              {/* Cards row */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-[#003d2d] rounded-xl p-3.5 border border-emerald-700/30">
+                  <div className="text-[9px] text-gray-300 uppercase tracking-wider">{isEnglish ? 'Total Wallet Balance' : 'Tổng tài sản ví'}</div>
+                  <div className="text-lg font-black tracking-tight mt-1 text-[#9FEF00]">******</div>
+                </div>
+                <div className="bg-[#003d2d] rounded-xl p-3.5 border border-emerald-700/30">
+                  <div className="text-[9px] text-gray-305 uppercase tracking-wider">{isEnglish ? 'This Month Spent' : 'Đã chi tháng này'}</div>
+                  <div className="text-lg font-black tracking-tight mt-1">******</div>
+                </div>
+              </div>
+
+              {/* Progress bars inside dashboard mockup */}
+              <div className="bg-[#0f241c] rounded-xl p-4 space-y-3.5">
+                <div className="flex justify-between items-center text-[10px] font-bold">
+                  <span className="text-gray-300">{isEnglish ? 'Food & Drinks Budget' : 'Ngân sách Ăn uống'}</span>
+                  <span className="text-[#9FEF00]">{isEnglish ? '72% Used' : 'Đã dùng 72%'}</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-emerald-950 overflow-hidden">
+                  <div className="h-full rounded-full bg-[#9FEF00]" style={{ width: '72%' }} />
+                </div>
+
+                <div className="flex justify-between items-center text-[10px] font-bold">
+                  <span className="text-gray-300">{isEnglish ? 'Shopping Budget' : 'Ngân sách Mua sắm'}</span>
+                  <span className="text-[#9FEF00]">{isEnglish ? '30% Used' : 'Đã dùng 30%'}</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-emerald-955 overflow-hidden">
+                  <div className="h-full rounded-full bg-[#9FEF00]" style={{ width: '30%' }} />
+                </div>
+              </div>
+
+              {/* Footer row */}
+              <div className="mt-4 pt-3 border-t border-emerald-800/80 flex justify-between items-center text-[9px] text-gray-300 font-bold">
+                <span>Recent transactions</span>
+                <span className="text-[#9FEF00] hover:underline cursor-pointer">View all →</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ══════════ NO HIDDEN FEES SECTION (Bright Lime Green) ══════════ */}
+      <section className="py-14 px-5 sm:px-8 bg-[#9FEF00] text-[#004b38] text-center relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 text-emerald-900/10 text-9xl font-black pointer-events-none select-none">₫</div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 text-emerald-900/10 text-9xl font-black pointer-events-none select-none">%</div>
+
+        <div className="max-w-3xl mx-auto space-y-4 relative z-10">
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight wise-headline uppercase">
+            {isEnglish ? 'Transparent Pricing. No Hidden Fees.' : 'Trải nghiệm minh bạch. Không phí ẩn.'}
+          </h2>
+          <p className="text-sm font-semibold max-w-lg mx-auto opacity-80 leading-relaxed">
+            {isEnglish
+              ? 'Our basic app is free for everyone. Access premium AI features with clear monthly billing.'
+              : 'Gói cơ bản là miễn phí mãi mãi cho tất cả mọi người. Nâng cấp VIP mở khóa sức mạnh AI trọn vẹn.'}
+          </p>
+          <div className="pt-2">
+            <button
+              onClick={() => navigate(user ? '/dashboard' : '/register')}
+              className="inline-flex items-center gap-1.5 px-7 py-3 bg-[#004b38] text-white hover:bg-[#003d2d] text-xs font-black uppercase tracking-wider rounded-xl transition shadow-lg"
+            >
+              {user
+                ? (isEnglish ? 'Go to Dashboard' : 'Vào Dashboard')
+                : (isEnglish ? 'Create Free Account' : 'Tạo tài khoản miễn phí')}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ DOWNLOAD / MOBILE MOCKUP SECTION ══════════ */}
+      <section id="how" className="py-20 px-5 sm:px-8 bg-[#F2F5F3] dark:bg-[#0c1310]">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-14 items-center">
+          
+          {/* Left: Smartphone CSS Mockup */}
+          <div className="relative flex justify-center order-2 lg:order-1 reveal">
+            <div className="absolute w-72 h-[520px] bg-emerald-900/5 rounded-[42px] blur-2xl pointer-events-none" />
+
+            {/* Smartphone frame */}
+            <div className="relative w-64 h-[490px] bg-[#1a202c] rounded-[36px] p-3 shadow-2xl border-4 border-gray-800 overflow-hidden flex flex-col justify-between">
+              
+              {/* Dynamic island / camera cutout */}
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-4 bg-black rounded-full z-20" />
+
+              {/* Status bar */}
+              <div className="flex justify-between items-center text-[8px] text-gray-400 font-bold px-3 pt-1.5 z-10">
+                <span>9:41</span>
+                <div className="flex items-center gap-1">
+                  <span>📶</span>
+                  <span>🔋</span>
+                </div>
+              </div>
+
+              {/* App main screens */}
+              <div className="flex-1 flex flex-col pt-6 px-1">
+                {/* Profile header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-6 h-6 rounded-full bg-[#9FEF00] text-[#004b38] flex items-center justify-center text-[10px] font-black">U</div>
+                    <div className="leading-none">
+                      <p className="text-[7px] text-gray-400">{isEnglish ? 'Welcome back' : 'Chào mừng quay lại'}</p>
+                      <p className="text-[9px] text-white font-extrabold">Alex Nguyen</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px]">🔔</span>
+                </div>
+
+                {/* Main wallet */}
+                <div className="bg-[#2d3748] rounded-xl p-3.5 border border-gray-700/50 mb-3 text-white">
+                  <span className="text-[7px] text-gray-300 uppercase tracking-widest block">{isEnglish ? 'Wallet Cash' : 'Số dư tiền mặt'}</span>
+                  <span className="text-base font-black text-[#9FEF00] block mt-0.5">******</span>
+                </div>
+
+                {/* Sub category progress */}
+                <div className="bg-[#2d3748] rounded-xl p-3 border border-gray-700/50 space-y-2.5 text-white">
+                  <div className="flex justify-between items-center text-[7px] font-black">
+                    <span className="text-gray-300">{isEnglish ? 'Rent Budget' : 'Ngân sách Thuê nhà'}</span>
+                    <span>100% {isEnglish ? 'Saved' : 'Đã đạt'}</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: '100%' }} />
+                  </div>
+
+                  <div className="flex justify-between items-center text-[7px] font-black">
+                    <span className="text-gray-300">{isEnglish ? 'Goal Savings' : 'Mục tiêu Tích lũy'}</span>
+                    <span>45%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#9FEF00] rounded-full" style={{ width: '45%' }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom navigation mockup */}
+              <div className="border-t border-gray-700 bg-gray-900/60 p-2 flex justify-around items-center text-[9px] text-gray-500">
+                <span className="text-[#9FEF00] font-bold">🏠</span>
+                <span>📊</span>
+                <span>💳</span>
+                <span>👤</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Text content */}
+          <div className="space-y-6 order-1 lg:order-2 reveal reveal-delay-2">
+            <span className="text-xs font-extrabold uppercase tracking-widest text-[#1ca063] bg-[#1ca063]/5 border border-[#1ca063]/25 px-3 py-1.5 rounded-full">
+              {isEnglish ? 'How it works' : 'Cách thức hoạt động'}
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#004b38] dark:text-white wise-headline">
+              {isEnglish ? 'Budget planning in three simple steps.' : 'Lập kế hoạch tài chính chỉ trong 3 bước.'}
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 leading-relaxed text-sm">
+              {isEnglish
+                ? 'Managing money should not be a math puzzle. Establish your workspace, automate categorizing of incomes and optimize expenses.'
+                : 'Quản lý tiền bạc không nhất thiết phải là bài toán hóc búa. Thiết lập tài khoản ví, nhập chi tiêu hàng ngày và để AI tự động phân tích.'}
+            </p>
+
+            <div className="space-y-5 pt-3">
+              {[
+                { step: '01', title: isEnglish ? 'Create your account' : 'Đăng ký tài khoản', desc: isEnglish ? 'Sign up free in 30 seconds. Access core dashboard immediately.' : 'Đăng ký miễn phí trong 30 giây. Sử dụng ngay trang bảng điều khiển chính.' },
+                { step: '02', title: isEnglish ? 'Add wallets & logs' : 'Tạo ví và nhập giao dịch', desc: isEnglish ? 'Import CSV, type manual spending or snap receipts with AI OCR.' : 'Quản lý ví vật lý/tài khoản ngân hàng, quét ảnh hóa đơn bằng AI nhanh chóng.' },
+                { step: '03', title: isEnglish ? 'Review cashflow charts' : 'Nhận báo cáo và tối ưu hóa', desc: isEnglish ? 'Analyze AI forecasts and monthly breakdowns to grow savings.' : 'Xem các dự báo chi tiêu AI và biểu đồ phân bổ để cắt giảm lãng phí.' }
+              ].map((item, i) => (
+                <div key={i} className="flex gap-4 items-start">
+                  <span className="text-xs font-black bg-[#004b38] dark:bg-[#9FEF00] text-[#9FEF00] dark:text-[#004b38] w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    {item.step}
+                  </span>
+                  <div>
+                    <h4 className="text-sm font-extrabold text-[#004b38] dark:text-white">{item.title}</h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{item.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-        </section>
 
-        {/* ══════════ FEATURED INSPIRATION ART ══════════ */}
-        <section className="py-20 px-5 sm:px-8 bg-[#f5f2eb] border-y border-[#e8dfc5]">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-10 reveal">
-              <span className="text-xs font-bold text-[#005c45] bg-[#005c45]/5 border border-[#005c45]/20 px-3 py-1 rounded-full uppercase tracking-widest">
-                {isEnglish ? 'Art inspiration' : 'Cảm hứng nghệ thuật'}
+        </div>
+      </section>
+
+      {/* ══════════ CASHFLOW CHART SECTION (Wise Rate Graph Mockup) ══════════ */}
+      <section className="py-20 px-5 sm:px-8 bg-white dark:bg-[#0a0f0d] border-t border-b border-gray-150 dark:border-gray-800">
+        <div className="max-w-4xl mx-auto text-center space-y-6">
+          <div className="space-y-2">
+            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1 rounded-full uppercase tracking-widest">
+              {isEnglish ? 'Analytics Trend' : 'Xu hướng Dòng tiền'}
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#004b38] dark:text-white wise-headline">
+              {isEnglish ? 'AI Cashflow Analytics Graph' : 'Biểu đồ Dự báo Dòng tiền AI'}
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+              {isEnglish
+                ? 'Forecast next month expenses accurately. Spot hidden risks before they occur.'
+                : 'Công cụ AI dự báo thói quen chi tiêu trong 6 tháng tiếp theo và khoanh vùng danh mục chi tiêu rủi ro cao.'}
+            </p>
+          </div>
+
+          {/* SVG line chart simulating Wise chart */}
+          <div className="relative pt-6 bg-gray-50 dark:bg-[#111915] rounded-3xl p-6 border border-gray-200/50 dark:border-gray-800/85 shadow-sm flex flex-col justify-between min-h-[300px]">
+            {/* Header of chart card */}
+            <div className="flex justify-between items-center mb-6">
+              <div className="text-left">
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-black tracking-widest">{isEnglish ? 'Predictive Spending' : 'Mức dự báo chi tiêu'}</p>
+                <p className="text-xl font-black text-[#004b38] dark:text-[#9FEF00]">
+                  {isEnglish ? '$1,480.00' : '14.800.000 ₫'}
+                </p>
+              </div>
+              <span className="text-[10px] font-bold bg-[#9FEF00]/20 text-[#004b38] dark:text-[#9FEF00] px-2.5 py-1 rounded-full">
+                Confidence: 94%
               </span>
-              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#0c211c]">
-                {isEnglish ? 'Cash flow and life goals' : 'Dòng tiền và mục tiêu cuộc sống'}
-              </h2>
             </div>
 
-            <div className="grid lg:grid-cols-[1fr_1.45fr] gap-8 lg:gap-10 items-center">
-              <article className="reveal">
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-[#0c211c] leading-tight">
-                  {FEATURED_ARTWORK.title}
-                </h3>
-                <p className="mt-3 text-sm font-semibold text-[#ca8a04] uppercase tracking-widest">
-                  {FEATURED_ARTWORK.subtitle}
-                </p>
-                <p className="mt-5 text-base text-slate-655 leading-relaxed">
-                  {FEATURED_ARTWORK.desc1}
-                </p>
-                <p className="mt-4 text-base text-slate-655 leading-relaxed">
-                  {FEATURED_ARTWORK.desc2}
-                </p>
-              </article>
+            {/* SVG line graph */}
+            <div className="relative w-full h-36">
+              <svg className="w-full h-full" viewBox="0 0 500 120" preserveAspectRatio="none">
+                {/* Grid lines */}
+                <line x1="0" y1="20" x2="500" y2="20" stroke="rgba(0,0,0,0.04)" strokeWidth="1" />
+                <line x1="0" y1="60" x2="500" y2="60" stroke="rgba(0,0,0,0.04)" strokeWidth="1" />
+                <line x1="0" y1="100" x2="500" y2="100" stroke="rgba(0,0,0,0.04)" strokeWidth="1" />
+                
+                {/* Trend line */}
+                <path
+                  d="M 10,95 C 60,95 100,75 150,75 C 200,75 250,55 300,55 C 350,55 400,80 430,80 C 460,80 480,45 490,45"
+                  fill="none"
+                  stroke="#004b38"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                />
+                
+                {/* Highlight dots */}
+                <circle cx="150" cy="75" r="4.5" fill="#9FEF00" stroke="#004b38" strokeWidth="2" />
+                <circle cx="300" cy="55" r="4.5" fill="#9FEF00" stroke="#004b38" strokeWidth="2" />
+                <circle cx="490" cy="45" r="4.5" fill="#9FEF00" stroke="#004b38" strokeWidth="2" />
+              </svg>
+            </div>
 
-              <figure
-                onMouseMove={handleArtCardMove}
-                onMouseLeave={handleArtCardLeave}
-                className="ai-art-card reveal reveal-delay-2 group rounded-3xl overflow-hidden border border-[#e8dfc5] bg-white shadow-sm hover:shadow-2xl transition-all duration-500"
-              >
-                <div className="ai-art-media relative aspect-[16/10] overflow-hidden">
-                  <img
-                    src={FEATURED_ARTWORK.image}
-                    alt={FEATURED_ARTWORK.title}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className="ai-art-shine" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/45 via-slate-900/10 to-transparent" />
-                </div>
-              </figure>
+            {/* Chart footer labels */}
+            <div className="flex justify-between items-center text-[10px] text-gray-400 dark:text-gray-500 font-bold border-t border-gray-200/80 dark:border-gray-800 pt-4 mt-2">
+              <span>Month 1</span>
+              <span>Month 2</span>
+              <span>Month 3 (Current)</span>
+              <span>Month 4 (AI Forecast)</span>
+              <span>Month 5</span>
+              <span>Month 6</span>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ══════════ VIP PLANS PRICING ══════════ */}
-        <section id="pricing" className="py-20 px-5 sm:px-8 bg-[#fcfbf9] border-t border-[#e8dfc5] relative">
-          {/* Decorative elements */}
-          <div className="absolute top-12 left-12 w-64 h-64 bg-[#ca8a04]/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-12 right-12 w-64 h-64 bg-[#005c45]/5 rounded-full blur-3xl pointer-events-none" />
+      {/* ══════════ VIP PLANS PRICING ══════════ */}
+      <section id="pricing" className="py-20 px-5 sm:px-8 bg-[#F2F5F3] dark:bg-[#0c1310] relative">
+        <div className="absolute top-12 left-12 w-64 h-64 bg-[#9FEF00]/5 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="max-w-6xl mx-auto relative z-10">
+          <div className="text-center mb-14 reveal">
+            <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-3.5 py-1.5 rounded-full uppercase tracking-widest">
+              {isEnglish ? 'VIP PACKAGES' : 'GÓI DỊCH VỤ VIP'}
+            </span>
+            <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#004b38] dark:text-white wise-headline">
+              {isEnglish ? 'Upgrade to Premium VIP' : 'Nâng cấp đặc quyền VIP'}
+            </h2>
+            <p className="mt-3 text-sm text-gray-500 dark:text-gray-400 max-w-lg mx-auto">
+              {isEnglish
+                ? 'Unlock unlimited wallets, automated AI scanning, and advanced forecasting models.'
+                : 'Mở khóa không giới hạn tài nguyên ví, hạn mức ngân sách và trọn vẹn sức mạnh trích xuất AI.'}
+            </p>
+          </div>
 
-          <div className="max-w-6xl mx-auto relative z-10">
-            <div className="text-center mb-14 reveal">
-              <span className="text-xs font-bold text-[#ca8a04] bg-[#ca8a04]/5 border border-[#ca8a04]/20 px-3 py-1 rounded-full uppercase tracking-widest">
-                {isEnglish ? 'VIP Packages' : 'Gói dịch vụ VIP'}
-              </span>
-              <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#0c211c]">
-                {isEnglish ? 'Upgrade to Premium VIP' : 'Nâng cấp đặc quyền VIP'}
-              </h2>
-              <p className="mt-3 text-base text-slate-650 max-w-lg mx-auto">
-                {isEnglish
-                  ? 'Unlock advanced AI forecasting, receipt scanning, and unlimited resources.'
-                  : 'Mở khóa không giới hạn tài nguyên và trải nghiệm trọn vẹn sức mạnh của trí tuệ nhân tạo AI.'}
-              </p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+            {[
+              {
+                id: '1_month',
+                name: isEnglish ? '1 Month VIP' : '1 Tháng VIP',
+                price: '10.000 ₫',
+                desc: isEnglish ? 'Perfect for testing premium features' : 'Trải nghiệm đầy đủ tính năng cao cấp',
+                isPopular: false,
+              },
+              {
+                id: '6_months',
+                name: isEnglish ? '6 Months VIP' : '6 Tháng VIP',
+                price: '50.000 ₫',
+                desc: isEnglish ? 'Optimal and cost-saving for smart users' : 'Lựa chọn tiết kiệm cho người dùng thông thái',
+                isPopular: true,
+                originalPrice: '60.000 ₫',
+                save: 16
+              },
+              {
+                id: '12_months',
+                name: isEnglish ? '1 Year VIP' : '1 Năm VIP',
+                price: '90.000 ₫',
+                desc: isEnglish ? 'Ultimate commitment for long-term planning' : 'Đồng hành lâu dài cùng kế hoạch tài chính',
+                isPopular: false,
+                originalPrice: '120.000 ₫',
+                save: 25
+              }
+            ].map((plan, i) => (
+              <div
+                key={plan.id}
+                className={`reveal reveal-delay-${i + 1} relative rounded-3xl border p-7 flex flex-col justify-between transition-all duration-300 bg-white dark:bg-[#111915]
+                  ${plan.isPopular
+                    ? 'border-[#004b38] dark:border-[#9FEF00] shadow-xl scale-[1.02] ring-2 ring-[#004b38] dark:ring-[#9FEF00]'
+                    : 'border-gray-200 dark:border-gray-800 hover:border-[#004b38] dark:hover:border-[#9FEF00] hover:shadow-md'
+                  }`}
+              >
+                {plan.isPopular && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#004b38] dark:bg-[#9FEF00] text-white dark:text-[#004b38] px-4 py-1 text-[9px] font-black uppercase tracking-widest">
+                    {isEnglish ? 'RECOMMENDED' : 'KHUYÊN DÙNG'}
+                  </span>
+                )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-              {[
-                {
-                  id: '1_month',
-                  name: isEnglish ? '1 Month VIP' : '1 Tháng VIP',
-                  price: '10.000 ₫',
-                  desc: isEnglish ? 'Perfect for testing premium features' : 'Trải nghiệm đầy đủ tính năng cao cấp',
-                  isPopular: false,
-                  save: 0
-                },
-                {
-                  id: '6_months',
-                  name: isEnglish ? '6 Months VIP' : '6 Tháng VIP',
-                  price: '50.000 ₫',
-                  desc: isEnglish ? 'Optimal and cost-saving for smart users' : 'Lựa chọn tiết kiệm cho người dùng thông thái',
-                  isPopular: true,
-                  save: 16,
-                  originalPrice: '60.000 ₫'
-                },
-                {
-                  id: '12_months',
-                  name: isEnglish ? '1 Year VIP' : '1 Năm VIP',
-                  price: '90.000 ₫',
-                  desc: isEnglish ? 'Ultimate commitment for long-term planning' : 'Đồng hành lâu dài cùng kế hoạch tài chính',
-                  isPopular: false,
-                  save: 25,
-                  originalPrice: '120.000 ₫'
-                }
-              ].map((plan, i) => (
-                <div
-                  key={plan.id}
-                  className={`reveal reveal-delay-${i + 1} relative rounded-3xl border p-7 flex flex-col justify-between transition-all duration-300 bg-[#fdfbf9] dark:bg-[#191d25]
-                    ${plan.isPopular
-                      ? 'border-[#ca8a04] shadow-xl scale-[1.02] ring-1 ring-[#ca8a04]'
-                      : 'border-[#e8dfc5] dark:border-gray-800 hover:border-[#ca8a04] hover:shadow-md'
-                    }`}
-                >
-                  {plan.isPopular && (
-                    <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#ca8a04] px-3.5 py-1 text-[11px] font-black uppercase text-white tracking-wider shadow-md animate-pulse">
-                      {isEnglish ? 'Most Popular' : 'Khuyên dùng'}
+                <div>
+                  <h3 className="text-lg font-bold text-[#004b38] dark:text-white mb-1 wise-headline">{plan.name}</h3>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-6">{plan.desc}</p>
+
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <span className="text-3xl font-black text-[#004b38] dark:text-white">
+                      {plan.price}
+                    </span>
+                    {plan.originalPrice && (
+                      <span className="text-xs line-through text-gray-400 dark:text-gray-500">
+                        {plan.originalPrice}
+                      </span>
+                    )}
+                  </div>
+
+                  {plan.save > 0 && (
+                    <span className="inline-block rounded bg-rose-100 dark:bg-rose-950/30 text-rose-700 dark:text-rose-450 text-[10px] font-black px-2 py-0.5 mb-5">
+                      {isEnglish ? `Save ${plan.save}%` : `Tiết kiệm ${plan.save}%`}
                     </span>
                   )}
 
-                  <div>
-                    <h3 className="text-xl font-bold text-[#0c211c] dark:text-white mb-2">{plan.name}</h3>
-                    <p className="text-xs text-slate-650 dark:text-gray-400 mb-6">{plan.desc}</p>
-
-                    <div className="flex items-baseline gap-2 mb-2">
-                      <span className="text-3xl font-black text-[#0c211c] dark:text-white">
-                        {plan.price}
-                      </span>
-                      {plan.originalPrice && (
-                        <span className="text-sm line-through text-slate-500 dark:text-gray-500">
-                          {plan.originalPrice}
-                        </span>
-                      )}
-                    </div>
-
-                    {plan.save > 0 && (
-                      <span className="inline-block rounded bg-red-500/10 px-2 py-0.5 text-[11px] text-red-600 dark:text-red-400 font-bold mb-6">
-                        {isEnglish ? `Save ${plan.save}%` : `Tiết kiệm ${plan.save}%`}
-                      </span>
-                    )}
-
-                    <ul className="space-y-3 mb-8 text-xs text-slate-650 dark:text-gray-300 border-t border-[#e8dfc5] dark:border-gray-800 pt-5">
-                      <li className="flex items-center gap-2">
-                        <span className="text-[#ca8a04] font-bold">👑</span>
-                        <span>{isEnglish ? 'Unlimited wallets & budgets' : 'Không giới hạn ví & ngân sách'}</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="text-[#ca8a04] font-bold">👑</span>
-                        <span>{isEnglish ? 'Unlimited monthly transactions' : 'Không giới hạn giao dịch thu chi'}</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="text-[#ca8a04] font-bold">👑</span>
-                        <span>{isEnglish ? 'Unlimited AI OCR Receipt Scan' : 'Quét ảnh hóa đơn bằng AI không giới hạn'}</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="text-[#ca8a04] font-bold">👑</span>
-                        <span>{isEnglish ? 'AI Cashflow Forecast & Trends' : 'Dự báo dòng tiền & phân tích xu hướng AI'}</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="text-[#ca8a04] font-bold">👑</span>
-                        <span>{isEnglish ? 'Full Debt Management & Exports' : 'Quản lý nợ & Xuất báo cáo PDF/Excel'}</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <button
-                    onClick={() => navigate(user ? '/vip' : '/register')}
-                    className={`w-full rounded-2xl py-3 text-xs font-extrabold transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm
-                      ${plan.isPopular
-                        ? 'bg-[#ca8a04] hover:bg-[#b07803] text-white shadow-lg shadow-[#ca8a04]/20'
-                        : 'bg-[#e8dfc5]/60 hover:bg-[#e8dfc5] text-[#0c211c] dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white'
-                      }`}
-                  >
-                    {isEnglish ? 'Upgrade Now' : 'Đăng ký ngay'}
-                  </button>
+                  <ul className="space-y-3 mb-8 text-xs text-gray-650 dark:text-gray-300 border-t border-gray-100 dark:border-gray-800 pt-5">
+                    <li className="flex items-center gap-2">
+                      <span className="text-amber-500 font-bold">👑</span>
+                      <span>{isEnglish ? 'Unlimited wallets & budgets' : 'Không giới hạn ví & ngân sách'}</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-amber-500 font-bold">👑</span>
+                      <span>{isEnglish ? 'Unlimited monthly transactions' : 'Không giới hạn nhập chi tiêu'}</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-amber-500 font-bold">👑</span>
+                      <span>{isEnglish ? 'Unlimited AI OCR Receipt Scan' : 'Quét ảnh hóa đơn AI không giới hạn'}</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-amber-500 font-bold">👑</span>
+                      <span>{isEnglish ? 'AI Cashflow Forecast & Trends' : 'Dự báo chi tiêu thông minh bằng AI'}</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-amber-500 font-bold">👑</span>
+                      <span>{isEnglish ? 'Full Debt Management & Exports' : 'Quản lý nợ & Xuất báo cáo PDF/Excel'}</span>
+                    </li>
+                  </ul>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
 
-        {/* ══════════ GROWTH ROADMAP ══════════ */}
-        <section id="testimonials" className="growth-surface py-24 px-5 sm:px-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12 reveal">
-              <span className="text-xs font-bold text-[#005c45] bg-[#005c45]/5 border border-[#005c45]/20 px-3 py-1 rounded-full uppercase tracking-widest">
-                {isEnglish ? 'Growth roadmap' : 'Bản đồ tăng trưởng'}
-              </span>
-              <h2 className="mt-4 text-3xl sm:text-5xl font-extrabold text-[#0c211c] tracking-tight">
-                {isEnglish ? 'Prosperous Cashflow Roadmap' : 'Lộ trình Dòng tiền thịnh vượng'}
-              </h2>
-              <p className="mt-4 text-sm sm:text-base text-slate-650 max-w-2xl mx-auto">
-                {isEnglish ? 'Instead of testimonials, here is a practical action framework to move from expense control to financial freedom in clear stages.' : 'Thay vì lời khen, đây là khâu hành động thực tế giúp bạn đi từ kiểm soát chi tiêu đến tự do tài chính theo từng giai đoạn rõ ràng.'}
-              </p>
-            </div>
-
-            <div className="grid lg:grid-cols-[1fr_1.2fr] gap-6">
-              <article className="growth-card reveal rounded-3xl p-7">
-                <h3 className="text-2xl font-extrabold text-[#0c211c] tracking-tight">{isEnglish ? 'Mindset and pace' : 'Tư duy và nhịp độ'}</h3>
-                <p className="mt-4 text-slate-655 leading-relaxed">
-                  {isEnglish ? 'The goal is not extreme austerity, but healthy cash flow: know where money goes, what to prioritize, and keep monthly savings habits.' : 'Mục tiêu không phải “thắt chặt cực đoan”, mà là tạo một dòng tiền lành mạnh: biết tiền đi đâu, ưu tiên gì trước, và duy trì thói quen tích lũy mỗi tháng.'}
-                </p>
-                <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-2xl border border-[#005c45]/20 bg-[#005c45]/5 p-3">
-                    <p className="text-xs uppercase tracking-widest text-[#005c45] font-bold">{isEnglish ? 'Priority' : 'Ưu tiên'}</p>
-                    <p className="mt-1 font-semibold text-[#0c211c]">{isEnglish ? 'Emergency fund safety' : 'An toàn quỹ dự phòng'}</p>
-                  </div>
-                  <div className="rounded-2xl border border-[#ca8a04]/20 bg-[#ca8a04]/5 p-3">
-                    <p className="text-xs uppercase tracking-widest text-[#ca8a04] font-bold">{isEnglish ? 'Consistency' : 'Nhịp độ'}</p>
-                    <p className="mt-1 font-semibold text-[#0c211c]">{isEnglish ? 'Automated monthly savings' : 'Tích lũy tự động hàng tháng'}</p>
-                  </div>
-                  <div className="rounded-2xl border border-[#e8dfc5] bg-[#fcfbf9] p-3 col-span-2">
-                    <p className="text-xs uppercase tracking-widest text-[#ca8a04] font-bold">{isEnglish ? 'Principle' : 'Nguyên tắc'}</p>
-                    <p className="mt-1 font-semibold text-[#0c211c]">{isEnglish ? 'Track - Optimize - Improve continuously' : 'Theo dõi - Tối ưu - Nâng cấp liên tục'}</p>
-                  </div>
-                </div>
-              </article>
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                {[
-                  { step: '01', title: isEnglish ? 'Understand cash flow' : 'Nắm dòng tiền', desc: isEnglish ? 'Categorize income/expense and find biggest leakage points.' : 'Phân loại thu/chi và xác định điểm rò rỉ lớn nhất.', icon: <FaWallet size={16} className="text-[#005c45]" /> },
-                  { step: '02', title: isEnglish ? 'Set budget milestones' : 'Đặt mốc ngân sách', desc: isEnglish ? 'Set spending caps by group and early warnings.' : 'Khóa trần chi tiêu theo nhóm và cảnh báo sớm.', icon: <FaCreditCard size={16} className="text-[#ca8a04]" /> },
-                  { step: '03', title: isEnglish ? 'Set goals' : 'Thiết lập mục tiêu', desc: isEnglish ? 'Break long-term goals into smaller milestones.' : 'Biến mục tiêu dài hạn thành cột mốc nhỏ dễ theo.', icon: <FaBullseye size={16} className="text-[#005c45]" /> },
-                  { step: '04', title: isEnglish ? 'Measure and grow' : 'Đo và tăng trưởng', desc: isEnglish ? 'Track monthly charts to improve savings efficiency.' : 'Theo dõi biểu đồ tháng để nâng hiệu quả tiết kiệm.', icon: <FaChartLine size={16} className="text-[#ca8a04]" /> },
-                ].map((item, i) => (
-                  <article key={item.step} className={`growth-card reveal reveal-delay-${(i % 4) + 1} rounded-3xl p-5`}>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-black tracking-widest text-[#005c45]">{isEnglish ? 'STAGE' : 'CHẶNG'} {item.step}</span>
-                      {item.icon}
-                    </div>
-                    <h4 className="text-lg font-extrabold text-[#0c211c] tracking-tight">{item.title}</h4>
-                    <p className="mt-2 text-sm text-slate-655 leading-relaxed">{item.desc}</p>
-                  </article>
-                ))}
+                <button
+                  onClick={() => navigate(user ? '/vip' : '/register')}
+                  className={`w-full rounded-xl py-3 text-xs font-black uppercase tracking-wider transition-all duration-150
+                    ${plan.isPopular
+                      ? 'bg-[#004b38] hover:bg-[#003d2d] dark:bg-[#9FEF00] dark:hover:bg-[#8ade00] text-white dark:text-[#004b38] shadow-md'
+                      : 'bg-[#9FEF00] hover:bg-[#8ade00] dark:bg-gray-800 dark:hover:bg-gray-700 text-[#004b38] dark:text-white'
+                    }`}
+                >
+                  {isEnglish ? 'Upgrade Now' : 'Đăng ký ngay'}
+                </button>
               </div>
-            </div>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ══════════ CTA ══════════ */}
-        <section
-          className="relative py-24 px-5 sm:px-8 overflow-hidden bg-[#f5f2eb] border-t border-b border-[#e8dfc5]"
-        >
-          <div ref={ctaWaveLayerRef} className="cta-wave-surface" style={{ '--wave-x': '50%', '--wave-y': '50%' }}>
-            <span className="cta-wave-ripple r1" />
-            <span className="cta-wave-ripple r2" />
-            <span className="cta-wave-ripple r3" />
-            <span className="cta-wave-core" />
-          </div>
-          <div className="absolute top-8 left-16 text-[#005c45]/5 text-8xl font-black pointer-events-none select-none">₫</div>
-          <div className="absolute bottom-8 right-16 text-[#005c45]/5 text-8xl font-black pointer-events-none select-none">%</div>
-
-          <div className="relative max-w-2xl mx-auto text-center reveal">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#005c45]/10 border border-[#005c45]/20 rounded-full mb-6">
-              <FaRocket className="text-[#005c45]" size={12} />
-              <span className="text-xs font-semibold text-[#005c45]">{isEnglish ? 'Start today' : 'Bắt đầu ngay hôm nay'}</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0c211c] mb-4 leading-tight">
-              {isEnglish ? 'Ready to master' : 'Sẵn sàng làm chủ'}<br />{isEnglish ? 'your finances?' : 'tài chính của bạn?'}
+      {/* ══════════ GROWTH ROADMAP (Dark Green background) ══════════ */}
+      <section className="py-24 px-5 sm:px-8 bg-[#004b38] text-white border-t border-b border-emerald-955">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16 reveal">
+            <span className="text-xs font-bold text-[#9FEF00] bg-[#9FEF00]/10 px-3.5 py-1.5 rounded-full uppercase tracking-widest">
+              {isEnglish ? 'FINANCIAL ROADMAP' : 'BẢN ĐỒ TĂNG TRƯỞNG'}
+            </span>
+            <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight wise-headline">
+              {isEnglish ? 'Roadmap to Financial Freedom' : 'Lộ trình Dòng tiền thịnh vượng'}
             </h2>
-            <p className="text-slate-655 mb-8 text-base leading-relaxed">
-              {isEnglish ? 'Join thousands building better financial habits every day.' : 'Tham gia hàng nghìn người đang xây dựng thói quen tài chính tốt mỗi ngày.'}
+            <p className="mt-4 text-sm text-gray-300 max-w-lg mx-auto">
+              {isEnglish
+                ? 'Follow this simple framework to master your spending and secure a comfortable retirement fund.'
+                : 'Thực hiện kế hoạch 4 giai đoạn cụ thể để làm chủ toàn diện đồng tiền của mình.'}
             </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { step: '01', title: isEnglish ? 'Log Cashflow' : 'Nắm dòng tiền', desc: isEnglish ? 'List daily expenses. Map out where your money leaks.' : 'Phân loại thu/chi hàng ngày. Tránh thất thoát tiền bạc.' },
+              { step: '02', title: isEnglish ? 'Lock Budget' : 'Thiết lập ngân sách', desc: isEnglish ? 'Define budget rules. Limit overspending automatically.' : 'Đặt hạn mức theo danh mục. Khóa chi tiêu lãng phí.' },
+              { step: '03', title: isEnglish ? 'Build Savings' : 'Mục tiêu tích lũy', desc: isEnglish ? 'Set emergency targets. Fund goals with automated metrics.' : 'Tạo quỹ dự phòng. Tự động hóa kế hoạch tích lũy.' },
+              { step: '04', title: isEnglish ? 'Financial Liberty' : 'Tự do tài chính', desc: isEnglish ? 'Analyze AI projections and invest excess savings.' : 'Theo dõi biểu đồ AI để nâng hiệu suất tài sản.' }
+            ].map((item, i) => (
+              <div key={i} className="bg-[#003d2d] dark:bg-[#00261c] border border-emerald-900/60 dark:border-emerald-950/40 rounded-2xl p-5 hover:scale-[1.02] transition-transform duration-200">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-xs font-black text-[#9FEF00]">{isEnglish ? 'STAGE' : 'GIAI ĐOẠN'} {item.step}</span>
+                  <span className="text-lg">⭐</span>
+                </div>
+                <h4 className="text-base font-extrabold wise-headline">{item.title}</h4>
+                <p className="text-xs text-gray-300 mt-2 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ FAQ SECTION (Interactive Accordions) ══════════ */}
+      <section id="faq" className="py-20 px-5 sm:px-8 bg-white dark:bg-[#0a0f0d]">
+        <div className="max-w-3xl mx-auto space-y-12">
+          
+          <div className="text-center space-y-2">
+            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1 rounded-full uppercase tracking-widest">
+              {isEnglish ? 'Help Center' : 'Hỗ trợ khách hàng'}
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#004b38] dark:text-white wise-headline">
+              {isEnglish ? 'Frequently Asked Questions' : 'Câu hỏi thường gặp'}
+            </h2>
+          </div>
+
+          <div className="space-y-4">
+            {faqs.map((faq, index) => {
+              const isOpen = activeFaq === index;
+              return (
+                <div
+                  key={index}
+                  className="border border-gray-155 dark:border-gray-800 rounded-2xl overflow-hidden bg-white dark:bg-[#111915] hover:border-[#004b38]/30 dark:hover:border-emerald-800 transition-colors"
+                >
+                  <button
+                    onClick={() => handleFaqToggle(index)}
+                    className="w-full flex justify-between items-center px-5 py-4 text-left font-bold text-sm sm:text-base text-[#004b38] dark:text-white hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors focus:outline-none"
+                  >
+                    <span>{faq.q}</span>
+                    <span className={`text-lg font-black transform transition-transform duration-200 ${isOpen ? 'rotate-45' : ''}`}>
+                      ＋
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 leading-relaxed border-t border-gray-100 dark:border-gray-800 bg-gray-50/40 dark:bg-[#0a0f0d]/30">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+        </div>
+      </section>
+
+      {/* ══════════ CTA BANNER ══════════ */}
+      <section className="py-20 px-5 sm:px-8 bg-[#004b38] text-white text-center relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#9FEF00]/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-2xl mx-auto space-y-6 relative z-10">
+          <h2 className="text-3xl sm:text-4xl font-extrabold leading-tight wise-headline">
+            {isEnglish ? 'Take control of your money today' : 'Bắt đầu làm chủ ví tiền của bạn ngay hôm nay'}
+          </h2>
+          <p className="text-gray-300 text-sm max-w-md mx-auto">
+            {isEnglish
+              ? 'Join thousands of smart spenders organizing their life with Finance Manager.'
+              : 'Tham gia cùng hàng ngìn người thông minh đang xây dựng thói quen tài chính tốt lành.'}
+          </p>
+
+          <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
             {user ? (
               <button
                 onClick={() => navigate('/dashboard')}
-                className="inline-flex items-center gap-2 px-9 py-4 bg-[#005c45] text-white font-bold rounded-2xl hover:bg-[#004d3e] hover:scale-[1.02] transition-all duration-200 shadow-md hover:shadow-lg text-sm"
+                className="px-8 py-3.5 bg-[#9FEF00] hover:bg-[#8ade00] text-[#004b38] font-extrabold rounded-xl transition text-xs uppercase tracking-wider shadow-lg"
               >
-                <FaRocket size={13} /> {isEnglish ? 'Go to Dashboard' : 'Vào Dashboard'} <FaArrowRight size={11} />
+                {isEnglish ? 'Go to Dashboard' : 'Vào Dashboard'}
               </button>
             ) : (
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <>
                 <button
                   onClick={() => navigate('/register')}
-                  className="inline-flex items-center justify-center gap-2 px-9 py-4 bg-[#005c45] text-white font-bold rounded-2xl hover:bg-[#004d3e] hover:scale-[1.02] transition-all duration-200 shadow-md hover:shadow-lg text-sm"
+                  className="px-8 py-3.5 bg-[#9FEF00] hover:bg-[#8ade00] text-[#004b38] font-extrabold rounded-xl transition text-xs uppercase tracking-wider shadow-lg"
                 >
-                  {isEnglish ? 'Sign up free' : 'Đăng ký miễn phí'} <FaArrowRight size={11} />
+                  {isEnglish ? 'Sign up free' : 'Đăng ký miễn phí'}
                 </button>
                 <button
                   onClick={() => navigate('/login')}
-                  className="inline-flex items-center justify-center gap-2 px-9 py-4 border border-[#005c45]/30 bg-[#fdfbf9] text-[#005c45] font-semibold rounded-2xl hover:bg-[#e8dfc5]/30 hover:scale-[1.02] transition-all duration-200 text-sm shadow-sm"
+                  className="px-8 py-3.5 border border-gray-650 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition text-xs"
                 >
-                  {isEnglish ? 'Already have an account? Sign in' : 'Đã có tài khoản? Đăng nhập'}
+                  {isEnglish ? 'Sign In' : 'Đăng nhập'}
                 </button>
-              </div>
+              </>
             )}
-            <p className="text-[#005c45] text-xs mt-5 font-medium">
-              {isEnglish ? 'No credit card required · 14-day free trial · Cancel anytime' : 'Không cần thẻ tín dụng · Miễn phí 14 ngày · Hủy bất cứ lúc nào'}
-            </p>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ══════════ FOOTER ══════════ */}
-        <footer className="bg-[#051f19] text-[#e8dfc5]/80 border-t border-[#0c211c] py-14 px-5 sm:px-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-9 h-9 bg-transparent rounded-xl flex items-center justify-center">
-                    <img src="/LogoD.png" alt="" className="w-5 h-5 object-contain" />
-                  </div>
-                  <span className="text-[#fdfbf9] font-bold text-sm">Finance Manager</span>
+      {/* ══════════ FOOTER (Dark Green theme) ══════════ */}
+      <footer className="bg-[#00261c] text-gray-400 border-t border-emerald-955/40 py-16 px-5 sm:px-8">
+        <div className="max-w-6xl mx-auto">
+          
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+            
+            {/* Column 1: Info */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 bg-transparent rounded-xl flex items-center justify-center">
+                  <img src="/LogoD.png" alt="logo" className="w-5 h-5 object-contain" />
                 </div>
-                <p className="text-sm leading-relaxed">{isEnglish ? 'A smart and modern personal finance management solution.' : 'Giải pháp quản lý tài chính cá nhân thông minh và hiện đại.'}</p>
-
-                {/* Security badge */}
-                <div className="flex items-center gap-1.5 mt-4 text-xs text-[#e8dfc5]/50">
-                  <FaLock size={10} className="text-[#ca8a04]" />
-                  <span>{isEnglish ? '256-bit SSL encrypted data' : 'Dữ liệu mã hóa 256-bit SSL'}</span>
-                </div>
+                <span className="text-white font-extrabold text-sm wise-headline">Finance Manager</span>
               </div>
-
-              <div>
-                <h4 className="text-[#fdfbf9] text-sm font-bold mb-4">{isEnglish ? 'Product' : 'Sản phẩm'}</h4>
-                <ul className="space-y-2.5 text-sm text-[#e8dfc5]/70">
-                  <li><a href="#features" className="hover:text-[#ca8a04] transition hover:translate-x-1 inline-block">{isEnglish ? 'Features' : 'Tính năng'}</a></li>
-                  <li><a href="#how" className="hover:text-[#ca8a04] transition hover:translate-x-1 inline-block">{isEnglish ? 'How it works' : 'Cách dùng'}</a></li>
-                  <li><a href="#pricing" className="hover:text-[#ca8a04] transition hover:translate-x-1 inline-block">{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a></li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="text-[#fdfbf9] text-sm font-bold mb-4">{isEnglish ? 'Company' : 'Công ty'}</h4>
-                <ul className="space-y-2.5 text-sm text-[#e8dfc5]/70">
-                  <li><button onClick={() => navigate('/about')} className="hover:text-[#ca8a04] transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'About us' : 'Về chúng tôi'}</button></li>
-                  <li><button onClick={() => navigate('/contact')} className="hover:text-[#ca8a04] transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'Contact' : 'Liên hệ'}</button></li>
-                  <li><button onClick={() => navigate('/privacy')} className="hover:text-[#ca8a04] transition hover:translate-x-1 inline-block text-left">{isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}</button></li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="text-[#fdfbf9] text-sm font-bold mb-4">{isEnglish ? 'Follow' : 'Theo dõi'}</h4>
-                <div className="flex gap-3 mb-5">
-                  {[FaFacebook, FaTwitter, FaLinkedin].map((Icon, i) => (
-                    <a key={i} href="#"
-                      className="w-9 h-9 rounded-xl bg-[#0c211c] border border-[#0c211c] hover:bg-[#ca8a04] hover:border-[#ca8a04] flex items-center justify-center transition-all duration-200 hover:scale-110 text-[#e8dfc5] hover:text-white">
-                      <Icon size={14} />
-                    </a>
-                  ))}
-                </div>
-                <div className="text-xs text-[#e8dfc5]/50">
-                  {isEnglish ? 'New feature updates' : 'Cập nhật tính năng mới'}<br />{isEnglish ? 'every week' : 'mỗi tuần'}
-                </div>
+              <p className="text-xs leading-relaxed">
+                {isEnglish
+                  ? 'A modern and clean personal finance dashboard built for fast and organized budget mapping.'
+                  : 'Giải pháp lập ngân sách, quét hóa đơn AI và hoạch định chi tiêu tối ưu cho bạn.'}
+              </p>
+              <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
+                <FaLock className="text-[#9FEF00]" />
+                <span>{isEnglish ? 'Secure 256-bit SSL Data' : 'Dữ liệu bảo mật 256-bit SSL'}</span>
               </div>
             </div>
 
-            <div className="border-t border-[#0c211c] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-              <span>&copy; 2025 Finance Manager. All rights reserved.</span>
-              <span className="text-[#e8dfc5]/50">{isEnglish ? 'Built with ❤ in Vietnam' : 'Được xây dựng với ❤ tại Việt Nam'}</span>
+            {/* Column 2: Product links */}
+            <div>
+              <h4 className="text-white text-xs font-black uppercase tracking-wider mb-4">{isEnglish ? 'Product' : 'Sản phẩm'}</h4>
+              <ul className="space-y-2 text-xs font-semibold">
+                <li><a href="#features" className="hover:text-white transition">{isEnglish ? 'Features' : 'Tính năng'}</a></li>
+                <li><a href="#how" className="hover:text-white transition">{isEnglish ? 'How it works' : 'Cách dùng'}</a></li>
+                <li><a href="#pricing" className="hover:text-white transition">{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a></li>
+              </ul>
             </div>
+
+            {/* Column 3: Company */}
+            <div>
+              <h4 className="text-white text-xs font-black uppercase tracking-wider mb-4">{isEnglish ? 'Company' : 'Công ty'}</h4>
+              <ul className="space-y-2 text-xs font-semibold">
+                <li><button onClick={() => navigate('/about')} className="hover:text-white transition">{isEnglish ? 'About us' : 'Về chúng tôi'}</button></li>
+                <li><button onClick={() => navigate('/contact')} className="hover:text-white transition">{isEnglish ? 'Contact' : 'Liên hệ'}</button></li>
+                <li><button onClick={() => navigate('/privacy')} className="hover:text-white transition">{isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}</button></li>
+              </ul>
+            </div>
+
+            {/* Column 4: Social */}
+            <div>
+              <h4 className="text-white text-xs font-black uppercase tracking-wider mb-4">{isEnglish ? 'Follow Us' : 'Theo dõi'}</h4>
+              <div className="flex gap-2.5 mb-4">
+                {[FaFacebook, FaTwitter, FaLinkedin].map((Icon, index) => (
+                  <a
+                    key={index}
+                    href="#"
+                    className="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-900/60 hover:bg-[#9FEF00] hover:text-[#004b38] flex items-center justify-center text-white transition-colors"
+                  >
+                    <Icon size={12} />
+                  </a>
+                ))}
+              </div>
+              <p className="text-[10px] text-gray-500">
+                {isEnglish ? 'New feature upgrades every week.' : 'Cập nhật tính năng hữu ích hàng tuần.'}
+              </p>
+            </div>
+
           </div>
-        </footer>
-      </div>
+
+          <div className="border-t border-emerald-955/40 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-[10px] text-gray-500">
+            <span>&copy; 2026 Finance Manager. All rights reserved.</span>
+            <span>{isEnglish ? 'Made with ❤ for financial freedom' : 'Được xây dựng vì sự phát triển tài chính của bạn'}</span>
+          </div>
+
+        </div>
+      </footer>
+
     </div>
   );
 };
