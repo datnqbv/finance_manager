@@ -5,7 +5,7 @@ import { useTransactions } from '../context/TransactionContext';
 import { useCategories } from '../context/CategoryContext';
 import { useWallets } from '../context/WalletContext';
 import { useAuth } from '../context/AuthContext';
-import { FiX, FiAlertCircle, FiCamera, FiZap, FiPaperclip, FiExternalLink, FiDownload } from 'react-icons/fi';
+import { FiX, FiAlertCircle, FiCamera, FiZap, FiPaperclip, FiExternalLink, FiDownload, FiUsers, FiMinus, FiPlus, FiCheck, FiInfo } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useLanguage } from '../context/LanguageContext';
@@ -36,6 +36,19 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
   const fileInputRef = useRef(null);
   const attachInputRef = useRef(null);
   const [showLightbox, setShowLightbox] = useState(false);
+  const [isSplitMode, setIsSplitMode] = useState(false);
+  const [totalBill, setTotalBill] = useState('');
+  const [splitPeople, setSplitPeople] = useState(2);
+  const [includeSplitNote, setIncludeSplitNote] = useState(true);
+
+  useEffect(() => {
+    if (isSplitMode && totalBill) {
+      const bill = parseFloat(totalBill) || 0;
+      const people = Math.max(1, splitPeople);
+      const share = Math.round(bill / people);
+      setFormData(prev => ({ ...prev, amount: share.toString() }));
+    }
+  }, [isSplitMode, totalBill, splitPeople]);
 
   // Get categories for current type
   const availableCategories = categories.filter(cat => 
@@ -513,6 +526,10 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
       if (transaction.receiptUrl) {
         setPreviewImage(transaction.receiptUrl);
       }
+      setIsSplitMode(false);
+      setTotalBill('');
+      setSplitPeople(2);
+      setIncludeSplitNote(true);
     } else {
       const defaultWallet = wallets.find(w => w.isDefault) || wallets[0];
       // Reset form when creating new transaction
@@ -528,6 +545,10 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
       });
       setPreviewImage(null);
       setReceiptFile(null);
+      setIsSplitMode(false);
+      setTotalBill('');
+      setSplitPeople(2);
+      setIncludeSplitNote(true);
     }
   }, [transaction, isOpen, wallets]);
 
@@ -593,9 +614,21 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
       }
     }
 
+    let finalNote = formData.note;
+    if (formData.type === 'expense' && isSplitMode && totalBill && includeSplitNote) {
+      const billFormatted = new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(totalBill) || 0);
+      const splitInfo = isEnglish 
+        ? `(Total bill: ${billFormatted}, split among ${splitPeople} people)`
+        : `(Tổng bill: ${billFormatted}, chia ${splitPeople} người)`;
+      if (!finalNote.includes(splitInfo)) {
+        finalNote = finalNote ? `${finalNote} - ${splitInfo}` : splitInfo;
+      }
+    }
+
     const data = {
       ...formData,
       amount: parsedAmount,
+      note: finalNote,
     };
 
     try {
@@ -839,14 +872,118 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
           )}
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
-              {isEnglish ? 'Amount' : 'Số tiền'}
-            </label>
-            <CurrencyInput
-              value={formData.amount}
-              onChange={v => setFormData(prev => ({ ...prev, amount: v }))}
-              placeholder="0"
-            />
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {isEnglish ? 'Amount' : 'Số tiền'}
+              </label>
+              {formData.type === 'expense' && (
+                <button
+                  type="button"
+                  onClick={() => setIsSplitMode(!isSplitMode)}
+                  className={`text-xs flex items-center gap-1.5 py-1 px-2.5 rounded-lg font-semibold transition-all duration-200 ${
+                    isSplitMode
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'bg-gray-100 dark:bg-[#232936] text-gray-600 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400'
+                  }`}
+                >
+                  <FiUsers size={14} className={isSplitMode ? 'text-white' : 'text-emerald-500'} />
+                  {isEnglish ? 'Split with friends' : 'Chia tiền nhóm'}
+                </button>
+              )}
+            </div>
+
+            {isSplitMode && formData.type === 'expense' ? (
+              <div className="mb-4 p-4 bg-gradient-to-br from-emerald-50/80 via-emerald-50/40 to-white dark:from-emerald-950/20 dark:via-emerald-900/10 dark:to-[#191d25] border border-emerald-200 dark:border-emerald-800/40 rounded-2xl shadow-sm space-y-4 animate-modal-scale">
+                <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-400 border-b border-emerald-100 dark:border-emerald-800/30 pb-2.5">
+                  <FiUsers size={16} />
+                  {isEnglish ? 'Group Split Calculator' : 'Bảng tính chia tiền nhóm'}
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                    {isEnglish ? 'Total Bill Amount' : 'Tổng hóa đơn (Tổng Bill)'}
+                  </label>
+                  <CurrencyInput
+                    value={totalBill}
+                    onChange={v => setTotalBill(v)}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                    {isEnglish ? 'Number of People' : 'Số người chia'}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center bg-white dark:bg-[#232936] border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+                      <button
+                        type="button"
+                        onClick={() => setSplitPeople(p => Math.max(1, p - 1))}
+                        className="p-2.5 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-emerald-600 transition"
+                      >
+                        <FiMinus size={16} />
+                      </button>
+                      <span className="w-12 text-center font-bold text-gray-900 dark:text-white text-sm">
+                        {splitPeople}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setSplitPeople(p => p + 1)}
+                        className="p-2.5 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-emerald-600 transition"
+                      >
+                        <FiPlus size={16} />
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 flex-1">
+                      {[2, 3, 4, 5, 6].map(num => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => setSplitPeople(num)}
+                          className={`py-1.5 px-3 text-xs font-bold rounded-lg transition ${
+                            splitPeople === num
+                              ? 'bg-emerald-600 text-white shadow-sm'
+                              : 'bg-white dark:bg-[#232936] text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-700'
+                          }`}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-white dark:bg-[#1f242e] rounded-xl border border-emerald-100 dark:border-emerald-800/30 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
+                      {isEnglish ? 'Your Share to Pay:' : 'Phần bạn phải trả:'}
+                    </span>
+                    <span className="text-base font-extrabold text-rose-600 dark:text-rose-400">
+                      {new Intl.NumberFormat(isEnglish ? 'en-US' : 'vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(formData.amount) || 0)}
+                    </span>
+                  </div>
+
+                  <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 cursor-pointer pt-2 border-t border-gray-100 dark:border-gray-800">
+                    <input
+                      type="checkbox"
+                      checked={includeSplitNote}
+                      onChange={e => setIncludeSplitNote(e.target.checked)}
+                      className="rounded border-gray-300 text-emerald-600 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-[#232936]"
+                    />
+                    <span className="select-none font-medium text-[11px]">
+                      {isEnglish ? 'Automatically add split details to note' : 'Tự động ghim thông tin chia tiền vào ghi chú'}
+                    </span>
+                  </label>
+                </div>
+              </div>
+            ) : (
+              <CurrencyInput
+                value={formData.amount}
+                onChange={v => setFormData(prev => ({ ...prev, amount: v }))}
+                placeholder="0"
+              />
+            )}
           </div>
 
           <div>
