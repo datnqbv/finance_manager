@@ -47,6 +47,10 @@ Transaction.init({
     type: DataTypes.STRING(500),
     allowNull: true,
   },
+  tags: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+  },
   date: {
     type: DataTypes.DATE,
     allowNull: false,

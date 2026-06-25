@@ -27,6 +27,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
     walletId: '',
     toWalletId: '',
     receiptUrl: '',
+    tags: [],
   });
   const [loading, setLoading] = useState(false);
   const [smartText, setSmartText] = useState('');
@@ -513,6 +514,18 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
 
   useEffect(() => {
     if (transaction) {
+      let parsedTags = [];
+      if (transaction.tags) {
+        if (Array.isArray(transaction.tags)) {
+          parsedTags = transaction.tags;
+        } else {
+          try {
+            parsedTags = JSON.parse(transaction.tags);
+          } catch {
+            parsedTags = transaction.tags.split(',').map(t => t.trim()).filter(Boolean);
+          }
+        }
+      }
       setFormData({
         type: transaction.type,
         category: transaction.category,
@@ -522,6 +535,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
         walletId: transaction.walletId || '',
         toWalletId: transaction.toWalletId || '',
         receiptUrl: transaction.receiptUrl || '',
+        tags: parsedTags,
       });
       if (transaction.receiptUrl) {
         setPreviewImage(transaction.receiptUrl);
@@ -542,6 +556,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
         walletId: defaultWallet ? defaultWallet.id : '',
         toWalletId: '',
         receiptUrl: '',
+        tags: [],
       });
       setPreviewImage(null);
       setReceiptFile(null);
@@ -1009,6 +1024,59 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
               className="input w-full text-sm resize-none"
               placeholder={isEnglish ? 'Add note (optional)' : 'Thêm ghi chú (tùy chọn)'}
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
+              {isEnglish ? 'Tags / Labels' : 'Tag / Nhãn (Sự kiện, chuyến đi...)'}
+            </label>
+            <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 dark:bg-[#232936] border border-gray-200 dark:border-gray-700 min-h-[42px] items-center">
+              {formData.tags?.map((tag, idx) => (
+                <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 text-xs font-semibold">
+                  #{tag}
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, tags: prev.tags.filter((_, i) => i !== idx) }))}
+                    className="hover:text-red-500 transition-colors"
+                  >
+                    <FiX size={13} />
+                  </button>
+                </span>
+              ))}
+              <input
+                type="text"
+                placeholder={isEnglish ? '+ Add tag (press Enter)' : '+ Thêm tag (nhấn Enter)'}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    const val = e.target.value.trim().replace(/^#/, '');
+                    if (val && !formData.tags?.includes(val)) {
+                      setFormData(prev => ({ ...prev, tags: [...(prev.tags || []), val] }));
+                      e.target.value = '';
+                    }
+                  }
+                }}
+                className="bg-transparent text-sm border-none focus:outline-none focus:ring-0 px-1 text-gray-800 dark:text-gray-200 flex-1 min-w-[120px]"
+              />
+            </div>
+            {/* Quick tag suggestions */}
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              <span className="text-[10px] text-gray-400 self-center mr-1">{isEnglish ? 'Suggestions:' : 'Gợi ý nhanh:'}</span>
+              {['du lịch Đà Lạt', 'sinh nhật', 'công việc', 'mua sắm', 'ăn uống'].map(sug => (
+                <button
+                  key={sug}
+                  type="button"
+                  onClick={() => {
+                    if (!formData.tags?.includes(sug)) {
+                      setFormData(prev => ({ ...prev, tags: [...(prev.tags || []), sug] }));
+                    }
+                  }}
+                  className="text-[10px] bg-gray-100 dark:bg-[#1f242e] hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-800 transition-colors"
+                >
+                  +{sug}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>

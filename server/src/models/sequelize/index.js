@@ -104,6 +104,27 @@ async function syncModels({ force = false } = {}) {
     } catch (err) {
       console.warn('⚠️ Could not run transactions table pre-sync migration for receiptUrl:', err.message);
     }
+
+    try {
+      await sequelize.query(`
+        IF EXISTS (
+          SELECT * FROM sys.objects 
+          WHERE object_id = OBJECT_ID('transactions') AND type = 'U'
+        )
+        BEGIN
+          IF NOT EXISTS (
+            SELECT * FROM sys.columns 
+            WHERE object_id = OBJECT_ID('transactions') AND name = 'tags'
+          )
+          BEGIN
+            ALTER TABLE transactions ADD tags NVARCHAR(500) NULL;
+          END
+        END
+      `);
+      console.log('✅ Checked transactions table: tags column exists or has been added.');
+    } catch (err) {
+      console.warn('⚠️ Could not run transactions table pre-sync migration for tags:', err.message);
+    }
   }
 
   await sequelize.sync({ force });

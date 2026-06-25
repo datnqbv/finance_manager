@@ -174,7 +174,7 @@ export const unsplitTransaction = async (userId, transactionId) => {
 export const getTransactions = async (userId, query) => {
   const {
     type, category, startDate, endDate,
-    search, amountMin, amountMax, walletId,
+    search, amountMin, amountMax, walletId, tag,
     page = 1, limit = 10,
     sortBy = 'date', sortOrder = 'desc'
   } = query;
@@ -185,7 +185,7 @@ export const getTransactions = async (userId, query) => {
 
   const where = { userId, parentId: null };
   if (search) {
-    where[Op.and] = [getSearchCondition(['category', 'note'], search)];
+    where[Op.and] = [getSearchCondition(['category', 'note', 'tags'], search)];
   }
   if (type) where.type = type;
   if (category) {
@@ -194,6 +194,14 @@ export const getTransactions = async (userId, query) => {
       where.category = sequelize.literal(`category LIKE N'%${escaped}%' COLLATE Latin1_General_CI_AI`);
     } else {
       where.category = { [Op.like]: `%${category}%` };
+    }
+  }
+  if (tag) {
+    if (sequelize.options.dialect === 'mssql') {
+      const escapedTag = tag.replace(/'/g, "''");
+      where.tags = sequelize.literal(`tags LIKE N'%${escapedTag}%' COLLATE Latin1_General_CI_AI`);
+    } else {
+      where.tags = { [Op.like]: `%${tag}%` };
     }
   }
   if (walletId) {
@@ -261,7 +269,7 @@ export const getTransactionById = async (userId, id) => {
 export const createTransaction = async (userId, data) => {
   const t = await sequelize.transaction();
   try {
-    const { type, category, amount, note, date, walletId, toWalletId, receiptUrl } = data;
+    const { type, category, amount, note, date, walletId, toWalletId, receiptUrl, tags } = data;
     const numAmount = Number(amount);
     if (!amount || Number.isNaN(numAmount) || numAmount <= 0) {
       throw new ErrorResponse('Số tiền không hợp lệ', 400);
@@ -298,7 +306,8 @@ export const createTransaction = async (userId, data) => {
       date: date || Date.now(),
       walletId: actualWalletId,
       toWalletId: type === 'transfer' ? toWalletId : null,
-      receiptUrl: receiptUrl || null
+      receiptUrl: receiptUrl || null,
+      tags: Array.isArray(tags) ? JSON.stringify(tags) : (tags || null)
     }, { transaction: t });
 
     // Recalculate wallet balances (assuming recalculateWalletBalance expects { transaction: t })
@@ -366,6 +375,9 @@ export const updateTransaction = async (userId, id, data) => {
     const updateData = { ...data };
     if (updateData.type === 'transfer') {
       updateData.category = 'Chuyển khoản';
+    }
+    if (Array.isArray(updateData.tags)) {
+      updateData.tags = JSON.stringify(updateData.tags);
     }
 
     await Transaction.update(updateData, { where: { id }, transaction: t });
@@ -527,11 +539,11 @@ export const bulkUpdateTransactions = async (userId, ids, updateData) => {
     });
 
     // Filter updateData to only valid fields
-    const validFields = ['type', 'category', 'walletId', 'date', 'note'];
+    const validFields = ['type', 'category', 'walletId', 'date', 'note', 'tags'];
     const dataToUpdate = {};
     for (const field of validFields) {
       if (updateData[field] !== undefined && updateData[field] !== '') {
-        dataToUpdate[field] = updateData[field];
+        dataToUpdate[field] = field === 'tags' && Array.isArray(updateData[field]) ? JSON.stringify(updateData[field]) : updateData[field];
       }
     }
 

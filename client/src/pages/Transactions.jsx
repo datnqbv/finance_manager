@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, Fragment } from 'react';
 import CurrencyInput from '../components/CurrencyInput';
 import { useTransactions } from '../context/TransactionContext';
 import { useAuth } from '../context/AuthContext';
@@ -44,7 +44,8 @@ const Transactions = () => {
     dateTo: '',
     amountFrom: '',
     amountTo: '',
-    walletId: ''
+    walletId: '',
+    tag: ''
   });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -72,7 +73,8 @@ const Transactions = () => {
     filter.dateFrom,
     filter.dateTo,
     filter.amountFrom,
-    filter.amountTo
+    filter.amountTo,
+    filter.tag
   ].filter(Boolean).length;
 
   const handleSelectAll = (e) => {
@@ -110,6 +112,7 @@ const Transactions = () => {
     dateTo: '',
     amountFrom: '',
     amountTo: '',
+    tag: '',
   });
 
   // Gọi API mỗi khi filter / page / viewMode / calendarMonth thay đổi
@@ -136,6 +139,7 @@ const Transactions = () => {
     if (filter.amountFrom) params.amountMin = filter.amountFrom;
     if (filter.amountTo) params.amountMax = filter.amountTo;
     if (filter.walletId) params.walletId = filter.walletId;
+    if (filter.tag) params.tag = filter.tag;
     fetchTransactions(params);
   }, [filter, currentPage, itemsPerPage, viewMode, calendarMonth]);
 
@@ -236,8 +240,8 @@ const Transactions = () => {
   };
   // Xóa toàn bộ bộ lọc (cả filter state lẫn local advanced state)
   const clearFilters = () => {
-    setFilter({ type: '', category: '', searchText: '', dateFrom: '', dateTo: '', amountFrom: '', amountTo: '', walletId: '' });
-    setAdvLocal({ category: '', dateFrom: '', dateTo: '', amountFrom: '', amountTo: '' });
+    setFilter({ type: '', category: '', searchText: '', dateFrom: '', dateTo: '', amountFrom: '', amountTo: '', walletId: '', tag: '' });
+    setAdvLocal({ category: '', dateFrom: '', dateTo: '', amountFrom: '', amountTo: '', tag: '' });
     setCurrentPage(1);
   };
   // hàm dùng cho thay đổi filter type (select) — reset page ngay vì không cần debounce
@@ -289,6 +293,7 @@ const Transactions = () => {
       if (filter.amountFrom) params.amountMin = filter.amountFrom;
       if (filter.amountTo) params.amountMax = filter.amountTo;
       if (filter.walletId) params.walletId = filter.walletId;
+      if (filter.tag) params.tag = filter.tag;
 
       try {
         const response = await transactionService.getTransactions(params);
@@ -622,6 +627,18 @@ const Transactions = () => {
                     />
                   </div>
 
+                  {/* Tag text search */}
+                  <div className="tx-adv-tag">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{isEnglish ? 'Tag / Label' : 'Tag / Nhãn'}</label>
+                    <input
+                      type="text"
+                      placeholder={isEnglish ? 'Enter tag (e.g. du lịch)...' : 'Nhập tag (VD: du lịch)...'}
+                      value={advLocal.tag}
+                      onChange={(e) => handleAdvLocalChange('tag', e.target.value)}
+                      className="input w-full"
+                    />
+                  </div>
+
                   {/* Date Range */}
                   <div className="tx-adv-date">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -734,9 +751,14 @@ const Transactions = () => {
                       const hasSplit = transaction.splitChildren && transaction.splitChildren.length > 0;
                       const isExpanded = expandedSplits.has(transaction.id);
                       const isSelected = selectedIds.includes(transaction.id);
+                      let txTags = [];
+                      if (transaction.tags) {
+                        if (Array.isArray(transaction.tags)) txTags = transaction.tags;
+                        else try { txTags = JSON.parse(transaction.tags); } catch { txTags = transaction.tags.split(',').map(t => t.trim()).filter(Boolean); }
+                      }
                       return (
-                        <>
-                          <tr key={transaction.id} className={`border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${isSelected ? 'bg-[#003d2d]/5 dark:bg-emerald-500/10' : hasSplit ? 'bg-emerald-50/30 dark:bg-emerald-900/5' : ''}`}>
+                        <Fragment key={transaction.id}>
+                          <tr className={`border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${isSelected ? 'bg-[#003d2d]/5 dark:bg-emerald-500/10' : hasSplit ? 'bg-emerald-50/30 dark:bg-emerald-900/5' : ''}`}>
                             <td className="py-3 px-4 w-12 text-center">
                               <input
                                 type="checkbox"
@@ -793,6 +815,15 @@ const Transactions = () => {
                                       </>
                                     )}
                                   </span>
+                                )}
+                                {txTags.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {txTags.map((tag, i) => (
+                                      <span key={i} className="px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-medium">
+                                        #{tag}
+                                      </span>
+                                    ))}
+                                  </div>
                                 )}
                               </div>
                             </td>
@@ -880,7 +911,7 @@ const Transactions = () => {
                               <td className="py-2 px-4"></td>
                             </tr>
                           ))}
-                        </>
+                        </Fragment>
                       );
                     })}
                   </tbody>
@@ -893,6 +924,11 @@ const Transactions = () => {
                   const hasSplit = transaction.splitChildren && transaction.splitChildren.length > 0;
                   const isExpanded = expandedSplits.has(transaction.id);
                   const isSelected = selectedIds.includes(transaction.id);
+                  let txTags = [];
+                  if (transaction.tags) {
+                    if (Array.isArray(transaction.tags)) txTags = transaction.tags;
+                    else try { txTags = JSON.parse(transaction.tags); } catch { txTags = transaction.tags.split(',').map(t => t.trim()).filter(Boolean); }
+                  }
                   return (
                     <div key={transaction.id} className={`py-3 px-2 flex flex-col gap-2 rounded-xl ${isSelected ? 'bg-[#003d2d]/5 dark:bg-emerald-500/10' : hasSplit ? 'bg-emerald-50/30 dark:bg-emerald-900/5' : ''}`}>
                       <div className="flex items-center justify-between">
@@ -950,6 +986,15 @@ const Transactions = () => {
                                 </>
                               )}
                             </span>
+                          )}
+                          {txTags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {txTags.map((tag, i) => (
+                                <span key={i} className="px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-medium">
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
                           )}
                         </div>
 
