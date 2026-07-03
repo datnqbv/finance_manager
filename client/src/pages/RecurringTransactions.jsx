@@ -122,7 +122,7 @@ const RecurringTransactions = () => {
   return (
     <div className="space-y-5">
       {/* Top Banner */}
-      <div className="rounded-3xl bg-[#004b38] p-6 text-white shadow-[0_14px_40px_rgba(1,56,42,0.28)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="rounded-3xl bg-[#0a5c48] p-6 text-white shadow-[0_14px_40px_rgba(1,56,42,0.28)] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">{isEnglish ? 'Automation' : 'Tự động hóa chi tiêu'}</p>
           <h1 className="mt-2 text-4xl font-black flex items-center gap-3">
@@ -137,7 +137,7 @@ const RecurringTransactions = () => {
         </div>
         <button
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#FFFCF5] px-5 py-3 text-sm font-semibold text-[#004b38] shadow-sm hover:bg-[#e9f4f1] transition shrink-0"
+          className="inline-flex items-center gap-2 rounded-xl bg-[#FFFCF5] px-5 py-3 text-sm font-semibold text-[#0a5c48] shadow-sm hover:bg-[#e9f4f1] transition shrink-0"
         >
           <FiPlus size={16} />
           {isEnglish ? 'New Schedule' : 'Tạo lịch mới'}

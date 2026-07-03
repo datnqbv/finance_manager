@@ -112,7 +112,7 @@ const ImportModal = ({ isOpen, onClose, onImported }) => {
             </div>
             <button
               onClick={handleDownloadTemplate}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-[#003d2d] hover:bg-[#00523d] text-white text-xs font-semibold rounded-xl transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-[#084d3c] hover:bg-[#0a5d4a] text-white text-xs font-semibold rounded-xl transition-colors"
             >
               <FiDownload size={14} /> {isEnglish ? 'Download Template' : 'Tải mẫu'}
             </button>
@@ -141,10 +141,10 @@ const ImportModal = ({ isOpen, onClose, onImported }) => {
               onClick={() => inputRef.current?.click()}
               className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
                 dragging
-                  ? 'border-[#004b38] dark:border-emerald-500 bg-emerald-50/50 dark:bg-emerald-500/10'
+                  ? 'border-[#0a5c48] dark:border-emerald-500 bg-emerald-50/50 dark:bg-emerald-500/10'
                   : file
                   ? 'border-emerald-400 bg-emerald-50/50 dark:bg-emerald-500/10'
-                  : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#232936] hover:border-[#004b38] dark:hover:border-emerald-500'
+                  : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#232936] hover:border-[#0a5c48] dark:hover:border-emerald-500'
               }`}
             >
               <input

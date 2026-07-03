@@ -272,7 +272,7 @@ const Wallets = () => {
               <button
                 type="submit"
                 disabled={isTransferring || !fromWalletId || !toWalletId || !transferAmount}
-                className="w-full rounded-xl bg-[#004b38] py-2 text-xs font-semibold text-white hover:bg-[#005e47] disabled:opacity-40 transition-colors"
+                className="w-full rounded-xl bg-[#0a5c48] py-2 text-xs font-semibold text-white hover:bg-[#0c6b54] disabled:opacity-40 transition-colors"
               >
                 {isTransferring ? (isEnglish ? 'Processing...' : 'Đang chuyển...') : (isEnglish ? 'Transfer Funds' : 'Xác nhận chuyển tiền')}
               </button>
@@ -293,7 +293,7 @@ const Wallets = () => {
               setEditingWallet(null);
               setShowModal(true);
             }}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#004b38] px-4 py-2 text-xs font-semibold text-white hover:bg-[#005e47] shadow-sm transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#0a5c48] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0c6b54] shadow-sm transition-colors"
           >
             <FiPlus size={14} />
             {isEnglish ? 'Add Wallet' : 'Thêm ví mới'}

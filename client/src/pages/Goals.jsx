@@ -145,7 +145,7 @@ const Goals = () => {
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
-        <div className="xl:col-span-8 rounded-xl bg-[#004b38] p-6 text-white shadow-[0_14px_40px_rgba(1,56,42,0.28)] relative overflow-hidden">
+        <div className="xl:col-span-8 rounded-xl bg-[#0a5c48] p-6 text-white shadow-[0_14px_40px_rgba(1,56,42,0.28)] relative overflow-hidden">
           <div className="absolute -right-8 top-1/2 h-52 w-52 -translate-y-1/2 rounded-full bg-[#4c8f7a] opacity-35" />
           <div className="relative">
             <div className="flex items-center gap-2">
@@ -230,7 +230,7 @@ const Goals = () => {
                 return (
                   <div key={goal.id} className="flex-1 min-w-[45px] sm:min-w-0">
                     <div className="h-[170px] flex items-end justify-center gap-1 sm:gap-2">
-                      <div className="w-2.5 sm:w-4 rounded-t-md bg-[#003d2d]" style={{ height: `${reachedHeight}%` }} />
+                      <div className="w-2.5 sm:w-4 rounded-t-md bg-[#084d3c]" style={{ height: `${reachedHeight}%` }} />
                       <div className="w-2.5 sm:w-4 rounded-t-md bg-[#b7c4d8]" style={{ height: `${remainHeight}%` }} />
                     </div>
                     <p className="mt-2 truncate text-center text-[11px] font-semibold text-[#6a7280] dark:text-[#aeb5c2]">
@@ -303,7 +303,7 @@ const Goals = () => {
             ))}
             <button
               onClick={openCreateModal}
-              className="ml-1 inline-flex items-center gap-1.5 rounded-xl bg-[#003d2d] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#00523d]"
+              className="ml-1 inline-flex items-center gap-1.5 rounded-xl bg-[#084d3c] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#0a5d4a]"
             >
               <FiPlus size={13} /> {isEnglish ? 'Create Goal' : 'Tạo mục tiêu'}
             </button>
@@ -489,7 +489,7 @@ const Goals = () => {
                     <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'No goals match the current filter.' : 'Không có mục tiêu phù hợp với bộ lọc hiện tại.'}</p>
                     <button
                       onClick={openCreateModal}
-                      className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00523d]"
+                      className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#084d3c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0a5d4a]"
                     >
                       <FiPlus size={14} /> {isEnglish ? 'Create your first goal' : 'Tạo mục tiêu đầu tiên'}
                     </button>
@@ -729,7 +729,7 @@ const Goals = () => {
               </p>
               <button
                 onClick={openCreateModal}
-                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00523d]"
+                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#084d3c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0a5d4a]"
               >
                 <FiPlus size={14} /> {isEnglish ? 'Create Goal' : 'Tạo mục tiêu'}
               </button>

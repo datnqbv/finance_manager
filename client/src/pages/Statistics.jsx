@@ -741,7 +741,7 @@ const Statistics = () => {
                   <p className="mt-1 text-sm font-semibold text-[#18202f] dark:text-[#eef3fb]">{referenceLabel}</p>
                                 <div className="rounded-lg bg-[#FFFCF5] px-3 py-2 shadow-sm dark:bg-[#1c2230]">
                                   <p className="text-[11px] uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Model accuracy' : 'Độ chính xác mô hình'}</p>
-                                  <p className="mt-1 text-sm font-semibold text-[#003d2d] dark:text-[#5fb89d]">{f?.confidencePercent || 0}%</p>
+                                  <p className="mt-1 text-sm font-semibold text-[#084d3c] dark:text-[#5fb89d]">{f?.confidencePercent || 0}%</p>
                                 </div>
                 </div>
               </div>
@@ -1143,7 +1143,7 @@ const Statistics = () => {
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
-        <div className="xl:col-span-8 rounded-xl bg-[#004b38] p-5 sm:p-6 text-white shadow-[0_14px_40px_rgba(1,56,42,0.28)] relative overflow-hidden">
+        <div className="xl:col-span-8 rounded-xl bg-[#0a5c48] p-5 sm:p-6 text-white shadow-[0_14px_40px_rgba(1,56,42,0.28)] relative overflow-hidden">
           <div className="absolute -right-8 top-1/2 h-52 w-52 -translate-y-1/2 rounded-full bg-[#4c8f7a] opacity-35" />
           <div className="relative">
             <div className="flex items-center gap-2">

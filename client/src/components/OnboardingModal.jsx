@@ -90,7 +90,7 @@ const OnboardingModal = ({ onClose }) => {
         {/* Progress bar */}
         <div className="h-1 bg-gray-100 dark:bg-gray-800/60">
           <div
-            className="h-full bg-[#004b38] dark:bg-emerald-500 transition-all duration-500"
+            className="h-full bg-[#0a5c48] dark:bg-emerald-500 transition-all duration-500"
             style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
           />
         </div>
@@ -140,7 +140,7 @@ const OnboardingModal = ({ onClose }) => {
               </button>
               <button
                 onClick={() => setStep(1)}
-                className="flex-1 py-2.5 rounded-xl bg-[#003d2d] hover:bg-[#00523d] text-white text-sm font-semibold flex items-center justify-center gap-2 transition"
+                className="flex-1 py-2.5 rounded-xl bg-[#084d3c] hover:bg-[#0a5d4a] text-white text-sm font-semibold flex items-center justify-center gap-2 transition"
               >
                 {isEnglish ? 'Get Started' : 'Bắt đầu'} <FiArrowRight size={15} />
               </button>
@@ -221,7 +221,7 @@ const OnboardingModal = ({ onClose }) => {
               <button
                 onClick={handleCreateCategories}
                 disabled={creating || selected.size === 0}
-                className="flex-1 py-2.5 rounded-xl bg-[#003d2d] hover:bg-[#00523d] disabled:opacity-60 text-white text-sm font-semibold flex items-center justify-center gap-2 transition"
+                className="flex-1 py-2.5 rounded-xl bg-[#084d3c] hover:bg-[#0a5d4a] disabled:opacity-60 text-white text-sm font-semibold flex items-center justify-center gap-2 transition"
               >
                 {creating ? (
                   <>
@@ -262,7 +262,7 @@ const OnboardingModal = ({ onClose }) => {
             <div className="flex flex-col gap-2">
               <button
                 onClick={() => handleFinish('/transactions')}
-                className="w-full py-3 rounded-xl bg-[#003d2d] hover:bg-[#00523d] text-white text-sm font-semibold flex items-center justify-center gap-2 transition"
+                className="w-full py-3 rounded-xl bg-[#084d3c] hover:bg-[#0a5d4a] text-white text-sm font-semibold flex items-center justify-center gap-2 transition"
               >
                 💸 {isEnglish ? 'Add your first transaction' : 'Thêm giao dịch đầu tiên'}
               </button>

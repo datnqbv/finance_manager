@@ -305,7 +305,7 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
                   onClick={() => setFormData(prev => ({ ...prev, icon }))}
                   className={`h-9 w-9 text-lg rounded-xl flex items-center justify-center border transition-all ${
                     formData.icon === icon
-                      ? 'border-[#004b38] bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-500/10'
+                      ? 'border-[#0a5c48] bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-500/10'
                       : 'border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-[#232936]'
                   }`}
                 >

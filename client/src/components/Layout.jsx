@@ -275,7 +275,7 @@ const Layout = ({ children }) => {
   return (
     <div
       className="h-screen overflow-hidden flex bg-[#F7F1E4] dark:bg-[#111216]"
-      style={{ fontFamily: "'Manrope', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}
+      style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
     >
       {/* Mobile menu button nằm trong header — xem header bên dưới */}
 
@@ -344,7 +344,7 @@ const Layout = ({ children }) => {
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group border text-sm
                       ${isActive
-                        ? 'bg-[#004b38] text-white border-transparent shadow-sm dark:bg-[#004b38] dark:text-white dark:border-transparent'
+                        ? 'bg-[#0a5c48] text-white border-transparent shadow-sm dark:bg-[#0a5c48] dark:text-white dark:border-transparent'
                         : 'text-[#4f5662] bg-transparent border-transparent hover:bg-[#FFFCF5] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
                       }`}
                   >
@@ -396,7 +396,7 @@ const Layout = ({ children }) => {
                                   onClick={() => setSidebarOpen(false)}
                                   className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150 group border text-sm
                                     ${isChildActive
-                                      ? 'bg-[#004b38] text-white border-transparent shadow-sm dark:bg-[#004b38] dark:text-white dark:border-transparent'
+                                      ? 'bg-[#0a5c48] text-white border-transparent shadow-sm dark:bg-[#0a5c48] dark:text-white dark:border-transparent'
                                       : 'text-[#5c6370] bg-transparent border-transparent hover:bg-[#FFFCF5] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#9fa5b0] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
                                     }`}
                                 >
@@ -531,7 +531,7 @@ const Layout = ({ children }) => {
       {/* Main content wrapper */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Header */}
-        <header className="bg-[#FFFCF5] dark:bg-[#191d24] border-b border-[#d8dce2] dark:border-[#2f343e] sticky top-0 z-30 flex-shrink-0">
+        <header className="bg-[#F7F1E4] dark:bg-[#111216] border-b border-[#d8dce2] dark:border-[#2f343e] sticky top-0 z-30 flex-shrink-0">
           <div className="px-4 lg:px-6 py-3">
             <div className="flex items-center gap-3">
 
@@ -903,7 +903,7 @@ const Layout = ({ children }) => {
 
                 <button
                   onClick={() => setShowQuickAdd(true)}
-                  className="hidden sm:inline-flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#00523d]"
+                  className="hidden sm:inline-flex items-center gap-2 rounded-xl bg-[#084d3c] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0a5d4a]"
                 >
                   <FiPlus size={16} /> {isEnglish ? 'Add Transaction' : 'Thêm Giao dịch'}
                 </button>

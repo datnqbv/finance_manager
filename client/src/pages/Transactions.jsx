@@ -366,7 +366,7 @@ const Transactions = () => {
                 <FiFilter size={16} />
                 <span>{isEnglish ? 'Filters' : 'Bộ lọc'}</span>
                 {activeFiltersCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#003d2d] dark:bg-emerald-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-white dark:border-[#0a0a0a]">
+                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#084d3c] dark:bg-emerald-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-white dark:border-[#0a0a0a]">
                     {activeFiltersCount}
                   </span>
                 )}
@@ -394,7 +394,7 @@ const Transactions = () => {
             {/* Add Transaction — hiển thị trên mọi màn hình */}
             <button
               onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 rounded-xl bg-[#003d2d] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#00523d] w-full sm:w-auto justify-center"
+              className="flex items-center gap-2 rounded-xl bg-[#084d3c] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0a5d4a] w-full sm:w-auto justify-center"
             >
               <FiPlus /> {isEnglish ? 'Add' : 'Thêm mới'}
             </button>
@@ -526,12 +526,12 @@ const Transactions = () => {
           <div className="tx-filter-expanded-content space-y-4">
             <div className="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-gray-800">
               <div className="flex items-center gap-2">
-                <FiFilter className="text-[#003d2d] dark:text-emerald-500" />
+                <FiFilter className="text-[#084d3c] dark:text-emerald-500" />
                 <span className="font-bold text-gray-855 dark:text-gray-200">
                   {isEnglish ? 'Filters' : 'Bộ lọc'}
                 </span>
                 {activeFiltersCount > 0 && (
-                  <span className="px-2 py-0.5 rounded-full bg-[#003d2d]/10 dark:bg-emerald-500/20 text-[#003d2d] dark:text-emerald-400 text-xs font-semibold">
+                  <span className="px-2 py-0.5 rounded-full bg-[#084d3c]/10 dark:bg-emerald-500/20 text-[#084d3c] dark:text-emerald-400 text-xs font-semibold">
                     {activeFiltersCount}
                   </span>
                 )}
@@ -700,8 +700,8 @@ const Transactions = () => {
         <div className="tx-area-table card tx-table-card">
           {/* Bulk Action Bar */}
           {selectedIds.length > 0 && (
-            <div className="bg-[#003d2d]/10 dark:bg-emerald-500/10 border border-[#003d2d]/20 dark:border-emerald-500/20 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-              <div className="flex items-center gap-3 text-sm font-semibold text-[#003d2d] dark:text-emerald-400">
+            <div className="bg-[#084d3c]/10 dark:bg-emerald-500/10 border border-[#084d3c]/20 dark:border-emerald-500/20 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3 text-sm font-semibold text-[#084d3c] dark:text-emerald-400">
                 <span>{isEnglish ? `${selectedIds.length} items selected` : `Đã chọn ${selectedIds.length} giao dịch`}</span>
                 <button onClick={() => setSelectedIds([])} className="text-xs underline hover:text-gray-700 dark:hover:text-gray-300">
                   {isEnglish ? 'Deselect all' : 'Bỏ chọn tất cả'}
@@ -735,7 +735,7 @@ const Transactions = () => {
                           type="checkbox"
                           checked={transactions.length > 0 && selectedIds.length === transactions.length}
                           onChange={handleSelectAll}
-                          className="w-4 h-4 rounded text-[#003d2d] dark:text-emerald-500 focus:ring-[#003d2d] dark:focus:ring-emerald-500 cursor-pointer"
+                          className="w-4 h-4 rounded text-[#084d3c] dark:text-emerald-500 focus:ring-[#084d3c] dark:focus:ring-emerald-500 cursor-pointer"
                         />
                       </th>
                       <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">{isEnglish ? 'Date' : 'Ngày'}</th>
@@ -758,13 +758,13 @@ const Transactions = () => {
                       }
                       return (
                         <Fragment key={transaction.id}>
-                          <tr className={`border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${isSelected ? 'bg-[#003d2d]/5 dark:bg-emerald-500/10' : hasSplit ? 'bg-emerald-50/30 dark:bg-emerald-900/5' : ''}`}>
+                          <tr className={`border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${isSelected ? 'bg-[#084d3c]/5 dark:bg-emerald-500/10' : hasSplit ? 'bg-emerald-50/30 dark:bg-emerald-900/5' : ''}`}>
                             <td className="py-3 px-4 w-12 text-center">
                               <input
                                 type="checkbox"
                                 checked={isSelected}
                                 onChange={() => handleSelectItem(transaction.id)}
-                                className="w-4 h-4 rounded text-[#003d2d] dark:text-emerald-500 focus:ring-[#003d2d] dark:focus:ring-emerald-500 cursor-pointer"
+                                className="w-4 h-4 rounded text-[#084d3c] dark:text-emerald-500 focus:ring-[#084d3c] dark:focus:ring-emerald-500 cursor-pointer"
                               />
                             </td>
                             <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
@@ -930,14 +930,14 @@ const Transactions = () => {
                     else try { txTags = JSON.parse(transaction.tags); } catch { txTags = transaction.tags.split(',').map(t => t.trim()).filter(Boolean); }
                   }
                   return (
-                    <div key={transaction.id} className={`py-3 px-2 flex flex-col gap-2 rounded-xl ${isSelected ? 'bg-[#003d2d]/5 dark:bg-emerald-500/10' : hasSplit ? 'bg-emerald-50/30 dark:bg-emerald-900/5' : ''}`}>
+                    <div key={transaction.id} className={`py-3 px-2 flex flex-col gap-2 rounded-xl ${isSelected ? 'bg-[#084d3c]/5 dark:bg-emerald-500/10' : hasSplit ? 'bg-emerald-50/30 dark:bg-emerald-900/5' : ''}`}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => handleSelectItem(transaction.id)}
-                            className="w-4 h-4 rounded text-[#003d2d] dark:text-emerald-500 focus:ring-[#003d2d] dark:focus:ring-emerald-500 cursor-pointer"
+                            className="w-4 h-4 rounded text-[#084d3c] dark:text-emerald-500 focus:ring-[#084d3c] dark:focus:ring-emerald-500 cursor-pointer"
                           />
                           {hasSplit && (
                             <button onClick={() => toggleSplitExpand(transaction.id)} className="p-0.5 text-emerald-600 dark:text-emerald-400">
@@ -1197,7 +1197,7 @@ const Transactions = () => {
                     download={`receipt_${viewingReceipt.id}.jpg`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-1 bg-[#003d2d] hover:bg-[#00523d] text-white rounded-lg text-xs font-medium transition duration-200"
+                    className="flex items-center gap-1.5 px-3 py-1 bg-[#084d3c] hover:bg-[#0a5d4a] text-white rounded-lg text-xs font-medium transition duration-200"
                   >
                     <FiDownload size={12} /> {isEnglish ? "Download" : "Tải xuống"}
                   </a>

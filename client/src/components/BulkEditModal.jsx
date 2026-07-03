@@ -41,7 +41,7 @@ const BulkEditModal = ({ isOpen, onClose, selectedIds, onBulkUpdate }) => {
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-modal-fade">
       <div className="bg-[#FFFCF5] dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100 dark:border-gray-700 animate-modal-scale flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-[#003d2d]/5 to-transparent dark:from-emerald-500/10">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-[#084d3c]/5 to-transparent dark:from-emerald-500/10">
           <div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
               {isEnglish ? 'Bulk Edit Transactions' : 'Sửa hàng loạt giao dịch'}
@@ -81,7 +81,7 @@ const BulkEditModal = ({ isOpen, onClose, selectedIds, onBulkUpdate }) => {
               name="type"
               value={formData.type}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:bg-[#FFFCF5] dark:focus:bg-gray-700 focus:ring-2 focus:ring-[#003d2d] dark:focus:ring-emerald-500 outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:bg-[#FFFCF5] dark:focus:bg-gray-700 focus:ring-2 focus:ring-[#084d3c] dark:focus:ring-emerald-500 outline-none transition-all"
             >
               <option value="">{isEnglish ? '-- No change --' : '-- Giữ nguyên --'}</option>
               <option value="expense">{isEnglish ? 'Expense' : 'Chi tiêu'}</option>
@@ -101,7 +101,7 @@ const BulkEditModal = ({ isOpen, onClose, selectedIds, onBulkUpdate }) => {
               value={formData.category}
               onChange={handleChange}
               placeholder={isEnglish ? 'Enter new category (leave blank for no change)' : 'Nhập danh mục mới (để trống nếu giữ nguyên)'}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:bg-[#FFFCF5] dark:focus:bg-gray-700 focus:ring-2 focus:ring-[#003d2d] dark:focus:ring-emerald-500 outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:bg-[#FFFCF5] dark:focus:bg-gray-700 focus:ring-2 focus:ring-[#084d3c] dark:focus:ring-emerald-500 outline-none transition-all"
             />
           </div>
 
@@ -114,7 +114,7 @@ const BulkEditModal = ({ isOpen, onClose, selectedIds, onBulkUpdate }) => {
               name="walletId"
               value={formData.walletId}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:bg-[#FFFCF5] dark:focus:bg-gray-700 focus:ring-2 focus:ring-[#003d2d] dark:focus:ring-emerald-500 outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:bg-[#FFFCF5] dark:focus:bg-gray-700 focus:ring-2 focus:ring-[#084d3c] dark:focus:ring-emerald-500 outline-none transition-all"
             >
               <option value="">{isEnglish ? '-- No change --' : '-- Giữ nguyên --'}</option>
               {wallets.map((w) => (
@@ -135,7 +135,7 @@ const BulkEditModal = ({ isOpen, onClose, selectedIds, onBulkUpdate }) => {
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:bg-[#FFFCF5] dark:focus:bg-gray-700 focus:ring-2 focus:ring-[#003d2d] dark:focus:ring-emerald-500 outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:bg-[#FFFCF5] dark:focus:bg-gray-700 focus:ring-2 focus:ring-[#084d3c] dark:focus:ring-emerald-500 outline-none transition-all"
             />
           </div>
 
@@ -150,7 +150,7 @@ const BulkEditModal = ({ isOpen, onClose, selectedIds, onBulkUpdate }) => {
               onChange={handleChange}
               rows="3"
               placeholder={isEnglish ? 'Enter new note (leave blank for no change)' : 'Nhập ghi chú mới (để trống nếu giữ nguyên)'}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:bg-[#FFFCF5] dark:focus:bg-gray-700 focus:ring-2 focus:ring-[#003d2d] dark:focus:ring-emerald-500 outline-none transition-all resize-none"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:bg-[#FFFCF5] dark:focus:bg-gray-700 focus:ring-2 focus:ring-[#084d3c] dark:focus:ring-emerald-500 outline-none transition-all resize-none"
             />
           </div>
 
@@ -167,7 +167,7 @@ const BulkEditModal = ({ isOpen, onClose, selectedIds, onBulkUpdate }) => {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 rounded-xl bg-[#003d2d] dark:bg-emerald-600 text-white hover:bg-[#003d2d]/90 dark:hover:bg-emerald-500 font-medium flex items-center gap-2 shadow-lg shadow-[#003d2d]/20 dark:shadow-emerald-900/30 transition-all disabled:opacity-50"
+              className="px-6 py-3 rounded-xl bg-[#084d3c] dark:bg-emerald-600 text-white hover:bg-[#084d3c]/90 dark:hover:bg-emerald-500 font-medium flex items-center gap-2 shadow-lg shadow-[#084d3c]/20 dark:shadow-emerald-900/30 transition-all disabled:opacity-50"
             >
               <FiCheck size={18} />
               {loading ? (isEnglish ? 'Updating...' : 'Đang cập nhật...') : (isEnglish ? 'Apply Changes' : 'Áp dụng')}

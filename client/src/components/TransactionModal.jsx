@@ -1212,7 +1212,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                 download="receipt_upload.jpg"
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1.5 px-4 py-2 bg-[#003d2d] hover:bg-[#00523d] text-white rounded-xl text-sm font-semibold transition duration-200 shadow-lg"
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#084d3c] hover:bg-[#0a5d4a] text-white rounded-xl text-sm font-semibold transition duration-200 shadow-lg"
               >
                 <FiDownload size={14} /> {isEnglish ? "Download" : "Tải xuống"}
               </a>

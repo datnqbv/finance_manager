@@ -287,7 +287,7 @@ const Dashboard = () => {
           {/* Left Column */}
           <div className="xl:col-span-8 flex flex-col gap-5">
             {/* Green Card */}
-            <div className="rounded-xl bg-[#004b38] p-6 text-white shadow-[0_14px_40px_rgba(1,56,42,0.28)] relative overflow-hidden">
+            <div className="rounded-xl bg-[#0a5c48] p-6 text-white shadow-[0_14px_40px_rgba(1,56,42,0.28)] relative overflow-hidden">
               <div className="absolute -right-8 top-1/2 h-52 w-52 -translate-y-1/2 rounded-full bg-[#4c8f7a] opacity-35" />
               <div className="relative">
                 <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">{greeting.text}</p>
@@ -343,7 +343,7 @@ const Dashboard = () => {
                   <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? `${t('monthlyIncome')} ${t('and')} ${t('monthlyExpense')} over the last 6 months` : `${t('monthlyIncome')} ${t('and')} ${t('monthlyExpense')} trong 6 tháng qua`}</p>
                 </div>
                 <div className="flex items-center gap-3 text-xs font-semibold text-[#5e6573] dark:text-[#a7afbc]">
-                  <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#003d2d]" /> {t('monthlyIncome')}</span>
+                  <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#084d3c]" /> {t('monthlyIncome')}</span>
                   <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#a8b6cf]" /> {t('monthlyExpense')}</span>
                 </div>
               </div>
@@ -354,7 +354,7 @@ const Dashboard = () => {
                   <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#6e7380' }} axisLine={false} tickLine={false} />
                   <YAxis hide />
                   <Tooltip content={<ChartTooltip />} />
-                  <Bar dataKey={t('monthlyIncome')} fill="#003d2d" radius={[8, 8, 0, 0]} maxBarSize={34} />
+                  <Bar dataKey={t('monthlyIncome')} fill="#084d3c" radius={[8, 8, 0, 0]} maxBarSize={34} />
                   <Bar dataKey={t('monthlyExpense')} fill="#b9c5db" radius={[8, 8, 0, 0]} maxBarSize={34} />
                 </BarChart>
               </ResponsiveContainer>
@@ -571,7 +571,7 @@ const Dashboard = () => {
                       <span className="font-bold">{goal.progress.toFixed(0)}%</span>
                     </div>
                     <div className="h-2 rounded-full bg-[#e3e7ee] dark:bg-[#2d3340]">
-                      <div className="h-full rounded-full bg-[#003d2d] dark:bg-[#2f8e6f]" style={{ width: `${goal.progress}%` }} />
+                      <div className="h-full rounded-full bg-[#084d3c] dark:bg-[#2f8e6f]" style={{ width: `${goal.progress}%` }} />
                     </div>
                   </div>
                 )) : (
@@ -623,7 +623,7 @@ const Dashboard = () => {
                     {forecastDelta > 0 ? '+' : ''}{forecastDeltaPct.toFixed(1)}% {t('monthlyComparison')}
                   </p>
                   <p className="mt-2 text-[11px] font-semibold text-[#667084] dark:text-[#8da3b8]">
-                    {isEnglish ? 'Confidence: ' : 'Độ tin cậy: '}<span className="text-[#003d2d] dark:text-[#5fb89d] font-black">{forecastData?.forecast?.confidencePercent || 0}%</span>
+                    {isEnglish ? 'Confidence: ' : 'Độ tin cậy: '}<span className="text-[#084d3c] dark:text-[#5fb89d] font-black">{forecastData?.forecast?.confidencePercent || 0}%</span>
                   </p>
                 </div>
 
@@ -663,7 +663,7 @@ const Dashboard = () => {
 
                       <div className="mt-2 h-1.5 rounded-full bg-[#dfe5ee] dark:bg-[#2e3542] overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-[#003d2d] dark:bg-[#2f8e6f]"
+                          className="h-full rounded-full bg-[#084d3c] dark:bg-[#2f8e6f]"
                           style={{ width: `${topForecastTotal > 0 ? Math.max((item.amount / topForecastTotal) * 100, 6) : 0}%` }}
                         />
                       </div>

@@ -109,7 +109,7 @@ const CategoryModal = ({ category, onClose, onSave }) => {
               <button
                 type="button"
                 onClick={() => setShowIconPicker(!showIconPicker)}
-                className="w-full flex items-center justify-between p-3.5 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-[#004b38] dark:hover:border-emerald-500 bg-gray-50 dark:bg-[#232936] transition"
+                className="w-full flex items-center justify-between p-3.5 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-[#0a5c48] dark:hover:border-emerald-500 bg-gray-50 dark:bg-[#232936] transition"
               >
                 <span className="text-3xl">{formData.icon}</span>
                 <span className="text-xs text-gray-400 dark:text-gray-500">
@@ -129,7 +129,7 @@ const CategoryModal = ({ category, onClose, onSave }) => {
                           setShowIconPicker(false);
                         }}
                         className={`text-2xl p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-[#191d25] transition ${
-                          formData.icon === emoji ? 'bg-emerald-50 dark:bg-emerald-500/10 ring-2 ring-[#004b38] dark:ring-emerald-500' : ''
+                          formData.icon === emoji ? 'bg-emerald-50 dark:bg-emerald-500/10 ring-2 ring-[#0a5c48] dark:ring-emerald-500' : ''
                         }`}
                       >
                         {emoji}

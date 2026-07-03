@@ -95,7 +95,7 @@ const WalletModal = ({ wallet, onClose, onSave }) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={isEnglish ? 'Cash, Bank Account...' : 'Tiền mặt, Vietcombank, Momo...'}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#004b38] dark:border-gray-800 dark:bg-[#232936] dark:text-white dark:focus:ring-emerald-500"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0a5c48] dark:border-gray-800 dark:bg-[#232936] dark:text-white dark:focus:ring-emerald-500"
             />
           </div>
 
@@ -111,7 +111,7 @@ const WalletModal = ({ wallet, onClose, onSave }) => {
               disabled={!!wallet} // Disable editing initial balance directly when updating to prevent sync mismatch
               value={initialBalance}
               onChange={(e) => setInitialBalance(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#004b38] dark:border-gray-800 dark:bg-[#232936] dark:text-white dark:focus:ring-emerald-500 disabled:opacity-50"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0a5c48] dark:border-gray-800 dark:bg-[#232936] dark:text-white dark:focus:ring-emerald-500 disabled:opacity-50"
             />
             {wallet && (
               <p className="mt-1 text-[11px] text-gray-400">
@@ -135,7 +135,7 @@ const WalletModal = ({ wallet, onClose, onSave }) => {
                   onClick={() => setIcon(i)}
                   className={`h-10 w-10 text-xl rounded-xl flex items-center justify-center border transition-all ${
                     icon === i 
-                      ? 'border-[#004b38] bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-500/10' 
+                      ? 'border-[#0a5c48] bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-500/10' 
                       : 'border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-[#232936]'
                   }`}
                 >

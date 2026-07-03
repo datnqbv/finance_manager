@@ -33,10 +33,10 @@ function StatItem({ icon, value, suffix, label, delay, started }) {
   const num = useCounter(value, 1400, started);
   return (
     <div className={`reveal reveal-delay-${delay} text-center group p-6 rounded-2xl bg-[#FFFCF5] dark:bg-[#111915] border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-300`}>
-      <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-400/10 text-[#004b38] dark:text-emerald-400 rounded-2xl mb-4 group-hover:bg-[#004b38] group-hover:text-emerald-400 dark:group-hover:bg-emerald-400 dark:group-hover:text-[#004b38] transition-all duration-300">
+      <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-400/10 text-[#0a5c48] dark:text-emerald-400 rounded-2xl mb-4 group-hover:bg-[#0a5c48] group-hover:text-emerald-400 dark:group-hover:bg-emerald-400 dark:group-hover:text-[#0a5c48] transition-all duration-300">
         {icon}
       </div>
-      <div className="text-3xl font-extrabold text-[#004b38] dark:text-white tabular-nums">
+      <div className="text-3xl font-extrabold text-[#0a5c48] dark:text-white tabular-nums">
         {started ? num : 0}{suffix}
       </div>
       <div className="text-xs font-semibold text-gray-500 mt-2 uppercase tracking-wider">{label}</div>
@@ -127,7 +127,7 @@ const Landing = () => {
 
   return (
     <div className="relative min-h-screen bg-[#F7F1E4] dark:bg-[#0a0f0d] text-[#1E2522] dark:text-gray-200 antialiased"
-         style={{ fontFamily: "'Manrope', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+         style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <style>{`
         /* ── Scroll reveal animation classes ── */
         .reveal { opacity: 0; transform: translateY(22px); transition: opacity .6s ease, transform .6s ease; }
@@ -139,7 +139,7 @@ const Landing = () => {
 
         /* ── Stark Wise-style font settings ── */
         .wise-headline {
-          font-family: 'Manrope', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           letter-spacing: -0.02em;
         }
 
@@ -170,7 +170,7 @@ const Landing = () => {
       <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-305 ${
         scrolled
           ? 'bg-[#FFFCF5] dark:bg-[#0c1310] shadow-sm border-b border-gray-200 dark:border-gray-800 py-3 text-[#1E2522] dark:text-white'
-          : 'bg-[#004b38] py-5 text-white'
+          : 'bg-[#0a5c48] py-5 text-white'
       }`}>
         <nav className="max-w-6xl mx-auto px-5 sm:px-8 flex items-center justify-between">
           {/* Logo */}
@@ -186,22 +186,22 @@ const Landing = () => {
           {/* Nav links */}
           <div className="hidden md:flex items-center gap-8">
             <a href="#features" className={`text-sm font-semibold transition ${
-              scrolled ? 'text-gray-600 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
+              scrolled ? 'text-gray-600 hover:text-[#0a5c48] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
             }`}>{isEnglish ? 'Features' : 'Tính năng'}</a>
             <a href="#how" className={`text-sm font-semibold transition ${
-              scrolled ? 'text-gray-600 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
+              scrolled ? 'text-gray-600 hover:text-[#0a5c48] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
             }`}>{isEnglish ? 'How it works' : 'Cách dùng'}</a>
             <a href="#pricing" className={`text-sm font-semibold transition ${
               scrolled ? 'text-gray-600 hover:text-[#1ca063] dark:text-gray-300 dark:hover:text-emerald-400' : 'text-gray-300 hover:text-emerald-400'
             }`}>{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a>
             <a href="#faq" className={`text-sm font-semibold transition ${
-              scrolled ? 'text-gray-600 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
+              scrolled ? 'text-gray-600 hover:text-[#0a5c48] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
             }`}>{isEnglish ? 'FAQ' : 'Hỏi đáp'}</a>
             
             {/* Scoped subpages */}
             <div className="relative group">
               <button className={`flex items-center gap-1 text-sm font-semibold transition ${
-                scrolled ? 'text-gray-600 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
+                scrolled ? 'text-gray-600 hover:text-[#0a5c48] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
               }`}>
                 {isEnglish ? 'Company' : 'Công ty'}
                 <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -209,13 +209,13 @@ const Landing = () => {
                 </svg>
               </button>
               <div className="absolute top-full right-0 mt-2 w-48 bg-[#FFFCF5] dark:bg-[#111915] border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden text-[#1E2522] dark:text-white">
-                <button onClick={() => navigate('/about')} className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#F3EBD8] dark:hover:bg-gray-800 hover:text-[#004b38] dark:hover:text-white transition text-left">
+                <button onClick={() => navigate('/about')} className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#F3EBD8] dark:hover:bg-gray-800 hover:text-[#0a5c48] dark:hover:text-white transition text-left">
                   <span>👥</span> {isEnglish ? 'About us' : 'Về chúng tôi'}
                 </button>
-                <button onClick={() => navigate('/contact')} className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#F3EBD8] dark:hover:bg-gray-800 hover:text-[#004b38] dark:hover:text-white transition text-left">
+                <button onClick={() => navigate('/contact')} className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#F3EBD8] dark:hover:bg-gray-800 hover:text-[#0a5c48] dark:hover:text-white transition text-left">
                   <span>✉️</span> {isEnglish ? 'Contact' : 'Liên hệ'}
                 </button>
-                <button onClick={() => navigate('/privacy')} className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#F3EBD8] dark:hover:bg-gray-800 hover:text-[#004b38] dark:hover:text-white transition text-left">
+                <button onClick={() => navigate('/privacy')} className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#F3EBD8] dark:hover:bg-gray-800 hover:text-[#0a5c48] dark:hover:text-white transition text-left">
                   <span>🔒</span> {isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}
                 </button>
               </div>
@@ -254,7 +254,7 @@ const Landing = () => {
             {user ? (
               <button
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 text-xs font-black uppercase tracking-wider px-5 py-2.5 bg-emerald-400 text-[#004b38] rounded-xl hover:bg-emerald-500 transition"
+                className="flex items-center gap-2 text-xs font-black uppercase tracking-wider px-5 py-2.5 bg-emerald-400 text-[#0a5c48] rounded-xl hover:bg-emerald-500 transition"
               >
                 <FaRocket size={11} /> {isEnglish ? 'Go to Overview' : 'Vào Tổng quan'}
               </button>
@@ -263,7 +263,7 @@ const Landing = () => {
                 <button
                   onClick={() => navigate('/login')}
                   className={`text-sm font-semibold transition px-3 py-1.5 rounded-lg ${
-                    scrolled ? 'text-gray-600 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
+                    scrolled ? 'text-gray-600 hover:text-[#0a5c48] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
                   }`}
                 >
                   {isEnglish ? 'Login' : 'Đăng nhập'}
@@ -272,8 +272,8 @@ const Landing = () => {
                   onClick={() => navigate('/register')}
                   className={`text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-xl transition ${
                     scrolled
-                      ? 'bg-[#004b38] text-white hover:bg-[#003d2d]'
-                      : 'bg-emerald-400 text-[#004b38] hover:bg-emerald-500'
+                      ? 'bg-[#0a5c48] text-white hover:bg-[#084d3c]'
+                      : 'bg-emerald-400 text-[#0a5c48] hover:bg-emerald-500'
                   }`}
                 >
                   {isEnglish ? 'Sign up free' : 'Đăng ký miễn phí'}
@@ -283,7 +283,7 @@ const Landing = () => {
           </div>
 
           <button
-            className="md:hidden p-2 text-[#004b38] dark:text-white"
+            className="md:hidden p-2 text-[#0a5c48] dark:text-white"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
@@ -326,7 +326,7 @@ const Landing = () => {
             <div className="pt-3 space-y-2">
               {user ? (
                 <button onClick={() => { navigate('/dashboard'); setMobileOpen(false); }}
-                  className="w-full flex items-center justify-center gap-2 text-sm font-bold px-4 py-3 bg-[#004b38] text-white rounded-xl">
+                  className="w-full flex items-center justify-center gap-2 text-sm font-bold px-4 py-3 bg-[#0a5c48] text-white rounded-xl">
                   <FaRocket size={12} /> {isEnglish ? 'Go to Overview' : 'Vào Tổng quan'}
                 </button>
               ) : (
@@ -336,7 +336,7 @@ const Landing = () => {
                     {isEnglish ? 'Login' : 'Đăng nhập'}
                   </button>
                   <button onClick={() => { navigate('/register'); setMobileOpen(false); }}
-                    className="w-full text-sm font-bold px-4 py-3 bg-emerald-400 text-[#004b38] rounded-xl text-center">
+                    className="w-full text-sm font-bold px-4 py-3 bg-emerald-400 text-[#0a5c48] rounded-xl text-center">
                     {isEnglish ? 'Sign up free' : 'Đăng ký miễn phí'}
                   </button>
                 </>
@@ -346,10 +346,10 @@ const Landing = () => {
         )}
       </header>
 
-      {/* ══════════ HERO SECTION (Deep Brand Green `#004b38`) ══════════ */}
-      <section className="relative bg-[#004b38] text-white pt-32 pb-24 px-5 sm:px-8 overflow-hidden">
+      {/* ══════════ HERO SECTION (Deep Brand Green `#0a5c48`) ══════════ */}
+      <section className="relative bg-[#0a5c48] text-white pt-32 pb-24 px-5 sm:px-8 overflow-hidden">
         {/* Abstract shapes matching Wise card design */}
-        <div className="absolute right-0 top-0 w-[45%] h-full bg-[#003d2d] opacity-65 rounded-l-[150px] pointer-events-none" />
+        <div className="absolute right-0 top-0 w-[45%] h-full bg-[#084d3c] opacity-65 rounded-l-[150px] pointer-events-none" />
         <div className="absolute -bottom-16 left-12 w-64 h-64 bg-emerald-400 opacity-5 blur-3xl pointer-events-none" />
 
         <div className="max-w-6xl mx-auto relative z-10 grid lg:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
@@ -383,7 +383,7 @@ const Landing = () => {
                 { icon: <FaShieldAlt size={12} />, label: isEnglish ? '256-bit SSL Cryptography' : 'Mã hóa 256-bit SSL' },
                 { icon: <FaStar size={12} className="text-emerald-400" />, label: isEnglish ? '4.9 App Rating' : '4.9 Đánh giá ứng dụng' },
               ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 bg-[#003d2d] border border-emerald-900/40 rounded-full px-4 py-2 text-xs font-semibold">
+                <div key={i} className="flex items-center gap-2 bg-[#084d3c] border border-emerald-900/40 rounded-full px-4 py-2 text-xs font-semibold">
                   {item.icon}
                   <span>{item.label}</span>
                 </div>
@@ -394,7 +394,7 @@ const Landing = () => {
               {user ? (
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-400 text-[#004b38] font-extrabold rounded-xl hover:bg-emerald-500 hover:scale-[1.01] active:scale-95 transition-all text-sm uppercase tracking-wider"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-400 text-[#0a5c48] font-extrabold rounded-xl hover:bg-emerald-500 hover:scale-[1.01] active:scale-95 transition-all text-sm uppercase tracking-wider"
                 >
                   {isEnglish ? 'Go to Overview' : 'Vào Tổng quan'} <FaArrowRight size={11} />
                 </button>
@@ -402,7 +402,7 @@ const Landing = () => {
                 <>
                   <button
                     onClick={() => navigate('/register')}
-                    className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-400 text-[#004b38] font-extrabold rounded-xl hover:bg-emerald-500 hover:scale-[1.01] active:scale-95 transition-all text-sm uppercase tracking-wider"
+                    className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-400 text-[#0a5c48] font-extrabold rounded-xl hover:bg-emerald-500 hover:scale-[1.01] active:scale-95 transition-all text-sm uppercase tracking-wider"
                   >
                     {isEnglish ? 'Start For Free' : 'Bắt đầu miễn phí'} <FaArrowRight size={11} />
                   </button>
@@ -423,7 +423,7 @@ const Landing = () => {
             <div className="absolute inset-2 bg-emerald-400/10 rounded-[28px] blur-xl pointer-events-none" />
 
             <div className="relative bg-[#FFFCF5] dark:bg-[#111915] rounded-3xl p-6 sm:p-7 shadow-2xl text-[#1E2522] dark:text-white border border-gray-100 dark:border-gray-800">
-              <h3 className="text-lg font-black text-[#004b38] dark:text-white mb-2 wise-headline">
+              <h3 className="text-lg font-black text-[#0a5c48] dark:text-white mb-2 wise-headline">
                 {isEnglish ? '50/30/20 Budget Estimator' : 'Công cụ tính ngân sách 50/30/20'}
               </h3>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">
@@ -435,34 +435,34 @@ const Landing = () => {
                 <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">
                   {isEnglish ? 'Monthly Income' : 'Thu nhập hàng tháng'}
                 </label>
-                <div className="flex items-center bg-[#F7F1E4] dark:bg-[#0c1310] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden focus-within:ring-2 focus-within:ring-[#004b38] transition-all">
+                <div className="flex items-center bg-[#F7F1E4] dark:bg-[#0c1310] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden focus-within:ring-2 focus-within:ring-[#0a5c48] transition-all">
                   <input
                     type="number"
                     value={incomeInput}
                     onChange={(e) => setIncomeInput(Math.max(0, parseFloat(e.target.value) || 0))}
-                    className="w-full bg-transparent px-4 py-3 text-lg font-bold text-[#004b38] dark:text-white outline-none"
+                    className="w-full bg-transparent px-4 py-3 text-lg font-bold text-[#0a5c48] dark:text-white outline-none"
                     placeholder="0"
                     min="0"
                     step={isEnglish ? 100 : 1000000}
                   />
-                  <span className="bg-gray-200 dark:bg-gray-800 px-4 py-3 font-extrabold text-sm text-[#004b38] dark:text-white">
+                  <span className="bg-gray-200 dark:bg-gray-800 px-4 py-3 font-extrabold text-sm text-[#0a5c48] dark:text-white">
                     {isEnglish ? 'USD' : 'VND'}
                   </span>
                 </div>
               </div>
 
               {/* Connecting Vertical Graph / Results */}
-              <div className="space-y-4 relative pl-7 border-l-2 border-dashed border-[#004b38]/20 dark:border-emerald-800/40">
+              <div className="space-y-4 relative pl-7 border-l-2 border-dashed border-[#0a5c48]/20 dark:border-emerald-800/40">
                 {/* Visual branch nodes */}
-                <div className="absolute top-3 -left-[7px] w-3 h-3 rounded-full bg-[#004b38] dark:bg-emerald-400" />
-                <div className="absolute top-1/2 -translate-y-1/2 -left-[7px] w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#004b38] dark:border-[#0c1310]" />
+                <div className="absolute top-3 -left-[7px] w-3 h-3 rounded-full bg-[#0a5c48] dark:bg-emerald-400" />
+                <div className="absolute top-1/2 -translate-y-1/2 -left-[7px] w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#0a5c48] dark:border-[#0c1310]" />
                 <div className="absolute bottom-3 -left-[7px] w-3 h-3 rounded-full bg-emerald-600" />
 
                 {/* 1. Needs (50%) */}
                 <div className="p-3 bg-[#F3EBD8] dark:bg-[#0c1310] rounded-xl hover:shadow-sm transition-shadow">
                   <div className="flex justify-between text-xs mb-1">
                     <span className="font-extrabold text-gray-700 dark:text-gray-300">{isEnglish ? 'Needs (50%)' : 'Thiết yếu (50%)'}</span>
-                    <span className="font-black text-[#004b38] dark:text-emerald-400">{formatWidgetCurrency(incomeInput * 0.5)}</span>
+                    <span className="font-black text-[#0a5c48] dark:text-emerald-400">{formatWidgetCurrency(incomeInput * 0.5)}</span>
                   </div>
                   <div className="text-[10px] text-gray-500 dark:text-gray-400">
                     {isEnglish ? 'Rent, utilities, groceries, bills' : 'Nhà ở, điện nước, ăn uống, hóa đơn'}
@@ -484,7 +484,7 @@ const Landing = () => {
                 <div className="p-3 bg-[#F3EBD8] dark:bg-[#0c1310] rounded-xl hover:shadow-sm transition-shadow">
                   <div className="flex justify-between text-xs mb-1">
                     <span className="font-extrabold text-gray-700 dark:text-gray-300">{isEnglish ? 'Savings & Debts (20%)' : 'Tích lũy & Trả nợ (20%)'}</span>
-                    <span className="font-black text-[#004b38] dark:text-emerald-400">{formatWidgetCurrency(incomeInput * 0.2)}</span>
+                    <span className="font-black text-[#0a5c48] dark:text-emerald-400">{formatWidgetCurrency(incomeInput * 0.2)}</span>
                   </div>
                   <div className="text-[10px] text-gray-500 dark:text-gray-400">
                     {isEnglish ? 'Emergency fund, investments, loan payments' : 'Quỹ dự phòng, tiết kiệm, trả nợ'}
@@ -495,7 +495,7 @@ const Landing = () => {
               {/* CTA bottom */}
               <button
                 onClick={() => navigate(user ? '/dashboard' : '/register')}
-                className="w-full mt-6 bg-[#004b38] hover:bg-[#003d2d] text-white font-extrabold uppercase py-3 rounded-xl text-xs tracking-wider transition-all"
+                className="w-full mt-6 bg-[#0a5c48] hover:bg-[#084d3c] text-white font-extrabold uppercase py-3 rounded-xl text-xs tracking-wider transition-all"
               >
                 {user 
                   ? (isEnglish ? 'View your real budget' : 'Xem ngân sách của bạn')
@@ -526,7 +526,7 @@ const Landing = () => {
             <span className="text-xs font-extrabold uppercase tracking-widest text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1.5 rounded-full">
               {isEnglish ? 'Save when you spend' : 'Chi tiêu thông minh, tích lũy vượt trội'}
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#004b38] dark:text-white wise-headline">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#0a5c48] dark:text-white wise-headline">
               {isEnglish ? 'Budget without boundary.' : 'Quản lý tài chính cá nhân không rào cản.'}
             </h2>
             <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
@@ -542,13 +542,13 @@ const Landing = () => {
                 { title: isEnglish ? 'Dynamic Multi-Wallet Accounts' : 'Liên kết ví linh hoạt', desc: isEnglish ? 'Track assets across multiple physical cash wallets and bank accounts.' : 'Quản lý nhiều ví vật lý, tài khoản ngân hàng và chuyển tiền nội bộ.' }
               ].map((item, index) => (
                 <li key={index} className="flex gap-3">
-                  <div className="w-5 h-5 rounded-full bg-[#004b38] dark:bg-emerald-400 text-emerald-400 dark:text-[#004b38] flex items-center justify-center mt-1 flex-shrink-0">
+                  <div className="w-5 h-5 rounded-full bg-[#0a5c48] dark:bg-emerald-400 text-emerald-400 dark:text-[#0a5c48] flex items-center justify-center mt-1 flex-shrink-0">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-sm font-extrabold text-[#004b38] dark:text-white">{item.title}</h4>
+                    <h4 className="text-sm font-extrabold text-[#0a5c48] dark:text-white">{item.title}</h4>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{item.desc}</p>
                   </div>
                 </li>
@@ -560,7 +560,7 @@ const Landing = () => {
           <div className="relative reveal reveal-delay-2 float-card">
             <div className="absolute inset-4 bg-emerald-400/10 rounded-[32px] blur-xl" />
             
-            <div className="relative bg-[#004b38] rounded-3xl p-5 text-white shadow-2xl border border-emerald-900">
+            <div className="relative bg-[#0a5c48] rounded-3xl p-5 text-white shadow-2xl border border-emerald-900">
               {/* Header mockup */}
               <div className="flex items-center justify-between border-b border-emerald-800/80 pb-4 mb-4">
                 <div className="flex items-center gap-2">
@@ -574,11 +574,11 @@ const Landing = () => {
 
               {/* Cards row */}
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-[#003d2d] rounded-xl p-3.5 border border-emerald-700/30">
+                <div className="bg-[#084d3c] rounded-xl p-3.5 border border-emerald-700/30">
                   <div className="text-[9px] text-gray-300 uppercase tracking-wider">{isEnglish ? 'Total Wallet Balance' : 'Tổng tài sản ví'}</div>
                   <div className="text-lg font-black tracking-tight mt-1 text-emerald-400">******</div>
                 </div>
-                <div className="bg-[#003d2d] rounded-xl p-3.5 border border-emerald-700/30">
+                <div className="bg-[#084d3c] rounded-xl p-3.5 border border-emerald-700/30">
                   <div className="text-[9px] text-gray-300 uppercase tracking-wider">{isEnglish ? 'This Month Spent' : 'Đã chi tháng này'}</div>
                   <div className="text-lg font-black tracking-tight mt-1">******</div>
                 </div>
@@ -615,7 +615,7 @@ const Landing = () => {
       </section>
 
       {/* ══════════ NO HIDDEN FEES SECTION (Bright Lime Green) ══════════ */}
-      <section className="py-14 px-5 sm:px-8 bg-emerald-400 text-[#004b38] text-center relative overflow-hidden">
+      <section className="py-14 px-5 sm:px-8 bg-emerald-400 text-[#0a5c48] text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 text-emerald-900/10 text-9xl font-black pointer-events-none select-none">₫</div>
         <div className="absolute bottom-0 left-0 w-32 h-32 text-emerald-900/10 text-9xl font-black pointer-events-none select-none">%</div>
 
@@ -631,7 +631,7 @@ const Landing = () => {
           <div className="pt-2">
             <button
               onClick={() => navigate(user ? '/dashboard' : '/register')}
-              className="inline-flex items-center gap-1.5 px-7 py-3 bg-[#004b38] text-white hover:bg-[#003d2d] text-xs font-black uppercase tracking-wider rounded-xl transition shadow-lg"
+              className="inline-flex items-center gap-1.5 px-7 py-3 bg-[#0a5c48] text-white hover:bg-[#084d3c] text-xs font-black uppercase tracking-wider rounded-xl transition shadow-lg"
             >
               {user
                 ? (isEnglish ? 'Go to Overview' : 'Vào Tổng quan')
@@ -669,7 +669,7 @@ const Landing = () => {
                 {/* Profile header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-6 h-6 rounded-full bg-emerald-400 text-[#004b38] flex items-center justify-center text-[10px] font-black">U</div>
+                    <div className="w-6 h-6 rounded-full bg-emerald-400 text-[#0a5c48] flex items-center justify-center text-[10px] font-black">U</div>
                     <div className="leading-none">
                       <p className="text-[7px] text-gray-400">{isEnglish ? 'Welcome back' : 'Chào mừng quay lại'}</p>
                       <p className="text-[9px] text-white font-extrabold">Alex Nguyen</p>
@@ -719,7 +719,7 @@ const Landing = () => {
             <span className="text-xs font-extrabold uppercase tracking-widest text-[#1ca063] bg-[#1ca063]/5 border border-[#1ca063]/25 px-3 py-1.5 rounded-full">
               {isEnglish ? 'How it works' : 'Cách thức hoạt động'}
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#004b38] dark:text-white wise-headline">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#0a5c48] dark:text-white wise-headline">
               {isEnglish ? 'Budget planning in three simple steps.' : 'Lập kế hoạch tài chính chỉ trong 3 bước.'}
             </h2>
             <p className="text-gray-500 dark:text-gray-400 leading-relaxed text-sm">
@@ -735,11 +735,11 @@ const Landing = () => {
                 { step: '03', title: isEnglish ? 'Review cashflow charts' : 'Nhận báo cáo và tối ưu hóa', desc: isEnglish ? 'Analyze AI forecasts and monthly breakdowns to grow savings.' : 'Xem các dự báo chi tiêu AI và biểu đồ phân bổ để cắt giảm lãng phí.' }
               ].map((item, i) => (
                 <div key={i} className="flex gap-4 items-start">
-                  <span className="text-xs font-black bg-[#004b38] dark:bg-emerald-400 text-emerald-400 dark:text-[#004b38] w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-black bg-[#0a5c48] dark:bg-emerald-400 text-emerald-400 dark:text-[#0a5c48] w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
                     {item.step}
                   </span>
                   <div>
-                    <h4 className="text-sm font-extrabold text-[#004b38] dark:text-white">{item.title}</h4>
+                    <h4 className="text-sm font-extrabold text-[#0a5c48] dark:text-white">{item.title}</h4>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{item.desc}</p>
                   </div>
                 </div>
@@ -757,7 +757,7 @@ const Landing = () => {
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1 rounded-full uppercase tracking-widest">
               {isEnglish ? 'Analytics Trend' : 'Xu hướng Dòng tiền'}
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#004b38] dark:text-white wise-headline">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0a5c48] dark:text-white wise-headline">
               {isEnglish ? 'AI Cashflow Analytics Graph' : 'Biểu đồ Dự báo Dòng tiền AI'}
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
@@ -773,11 +773,11 @@ const Landing = () => {
             <div className="flex justify-between items-center mb-6">
               <div className="text-left">
                 <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-black tracking-widest">{isEnglish ? 'Predictive Spending' : 'Mức dự báo chi tiêu'}</p>
-                <p className="text-xl font-black text-[#004b38] dark:text-emerald-400">
+                <p className="text-xl font-black text-[#0a5c48] dark:text-emerald-400">
                   {isEnglish ? '$1,480.00' : '14.800.000 ₫'}
                 </p>
               </div>
-              <span className="text-[10px] font-bold bg-emerald-400/20 text-[#004b38] dark:text-emerald-400 px-2.5 py-1 rounded-full">
+              <span className="text-[10px] font-bold bg-emerald-400/20 text-[#0a5c48] dark:text-emerald-400 px-2.5 py-1 rounded-full">
                 Confidence: 94%
               </span>
             </div>
@@ -794,15 +794,15 @@ const Landing = () => {
                 <path
                   d="M 10,95 C 60,95 100,75 150,75 C 200,75 250,55 300,55 C 350,55 400,80 430,80 C 460,80 480,45 490,45"
                   fill="none"
-                  stroke="#004b38"
+                  stroke="#0a5c48"
                   strokeWidth="3.5"
                   strokeLinecap="round"
                 />
                 
                 {/* Highlight dots */}
-                <circle cx="150" cy="75" r="4.5" fill="#34d399" stroke="#004b38" strokeWidth="2" />
-                <circle cx="300" cy="55" r="4.5" fill="#34d399" stroke="#004b38" strokeWidth="2" />
-                <circle cx="490" cy="45" r="4.5" fill="#34d399" stroke="#004b38" strokeWidth="2" />
+                <circle cx="150" cy="75" r="4.5" fill="#34d399" stroke="#0a5c48" strokeWidth="2" />
+                <circle cx="300" cy="55" r="4.5" fill="#34d399" stroke="#0a5c48" strokeWidth="2" />
+                <circle cx="490" cy="45" r="4.5" fill="#34d399" stroke="#0a5c48" strokeWidth="2" />
               </svg>
             </div>
 
@@ -828,7 +828,7 @@ const Landing = () => {
             <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-3.5 py-1.5 rounded-full uppercase tracking-widest">
               {isEnglish ? 'VIP PACKAGES' : 'GÓI DỊCH VỤ VIP'}
             </span>
-            <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#004b38] dark:text-white wise-headline">
+            <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#0a5c48] dark:text-white wise-headline">
               {isEnglish ? 'Upgrade to Premium VIP' : 'Nâng cấp đặc quyền VIP'}
             </h2>
             <p className="mt-3 text-sm text-gray-500 dark:text-gray-400 max-w-lg mx-auto">
@@ -870,22 +870,22 @@ const Landing = () => {
                 key={plan.id}
                 className={`reveal reveal-delay-${i + 1} relative rounded-3xl border p-7 flex flex-col justify-between transition-all duration-300 bg-[#FFFCF5] dark:bg-[#111915]
                   ${plan.isPopular
-                    ? 'border-[#004b38] dark:border-emerald-400 shadow-xl scale-[1.02] ring-2 ring-[#004b38] dark:ring-emerald-400'
-                    : 'border-gray-200 dark:border-gray-800 hover:border-[#004b38] dark:hover:border-emerald-400 hover:shadow-md'
+                    ? 'border-[#0a5c48] dark:border-emerald-400 shadow-xl scale-[1.02] ring-2 ring-[#0a5c48] dark:ring-emerald-400'
+                    : 'border-gray-200 dark:border-gray-800 hover:border-[#0a5c48] dark:hover:border-emerald-400 hover:shadow-md'
                   }`}
               >
                 {plan.isPopular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#004b38] dark:bg-emerald-400 text-white dark:text-[#004b38] px-4 py-1 text-[9px] font-black uppercase tracking-widest">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#0a5c48] dark:bg-emerald-400 text-white dark:text-[#0a5c48] px-4 py-1 text-[9px] font-black uppercase tracking-widest">
                     {isEnglish ? 'RECOMMENDED' : 'KHUYÊN DÙNG'}
                   </span>
                 )}
 
                 <div>
-                  <h3 className="text-lg font-bold text-[#004b38] dark:text-white mb-1 wise-headline">{plan.name}</h3>
+                  <h3 className="text-lg font-bold text-[#0a5c48] dark:text-white mb-1 wise-headline">{plan.name}</h3>
                   <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-6">{plan.desc}</p>
 
                   <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-3xl font-black text-[#004b38] dark:text-white">
+                    <span className="text-3xl font-black text-[#0a5c48] dark:text-white">
                       {plan.price}
                     </span>
                     {plan.originalPrice && (
@@ -929,8 +929,8 @@ const Landing = () => {
                   onClick={() => navigate(user ? '/vip' : '/register')}
                   className={`w-full rounded-xl py-3 text-xs font-black uppercase tracking-wider transition-all duration-150
                     ${plan.isPopular
-                      ? 'bg-[#004b38] hover:bg-[#003d2d] dark:bg-emerald-400 dark:hover:bg-emerald-500 text-white dark:text-[#004b38] shadow-md'
-                      : 'bg-emerald-400 hover:bg-emerald-500 dark:bg-gray-800 dark:hover:bg-gray-700 text-[#004b38] dark:text-white'
+                      ? 'bg-[#0a5c48] hover:bg-[#084d3c] dark:bg-emerald-400 dark:hover:bg-emerald-500 text-white dark:text-[#0a5c48] shadow-md'
+                      : 'bg-emerald-400 hover:bg-emerald-500 dark:bg-gray-800 dark:hover:bg-gray-700 text-[#0a5c48] dark:text-white'
                     }`}
                 >
                   {isEnglish ? 'Upgrade Now' : 'Đăng ký ngay'}
@@ -942,7 +942,7 @@ const Landing = () => {
       </section>
 
       {/* ══════════ GROWTH ROADMAP (Dark Green background) ══════════ */}
-      <section className="py-24 px-5 sm:px-8 bg-[#004b38] text-white border-t border-b border-emerald-950">
+      <section className="py-24 px-5 sm:px-8 bg-[#0a5c48] text-white border-t border-b border-emerald-950">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16 reveal">
             <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-3.5 py-1.5 rounded-full uppercase tracking-widest">
@@ -965,7 +965,7 @@ const Landing = () => {
               { step: '03', title: isEnglish ? 'Build Savings' : 'Mục tiêu tích lũy', desc: isEnglish ? 'Set emergency targets. Fund goals with automated metrics.' : 'Tạo quỹ dự phòng. Tự động hóa kế hoạch tích lũy.' },
               { step: '04', title: isEnglish ? 'Financial Liberty' : 'Tự do tài chính', desc: isEnglish ? 'Analyze AI projections and invest excess savings.' : 'Theo dõi biểu đồ AI để nâng hiệu suất tài sản.' }
             ].map((item, i) => (
-              <div key={i} className="bg-[#003d2d] dark:bg-[#00261c] border border-emerald-900/60 dark:border-emerald-950/40 rounded-2xl p-5 hover:scale-[1.02] transition-transform duration-200">
+              <div key={i} className="bg-[#084d3c] dark:bg-[#00261c] border border-emerald-900/60 dark:border-emerald-950/40 rounded-2xl p-5 hover:scale-[1.02] transition-transform duration-200">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-xs font-black text-emerald-400">{isEnglish ? 'STAGE' : 'GIAI ĐOẠN'} {item.step}</span>
                   <span className="text-lg">⭐</span>
@@ -986,7 +986,7 @@ const Landing = () => {
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1 rounded-full uppercase tracking-widest">
               {isEnglish ? 'Help Center' : 'Hỗ trợ khách hàng'}
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#004b38] dark:text-white wise-headline">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0a5c48] dark:text-white wise-headline">
               {isEnglish ? 'Frequently Asked Questions' : 'Câu hỏi thường gặp'}
             </h2>
           </div>
@@ -997,11 +997,11 @@ const Landing = () => {
               return (
                 <div
                   key={index}
-                  className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden bg-[#FFFCF5] dark:bg-[#111915] hover:border-[#004b38]/30 dark:hover:border-emerald-800 transition-colors"
+                  className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden bg-[#FFFCF5] dark:bg-[#111915] hover:border-[#0a5c48]/30 dark:hover:border-emerald-800 transition-colors"
                 >
                   <button
                     onClick={() => handleFaqToggle(index)}
-                    className="w-full flex justify-between items-center px-5 py-4 text-left font-bold text-sm sm:text-base text-[#004b38] dark:text-white hover:bg-[#F3EBD8]/50 dark:hover:bg-gray-800/40 transition-colors focus:outline-none"
+                    className="w-full flex justify-between items-center px-5 py-4 text-left font-bold text-sm sm:text-base text-[#0a5c48] dark:text-white hover:bg-[#F3EBD8]/50 dark:hover:bg-gray-800/40 transition-colors focus:outline-none"
                   >
                     <span>{faq.q}</span>
                     <span className={`text-lg font-black transform transition-transform duration-200 ${isOpen ? 'rotate-45' : ''}`}>
@@ -1022,7 +1022,7 @@ const Landing = () => {
       </section>
 
       {/* ══════════ CTA BANNER ══════════ */}
-      <section className="py-20 px-5 sm:px-8 bg-[#004b38] text-white text-center relative overflow-hidden">
+      <section className="py-20 px-5 sm:px-8 bg-[#0a5c48] text-white text-center relative overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-400/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -1040,7 +1040,7 @@ const Landing = () => {
             {user ? (
               <button
                 onClick={() => navigate('/dashboard')}
-                className="px-8 py-3.5 bg-emerald-400 hover:bg-emerald-500 text-[#004b38] font-extrabold rounded-xl transition text-xs uppercase tracking-wider shadow-lg"
+                className="px-8 py-3.5 bg-emerald-400 hover:bg-emerald-500 text-[#0a5c48] font-extrabold rounded-xl transition text-xs uppercase tracking-wider shadow-lg"
               >
                 {isEnglish ? 'Go to Overview' : 'Vào Tổng quan'}
               </button>
@@ -1048,7 +1048,7 @@ const Landing = () => {
               <>
                 <button
                   onClick={() => navigate('/register')}
-                  className="px-8 py-3.5 bg-emerald-400 hover:bg-emerald-500 text-[#004b38] font-extrabold rounded-xl transition text-xs uppercase tracking-wider shadow-lg"
+                  className="px-8 py-3.5 bg-emerald-400 hover:bg-emerald-500 text-[#0a5c48] font-extrabold rounded-xl transition text-xs uppercase tracking-wider shadow-lg"
                 >
                   {isEnglish ? 'Sign up free' : 'Đăng ký miễn phí'}
                 </button>
@@ -1117,7 +1117,7 @@ const Landing = () => {
                   <a
                     key={index}
                     href="#"
-                    className="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-900/60 hover:bg-emerald-400 hover:text-[#004b38] flex items-center justify-center text-white transition-colors"
+                    className="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-900/60 hover:bg-emerald-400 hover:text-[#0a5c48] flex items-center justify-center text-white transition-colors"
                   >
                     <Icon size={12} />
                   </a>

@@ -90,7 +90,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-3xl bg-[#004b38] p-6 text-white shadow-[0_14px_40px_rgba(1,56,42,0.28)]">
+      <div className="rounded-3xl bg-[#0a5c48] p-6 text-white shadow-[0_14px_40px_rgba(1,56,42,0.28)]">
         <p className="text-xs uppercase tracking-[0.18em] text-[#9ed3c3]">{isEnglish ? 'Admin Dashboard' : 'Dashboard quản trị'}</p>
         <h1 className="mt-2 text-4xl font-black">{isEnglish ? 'System overview' : 'Tổng quan hệ thống'}</h1>
         <p className="mt-3 max-w-2xl text-sm text-[#cfe9df]">
