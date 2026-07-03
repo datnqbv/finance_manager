@@ -35,7 +35,7 @@ export const SkeletonText = ({ width = 'w-full', height = 'h-4', className = '' 
 
 // ── Reusable row for lists ─────────────────────────────────────────────────
 const SkeletonRow = ({ cols }) => (
-  <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4 flex items-center gap-3">
+  <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4 flex items-center gap-3">
     {cols}
   </div>
 );
@@ -115,7 +115,7 @@ export const TransactionsPageSkeleton = () => (
       </div>
     </div>
     {/* Filter bar */}
-    <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+    <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
       <div className="flex flex-wrap gap-3">
         <SkeletonCard className="h-10 w-48 rounded-xl flex-1" />
         <SkeletonCard className="h-10 w-32 rounded-xl" />
@@ -159,7 +159,7 @@ export const CategoriesSkeleton = () => (
         <SkeletonText width="w-28" height="h-5" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4 flex items-start gap-3">
+            <div key={i} className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4 flex items-start gap-3">
               <SkeletonCard className="w-12 h-12 rounded-xl flex-shrink-0" />
               <div className="flex-1 space-y-2 pt-1">
                 <SkeletonText width="w-24" height="h-4" />
@@ -182,7 +182,7 @@ export const BudgetsSkeleton = () => (
     {/* Summary bar */}
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4 space-y-2">
+        <div key={i} className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4 space-y-2">
           <SkeletonText width="w-16" height="h-3" />
           <SkeletonText width="w-24" height="h-5" />
         </div>
@@ -191,7 +191,7 @@ export const BudgetsSkeleton = () => (
     {/* Budget cards */}
     <div className="space-y-3">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-white dark:bg-[#111111] border-l-4 border-l-gray-200 dark:border-l-[#2a2a2a] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-3">
+        <div key={i} className="bg-[#FFFCF5] dark:bg-[#111111] border-l-4 border-l-gray-200 dark:border-l-[#2a2a2a] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="space-y-1.5">
               <SkeletonText width="w-36" height="h-5" />
@@ -229,7 +229,7 @@ export const GoalsSkeleton = () => (
     {/* Stats bar */}
     <div className="grid grid-cols-3 gap-3">
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4 space-y-1.5">
+        <div key={i} className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4 space-y-1.5">
           <SkeletonText width="w-16" height="h-3" />
           <SkeletonText width="w-10" height="h-6" />
         </div>
@@ -242,7 +242,7 @@ export const GoalsSkeleton = () => (
     {/* Goal cards */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-4">
+        <div key={i} className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-4">
           <div className="flex items-start gap-3">
             <SkeletonCard className="w-11 h-11 rounded-xl flex-shrink-0" />
             <div className="flex-1 space-y-2">
@@ -282,7 +282,7 @@ export const DebtsSkeleton = () => (
     {/* Summary stats */}
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4 space-y-2">
+        <div key={i} className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4 space-y-2">
           <SkeletonText width="w-16" height="h-3" />
           <SkeletonText width="w-28" height="h-5" />
         </div>
@@ -295,7 +295,7 @@ export const DebtsSkeleton = () => (
     {/* Debt cards */}
     <div className="space-y-3">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-4">
+        <div key={i} className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-4">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
               <SkeletonCard className="w-10 h-10 rounded-xl flex-shrink-0" />
@@ -353,7 +353,7 @@ export const StatisticsPageSkeleton = () => (
     {/* KPI cards */}
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] border-l-4 border-l-gray-200 dark:border-l-[#2a2a2a] rounded-2xl p-4 space-y-2">
+        <div key={i} className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] border-l-4 border-l-gray-200 dark:border-l-[#2a2a2a] rounded-2xl p-4 space-y-2">
           <SkeletonText width="w-20" height="h-3" />
           <SkeletonText width="w-32" height="h-6" />
           <SkeletonText width="w-16" height="h-3" />
@@ -362,16 +362,16 @@ export const StatisticsPageSkeleton = () => (
     </div>
     {/* Charts */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-3">
+      <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-3">
         <SkeletonText width="w-32" height="h-5" />
         <SkeletonCard className="h-64 w-full rounded-xl" />
       </div>
-      <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-3">
+      <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-3">
         <SkeletonText width="w-32" height="h-5" />
         <SkeletonCard className="h-64 w-full rounded-xl" />
       </div>
     </div>
-    <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-3">
+    <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-3">
       <SkeletonText width="w-32" height="h-5" />
       <SkeletonCard className="h-56 w-full rounded-xl" />
     </div>
@@ -417,7 +417,7 @@ export const WalletsSkeleton = () => (
     {/* Grid of Wallet Cards */}
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-4">
+        <div key={i} className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-4">
           <div className="flex items-center justify-between">
             <SkeletonCard className="w-10 h-10 rounded-xl" />
             <SkeletonCard className="w-8 h-8 rounded-lg" />
@@ -431,7 +431,7 @@ export const WalletsSkeleton = () => (
     </div>
 
     {/* Quick Transfer Section */}
-    <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-4">
+    <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-4">
       <SkeletonText width="w-48" height="h-5" />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <SkeletonCard className="h-10 rounded-xl" />
@@ -456,7 +456,7 @@ export const RecurringTransactionsSkeleton = () => (
     </div>
 
     {/* Table View */}
-    <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl overflow-hidden">
+    <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl overflow-hidden">
       <div className="p-4 border-b border-gray-100 dark:border-[#222222]">
         <SkeletonText width="w-32" height="h-5" />
       </div>
@@ -496,7 +496,7 @@ export const ProfileSkeleton = () => (
 
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* User Card */}
-      <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-6 flex flex-col items-center text-center space-y-4">
+      <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-6 flex flex-col items-center text-center space-y-4">
         <SkeletonCard className="w-24 h-24 rounded-full" />
         <div className="space-y-2 w-full flex flex-col items-center">
           <SkeletonText width="w-32" height="h-5" />
@@ -510,7 +510,7 @@ export const ProfileSkeleton = () => (
       </div>
 
       {/* Edit Form Card */}
-      <div className="lg:col-span-2 bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-6 space-y-6">
+      <div className="lg:col-span-2 bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-6 space-y-6">
         <div className="space-y-4">
           <SkeletonText width="w-40" height="h-5" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -543,7 +543,7 @@ export const VipSubscriptionSkeleton = () => (
     {/* Benefits and Pricing Grid */}
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-6 text-center flex flex-col items-center space-y-6">
+        <div key={i} className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-6 text-center flex flex-col items-center space-y-6">
           <div className="space-y-2">
             <SkeletonText width="w-24" height="h-4" className="mx-auto" />
             <SkeletonText width="w-32" height="h-8" className="mx-auto" />
@@ -573,7 +573,7 @@ export const AdminDashboardSkeleton = () => (
     {/* Admin Card Metrics */}
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4 flex items-center justify-between">
+        <div key={i} className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4 flex items-center justify-between">
           <div className="space-y-2">
             <SkeletonText width="w-24" height="h-3" />
             <SkeletonText width="w-16" height="h-6" />
@@ -585,11 +585,11 @@ export const AdminDashboardSkeleton = () => (
 
     {/* Admin Charts */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-3">
+      <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-3">
         <SkeletonText width="w-36" height="h-5" />
         <SkeletonCard className="h-80 w-full rounded-xl" />
       </div>
-      <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-3">
+      <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 space-y-3">
         <SkeletonText width="w-36" height="h-5" />
         <SkeletonCard className="h-80 w-full rounded-xl" />
       </div>
@@ -608,7 +608,7 @@ export const AdminTableSkeleton = () => (
     </div>
 
     {/* Search/Filter Bar */}
-    <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+    <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
       <div className="flex flex-wrap gap-3">
         <SkeletonCard className="h-10 w-64 rounded-xl" />
         <SkeletonCard className="h-10 w-32 rounded-xl" />
@@ -616,7 +616,7 @@ export const AdminTableSkeleton = () => (
     </div>
 
     {/* Data Table rows */}
-    <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl overflow-hidden p-4 space-y-3">
+    <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl overflow-hidden p-4 space-y-3">
       {[...Array(6)].map((_, i) => (
         <SkeletonRow key={i} cols={<>
           <SkeletonText width="w-12" height="h-4" />

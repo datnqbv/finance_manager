@@ -82,7 +82,7 @@ const CategoryModal = ({ category, onClose, onSave }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-modal-fade">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-[#191d25] border border-gray-100 dark:border-gray-800 transition-all transform scale-100 max-h-[90vh] overflow-y-auto animate-modal-scale">
+      <div className="w-full max-w-md rounded-2xl bg-[#FFFCF5] p-6 shadow-2xl dark:bg-[#191d25] border border-gray-100 dark:border-gray-800 transition-all transform scale-100 max-h-[90vh] overflow-y-auto animate-modal-scale">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -118,7 +118,7 @@ const CategoryModal = ({ category, onClose, onSave }) => {
               </button>
 
               {showIconPicker && (
-                <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-white dark:bg-[#232936] border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl z-10 max-h-60 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-[#FFFCF5] dark:bg-[#232936] border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl z-10 max-h-60 overflow-y-auto">
                   <div className="grid grid-cols-8 gap-2">
                     {EMOJI_ICONS.map((emoji, index) => (
                       <button

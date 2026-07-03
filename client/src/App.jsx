@@ -36,9 +36,9 @@ function App() {
     <LanguageProvider>
       <AuthProvider>  
         <Router> 
-          <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] transition-colors duration-300">
+          <div className="min-h-screen bg-[#F7F1E4] dark:bg-[#0a0a0a] transition-colors duration-300">
             <Suspense fallback={
-              <div className="flex h-screen w-screen items-center justify-center bg-gray-50 dark:bg-[#0a0a0a]">
+              <div className="flex h-screen w-screen items-center justify-center bg-[#F7F1E4] dark:bg-[#0a0a0a]">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
               </div>
             }>

@@ -101,7 +101,7 @@ const Debts = () => {
   if (!isVipActive) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-[#191d25] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-8 md:p-12 max-w-lg w-full text-center shadow-2xl relative overflow-hidden flex flex-col items-center">
+        <div className="bg-[#FFFCF5] dark:bg-[#191d25] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-8 md:p-12 max-w-lg w-full text-center shadow-2xl relative overflow-hidden flex flex-col items-center">
           <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-amber-500/10 blur-2xl" />
           <div className="absolute -left-16 -bottom-16 h-48 w-48 rounded-full bg-emerald-500/10 blur-2xl" />
           
@@ -170,7 +170,7 @@ const Debts = () => {
         </div>
 
         <div className="xl:col-span-4 space-y-4">
-          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Repayment Progress' : 'Tiến độ trả nợ'}</h3>
               <button onClick={() => { setEditingDebt(null); setShowModal(true); }} className="text-xs font-semibold text-[#3a4a62] hover:underline dark:text-[#b9c3d0]">
@@ -197,7 +197,7 @@ const Debts = () => {
               )}
             </div>
 
-            <div className="mt-4 rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
+            <div className="mt-4 rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#222935]">
               <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{isEnglish ? 'Smart Suggestion' : 'Gợi ý thông minh'}</p>
               <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">
                 {activeDebts.length > 0
@@ -210,7 +210,7 @@ const Debts = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
-        <div className="xl:col-span-8 rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+        <div className="xl:col-span-8 rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Debt Trend' : 'Biến động công nợ'}</h3>
@@ -243,7 +243,7 @@ const Debts = () => {
           )}
         </div>
 
-        <div className="xl:col-span-4 rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+        <div className="xl:col-span-4 rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Upcoming Due Debts' : 'Khoản sắp tới hạn'}</h3>
             <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">{isEnglish ? 'Debt schedule' : 'Lịch nợ'}</span>
@@ -254,7 +254,7 @@ const Debts = () => {
               const days = daysUntil(debt.dueDate);
               const overdue = days !== null && days < 0;
               return (
-                <div key={debt.id} className="flex items-center justify-between rounded-xl bg-[#f4f6f9] p-3 dark:bg-[#232936]">
+                <div key={debt.id} className="flex items-center justify-between rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#232936]">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${overdue ? 'bg-[#f3d7d2] text-[#7b3e35]' : 'bg-[#dfe8f6] text-[#476082]'}`}>
                       {overdue ? <FiAlertTriangle size={14} /> : <FiClock size={14} />}
@@ -276,7 +276,7 @@ const Debts = () => {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25]">
+      <div className="rounded-xl bg-[#FFFCF5] shadow-sm dark:bg-[#191d25]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eceff4] px-5 py-4 dark:border-[#2b313d]">
           <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Debt List' : 'Danh sách công nợ'}</h3>
           <div className="flex flex-wrap items-center gap-2">
@@ -290,8 +290,8 @@ const Debts = () => {
                   }}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
                     filterType === f.value
-                      ? 'bg-[#eceff4] text-[#1f2733] dark:bg-[#303746] dark:text-[#f1f4f8]'
-                      : 'bg-[#f8f9fb] text-[#6f7480] hover:bg-[#edf1f6] dark:bg-[#232936] dark:text-[#a4acba] dark:hover:bg-[#2d3442]'
+                      ? 'bg-[#F3EBD8] text-[#1f2733] dark:bg-[#303746] dark:text-[#f1f4f8]'
+                      : 'bg-[#FFFCF5] text-[#6f7480] hover:bg-[#F3EBD8] dark:bg-[#232936] dark:text-[#a4acba] dark:hover:bg-[#2d3442]'
                   }`}
                 >
                   {f.label}
@@ -306,8 +306,8 @@ const Debts = () => {
                   }}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
                     filterStatus === f.value
-                      ? 'bg-[#eceff4] text-[#1f2733] dark:bg-[#303746] dark:text-[#f1f4f8]'
-                      : 'bg-[#f8f9fb] text-[#6f7480] hover:bg-[#edf1f6] dark:bg-[#232936] dark:text-[#a4acba] dark:hover:bg-[#2d3442]'
+                      ? 'bg-[#F3EBD8] text-[#1f2733] dark:bg-[#303746] dark:text-[#f1f4f8]'
+                      : 'bg-[#FFFCF5] text-[#6f7480] hover:bg-[#F3EBD8] dark:bg-[#232936] dark:text-[#a4acba] dark:hover:bg-[#2d3442]'
                   }`}
                 >
                   {f.label}
@@ -327,7 +327,7 @@ const Debts = () => {
         <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-[#eceff4] bg-[#f8f9fb] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:bg-[#232936] dark:text-[#9fa7b4]">
+              <tr className="border-b border-[#eceff4] bg-[#FFFCF5] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:bg-[#232936] dark:text-[#9fa7b4]">
                 <th className="px-5 py-3">{isEnglish ? 'Person' : 'Đối tượng'}</th>
                 <th className="px-5 py-3">{isEnglish ? 'Type' : 'Loại'}</th>
                 <th className="px-5 py-3">{isEnglish ? 'Remaining' : 'Còn lại'}</th>
@@ -349,7 +349,7 @@ const Debts = () => {
                 const paying = payingId === debt.id;
 
                 return [
-                  <tr key={`row-${debt.id}`} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
+                  <tr key={`row-${debt.id}`} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#FFFCF5] dark:bg-[#1d222c]' : ''}`}>
                     <td className="px-5 py-4">
                       <p className="font-bold text-[#1d2430] dark:text-[#eef1f5]">{debt.personName}</p>
                       <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{debt.description || (isEnglish ? 'Personal debt record' : 'Khoản vay mượn cá nhân')}</p>
@@ -465,7 +465,7 @@ const Debts = () => {
                   ) : null,
 
                   expanded ? (
-                    <tr key={`history-${debt.id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#f9fafc] dark:bg-[#212734]">
+                    <tr key={`history-${debt.id}`} className="border-b border-[#eef1f6] dark:border-[#2a303b] bg-[#F3EBD8] dark:bg-[#212734]">
                       <td colSpan={8} className="px-5 py-3">
                         <div className="max-h-52 overflow-y-auto divide-y divide-gray-100 dark:divide-[#2b3241] rounded-xl border border-[#e8edf4] dark:border-[#2f3748]">
                           {[...debt.paymentHistory].reverse().map((h, i) => (
@@ -633,7 +633,7 @@ const Debts = () => {
 
                 {/* Inline payment history section */}
                 {expanded && (
-                  <div className="mt-2 p-2 rounded-xl bg-[#f9fafc] dark:bg-[#212734] border border-gray-100 dark:border-gray-800 flex flex-col gap-1.5 max-h-40 overflow-y-auto">
+                  <div className="mt-2 p-2 rounded-xl bg-[#F3EBD8] dark:bg-[#212734] border border-gray-100 dark:border-gray-800 flex flex-col gap-1.5 max-h-40 overflow-y-auto">
                     {[...debt.paymentHistory].reverse().map((h, i) => (
                       <div key={i} className="flex items-start justify-between gap-2 py-1 px-1 border-b border-gray-50 dark:border-gray-800/40 last:border-0">
                         <div className="min-w-0">

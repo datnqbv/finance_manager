@@ -103,9 +103,9 @@ const SplitTransactionModal = ({ transaction, onClose, isOpen }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-modal-fade">
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-100 dark:border-gray-800 bg-white shadow-2xl dark:bg-[#191d25] animate-modal-scale">
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-100 dark:border-gray-800 bg-[#FFFCF5] shadow-2xl dark:bg-[#191d25] animate-modal-scale">
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4 dark:border-gray-800 dark:bg-[#191d25]">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-[#FFFCF5] px-6 py-4 dark:border-gray-800 dark:bg-[#191d25]">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <FiScissors className="text-emerald-600" />
             {isEnglish ? 'Split Transaction' : 'Tách giao dịch'}
@@ -157,7 +157,7 @@ const SplitTransactionModal = ({ transaction, onClose, isOpen }) => {
             </p>
 
             {splits.map((split, index) => (
-              <div key={index} className="rounded-xl border border-gray-200 dark:border-gray-700 p-3 space-y-2 bg-white dark:bg-[#1a1f28]">
+              <div key={index} className="rounded-xl border border-gray-200 dark:border-gray-700 p-3 space-y-2 bg-[#FFFCF5] dark:bg-[#1a1f28]">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
                     {isEnglish ? `Part ${index + 1}` : `Phần ${index + 1}`}

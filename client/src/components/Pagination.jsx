@@ -71,7 +71,7 @@ const Pagination = ({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-[#F3EBD8] dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           title={isEnglish ? 'Previous page' : 'Trang trước'}
         >
           <FiChevronLeft />
@@ -87,7 +87,7 @@ const Pagination = ({
               className={`min-w-[40px] px-3 py-2 rounded-lg border transition-colors ${
                 currentPage === page
                   ? 'bg-primary-600 text-white border-primary-600'
-                  : 'border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  : 'border-gray-300 dark:border-gray-600 hover:bg-[#F3EBD8] dark:hover:bg-gray-700'
               }`}
             >
               {page}
@@ -98,7 +98,7 @@ const Pagination = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-[#F3EBD8] dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           title={isEnglish ? 'Next page' : 'Trang sau'}
         >
           <FiChevronRight />

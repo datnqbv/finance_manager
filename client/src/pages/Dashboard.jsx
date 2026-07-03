@@ -215,7 +215,7 @@ const Dashboard = () => {
   const ChartTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
     return (
-      <div className="bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] rounded-xl shadow-xl p-3 min-w-[160px]">
+      <div className="bg-[#FFFCF5] dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] rounded-xl shadow-xl p-3 min-w-[160px]">
         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">{label}</p>
         {payload.map((p, i) => (
           <div key={i} className="flex items-center justify-between gap-4 text-xs mb-1">
@@ -336,7 +336,7 @@ const Dashboard = () => {
             )}
 
             {/* Financial Trend Card */}
-            <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+            <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
               <div className="mb-4 flex items-center justify-between">
                 <div>
                   <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Financial Trend' : 'Biến động tài chính'}</h3>
@@ -361,7 +361,7 @@ const Dashboard = () => {
             </div>
 
             {/* Recent Transactions */}
-            <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] flex-1 flex flex-col">
+            <div className="rounded-xl bg-[#FFFCF5] shadow-sm dark:bg-[#191d25] flex-1 flex flex-col">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eceff4] px-5 py-4 dark:border-[#2b313d]">
                 <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Recent Transactions' : 'Giao dịch gần đây'}</h3>
                 <div className="flex items-center gap-2">
@@ -374,8 +374,8 @@ const Dashboard = () => {
                       key={filter.key}
                       onClick={() => setTxFilter(filter.key)}
                       className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${txFilter === filter.key
-                        ? 'bg-[#eceff4] text-[#1f2733] dark:bg-[#303746] dark:text-[#f1f4f8]'
-                        : 'bg-[#f8f9fb] text-[#6f7480] hover:bg-[#edf1f6] dark:bg-[#232936] dark:text-[#a4acba] dark:hover:bg-[#2d3442]'
+                        ? 'bg-[#F3EBD8] text-[#1f2733] dark:bg-[#303746] dark:text-[#f1f4f8]'
+                        : 'bg-[#FFFCF5] text-[#6f7480] hover:bg-[#F3EBD8] dark:bg-[#232936] dark:text-[#a4acba] dark:hover:bg-[#2d3442]'
                         }`}
                     >
                       {filter.label}
@@ -500,7 +500,7 @@ const Dashboard = () => {
           {/* Right Column */}
           <div className="xl:col-span-4 flex flex-col gap-4">
             {/* Wallet Summary Card */}
-            <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+            <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">
                   {isEnglish ? 'My Wallets' : 'Tài khoản ví'}
@@ -555,7 +555,7 @@ const Dashboard = () => {
             </div>
 
             {/* Goal Progress Card */}
-            <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+            <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">{t('goalProgress')}</h3>
                 <button onClick={() => navigate('/goals')} className="text-xs font-semibold text-[#3a4a62] hover:underline dark:text-[#b9c3d0]">
@@ -579,7 +579,7 @@ const Dashboard = () => {
                 )}
               </div>
 
-              <div className="mt-4 rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
+              <div className="mt-4 rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#222935]">
                 <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{t('intelligentSuggestion')}</p>
                 <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">
                   {aiInsight?.message || t('defaultSuggestion')}
@@ -588,7 +588,7 @@ const Dashboard = () => {
             </div>
 
             {/* Spending Forecast Card */}
-            <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25] relative overflow-hidden flex-1 flex flex-col justify-between min-h-[350px]">
+            <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25] relative overflow-hidden flex-1 flex flex-col justify-between min-h-[350px]">
               {!isVipActive && (
                 <div className="absolute inset-0 bg-white/70 dark:bg-[#191d25]/75 z-10 flex flex-col items-center justify-center p-6 text-center backdrop-blur-[2px]">
                   <div className="h-10 w-10 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-500 flex items-center justify-center mb-3">
@@ -616,7 +616,7 @@ const Dashboard = () => {
                   <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">{isEnglish ? `${t('currentExpense')} onward` : `${t('currentExpense')} tới`}</span>
                 </div>
 
-                <div className="mb-3 rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
+                <div className="mb-3 rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#222935]">
                   <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{t('forecastedExpense')}</p>
                   <p className="mt-1 text-lg font-black text-[#1f2733] dark:text-[#e8edf4]">{formatCurrency(forecastExpense)}</p>
                   <p className={`mt-1 text-xs font-semibold ${forecastDelta > 0 ? 'text-[#b54747] dark:text-[#f3a5a5]' : 'text-[#2f8e6f] dark:text-[#8dd5bd]'}`}>
@@ -628,11 +628,11 @@ const Dashboard = () => {
                 </div>
 
                 <div className="mb-3 grid grid-cols-2 gap-2">
-                  <div className="rounded-xl bg-[#f7f9fc] p-2.5 dark:bg-[#232936]">
+                  <div className="rounded-xl bg-[#F3EBD8] p-2.5 dark:bg-[#232936]">
                     <p className="text-[11px] font-semibold text-[#667084] dark:text-[#a8b0be]">{isEnglish ? 'Low scenario' : 'Kịch bản thấp'}</p>
                     <p className="mt-1 text-sm font-black text-[#1f2733] dark:text-[#e8edf4]">{formatCurrency(forecastLow)}</p>
                   </div>
-                  <div className="rounded-xl bg-[#f7f9fc] p-2.5 dark:bg-[#232936]">
+                  <div className="rounded-xl bg-[#F3EBD8] p-2.5 dark:bg-[#232936]">
                     <p className="text-[11px] font-semibold text-[#667084] dark:text-[#a8b0be]">{isEnglish ? 'High scenario' : 'Kịch bản cao'}</p>
                     <p className="mt-1 text-sm font-black text-[#1f2733] dark:text-[#e8edf4]">{formatCurrency(forecastHigh)}</p>
                   </div>
@@ -640,7 +640,7 @@ const Dashboard = () => {
 
                 <div className="space-y-3">
                   {topForecastCategories.length > 0 ? topForecastCategories.map((item, idx) => (
-                    <div key={`${item.name}-${idx}`} className="rounded-xl bg-[#f4f6f9] p-3 dark:bg-[#232936]">
+                    <div key={`${item.name}-${idx}`} className="rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#232936]">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="h-8 w-8 rounded-lg flex items-center justify-center font-bold bg-[#dce7f7] text-[#31557e] dark:bg-[#2a3a4f] dark:text-[#9fc4ef]">{idx + 1}</div>

@@ -127,7 +127,7 @@ const Categories = () => {
         </div>
 
         <div className="xl:col-span-4 space-y-4">
-          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Category Distribution' : 'Phân bổ danh mục'}</h3>
               <button
@@ -156,7 +156,7 @@ const Categories = () => {
               ))}
             </div>
 
-            <div className="mt-4 rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
+            <div className="mt-4 rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#222935]">
               <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{isEnglish ? 'Smart Suggestion' : 'Gợi ý tối ưu'}</p>
               <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">
                 {categories.length < 8 
@@ -168,7 +168,7 @@ const Categories = () => {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25]">
+      <div className="rounded-xl bg-[#FFFCF5] shadow-sm dark:bg-[#191d25]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eceff4] px-5 py-4 dark:border-[#2b313d]">
           <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Category List' : 'Danh sách danh mục'}</h3>
           <div className="flex items-center gap-2">
@@ -182,8 +182,8 @@ const Categories = () => {
                 onClick={() => setFilterType(f.value)}
                 className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
                   filterType === f.value
-                    ? 'bg-[#eceff4] text-[#1f2733] dark:bg-[#303746] dark:text-[#f1f4f8]'
-                    : 'bg-[#f8f9fb] text-[#6f7480] hover:bg-[#edf1f6] dark:bg-[#232936] dark:text-[#a4acba] dark:hover:bg-[#2d3442]'
+                    ? 'bg-[#F3EBD8] text-[#1f2733] dark:bg-[#303746] dark:text-[#f1f4f8]'
+                    : 'bg-[#FFFCF5] text-[#6f7480] hover:bg-[#F3EBD8] dark:bg-[#232936] dark:text-[#a4acba] dark:hover:bg-[#2d3442]'
                 }`}
               >
                 {f.label}
@@ -202,7 +202,7 @@ const Categories = () => {
         <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full text-sm">
             <thead>
-                <tr className="border-b border-[#eceff4] bg-[#f8f9fb] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:bg-[#232936] dark:text-[#9fa7b4]">
+                <tr className="border-b border-[#eceff4] bg-[#FFFCF5] text-left text-xs font-bold uppercase tracking-wider text-[#7a808c] dark:border-[#2b313d] dark:bg-[#232936] dark:text-[#9fa7b4]">
                 <th className="px-5 py-3">{isEnglish ? 'Description' : 'Mô tả'}</th>
                 <th className="px-5 py-3">{isEnglish ? 'Type' : 'Loại'}</th>
                 <th className="px-5 py-3">{isEnglish ? 'Color' : 'Màu'}</th>
@@ -213,7 +213,7 @@ const Categories = () => {
             </thead>
             <tbody>
               {paginatedCategories.length > 0 ? paginatedCategories.map((category, idx) => (
-                <tr key={category.id} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#fcfdff] dark:bg-[#1d222c]' : ''}`}>
+                <tr key={category.id} className={`border-b border-[#eef1f6] dark:border-[#2a303b] ${idx % 2 === 1 ? 'bg-[#FFFCF5] dark:bg-[#1d222c]' : ''}`}>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="h-9 w-9 rounded-lg flex items-center justify-center text-lg" style={{ backgroundColor: `${category.color || '#10b981'}1f` }}>

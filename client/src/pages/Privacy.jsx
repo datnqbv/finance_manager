@@ -193,9 +193,9 @@ const Privacy = () => {
   }, [sections.length]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#12151c] text-slate-800 dark:text-slate-200 antialiased transition-colors duration-300">
+    <div className="min-h-screen bg-[#F7F1E4] dark:bg-[#12151c] text-slate-800 dark:text-slate-200 antialiased transition-colors duration-300">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#191d25]/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 transition-colors duration-300">
+      <header className="sticky top-0 z-40 bg-[#FFFCF5]/80 dark:bg-[#191d25]/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -243,7 +243,7 @@ const Privacy = () => {
           { emoji: '🚫', title: isEnglish ? 'Zero Data Sharing' : 'Không chia sẻ dữ liệu', desc: isEnglish ? 'We never sell or distribute your financial logs to third parties.' : 'Chúng tôi không bao giờ bán hay chia sẻ lịch sử tài chính của bạn.' },
           { emoji: '🗑️', title: isEnglish ? 'Absolute Deletion' : 'Xóa sạch dữ liệu', desc: isEnglish ? 'Deleting your account fully purges all records within 30 days.' : 'Yêu cầu xóa tài khoản sẽ xóa sạch mọi thông tin trong vòng 30 ngày.' },
         ].map((h, i) => (
-          <div key={i} className="flex gap-4 bg-white dark:bg-[#191d25] rounded-2xl p-5 border border-slate-100 dark:border-slate-800/80 hover:border-emerald-500/20 dark:hover:border-emerald-500/30 shadow-sm hover:shadow-md transition-all duration-300">
+          <div key={i} className="flex gap-4 bg-[#FFFCF5] dark:bg-[#191d25] rounded-2xl p-5 border border-slate-100 dark:border-slate-800/80 hover:border-emerald-500/20 dark:hover:border-emerald-500/30 shadow-sm hover:shadow-md transition-all duration-300">
             <span className="text-3xl flex-shrink-0">{h.emoji}</span>
             <div className="space-y-1">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">{h.title}</h3>
@@ -259,7 +259,7 @@ const Privacy = () => {
           
           {/* Sticky Left Navigation Sidebar */}
           <div className="lg:col-span-4 hidden lg:block">
-            <div className="sticky top-24 bg-white dark:bg-[#191d25] rounded-3xl p-5 border border-slate-100 dark:border-slate-800/80 shadow-sm space-y-4">
+            <div className="sticky top-24 bg-[#FFFCF5] dark:bg-[#191d25] rounded-3xl p-5 border border-slate-100 dark:border-slate-800/80 shadow-sm space-y-4">
               <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2">
                 {isEnglish ? 'Sections' : 'Mục lục'}
               </h3>
@@ -271,7 +271,7 @@ const Privacy = () => {
                     className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-3 ${
                       activeSection === idx
                         ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20'
-                        : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/30'
+                        : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-[#F3EBD8] dark:hover:bg-slate-800/30'
                     }`}
                   >
                     <span className="text-base">{sectionIcons[idx].icon}</span>
@@ -288,7 +288,7 @@ const Privacy = () => {
               <div
                 id={`section-${idx}`}
                 key={idx}
-                className="bg-white dark:bg-[#191d25] rounded-3xl p-6 md:p-8 border border-slate-100 dark:border-slate-800/80 shadow-sm hover:shadow-md hover:border-emerald-500/20 dark:hover:border-emerald-500/30 transition-all duration-350 space-y-5 scroll-mt-24"
+                className="bg-[#FFFCF5] dark:bg-[#191d25] rounded-3xl p-6 md:p-8 border border-slate-100 dark:border-slate-800/80 shadow-sm hover:shadow-md hover:border-emerald-500/20 dark:hover:border-emerald-500/30 transition-all duration-350 space-y-5 scroll-mt-24"
               >
                 <div className="flex items-center gap-4">
                   <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${sectionIcons[idx].gradient} text-white flex items-center justify-center text-lg shadow-md`}>

@@ -203,7 +203,7 @@ const Wallets = () => {
         </div>
 
         {/* Quick Fund Transfer Card */}
-        <div className="xl:col-span-4 rounded-2xl bg-white p-5 shadow-sm dark:bg-[#191d25] border border-gray-100 dark:border-gray-800 flex flex-col justify-between">
+        <div className="xl:col-span-4 rounded-2xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25] border border-gray-100 dark:border-gray-800 flex flex-col justify-between">
           <div>
             <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
               <BiTransfer size={20} className="text-emerald-500" />
@@ -382,7 +382,7 @@ const Wallets = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Column: Recent Activities */}
-        <div className="lg:col-span-7 rounded-2xl bg-white p-6 shadow-sm dark:bg-[#191d25] border border-gray-100 dark:border-gray-800">
+        <div className="lg:col-span-7 rounded-2xl bg-[#FFFCF5] p-6 shadow-sm dark:bg-[#191d25] border border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-2 mb-4">
             <BiTransfer className="text-emerald-500" size={22} />
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -476,7 +476,7 @@ const Wallets = () => {
         </div>
 
         {/* Right Column: Scheduled Recurring Transactions */}
-        <div className="lg:col-span-5 rounded-2xl bg-white p-6 shadow-sm dark:bg-[#191d25] border border-gray-100 dark:border-gray-800">
+        <div className="lg:col-span-5 rounded-2xl bg-[#FFFCF5] p-6 shadow-sm dark:bg-[#191d25] border border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-2 mb-4">
             <FiClock className="text-blue-500" size={22} />
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">

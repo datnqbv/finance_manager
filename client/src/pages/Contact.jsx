@@ -66,10 +66,10 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#12151c] text-slate-800 dark:text-slate-200 antialiased transition-colors duration-300">
+    <div className="min-h-screen bg-[#F7F1E4] dark:bg-[#12151c] text-slate-800 dark:text-slate-200 antialiased transition-colors duration-300">
       
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#191d25]/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 transition-colors duration-300">
+      <header className="sticky top-0 z-40 bg-[#FFFCF5]/80 dark:bg-[#191d25]/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -126,8 +126,8 @@ const Contact = () => {
                   { icon: <FaMapMarkerAlt className="text-rose-500" size={16} />, label: isEnglish ? 'Headquarters' : 'Văn phòng', value: isEnglish ? 'District 1, Ho Chi Minh City, VN' : 'Quận 1, TP. Hồ Chí Minh, VN', href: null, desc: isEnglish ? 'Operating center & research hub' : 'Trung tâm vận hành chính' },
                   { icon: <FaClock className="text-amber-500" size={16} />, label: isEnglish ? 'Working Hours' : 'Giờ hoạt động', value: isEnglish ? 'Mon – Fri, 8:00 – 17:30' : 'Thứ 2 – Thứ 6, 8:00 – 17:30', href: null, desc: isEnglish ? 'Excluding public national holidays' : 'Ngoại trừ các ngày lễ tết' },
                 ].map((item, i) => (
-                  <div key={i} className="flex gap-4 bg-white dark:bg-[#191d25] rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 shadow-sm hover:shadow-md transition-all duration-300">
-                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-850 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <div key={i} className="flex gap-4 bg-[#FFFCF5] dark:bg-[#191d25] rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 shadow-sm hover:shadow-md transition-all duration-300">
+                    <div className="w-10 h-10 bg-[#F3EBD8] dark:bg-slate-850 rounded-xl flex items-center justify-center flex-shrink-0">
                       {item.icon}
                     </div>
                     <div className="space-y-0.5">
@@ -153,10 +153,10 @@ const Contact = () => {
               </h2>
               <div className="space-y-2.5">
                 {faqData.map((faq, idx) => (
-                  <div key={idx} className="bg-white dark:bg-[#191d25] rounded-2xl border border-slate-100 dark:border-slate-800/85 overflow-hidden transition-all duration-300">
+                  <div key={idx} className="bg-[#FFFCF5] dark:bg-[#191d25] rounded-2xl border border-slate-100 dark:border-slate-800/85 overflow-hidden transition-all duration-300">
                     <button
                       onClick={() => toggleFaq(idx)}
-                      className="w-full px-5 py-4 flex items-center justify-between text-left font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all duration-200"
+                      className="w-full px-5 py-4 flex items-center justify-between text-left font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 hover:bg-[#F3EBD8]/50 dark:hover:bg-slate-800/20 transition-all duration-200"
                     >
                       <span>{faq.q}</span>
                       <FaChevronDown size={11} className={`text-slate-400 transition-transform duration-350 ${openFaq === idx ? 'rotate-180 text-emerald-500' : ''}`} />
@@ -174,7 +174,7 @@ const Contact = () => {
           </div>
 
           {/* Right Column: Dynamic Form Widget */}
-          <div className="lg:col-span-7 bg-white dark:bg-[#191d25] rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-slate-800/80 shadow-md">
+          <div className="lg:col-span-7 bg-[#FFFCF5] dark:bg-[#191d25] rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-slate-800/80 shadow-md">
             {sent ? (
               <div className="flex flex-col items-center justify-center text-center py-16 space-y-6">
                 <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center shadow-lg animate-bounce">

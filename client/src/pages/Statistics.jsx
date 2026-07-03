@@ -22,7 +22,7 @@ const COLORS = ['#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f9
 const ChartTip = ({ active, payload, label, fmt }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-xl px-3 py-2 shadow-lg text-xs">
+    <div className="bg-[#FFFCF5] dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-xl px-3 py-2 shadow-lg text-xs">
       <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">{label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color }} className="font-medium">
@@ -52,7 +52,7 @@ const ConfidenceBadge = ({ confidence, isEnglish }) => {
 };
 
 const KpiCard = ({ label, value, sub, border, icon, valueColor, loading }) => (
-  <div className={`bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] border-l-4 ${border} rounded-2xl px-4 py-3`}>
+  <div className={`bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] border-l-4 ${border} rounded-2xl px-4 py-3`}>
     <div className="flex items-center justify-between">
       <div className="flex-1 min-w-0">
         <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">{label}</p>
@@ -74,7 +74,7 @@ const LockedFeaturePlaceholder = ({ featureName, description }) => {
   const isEnglish = language === 'en';
 
   return (
-    <div className="rounded-xl bg-white p-12 shadow-sm dark:bg-[#191d25] relative overflow-hidden flex flex-col items-center justify-center text-center min-h-[350px] border border-gray-100 dark:border-gray-800">
+    <div className="rounded-xl bg-[#FFFCF5] p-12 shadow-sm dark:bg-[#191d25] relative overflow-hidden flex flex-col items-center justify-center text-center min-h-[350px] border border-gray-100 dark:border-gray-800">
       <div className="absolute inset-0 bg-white/40 dark:bg-[#191d25]/50 backdrop-blur-[1px] z-0" />
       <div className="relative z-10 flex flex-col items-center max-w-md">
         <div className="h-16 w-16 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-500 flex items-center justify-center mb-4 shadow-sm animate-bounce">
@@ -351,7 +351,7 @@ const Statistics = () => {
     { key: 'daily',     label: isEnglish ? 'Daily' : 'Theo ngày',   icon: <FiCalendar size={13}/> },
   ];
 
-  const TAB_ACTIVE = 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-sm';
+  const TAB_ACTIVE = 'bg-gray-900 dark:bg-[#FFFCF5] text-white dark:text-gray-900 shadow-sm';
   useEffect(() => {
     monthBundleCacheRef.current.clear();
   }, [user?.id, transactionRevision]);
@@ -359,10 +359,45 @@ const Statistics = () => {
 
   // ── Overview tab ─────────────────────────────────────────────────────────
   const OverviewTab = () => {
-    const pieData = catStats.filter(c => c.totalExpense > 0).slice(0, 8).map((c, i) => ({
-      name: c.category, value: c.totalExpense, fill: COLORS[i % COLORS.length]
-    }));
-    const topExpCats = [...catStats].sort((a, b) => b.totalExpense - a.totalExpense).slice(0, 6);
+    const sortedExpenses = [...catStats]
+      .filter(c => c.totalExpense > 0)
+      .sort((a, b) => b.totalExpense - a.totalExpense);
+
+    let pieData = [];
+    let topExpCats = [];
+
+    if (sortedExpenses.length <= 6) {
+      pieData = sortedExpenses.map((c, i) => ({
+        name: c.category, value: c.totalExpense, fill: COLORS[i % COLORS.length]
+      }));
+      topExpCats = sortedExpenses;
+    } else {
+      const top5 = sortedExpenses.slice(0, 5);
+      const othersVal = sortedExpenses.slice(5).reduce((sum, c) => sum + c.totalExpense, 0);
+      const othersCount = sortedExpenses.slice(5).reduce((sum, c) => sum + c.count, 0);
+
+      pieData = [
+        ...top5.map((c, i) => ({
+          name: c.category, value: c.totalExpense, fill: COLORS[i % COLORS.length]
+        })),
+        {
+          name: isEnglish ? 'Others' : 'Khác',
+          value: othersVal,
+          fill: '#94a3b8'
+        }
+      ];
+
+      topExpCats = [
+        ...top5,
+        {
+          category: isEnglish ? 'Others' : 'Khác',
+          totalExpense: othersVal,
+          totalIncome: 0,
+          count: othersCount
+        }
+      ];
+    }
+
     const maxExp = topExpCats[0]?.totalExpense || 1;
     const overviewIncome = monthly?.totalIncome || 0;
     const overviewExpense = monthly?.totalExpense || 0;
@@ -371,7 +406,7 @@ const Statistics = () => {
 
     return (
       <div className="space-y-5">
-        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-[#191d25]">
+        <div className="rounded-xl bg-[#FFFCF5] p-4 shadow-sm dark:bg-[#191d25]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Period Overview' : 'Tổng quan theo kỳ'}</h3>
@@ -383,25 +418,25 @@ const Statistics = () => {
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2 items-center w-full overflow-hidden">
-            <div className="flex items-center bg-[#f4f7fb] dark:bg-[#222935] p-1 rounded-xl gap-0.5 overflow-x-auto max-w-full scrollbar-hide flex-nowrap">
+            <div className="flex items-center bg-[#F3EBD8] dark:bg-[#222935] p-1 rounded-xl gap-0.5 overflow-x-auto max-w-full scrollbar-hide flex-nowrap">
               {Array.from({length: 12}, (_, i) => i + 1).map(m => (
                 <button key={m}
                   onClick={() => setSelectedMonth(m)}
                   className={`w-9 h-7 rounded-lg text-xs font-semibold flex-shrink-0 transition-all ${
                     selectedMonth === m
-                      ? 'bg-white dark:bg-[#303746] text-[#1f2733] dark:text-[#f1f4f8] shadow-sm'
+                      ? 'bg-[#FFFCF5] dark:bg-[#303746] text-[#1f2733] dark:text-[#f1f4f8] shadow-sm'
                       : 'text-[#7f8795] dark:text-[#9ba3b2] hover:text-[#2d3645] dark:hover:text-[#e5eaf1]'
                   }`}
                 >{isEnglish ? `M${m}` : `T${m}`}</button>
               ))}
             </div>
-            <div className="flex items-center bg-[#f4f7fb] dark:bg-[#222935] p-1 rounded-xl gap-0.5 flex-shrink-0">
+            <div className="flex items-center bg-[#F3EBD8] dark:bg-[#222935] p-1 rounded-xl gap-0.5 flex-shrink-0">
               {[selectedYear - 1, selectedYear, selectedYear + 1].map(y => (
                 <button key={y}
                   onClick={() => setSelectedYear(y)}
                   className={`px-3 h-7 rounded-lg text-xs font-semibold transition-all ${
                     selectedYear === y
-                      ? 'bg-white dark:bg-[#303746] text-[#1f2733] dark:text-[#f1f4f8] shadow-sm'
+                      ? 'bg-[#FFFCF5] dark:bg-[#303746] text-[#1f2733] dark:text-[#f1f4f8] shadow-sm'
                       : 'text-[#7f8795] dark:text-[#9ba3b2] hover:text-[#2d3645] dark:hover:text-[#e5eaf1]'
                   }`}
                 >{y}</button>
@@ -411,28 +446,28 @@ const Statistics = () => {
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
             <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Income' : 'Thu nhập'}</p>
             <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#159b63] dark:text-[#58d49f] truncate">{fmt(overviewIncome)}</p>
           </div>
-          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
             <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Expense' : 'Chi tiêu'}</p>
             <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f] truncate">{fmt(overviewExpense)}</p>
           </div>
-          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
             <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Net savings' : 'Tiết kiệm ròng'}</p>
             <p className={`mt-2 text-sm sm:text-xl md:text-2xl font-black truncate ${overviewSaving >= 0 ? 'text-[#2e67da] dark:text-[#8eb2ff]' : 'text-[#c0701c] dark:text-[#f2ba76]'}`}>
               {fmt(overviewSaving)}
             </p>
           </div>
-          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
             <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Transactions' : 'Giao dịch'}</p>
             <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#7a43db] dark:text-[#bd97ff] truncate">{monthly?.totalTransactions ?? 0}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-blue-500"/>
               <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Expense Share by Category' : 'Tỷ lệ chi tiêu theo danh mục'}</h3>
@@ -440,7 +475,7 @@ const Statistics = () => {
             {pieData.length > 0 ? (
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({name, percent}) => isMobile ? `${(percent*100).toFixed(0)}%` : `${name} ${(percent*100).toFixed(0)}%`} labelLine={false} fontSize={10}>
+                  <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({name, percent}) => (!percent || percent < 0.03) ? null : (isMobile ? `${(percent*100).toFixed(0)}%` : `${name} ${(percent*100).toFixed(0)}%`)} labelLine={false} fontSize={10}>
                     {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]}/>)}
                   </Pie>
                   <Tooltip content={<ChartTip fmt={fmt}/>}/>
@@ -451,7 +486,7 @@ const Statistics = () => {
             )}
           </div>
 
-          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-red-500"/>
               <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Top Expense Categories' : 'Top danh mục chi tiêu'}</h3>
@@ -475,7 +510,7 @@ const Statistics = () => {
         </div>
 
         {catStats.length > 0 && (
-          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-purple-500"/>
               <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Income/Expense by Category' : 'Thu/Chi theo danh mục'}</h3>
@@ -501,25 +536,25 @@ const Statistics = () => {
   const CompareTab = () => (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+        <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
           <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total income (6 months)' : 'Tổng thu (6 tháng)'}</p>
           <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#159b63] dark:text-[#58d49f] truncate">
             {fmt(compare.reduce((s,m)=>s+(m.totalIncome||0),0))}
           </p>
         </div>
-        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+        <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
           <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total expense (6 months)' : 'Tổng chi (6 tháng)'}</p>
           <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f] truncate">
             {fmt(compare.reduce((s,m)=>s+(m.totalExpense||0),0))}
           </p>
         </div>
-        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+        <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
           <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg income/month' : 'TB thu/tháng'}</p>
           <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff] truncate">
             {fmt(compare.length ? compare.reduce((s,m)=>s+(m.totalIncome||0),0)/compare.length : 0)}
           </p>
         </div>
-        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+        <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
           <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg expense/month' : 'TB chi/tháng'}</p>
           <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#c0701c] dark:text-[#f2ba76] truncate">
             {fmt(compare.length ? compare.reduce((s,m)=>s+(m.totalExpense||0),0)/compare.length : 0)}
@@ -527,7 +562,7 @@ const Statistics = () => {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+      <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-1 h-4 rounded-full bg-blue-500"/>
           <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Income vs Expense (Last 6 Months)' : 'So sánh thu/chi 6 tháng gần nhất'}</h3>
@@ -548,14 +583,14 @@ const Statistics = () => {
       </div>
 
       {compare.length > 0 && (
-        <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] overflow-hidden">
+        <div className="rounded-xl bg-[#FFFCF5] shadow-sm dark:bg-[#191d25] overflow-hidden">
           <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
             <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Monthly Details' : 'Chi tiết theo tháng'}</h3>
           </div>
           {/* Desktop Table View */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-xs">
-              <thead className="bg-[#f8f9fb] dark:bg-[#232936]">
+              <thead className="bg-[#FFFCF5] dark:bg-[#232936]">
                 <tr>
                   {[(isEnglish ? 'Month' : 'Tháng'),(isEnglish ? 'Income' : 'Thu nhập'),(isEnglish ? 'Expense' : 'Chi tiêu'),(isEnglish ? 'Savings' : 'Tiết kiệm'),(isEnglish ? 'Savings rate' : 'Tỷ lệ tiết kiệm'),(isEnglish ? 'Expense growth' : 'Tăng trưởng chi')].map(h => (
                     <th key={h} className="px-4 py-2.5 text-left font-semibold text-[#7a808c] dark:text-[#9fa7b4]">{h}</th>
@@ -569,7 +604,7 @@ const Statistics = () => {
                   const prev    = compare[i-1];
                   const growth  = prev?.totalExpense ? (((m.totalExpense - prev.totalExpense)/prev.totalExpense)*100).toFixed(1) : '—';
                   return (
-                    <tr key={i} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
+                    <tr key={i} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#F3EBD8] dark:hover:bg-[#202632] transition-colors">
                       <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">{isEnglish ? 'M' : 'T'}{m.month}/{m.year}</td>
                       <td className="px-4 py-2.5 text-emerald-600 dark:text-emerald-400 font-medium">{fmt(m.totalIncome)}</td>
                       <td className="px-4 py-2.5 text-red-600 dark:text-red-400 font-medium">{fmt(m.totalExpense)}</td>
@@ -593,7 +628,7 @@ const Statistics = () => {
               const prev    = compare[i-1];
               const growth  = prev?.totalExpense ? (((m.totalExpense - prev.totalExpense)/prev.totalExpense)*100).toFixed(1) : '—';
               return (
-                <div key={i} className="p-4 space-y-2 hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
+                <div key={i} className="p-4 space-y-2 hover:bg-[#F3EBD8] dark:hover:bg-[#202632] transition-colors">
                   <div className="flex items-center justify-between font-bold text-sm text-gray-800 dark:text-gray-200">
                     <span>{isEnglish ? 'Month' : 'Tháng'} {isEnglish ? 'M' : 'T'}{m.month}/{m.year}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${savings >= 0 ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-600' : 'bg-orange-50 dark:bg-orange-950/20 text-orange-600'}`}>
@@ -658,19 +693,19 @@ const Statistics = () => {
     return (
       <div className="space-y-5">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
             <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Expense forecast' : 'Dự báo chi tiêu'}</p>
             <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f] truncate">{fmt(f?.nextMonthExpense)}</p>
           </div>
-          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
             <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Income forecast' : 'Dự báo thu nhập'}</p>
             <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#159b63] dark:text-[#58d49f] truncate">{fmt(f?.nextMonthIncome)}</p>
           </div>
-          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
             <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Savings forecast' : 'Dự báo tiết kiệm'}</p>
             <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff] truncate">{fmt(f?.nextMonthSavings)}</p>
           </div>
-          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
             <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Model confidence' : 'Độ tin cậy mô hình'}</p>
             <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#7a43db] dark:text-[#bd97ff] truncate">{f?.confidencePercent !== undefined ? `${f.confidencePercent}%` : (confidenceMap[f?.confidence] || '—')}</p>
           </div>
@@ -693,18 +728,18 @@ const Statistics = () => {
                 </p>
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:min-w-[360px]">
-                <div className="rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-[#1c2230]">
+                <div className="rounded-lg bg-[#FFFCF5] px-3 py-2 shadow-sm dark:bg-[#1c2230]">
                   <p className="text-[11px] uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Time unit' : 'Đơn vị thời gian'}</p>
                   <p className="mt-1 text-sm font-semibold text-[#18202f] dark:text-[#eef3fb]">{isEnglish ? 'Monthly' : 'Theo tháng'}</p>
                 </div>
-                <div className="rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-[#1c2230]">
+                <div className="rounded-lg bg-[#FFFCF5] px-3 py-2 shadow-sm dark:bg-[#1c2230]">
                   <p className="text-[11px] uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Window' : 'Cửa sổ dữ liệu'}</p>
                   <p className="mt-1 text-sm font-semibold text-[#18202f] dark:text-[#eef3fb]">{forecastWindow} {isEnglish ? 'months' : 'tháng'}</p>
                 </div>
-                <div className="rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-[#1c2230]">
+                <div className="rounded-lg bg-[#FFFCF5] px-3 py-2 shadow-sm dark:bg-[#1c2230]">
                   <p className="text-[11px] uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Reference month' : 'Tháng tham chiếu'}</p>
                   <p className="mt-1 text-sm font-semibold text-[#18202f] dark:text-[#eef3fb]">{referenceLabel}</p>
-                                <div className="rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-[#1c2230]">
+                                <div className="rounded-lg bg-[#FFFCF5] px-3 py-2 shadow-sm dark:bg-[#1c2230]">
                                   <p className="text-[11px] uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Model accuracy' : 'Độ chính xác mô hình'}</p>
                                   <p className="mt-1 text-sm font-semibold text-[#003d2d] dark:text-[#5fb89d]">{f?.confidencePercent || 0}%</p>
                                 </div>
@@ -715,7 +750,7 @@ const Statistics = () => {
         )}
 
         {f && (
-          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <div className="w-1 h-4 rounded-full bg-purple-500"/>
@@ -757,14 +792,14 @@ const Statistics = () => {
         )}
 
         {catForecastList.length > 0 && (
-          <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] overflow-hidden">
+          <div className="rounded-xl bg-[#FFFCF5] shadow-sm dark:bg-[#191d25] overflow-hidden">
             <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
               <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Category Expense Forecast' : 'Dự báo chi tiêu theo danh mục'}</h3>
             </div>
             {/* Desktop Table View */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="bg-[#f8f9fb] dark:bg-[#232936]">
+                <thead className="bg-[#FFFCF5] dark:bg-[#232936]">
                   <tr>
                     {[(isEnglish ? 'Category' : 'Danh mục'),(isEnglish ? 'Average/month' : 'Trung bình/tháng'),(isEnglish ? 'Next month forecast' : 'Dự báo tháng tới'),(isEnglish ? 'Trend' : 'Xu hướng'),(isEnglish ? 'Confidence' : 'Độ tin cậy')].map(h => (
                       <th key={h} className="px-4 py-2.5 text-left font-semibold text-[#7a808c] dark:text-[#9fa7b4]">{h}</th>
@@ -773,7 +808,7 @@ const Statistics = () => {
                 </thead>
                 <tbody>
                   {catForecastList.map(([cat, d]) => (
-                    <tr key={cat} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
+                    <tr key={cat} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#F3EBD8] dark:hover:bg-[#202632] transition-colors">
                       <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">{cat}</td>
                       <td className="px-4 py-2.5 text-gray-600 dark:text-gray-300">{fmt(d.average)}</td>
                       <td className="px-4 py-2.5 font-bold text-red-600 dark:text-red-400">{fmt(d.forecast)}</td>
@@ -788,7 +823,7 @@ const Statistics = () => {
             {/* Mobile Card View */}
             <div className="block md:hidden divide-y divide-[#eef1f6] dark:divide-[#2a303b]">
               {catForecastList.map(([cat, d]) => (
-                <div key={cat} className="p-4 space-y-2 hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
+                <div key={cat} className="p-4 space-y-2 hover:bg-[#F3EBD8] dark:hover:bg-[#202632] transition-colors">
                   <div className="flex items-center justify-between font-bold text-sm text-gray-800 dark:text-gray-200">
                     <span>{cat}</span>
                     <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-950/20 text-red-600">
@@ -825,26 +860,26 @@ const Statistics = () => {
     return (
       <div className="space-y-5">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
             <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg income/month' : 'TB Thu/tháng'}</p>
             <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#159b63] dark:text-[#58d49f] truncate">{fmt(t?.averageIncome)}</p>
           </div>
-          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
             <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg expense/month' : 'TB Chi/tháng'}</p>
             <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f] truncate">{fmt(t?.averageExpense)}</p>
           </div>
-          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
             <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Avg savings' : 'TB Tiết kiệm'}</p>
             <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff] truncate">{fmt(t?.averageSavings)}</p>
           </div>
-          <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
             <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Expense trend' : 'Xu hướng chi'}</p>
             <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#7a43db] dark:text-[#bd97ff] truncate">{t?.overallTrend || '—'}</p>
           </div>
         </div>
 
         {trendData.length > 0 && (
-          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-blue-500"/>
               <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? '12-Month Income/Expense/Savings Trend' : 'Xu hướng thu/chi/tiết kiệm 12 tháng'}</h3>
@@ -879,14 +914,14 @@ const Statistics = () => {
         )}
 
         {trendData.length > 0 && (
-          <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] overflow-hidden">
+          <div className="rounded-xl bg-[#FFFCF5] shadow-sm dark:bg-[#191d25] overflow-hidden">
             <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
               <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Monthly Details' : 'Chi tiết theo tháng'}</h3>
             </div>
             {/* Desktop Table View */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="bg-[#f8f9fb] dark:bg-[#232936]">
+                <thead className="bg-[#FFFCF5] dark:bg-[#232936]">
                   <tr>
                     {[(isEnglish ? 'Month' : 'Tháng'),(isEnglish ? 'Income' : 'Thu nhập'),(isEnglish ? 'Expense' : 'Chi tiêu'),(isEnglish ? 'Savings' : 'Tiết kiệm'),(isEnglish ? 'Savings rate' : 'Tỷ lệ tiết kiệm')].map(h => (
                       <th key={h} className="px-4 py-2.5 text-left font-semibold text-[#7a808c] dark:text-[#9fa7b4]">{h}</th>
@@ -897,7 +932,7 @@ const Statistics = () => {
                   {trendData.map((d, i) => {
                     const rate = d.income ? ((d.savings/d.income)*100) : 0;
                     return (
-                      <tr key={i} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
+                      <tr key={i} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#F3EBD8] dark:hover:bg-[#202632] transition-colors">
                         <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">{isEnglish ? 'M' : 'T'}{d.month}/{d.year}</td>
                         <td className="px-4 py-2.5 text-emerald-600 dark:text-emerald-400 font-medium">{fmt(d.income)}</td>
                         <td className="px-4 py-2.5 text-red-600 dark:text-red-400 font-medium">{fmt(d.expense)}</td>
@@ -922,7 +957,7 @@ const Statistics = () => {
               {trendData.map((d, i) => {
                 const rate = d.income ? ((d.savings/d.income)*100) : 0;
                 return (
-                  <div key={i} className="p-4 space-y-2 hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
+                  <div key={i} className="p-4 space-y-2 hover:bg-[#F3EBD8] dark:hover:bg-[#202632] transition-colors">
                     <div className="flex items-center justify-between font-bold text-sm text-gray-800 dark:text-gray-200">
                       <span>{isEnglish ? 'Month' : 'Tháng'} {isEnglish ? 'M' : 'T'}{d.month}/{d.year}</span>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${d.savings >= 0 ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-600' : 'bg-orange-50 dark:bg-orange-950/20 text-orange-600'}`}>
@@ -972,13 +1007,13 @@ const Statistics = () => {
     return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center bg-[#f4f7fb] dark:bg-[#222935] p-1 rounded-xl gap-0.5">
+        <div className="flex items-center bg-[#F3EBD8] dark:bg-[#222935] p-1 rounded-xl gap-0.5">
           {[7, 14, 30].map(d => (
             <button key={d}
               onClick={() => handleDailyRange(d)}
               className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 dailyRange === d
-                  ? 'bg-white dark:bg-[#303746] text-[#1f2733] dark:text-[#f1f4f8] shadow-sm'
+                  ? 'bg-[#FFFCF5] dark:bg-[#303746] text-[#1f2733] dark:text-[#f1f4f8] shadow-sm'
                   : 'text-[#7f8795] dark:text-[#9ba3b2] hover:text-[#2d3645] dark:hover:text-[#e5eaf1]'
               }`}
             >{d} {isEnglish ? 'days' : 'ngày'}</button>
@@ -990,21 +1025,21 @@ const Statistics = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+        <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
           <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total income in period' : 'Tổng thu giai đoạn'}</p>
           <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#159b63] dark:text-[#58d49f] truncate">{fmt(dailyIncomeTotal)}</p>
         </div>
-        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+        <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
           <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Total expense in period' : 'Tổng chi giai đoạn'}</p>
           <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f] truncate">{fmt(dailyExpenseTotal)}</p>
         </div>
-        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+        <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
           <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Net balance' : 'Cân bằng ròng'}</p>
           <p className={`mt-2 text-sm sm:text-xl md:text-2xl font-black truncate ${dailyIncomeTotal - dailyExpenseTotal >= 0 ? 'text-[#2e67da] dark:text-[#8eb2ff]' : 'text-[#c0701c] dark:text-[#f2ba76]'}`}>
             {fmt(dailyIncomeTotal - dailyExpenseTotal)}
           </p>
         </div>
-        <div className="rounded-xl bg-white p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
+        <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
           <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Transactions count' : 'Số giao dịch'}</p>
           <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#7a43db] dark:text-[#bd97ff] truncate">{dailyTxTotal}</p>
         </div>
@@ -1012,7 +1047,7 @@ const Statistics = () => {
 
       {daily.length > 0 ? (
         <>
-          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-emerald-500"/>
               <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Daily Income/Expense' : 'Thu/chi theo ngày'}</h3>
@@ -1033,14 +1068,14 @@ const Statistics = () => {
             </ResponsiveContainer>
           </div>
 
-          <div className="rounded-xl bg-white shadow-sm dark:bg-[#191d25] overflow-hidden">
+          <div className="rounded-xl bg-[#FFFCF5] shadow-sm dark:bg-[#191d25] overflow-hidden">
             <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
               <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Daily Details' : 'Chi tiết theo ngày'}</h3>
             </div>
             {/* Desktop Table View */}
             <div className="hidden md:block overflow-x-auto max-h-80 overflow-y-auto">
               <table className="w-full text-xs">
-                <thead className="bg-[#f8f9fb] dark:bg-[#232936] sticky top-0">
+                <thead className="bg-[#FFFCF5] dark:bg-[#232936] sticky top-0">
                   <tr>
                     {[(isEnglish ? 'Date' : 'Ngày'),(isEnglish ? 'Income' : 'Thu nhập'),(isEnglish ? 'Expense' : 'Chi tiêu'),(isEnglish ? 'Transactions' : 'Số giao dịch')].map(h => (
                       <th key={h} className="px-4 py-2.5 text-left font-semibold text-[#7a808c] dark:text-[#9fa7b4]">{h}</th>
@@ -1049,7 +1084,7 @@ const Statistics = () => {
                 </thead>
                 <tbody>
                   {[...daily].reverse().map((d, i) => (
-                    <tr key={i} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
+                    <tr key={i} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#F3EBD8] dark:hover:bg-[#202632] transition-colors">
                       <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">
                         {new Date(d.date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'})}
                       </td>
@@ -1065,7 +1100,7 @@ const Statistics = () => {
             {/* Mobile Card View */}
             <div className="block md:hidden max-h-80 overflow-y-auto divide-y divide-[#eef1f6] dark:divide-[#2a303b]">
               {[...daily].reverse().map((d, i) => (
-                <div key={i} className="p-4 space-y-2 hover:bg-[#f7f9fc] dark:hover:bg-[#202632] transition-colors">
+                <div key={i} className="p-4 space-y-2 hover:bg-[#F3EBD8] dark:hover:bg-[#202632] transition-colors">
                   <div className="flex items-center justify-between font-bold text-sm text-gray-800 dark:text-gray-200">
                     <span>{new Date(d.date).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
                     <span className="text-xs px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-[#be9cff]">
@@ -1139,26 +1174,26 @@ const Statistics = () => {
         </div>
 
         <div className="xl:col-span-4 space-y-4">
-          <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Key Metrics' : 'Chỉ số nổi bật'}</h3>
               <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">{periodLabel}</span>
             </div>
 
             <div className="space-y-3">
-              <div className="rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
+              <div className="rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#222935]">
                 <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{isEnglish ? 'Savings rate' : 'Tỷ lệ tiết kiệm'}</p>
                 <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">{savingRate.toFixed(1)}%</p>
               </div>
 
-              <div className="rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
+              <div className="rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#222935]">
                 <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{isEnglish ? 'Income - Expense' : 'Thu nhập - Chi tiêu'}</p>
                 <p className={`mt-1 text-sm font-semibold ${currentBalance >= 0 ? 'text-[#2f8e6f] dark:text-[#8dd5bd]' : 'text-[#b54747] dark:text-[#f3a5a5]'}`}>
                   {fmt(currentBalance)}
                 </p>
               </div>
 
-              <div className="rounded-xl bg-[#f1f4f8] p-3 dark:bg-[#222935]">
+              <div className="rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#222935]">
                 <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{isEnglish ? 'Top expense category' : 'Danh mục chi cao nhất'}</p>
                 <p className="mt-1 text-sm font-semibold text-[#1f2733] dark:text-[#e8edf4]">
                   {monthTopCategory ? `${monthTopCategory.category}: ${fmt(monthTopCategory.totalExpense)}` : (isEnglish ? 'No category data yet' : 'Chưa có dữ liệu danh mục')}
@@ -1170,7 +1205,7 @@ const Statistics = () => {
       </div>
 
       {/* Tabs */}
-      <div className="rounded-xl bg-white p-1.5 shadow-sm dark:bg-[#191d25]">
+      <div className="rounded-xl bg-[#FFFCF5] p-1.5 shadow-sm dark:bg-[#191d25]">
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
           {TABS.map(t => (
             <button key={t.key}
@@ -1178,7 +1213,7 @@ const Statistics = () => {
               className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
                 activeTab === t.key
                   ? TAB_ACTIVE
-                  : 'text-[#6f7480] dark:text-[#a4acba] hover:text-[#1f2733] dark:hover:text-[#e8edf4] hover:bg-[#f3f5f9] dark:hover:bg-[#242c38]'
+                  : 'text-[#6f7480] dark:text-[#a4acba] hover:text-[#1f2733] dark:hover:text-[#e8edf4] hover:bg-[#F3EBD8] dark:hover:bg-[#242c38]'
               }`}
             >
               {t.icon}

@@ -8,10 +8,10 @@ const About = () => {
   const isEnglish = language === 'en';
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 antialiased">
+    <div className="min-h-screen bg-[#FFFCF5] text-slate-900 antialiased">
 
       {/* ── Header ── */}
-      <header className="bg-white border-b border-slate-100 sticky top-0 z-40">
+      <header className="bg-[#FFFCF5] border-b border-slate-100 sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 h-16 flex items-center gap-4">
           <button
             onClick={() => navigate('/home')}
@@ -68,7 +68,7 @@ const About = () => {
               { icon: <FaChartLine size={20} />, title: isEnglish ? '1M+ Transactions' : '1M+ Giao dịch', desc: isEnglish ? 'Transactions recorded and analyzed' : 'Giao dịch được ghi nhận và phân tích', color: 'bg-violet-50 text-violet-600' },
               { icon: <FaShieldAlt size={20} />, title: isEnglish ? 'Bank-grade security' : 'Bảo mật tuyệt đối', desc: isEnglish ? '256-bit SSL encrypted data' : 'Dữ liệu mã hóa 256-bit SSL tiêu chuẩn ngân hàng', color: 'bg-amber-50 text-amber-600' },
             ].map((item, i) => (
-              <div key={i} className="bg-white border border-slate-100 rounded-2xl p-5 hover:shadow-md transition-shadow">
+              <div key={i} className="bg-[#FFFCF5] border border-slate-100 rounded-2xl p-5 hover:shadow-md transition-shadow">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${item.color}`}>
                   {item.icon}
                 </div>
@@ -81,7 +81,7 @@ const About = () => {
       </section>
 
       {/* ── Values ── */}
-      <section className="py-16 px-5 sm:px-8 bg-slate-50">
+      <section className="py-16 px-5 sm:px-8 bg-[#F7F1E4]">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest">{isEnglish ? 'Core values' : 'Giá trị cốt lõi'}</span>
@@ -93,7 +93,7 @@ const About = () => {
               { title: isEnglish ? 'Transparent' : 'Minh bạch', desc: isEnglish ? 'Your data is yours. We never sell or share personal information.' : 'Dữ liệu của bạn là của bạn. Chúng tôi không bán hay chia sẻ thông tin cá nhân.', emoji: '🔍' },
               { title: isEnglish ? 'Reliable' : 'Tin cậy', desc: isEnglish ? 'System runs 24/7 with high stability and auto backup.' : 'Hệ thống hoạt động 24/7 với độ ổn định cao và sao lưu dữ liệu tự động.', emoji: '🛡️' },
             ].map((v, i) => (
-              <div key={i} className="bg-white rounded-2xl p-6 border border-slate-100 hover:border-emerald-200 hover:shadow-md transition-all">
+              <div key={i} className="bg-[#FFFCF5] rounded-2xl p-6 border border-slate-100 hover:border-emerald-200 hover:shadow-md transition-all">
                 <div className="text-3xl mb-4">{v.emoji}</div>
                 <h3 className="text-base font-bold text-slate-800 mb-2">{v.title}</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">{v.desc}</p>
@@ -133,7 +133,7 @@ const About = () => {
           <p className="text-emerald-100 mb-6 text-sm">{isEnglish ? 'Free, no credit card required.' : 'Miễn phí, không cần thẻ tín dụng.'}</p>
           <button
             onClick={() => navigate('/register')}
-            className="inline-flex items-center gap-2 px-8 py-3 bg-white text-emerald-700 font-bold rounded-xl hover:bg-emerald-50 transition shadow-lg text-sm"
+            className="inline-flex items-center gap-2 px-8 py-3 bg-[#FFFCF5] text-emerald-700 font-bold rounded-xl hover:bg-emerald-50 transition shadow-lg text-sm"
           >
             {isEnglish ? 'Sign up for free' : 'Đăng ký miễn phí'}
           </button>

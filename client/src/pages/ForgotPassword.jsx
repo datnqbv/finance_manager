@@ -107,14 +107,14 @@ const ForgotPassword = () => {
         <div className="mb-4 flex flex-wrap gap-3">
           <button
             onClick={() => navigate('/home')}
-            className="inline-flex items-center gap-2 rounded-full border border-[#bfd2c2] bg-white/60 px-4 py-2 text-sm font-semibold text-[#4b5f4f] transition hover:bg-white"
+            className="inline-flex items-center gap-2 rounded-full border border-[#bfd2c2] bg-white/60 px-4 py-2 text-sm font-semibold text-[#4b5f4f] transition hover:bg-[#FFFCF5]"
           >
             <FiArrowLeft className="text-base" />
             {isEnglish ? 'Back to home' : 'Quay lại trang chủ'}
           </button>
           <Link
             to="/login"
-            className="inline-flex items-center gap-2 rounded-full border border-[#bfd2c2] bg-white/60 px-4 py-2 text-sm font-semibold text-[#4b5f4f] transition hover:bg-white"
+            className="inline-flex items-center gap-2 rounded-full border border-[#bfd2c2] bg-white/60 px-4 py-2 text-sm font-semibold text-[#4b5f4f] transition hover:bg-[#FFFCF5]"
           >
             <FiArrowLeft className="text-base" />
             {isEnglish ? 'Back to login' : 'Về đăng nhập'}
@@ -123,7 +123,7 @@ const ForgotPassword = () => {
 
         <div className="grid min-h-[640px] overflow-hidden rounded-[22px] border border-[#c8d8c9] bg-[#e2ece2] lg:grid-cols-[360px_1fr]">
           <section className="flex items-center justify-center bg-[#f4f8f3] p-6 md:p-8">
-            <div className="login-form-card w-full max-w-[300px] rounded-[24px] bg-white px-6 py-8 shadow-[0_12px_28px_rgba(45,45,45,0.08)]">
+            <div className="login-form-card w-full max-w-[300px] rounded-[24px] bg-[#FFFCF5] px-6 py-8 shadow-[0_12px_28px_rgba(45,45,45,0.08)]">
               <p className="mb-8 text-sm font-extrabold uppercase tracking-[0.2em] text-[#273628]">DatPT</p>
 
               <div className="mb-6">

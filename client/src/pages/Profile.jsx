@@ -126,7 +126,7 @@ const Profile = () => {
         <div className="space-y-4">
 
           {/* Avatar card */}
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 flex flex-col items-center text-center">
+          <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5 flex flex-col items-center text-center">
             <div className="relative mb-4">
               {avatarPreview ? (
                 <img src={avatarPreview} alt={user?.name}
@@ -137,7 +137,7 @@ const Profile = () => {
                 </div>
               )}
               <label htmlFor="avatar-upload"
-                className="absolute -bottom-1 -right-1 w-7 h-7 bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#333333] rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-[#333333] transition-colors shadow-sm">
+                className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#FFFCF5] dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#333333] rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-[#333333] transition-colors shadow-sm">
                 <FiCamera size={13} className="text-gray-600 dark:text-gray-300"/>
               </label>
               <input id="avatar-upload" type="file" accept="image/*" onChange={handleAvatarChange} className="hidden"/>
@@ -165,7 +165,7 @@ const Profile = () => {
           </div>
 
           {/* Quick info */}
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
+          <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-4 rounded-full bg-blue-500"/>
               <h3 className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide">{isEnglish ? 'Account Information' : 'Thông tin tài khoản'}</h3>
@@ -187,7 +187,7 @@ const Profile = () => {
         <div className="lg:col-span-2 space-y-4">
 
           {/* Edit profile form */}
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5">
+          <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-5">
               <div className="w-1 h-4 rounded-full bg-emerald-500"/>
               <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">{isEnglish ? 'Edit Profile' : 'Chỉnh sửa thông tin'}</h3>
@@ -248,7 +248,7 @@ const Profile = () => {
           </div>
 
           {/* Change password form */}
-          <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5">
+          <div className="bg-[#FFFCF5] dark:bg-[#111111] border border-gray-100 dark:border-[#222222] rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-5">
               <div className="w-1 h-4 rounded-full bg-purple-500"/>
               <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">{isEnglish ? 'Change Password' : 'Đổi mật khẩu'}</h3>

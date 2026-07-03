@@ -100,7 +100,7 @@ const AdminVisits = () => {
       </div>
 
       {/* Filter Form Card */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-[#171a21] border border-gray-150 dark:border-gray-800">
+      <div className="rounded-2xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#171a21] border border-gray-150 dark:border-gray-800">
         <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-[2fr_1.2fr_1.2fr] gap-4 items-end">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
@@ -114,7 +114,7 @@ const AdminVisits = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={isEnglish ? 'Search visitor, email, OS...' : 'Tìm khách truy cập, email, OS...'}
-                className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-[#d8dde5] dark:border-gray-800 dark:bg-gray-850 dark:text-white outline-none focus:border-[#6aa386] transition-colors"
+                className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-[#d8dde5] bg-[#FFFCF5] dark:border-gray-800 dark:bg-gray-850 dark:text-white outline-none focus:border-[#6aa386] transition-colors"
               />
             </div>
           </div>
@@ -127,7 +127,7 @@ const AdminVisits = () => {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-xl border border-[#d8dde5] dark:border-gray-800 dark:bg-gray-850 dark:text-white outline-none focus:border-[#6aa386] transition-colors"
+              className="w-full px-3 py-2 text-sm rounded-xl border border-[#d8dde5] bg-[#FFFCF5] dark:border-gray-800 dark:bg-gray-850 dark:text-white outline-none focus:border-[#6aa386] transition-colors"
             />
           </div>
 
@@ -139,17 +139,17 @@ const AdminVisits = () => {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-xl border border-[#d8dde5] dark:border-gray-800 dark:bg-gray-850 dark:text-white outline-none focus:border-[#6aa386] transition-colors"
+              className="w-full px-3 py-2 text-sm rounded-xl border border-[#d8dde5] bg-[#FFFCF5] dark:border-gray-800 dark:bg-gray-850 dark:text-white outline-none focus:border-[#6aa386] transition-colors"
             />
           </div>
         </form>
       </div>
 
       {/* Main Table Card */}
-      <div className="rounded-2xl bg-white shadow-sm dark:bg-[#171a21] overflow-hidden border border-gray-150 dark:border-gray-800">
+      <div className="rounded-2xl bg-[#FFFCF5] shadow-sm dark:bg-[#171a21] overflow-hidden border border-gray-150 dark:border-gray-800">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-[#f8fafc] text-xs font-semibold text-[#5f6e82] dark:bg-[#1b202a] dark:text-gray-400 uppercase tracking-wider">
+            <thead className="bg-[#FFFCF5] text-xs font-semibold text-[#5f6e82] dark:bg-[#1b202a] dark:text-gray-400 uppercase tracking-wider">
               <tr>
                 <th className="px-5 py-3.5 w-16 text-center">{isEnglish ? 'STT' : 'STT'}</th>
                 <th className="px-5 py-3.5">{isEnglish ? 'Date' : 'Ngày'}</th>
@@ -176,7 +176,7 @@ const AdminVisits = () => {
                 items.map((item, index) => {
                   const globalIndex = (pagination.page - 1) * pagination.limit + index + 1;
                   return (
-                    <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-[#1c2230]/30 transition-colors">
+                    <tr key={item.id} className="hover:bg-[#FFFCF5]/50 dark:hover:bg-[#1c2230]/30 transition-colors">
                       <td className="px-5 py-4 text-center text-gray-400 font-medium">{globalIndex}</td>
                       <td className="px-5 py-4 font-semibold text-gray-900 dark:text-white">{formatDate(item.visitedAt)}</td>
                       <td className="px-5 py-4 text-gray-500 dark:text-gray-400">

@@ -164,7 +164,7 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-modal-fade">
-      <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-[#191d25] border border-gray-100 dark:border-gray-800 transition-all transform scale-100 max-h-[90vh] overflow-y-auto animate-modal-scale">
+      <div className="w-full max-w-2xl rounded-2xl bg-[#FFFCF5] p-6 shadow-2xl dark:bg-[#191d25] border border-gray-100 dark:border-gray-800 transition-all transform scale-100 max-h-[90vh] overflow-y-auto animate-modal-scale">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -350,7 +350,7 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
                   : `Để đạt mục tiêu tích lũy ${formatValue(targetVal)} trong ${daysRemaining} ngày (khoảng ${monthsRemaining} tháng / ${weeksRemaining} tuần):`}
               </p>
               <div className="grid grid-cols-3 gap-3 pt-1">
-                <div className="bg-white dark:bg-gray-800/40 p-2.5 rounded-lg border border-amber-200/40 dark:border-amber-500/10">
+                <div className="bg-[#FFFCF5] dark:bg-gray-800/40 p-2.5 rounded-lg border border-amber-200/40 dark:border-amber-500/10">
                   <p className="text-[10px] text-gray-500 dark:text-gray-450 uppercase tracking-wide">
                     {isEnglish ? 'Daily' : 'Mỗi ngày'}
                   </p>
@@ -358,7 +358,7 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
                     {formatValue(dailySavingRate)}
                   </p>
                 </div>
-                <div className="bg-white dark:bg-gray-800/40 p-2.5 rounded-lg border border-amber-200/40 dark:border-amber-500/10">
+                <div className="bg-[#FFFCF5] dark:bg-gray-800/40 p-2.5 rounded-lg border border-amber-200/40 dark:border-amber-500/10">
                   <p className="text-[10px] text-gray-500 dark:text-gray-450 uppercase tracking-wide">
                     {isEnglish ? 'Weekly' : 'Mỗi tuần'}
                   </p>
@@ -366,7 +366,7 @@ const GoalModal = ({ isOpen, onClose, onSubmit, goal = null }) => {
                     {formatValue(weeklySavingRate)}
                   </p>
                 </div>
-                <div className="bg-white dark:bg-gray-800/40 p-2.5 rounded-lg border border-amber-200/40 dark:border-amber-500/10">
+                <div className="bg-[#FFFCF5] dark:bg-gray-800/40 p-2.5 rounded-lg border border-amber-200/40 dark:border-amber-500/10">
                   <p className="text-[10px] text-gray-500 dark:text-gray-450 uppercase tracking-wide">
                     {isEnglish ? 'Monthly' : 'Mỗi tháng'}
                   </p>

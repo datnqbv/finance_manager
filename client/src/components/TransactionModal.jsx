@@ -678,8 +678,8 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-modal-fade">
-      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-100 dark:border-gray-800 bg-white shadow-2xl dark:bg-[#191d25] transition-all transform scale-100 animate-modal-scale">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4 dark:border-gray-800 dark:bg-[#191d25]">
+      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-100 dark:border-gray-800 bg-[#FFFCF5] shadow-2xl dark:bg-[#191d25] transition-all transform scale-100 animate-modal-scale">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-[#FFFCF5] px-6 py-4 dark:border-gray-800 dark:bg-[#191d25]">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             {transaction 
               ? (isEnglish ? 'Edit Transaction' : 'Chỉnh sửa giao dịch') 
@@ -710,7 +710,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                   }
                 }}
                 placeholder={isEnglish ? 'e.g., 30k coffee, 2m market...' : 'VD: 30k cafe, 2tr đi chợ...'}
-                className="input w-full bg-white dark:bg-[#191d25] text-sm"
+                className="input w-full bg-[#FFFCF5] dark:bg-[#191d25] text-sm"
               />
               <button type="button" onClick={handleSmartParse} className="btn btn-primary px-4">
                 {isEnglish ? 'Parse' : 'Phân tích'}
@@ -732,7 +732,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                 type="button" 
                 onClick={() => fileInputRef.current?.click()}
                 disabled={ocrLoading}
-                className={`text-[11px] flex items-center gap-1.5 py-1.5 px-3 bg-white dark:bg-[#232936] border border-emerald-200 dark:border-emerald-850 rounded-lg text-emerald-700 dark:text-[#b9e4d2] transition ${ocrLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-emerald-50 dark:hover:bg-emerald-500/10'}`}
+                className={`text-[11px] flex items-center gap-1.5 py-1.5 px-3 bg-[#FFFCF5] dark:bg-[#232936] border border-emerald-200 dark:border-emerald-850 rounded-lg text-emerald-700 dark:text-[#b9e4d2] transition ${ocrLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-emerald-50 dark:hover:bg-emerald-500/10'}`}
               >
                 <FiCamera /> {ocrLoading ? (isEnglish ? 'Scanning...' : 'Đang đọc...') : (isEnglish ? 'Upload receipt image' : 'Tải ảnh hóa đơn')}
               </button>
@@ -930,7 +930,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                     {isEnglish ? 'Number of People' : 'Số người chia'}
                   </label>
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center bg-white dark:bg-[#232936] border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+                    <div className="flex items-center bg-[#FFFCF5] dark:bg-[#232936] border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
                       <button
                         type="button"
                         onClick={() => setSplitPeople(p => Math.max(1, p - 1))}
@@ -959,7 +959,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                           className={`py-1.5 px-3 text-xs font-bold rounded-lg transition ${
                             splitPeople === num
                               ? 'bg-emerald-600 text-white shadow-sm'
-                              : 'bg-white dark:bg-[#232936] text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-700'
+                              : 'bg-[#FFFCF5] dark:bg-[#232936] text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-700'
                           }`}
                         >
                           {num}
@@ -969,7 +969,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                   </div>
                 </div>
 
-                <div className="p-3 bg-white dark:bg-[#1f242e] rounded-xl border border-emerald-100 dark:border-emerald-800/30 space-y-2">
+                <div className="p-3 bg-[#FFFCF5] dark:bg-[#1f242e] rounded-xl border border-emerald-100 dark:border-emerald-800/30 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
                       {isEnglish ? 'Your Share to Pay:' : 'Phần bạn phải trả:'}
@@ -1133,7 +1133,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
                     </button>
                   </div>
                 </div>
-                <div className="relative w-full h-32 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#191d25] flex items-center justify-center">
+                <div className="relative w-full h-32 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 bg-[#FFFCF5] dark:bg-[#191d25] flex items-center justify-center">
                   <img
                     src={previewImage}
                     alt="Receipt Preview"

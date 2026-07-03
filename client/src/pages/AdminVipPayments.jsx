@@ -170,7 +170,7 @@ const AdminVipPayments = () => {
       </div>
 
       {/* Control panel (Filters + Search) */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center rounded-2xl bg-white p-4 shadow-sm dark:bg-[#191d25] border border-gray-100 dark:border-gray-800">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center rounded-2xl bg-[#FFFCF5] p-4 shadow-sm dark:bg-[#191d25] border border-gray-100 dark:border-gray-800">
         
         {/* Search */}
         <div className="relative w-full sm:max-w-xs">
@@ -179,7 +179,7 @@ const AdminVipPayments = () => {
             placeholder={isEnglish ? 'Search code, name, email...' : 'Tìm mã, tên, email...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl text-sm border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-[#232936] dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full pl-9 pr-4 py-2 rounded-xl text-sm border border-gray-200 bg-[#FFFCF5] dark:border-gray-800 dark:bg-[#232936] dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
           />
           <FiSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         </div>
@@ -187,14 +187,14 @@ const AdminVipPayments = () => {
         {/* Status filters */}
         <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
           <FiFilter size={15} className="text-gray-400 flex-shrink-0" />
-          <div className="flex rounded-xl bg-gray-100 dark:bg-gray-800/40 p-0.5 shrink-0">
+          <div className="flex rounded-xl bg-[#F3EBD8] dark:bg-gray-800/40 p-0.5 shrink-0">
             {['all', 'pending', 'completed', 'cancelled'].map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-bold capitalize transition-colors
                   ${statusFilter === status
-                    ? 'bg-white text-gray-950 dark:bg-[#22252d] dark:text-white shadow-sm'
+                    ? 'bg-[#FFFCF5] text-gray-950 dark:bg-[#22252d] dark:text-white shadow-sm'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                   }`}
               >
@@ -206,7 +206,7 @@ const AdminVipPayments = () => {
       </div>
 
       {/* Orders Table List */}
-      <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-[#191d25] border border-gray-100 dark:border-gray-800 overflow-hidden">
+      <div className="rounded-2xl bg-[#FFFCF5] p-6 shadow-sm dark:bg-[#191d25] border border-gray-100 dark:border-gray-800 overflow-hidden">
         {loading ? (
           <div className="text-center py-10 text-sm text-gray-500">
             {isEnglish ? 'Loading payments log...' : 'Đang tải lịch sử giao dịch...'}
@@ -227,7 +227,7 @@ const AdminVipPayments = () => {
               </thead>
               <tbody>
                 {paginatedOrders.map((order) => (
-                  <tr key={order.id} className="border-b border-gray-50 dark:border-gray-800/40 hover:bg-gray-50/50 dark:hover:bg-gray-800/5 transition-colors">
+                  <tr key={order.id} className="border-b border-gray-50 dark:border-gray-800/40 hover:bg-[#FFFCF5]/50 dark:hover:bg-gray-800/5 transition-colors">
                     <td className="py-3.5 px-4 text-gray-500 dark:text-gray-400">
                       <span className="flex items-center gap-1.5">
                         <FiCalendar size={13} />
@@ -242,7 +242,7 @@ const AdminVipPayments = () => {
                     </td>
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-850 flex items-center justify-center text-gray-500">
+                        <div className="h-8 w-8 rounded-full bg-[#F3EBD8] dark:bg-gray-850 flex items-center justify-center text-gray-500">
                           <FiUser size={14} />
                         </div>
                         <div>

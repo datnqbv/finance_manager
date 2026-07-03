@@ -24,7 +24,7 @@ import {
 } from 'recharts';
 
 const StatCard = ({ label, value, icon, hint }) => (
-  <div className="rounded-2xl border border-[#e2e6ee] bg-white p-5 shadow-sm dark:border-[#2a2f3a] dark:bg-[#171a21]">
+  <div className="rounded-2xl border border-[#e2e6ee] bg-[#FFFCF5] p-5 shadow-sm dark:border-[#2a2f3a] dark:bg-[#171a21]">
     <div className="flex items-start justify-between gap-4">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#718096] dark:text-[#98a2b3]">{label}</p>
@@ -41,7 +41,7 @@ const StatCard = ({ label, value, icon, hint }) => (
 const ChartTip = ({ active, payload, fmt }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-xl px-3 py-2 shadow-lg text-xs">
+    <div className="bg-[#FFFCF5] dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-xl px-3 py-2 shadow-lg text-xs">
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color }} className="font-semibold">
           {p.name}: {fmt ? fmt(p.value) : p.value}
@@ -101,7 +101,7 @@ const AdminDashboard = () => {
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border border-dashed border-[#d6dde6] bg-white p-6 text-sm text-[#718096] dark:border-[#2a2f3a] dark:bg-[#171a21] animate-pulse">
+        <div className="rounded-2xl border border-dashed border-[#d6dde6] bg-[#FFFCF5] p-6 text-sm text-[#718096] dark:border-[#2a2f3a] dark:bg-[#171a21] animate-pulse">
           {isEnglish ? 'Loading admin data...' : 'Đang tải dữ liệu admin...'}
         </div>
       ) : (
@@ -117,7 +117,7 @@ const AdminDashboard = () => {
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
             
             {/* VIP Revenue trends chart */}
-            <div className="lg:col-span-8 rounded-2xl border border-[#e2e6ee] bg-white p-5 shadow-sm dark:border-[#2a2f3a] dark:bg-[#171a21] flex flex-col justify-between">
+            <div className="lg:col-span-8 rounded-2xl border border-[#e2e6ee] bg-[#FFFCF5] p-5 shadow-sm dark:border-[#2a2f3a] dark:bg-[#171a21] flex flex-col justify-between">
               <div className="mb-3 flex items-center gap-2">
                 <div className="w-1.5 h-5 rounded-full bg-emerald-500"/>
                 <h3 className="text-lg font-bold text-[#102a20] dark:text-white">
@@ -144,7 +144,7 @@ const AdminDashboard = () => {
 
             {/* Contacts & notes */}
             <div className="lg:col-span-4 space-y-4">
-              <div className="rounded-2xl border border-[#e2e6ee] bg-white p-5 shadow-sm dark:border-[#2a2f3a] dark:bg-[#171a21]">
+              <div className="rounded-2xl border border-[#e2e6ee] bg-[#FFFCF5] p-5 shadow-sm dark:border-[#2a2f3a] dark:bg-[#171a21]">
                 <h3 className="text-lg font-bold text-[#102a20] dark:text-white">{isEnglish ? 'Support Requests' : 'Trạng thái liên hệ'}</h3>
                 <div className="mt-4 grid grid-cols-3 gap-2">
                   {[
@@ -160,7 +160,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[#e2e6ee] bg-white p-5 shadow-sm dark:border-[#2a2f3a] dark:bg-[#171a21]">
+              <div className="rounded-2xl border border-[#e2e6ee] bg-[#FFFCF5] p-5 shadow-sm dark:border-[#2a2f3a] dark:bg-[#171a21]">
                 <h3 className="text-lg font-bold text-[#102a20] dark:text-white">{isEnglish ? 'System Alerts' : 'Lưu ý hệ thống'}</h3>
                 <p className="mt-2 text-xs leading-relaxed text-[#59667a] dark:text-[#97a3b6]">
                   {isEnglish
@@ -173,7 +173,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* Recent VIP transactions */}
-          <div className="rounded-2xl border border-[#e2e6ee] bg-white shadow-sm dark:border-[#2a2f3a] dark:bg-[#171a21] overflow-hidden">
+          <div className="rounded-2xl border border-[#e2e6ee] bg-[#FFFCF5] shadow-sm dark:border-[#2a2f3a] dark:bg-[#171a21] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#e2e6ee] dark:border-[#2a2f3a] flex items-center justify-between">
               <h3 className="text-lg font-bold text-[#102a20] dark:text-white flex items-center gap-2">
                 <FiCreditCard className="text-amber-500" />
@@ -185,7 +185,7 @@ const AdminDashboard = () => {
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="bg-[#f6f8fb] dark:bg-[#232936] text-left text-xs uppercase tracking-wide text-[#728095] dark:text-gray-400">
+                  <tr className="bg-[#FFFCF5] dark:bg-[#232936] text-left text-xs uppercase tracking-wide text-[#728095] dark:text-gray-400">
                     <th className="px-5 py-3">{isEnglish ? 'User' : 'Người dùng'}</th>
                     <th className="px-5 py-3">{isEnglish ? 'Transfer Code' : 'Mã chuyển khoản'}</th>
                     <th className="px-5 py-3">{isEnglish ? 'Duration' : 'Thời hạn'}</th>

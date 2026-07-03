@@ -106,8 +106,8 @@ const RecurringModal = ({ rule, onClose, isOpen, onSave }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-modal-fade">
-      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-100 dark:border-gray-800 bg-white shadow-2xl dark:bg-[#191d25] transition-all transform scale-100">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4 dark:border-gray-800 dark:bg-[#191d25]">
+      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-100 dark:border-gray-800 bg-[#FFFCF5] shadow-2xl dark:bg-[#191d25] transition-all transform scale-100">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-[#FFFCF5] px-6 py-4 dark:border-gray-800 dark:bg-[#191d25]">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             {rule 
               ? (isEnglish ? 'Configure Recurring Transaction' : 'Cấu hình giao dịch định kỳ') 

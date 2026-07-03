@@ -137,7 +137,7 @@ const RecurringTransactions = () => {
         </div>
         <button
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-[#004b38] shadow-sm hover:bg-[#e9f4f1] transition shrink-0"
+          className="inline-flex items-center gap-2 rounded-xl bg-[#FFFCF5] px-5 py-3 text-sm font-semibold text-[#004b38] shadow-sm hover:bg-[#e9f4f1] transition shrink-0"
         >
           <FiPlus size={16} />
           {isEnglish ? 'New Schedule' : 'Tạo lịch mới'}
@@ -145,10 +145,10 @@ const RecurringTransactions = () => {
       </div>
 
       {/* Main Container */}
-      <div className="rounded-2xl bg-white shadow-sm dark:bg-[#171a21] overflow-hidden border border-gray-150 dark:border-gray-800">
+      <div className="rounded-2xl bg-[#FFFCF5] shadow-sm dark:bg-[#171a21] overflow-hidden border border-gray-150 dark:border-gray-800">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-[#f8fafc] text-xs font-semibold text-[#5f6e82] dark:bg-[#1b202a] dark:text-gray-400 uppercase tracking-wider">
+            <thead className="bg-[#FFFCF5] text-xs font-semibold text-[#5f6e82] dark:bg-[#1b202a] dark:text-gray-400 uppercase tracking-wider">
               <tr>
                 <th className="px-5 py-3.5 w-16 text-center">STT</th>
                 <th className="px-5 py-3.5">{isEnglish ? 'Type' : 'Loại'}</th>

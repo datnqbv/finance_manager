@@ -228,22 +228,22 @@ const AdminUsers = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-[#171a21]"><div className="text-xs uppercase text-[#718096]">{isEnglish ? 'Users' : 'Người dùng'}</div><div className="mt-2 text-3xl font-black">{summary.user}</div></div>
-        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-[#171a21]"><div className="text-xs uppercase text-[#718096]">{isEnglish ? 'Admins' : 'Quản trị viên'}</div><div className="mt-2 text-3xl font-black">{summary.admin}</div></div>
+        <div className="rounded-2xl bg-[#FFFCF5] p-4 shadow-sm dark:bg-[#171a21]"><div className="text-xs uppercase text-[#718096]">{isEnglish ? 'Users' : 'Người dùng'}</div><div className="mt-2 text-3xl font-black">{summary.user}</div></div>
+        <div className="rounded-2xl bg-[#FFFCF5] p-4 shadow-sm dark:bg-[#171a21]"><div className="text-xs uppercase text-[#718096]">{isEnglish ? 'Admins' : 'Quản trị viên'}</div><div className="mt-2 text-3xl font-black">{summary.admin}</div></div>
       </div>
 
-      <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-[#171a21]">
+      <div className="rounded-2xl bg-[#FFFCF5] p-4 shadow-sm dark:bg-[#171a21]">
         <form onSubmit={handleSearch} className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px]">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={isEnglish ? 'Search by name or email...' : 'Tìm theo tên hoặc email...'}
-            className="rounded-xl border border-[#d8dde5] dark:border-gray-800 dark:bg-gray-850 dark:text-white px-3 py-2 text-sm outline-none focus:border-[#6aa386]"
+            className="rounded-xl border border-[#d8dde5] bg-[#FFFCF5] dark:border-gray-800 dark:bg-gray-850 dark:text-white px-3 py-2 text-sm outline-none focus:border-[#6aa386]"
           />
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="rounded-xl border border-[#d8dde5] dark:border-gray-800 dark:bg-gray-850 dark:text-white px-3 py-2 text-sm outline-none focus:border-[#6aa386]"
+            className="rounded-xl border border-[#d8dde5] bg-[#FFFCF5] dark:border-gray-800 dark:bg-gray-850 dark:text-white px-3 py-2 text-sm outline-none focus:border-[#6aa386]"
           >
             <option value="">{isEnglish ? 'All roles' : 'Tất cả vai trò'}</option>
             <option value="user">{isEnglish ? 'User' : 'Người dùng'}</option>
@@ -252,11 +252,11 @@ const AdminUsers = () => {
         </form>
       </div>
 
-      <div className="rounded-2xl bg-white shadow-sm dark:bg-[#171a21] overflow-hidden">
+      <div className="rounded-2xl bg-[#FFFCF5] shadow-sm dark:bg-[#171a21] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="bg-[#f6f8fb] dark:bg-[#232936] text-left text-xs uppercase tracking-wide text-[#728095] dark:text-gray-400">
+              <tr className="bg-[#FFFCF5] dark:bg-[#232936] text-left text-xs uppercase tracking-wide text-[#728095] dark:text-gray-400">
                 <th className="px-4 py-3">{isEnglish ? 'User' : 'Người dùng'}</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">{isEnglish ? 'Role' : 'Vai trò'}</th>
@@ -274,7 +274,7 @@ const AdminUsers = () => {
                 const isSelf = item.id === currentUser?.id;
                 const isVipActive = item.isVip && (!item.vipExpire || new Date(item.vipExpire) > new Date());
                 return (
-                  <tr key={item.id} className="border-t border-[#edf1f5] dark:border-gray-800 align-top hover:bg-gray-50/40 dark:hover:bg-gray-800/10">
+                  <tr key={item.id} className="border-t border-[#edf1f5] dark:border-gray-800 align-top hover:bg-[#FFFCF5]/40 dark:hover:bg-gray-800/10">
                     <td className="px-4 py-3">
                       <div className="font-bold text-[#1f2a38] dark:text-gray-200 flex items-center gap-1">
                         {item.name}
@@ -290,7 +290,7 @@ const AdminUsers = () => {
                         value={item.role}
                         disabled={isSelf || actionLoading}
                         onChange={(e) => handleRoleChange(item.id, e.target.value)}
-                        className="rounded-lg border border-[#d8dde5] dark:border-gray-700 dark:bg-gray-850 dark:text-white px-2 py-1 text-xs outline-none focus:border-[#6aa386] disabled:cursor-not-allowed disabled:bg-[#f2f4f8] dark:disabled:bg-gray-800"
+                        className="rounded-lg border border-[#d8dde5] bg-[#FFFCF5] dark:border-gray-700 dark:bg-gray-850 dark:text-white px-2 py-1 text-xs outline-none focus:border-[#6aa386] disabled:cursor-not-allowed disabled:bg-[#F3EBD8] dark:disabled:bg-gray-800"
                       >
                         <option value="user">{isEnglish ? 'User' : 'Người dùng'}</option>
                         <option value="admin">{isEnglish ? 'Admin' : 'Quản trị viên'}</option>
@@ -306,7 +306,7 @@ const AdminUsers = () => {
                           </p>
                         </div>
                       ) : (
-                        <span className="inline-block rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs text-gray-400 font-bold">{isEnglish ? 'Standard' : 'Thường'}</span>
+                        <span className="inline-block rounded-full bg-[#F3EBD8] dark:bg-gray-800 px-2.5 py-0.5 text-xs text-gray-400 font-bold">{isEnglish ? 'Standard' : 'Thường'}</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -396,18 +396,18 @@ const AdminUsers = () => {
       {/* Password Reset Modal */}
       {showPasswordModal && passwordTargetUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-[#151921] rounded-3xl w-full max-w-sm border border-gray-200 dark:border-gray-800 shadow-2xl overflow-hidden">
+          <div className="bg-[#FFFCF5] dark:bg-[#151921] rounded-3xl w-full max-w-sm border border-gray-200 dark:border-gray-800 shadow-2xl overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
               <h3 className="font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
                 <FiKey className="text-blue-500" />
                 {isEnglish ? 'Reset Password' : 'Đặt lại mật khẩu'}
               </h3>
-              <button onClick={() => { setShowPasswordModal(false); setPasswordTargetUser(null); }} className="p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
+              <button onClick={() => { setShowPasswordModal(false); setPasswordTargetUser(null); }} className="p-1 text-gray-400 hover:bg-[#F3EBD8] dark:hover:bg-gray-800 rounded-lg">
                 <FiX size={18} />
               </button>
             </div>
             <form onSubmit={handlePasswordResetSubmit} className="p-5 space-y-4">
-              <div className="bg-gray-50 dark:bg-[#1e2430] p-3 rounded-2xl border border-gray-100 dark:border-gray-800 text-xs">
+              <div className="bg-[#FFFCF5] dark:bg-[#1e2430] p-3 rounded-2xl border border-gray-100 dark:border-gray-800 text-xs">
                 <p className="text-gray-500 dark:text-gray-400">{isEnglish ? 'User Account:' : 'Tài khoản:'}</p>
                 <p className="font-bold text-gray-800 dark:text-gray-200 mt-0.5">{passwordTargetUser.name} ({passwordTargetUser.email})</p>
               </div>
@@ -427,7 +427,7 @@ const AdminUsers = () => {
                 <button type="submit" disabled={actionLoading} className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white py-2.5 text-xs font-bold transition">
                   {isEnglish ? 'Confirm Reset' : 'Đặt lại mật khẩu'}
                 </button>
-                <button type="button" onClick={() => { setShowPasswordModal(false); setPasswordTargetUser(null); }} className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 py-2.5 text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                <button type="button" onClick={() => { setShowPasswordModal(false); setPasswordTargetUser(null); }} className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 py-2.5 text-xs font-bold hover:bg-[#F3EBD8] dark:hover:bg-gray-800 transition">
                   {isEnglish ? 'Cancel' : 'Hủy'}
                 </button>
               </div>
@@ -439,18 +439,18 @@ const AdminUsers = () => {
       {/* VIP Override Modal */}
       {showVipModal && vipTargetUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-[#151921] rounded-3xl w-full max-w-sm border border-gray-200 dark:border-gray-800 shadow-2xl overflow-hidden">
+          <div className="bg-[#FFFCF5] dark:bg-[#151921] rounded-3xl w-full max-w-sm border border-gray-200 dark:border-gray-800 shadow-2xl overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
               <h3 className="font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
                 <FiAward className="text-amber-500" />
                 {isEnglish ? 'Manual VIP Override' : 'Điều chỉnh quyền VIP'}
               </h3>
-              <button onClick={() => { setShowVipModal(false); setVipTargetUser(null); }} className="p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
+              <button onClick={() => { setShowVipModal(false); setVipTargetUser(null); }} className="p-1 text-gray-400 hover:bg-[#F3EBD8] dark:hover:bg-gray-800 rounded-lg">
                 <FiX size={18} />
               </button>
             </div>
             <form onSubmit={handleVipOverrideSubmit} className="p-5 space-y-4">
-              <div className="bg-gray-50 dark:bg-[#1e2430] p-3 rounded-2xl border border-gray-100 dark:border-gray-800 text-xs">
+              <div className="bg-[#FFFCF5] dark:bg-[#1e2430] p-3 rounded-2xl border border-gray-100 dark:border-gray-800 text-xs">
                 <p className="text-gray-500 dark:text-gray-400">{isEnglish ? 'User Account:' : 'Tài khoản:'}</p>
                 <p className="font-bold text-gray-800 dark:text-gray-200 mt-0.5">{vipTargetUser.name} ({vipTargetUser.email})</p>
               </div>
@@ -494,7 +494,7 @@ const AdminUsers = () => {
                 <button type="submit" disabled={actionLoading} className="flex-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white py-2.5 text-xs font-bold transition">
                   {isEnglish ? 'Apply Changes' : 'Lưu thay đổi'}
                 </button>
-                <button type="button" onClick={() => { setShowVipModal(false); setVipTargetUser(null); }} className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 py-2.5 text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                <button type="button" onClick={() => { setShowVipModal(false); setVipTargetUser(null); }} className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 py-2.5 text-xs font-bold hover:bg-[#F3EBD8] dark:hover:bg-gray-800 transition">
                   {isEnglish ? 'Cancel' : 'Hủy'}
                 </button>
               </div>

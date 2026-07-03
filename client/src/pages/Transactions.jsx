@@ -339,7 +339,7 @@ const Transactions = () => {
               <button
                 onClick={() => switchViewMode('list')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${viewMode === 'list'
-                  ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
+                  ? 'bg-[#FFFCF5] dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                   }`}
               >
@@ -348,7 +348,7 @@ const Transactions = () => {
               <button
                 onClick={() => switchViewMode('calendar')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${viewMode === 'calendar'
-                  ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
+                  ? 'bg-[#FFFCF5] dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                   }`}
               >
@@ -420,15 +420,15 @@ const Transactions = () => {
       {/* ── LIST VIEW: Filters ── */}
       {viewMode === 'list' && (
         <div className="tx-area-summary grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="rounded-2xl border border-[#d5e3d6] dark:border-[#243126] bg-white/95 dark:bg-[#111111] p-4">
+          <div className="rounded-2xl border border-[#d5e3d6] dark:border-[#243126] bg-[#FFFCF5]/95 dark:bg-[#111111] p-4">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{isEnglish ? 'Income (current page)' : 'Thu nhập (trang hiện tại)'}</p>
             <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(pageIncome)}</p>
           </div>
-          <div className="rounded-2xl border border-[#d5e3d6] dark:border-[#243126] bg-white/95 dark:bg-[#111111] p-4">
+          <div className="rounded-2xl border border-[#d5e3d6] dark:border-[#243126] bg-[#FFFCF5]/95 dark:bg-[#111111] p-4">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{isEnglish ? 'Expense (current page)' : 'Chi tiêu (trang hiện tại)'}</p>
             <p className="text-lg font-bold text-red-600 dark:text-red-400">{formatCurrency(pageExpense)}</p>
           </div>
-          <div className="rounded-2xl border border-[#d5e3d6] dark:border-[#243126] bg-white/95 dark:bg-[#111111] p-4">
+          <div className="rounded-2xl border border-[#d5e3d6] dark:border-[#243126] bg-[#FFFCF5]/95 dark:bg-[#111111] p-4">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{isEnglish ? 'Balance (current page)' : 'Chênh lệch (trang hiện tại)'}</p>
             <p className={`text-lg font-bold ${pageBalance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
               {formatCurrency(pageBalance)}

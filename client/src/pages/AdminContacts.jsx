@@ -105,23 +105,23 @@ const AdminContacts = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-[#171a21]"><div className="text-xs uppercase text-[#718096]">{isEnglish ? 'New' : 'Mới'}</div><div className="mt-2 text-3xl font-black">{summary.new}</div></div>
-        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-[#171a21]"><div className="text-xs uppercase text-[#718096]">{isEnglish ? 'Read' : 'Đã đọc'}</div><div className="mt-2 text-3xl font-black">{summary.read}</div></div>
-        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-[#171a21]"><div className="text-xs uppercase text-[#718096]">{isEnglish ? 'Replied' : 'Đã phản hồi'}</div><div className="mt-2 text-3xl font-black">{summary.replied}</div></div>
+        <div className="rounded-2xl bg-[#FFFCF5] p-4 shadow-sm dark:bg-[#171a21]"><div className="text-xs uppercase text-[#718096]">{isEnglish ? 'New' : 'Mới'}</div><div className="mt-2 text-3xl font-black">{summary.new}</div></div>
+        <div className="rounded-2xl bg-[#FFFCF5] p-4 shadow-sm dark:bg-[#171a21]"><div className="text-xs uppercase text-[#718096]">{isEnglish ? 'Read' : 'Đã đọc'}</div><div className="mt-2 text-3xl font-black">{summary.read}</div></div>
+        <div className="rounded-2xl bg-[#FFFCF5] p-4 shadow-sm dark:bg-[#171a21]"><div className="text-xs uppercase text-[#718096]">{isEnglish ? 'Replied' : 'Đã phản hồi'}</div><div className="mt-2 text-3xl font-black">{summary.replied}</div></div>
       </div>
 
-      <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-[#171a21]">
+      <div className="rounded-2xl bg-[#FFFCF5] p-4 shadow-sm dark:bg-[#171a21]">
         <form onSubmit={handleSearch} className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px]">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={isEnglish ? 'Search name, email, subject...' : 'Tìm theo tên, email, tiêu đề...'}
-            className="rounded-xl border border-[#d8dde5] px-3 py-2 text-sm outline-none focus:border-[#6aa386]"
+            className="rounded-xl border border-[#d8dde5] bg-[#FFFCF5] dark:bg-[#171a21] px-3 py-2 text-sm outline-none focus:border-[#6aa386]"
           />
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="rounded-xl border border-[#d8dde5] px-3 py-2 text-sm outline-none focus:border-[#6aa386]"
+            className="rounded-xl border border-[#d8dde5] bg-[#FFFCF5] dark:bg-[#171a21] px-3 py-2 text-sm outline-none focus:border-[#6aa386]"
           >
             <option value="">{isEnglish ? 'All statuses' : 'Tất cả trạng thái'}</option>
             {statusOptions.map((option) => (
@@ -131,11 +131,11 @@ const AdminContacts = () => {
         </form>
       </div>
 
-      <div className="rounded-2xl bg-white shadow-sm dark:bg-[#171a21] overflow-hidden">
+      <div className="rounded-2xl bg-[#FFFCF5] shadow-sm dark:bg-[#171a21] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="bg-[#f6f8fb] text-left text-xs uppercase tracking-wide text-[#728095]">
+              <tr className="bg-[#FFFCF5] text-left text-xs uppercase tracking-wide text-[#728095]">
                 <th className="px-4 py-3">{isEnglish ? 'Sender' : 'Người gửi'}</th>
                 <th className="px-4 py-3">{isEnglish ? 'Subject' : 'Tiêu đề'}</th>
                 <th className="px-4 py-3">{isEnglish ? 'Message' : 'Nội dung'}</th>
@@ -164,7 +164,7 @@ const AdminContacts = () => {
                       <select
                         value={draft.status}
                         onChange={(e) => setDrafts((current) => ({ ...current, [item.id]: { ...draft, status: e.target.value } }))}
-                        className="w-full rounded-lg border border-[#d8dde5] px-2 py-1 text-xs outline-none focus:border-[#6aa386]"
+                        className="w-full rounded-lg border border-[#d8dde5] bg-[#FFFCF5] dark:bg-[#171a21] px-2 py-1 text-xs outline-none focus:border-[#6aa386]"
                       >
                         {statusOptions.map((option) => (
                           <option key={option.value} value={option.value}>{statusLabel(option.value)}</option>
@@ -176,7 +176,7 @@ const AdminContacts = () => {
                         value={draft.adminNote}
                         onChange={(e) => setDrafts((current) => ({ ...current, [item.id]: { ...draft, adminNote: e.target.value } }))}
                         rows={3}
-                        className="w-full rounded-lg border border-[#d8dde5] px-2 py-1 text-xs outline-none focus:border-[#6aa386]"
+                        className="w-full rounded-lg border border-[#d8dde5] bg-[#FFFCF5] dark:bg-[#171a21] px-2 py-1 text-xs outline-none focus:border-[#6aa386]"
                         placeholder={isEnglish ? 'Add internal note...' : 'Thêm ghi chú nội bộ...'}
                       />
                     </td>

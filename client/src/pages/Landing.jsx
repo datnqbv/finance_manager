@@ -32,8 +32,8 @@ function useCounter(target, duration = 1600, start = false) {
 function StatItem({ icon, value, suffix, label, delay, started }) {
   const num = useCounter(value, 1400, started);
   return (
-    <div className={`reveal reveal-delay-${delay} text-center group p-6 rounded-2xl bg-white dark:bg-[#111915] border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-300`}>
-      <div className="inline-flex items-center justify-center w-12 h-12 bg-[#9FEF00]/10 text-[#004b38] dark:text-[#9FEF00] rounded-2xl mb-4 group-hover:bg-[#004b38] group-hover:text-[#9FEF00] dark:group-hover:bg-[#9FEF00] dark:group-hover:text-[#004b38] transition-all duration-300">
+    <div className={`reveal reveal-delay-${delay} text-center group p-6 rounded-2xl bg-[#FFFCF5] dark:bg-[#111915] border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-300`}>
+      <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-400/10 text-[#004b38] dark:text-emerald-400 rounded-2xl mb-4 group-hover:bg-[#004b38] group-hover:text-emerald-400 dark:group-hover:bg-emerald-400 dark:group-hover:text-[#004b38] transition-all duration-300">
         {icon}
       </div>
       <div className="text-3xl font-extrabold text-[#004b38] dark:text-white tabular-nums">
@@ -126,7 +126,7 @@ const Landing = () => {
   ];
 
   return (
-    <div className="relative min-h-screen bg-[#F2F5F3] dark:bg-[#0a0f0d] text-[#1E2522] dark:text-gray-200 antialiased"
+    <div className="relative min-h-screen bg-[#F7F1E4] dark:bg-[#0a0f0d] text-[#1E2522] dark:text-gray-200 antialiased"
          style={{ fontFamily: "'Manrope', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
       <style>{`
         /* ── Scroll reveal animation classes ── */
@@ -169,7 +169,7 @@ const Landing = () => {
       {/* ══════════ NAVBAR (Header) ══════════ */}
       <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-305 ${
         scrolled
-          ? 'bg-white dark:bg-[#0c1310] shadow-sm border-b border-gray-150 dark:border-gray-800 py-3 text-[#1E2522] dark:text-white'
+          ? 'bg-[#FFFCF5] dark:bg-[#0c1310] shadow-sm border-b border-gray-200 dark:border-gray-800 py-3 text-[#1E2522] dark:text-white'
           : 'bg-[#004b38] py-5 text-white'
       }`}>
         <nav className="max-w-6xl mx-auto px-5 sm:px-8 flex items-center justify-between">
@@ -186,36 +186,36 @@ const Landing = () => {
           {/* Nav links */}
           <div className="hidden md:flex items-center gap-8">
             <a href="#features" className={`text-sm font-semibold transition ${
-              scrolled ? 'text-gray-650 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
+              scrolled ? 'text-gray-600 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
             }`}>{isEnglish ? 'Features' : 'Tính năng'}</a>
             <a href="#how" className={`text-sm font-semibold transition ${
-              scrolled ? 'text-gray-655 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
+              scrolled ? 'text-gray-600 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
             }`}>{isEnglish ? 'How it works' : 'Cách dùng'}</a>
             <a href="#pricing" className={`text-sm font-semibold transition ${
-              scrolled ? 'text-gray-650 hover:text-[#1ca063] dark:text-gray-305 dark:hover:text-[#9FEF00]' : 'text-gray-303 hover:text-[#9FEF00]'
+              scrolled ? 'text-gray-600 hover:text-[#1ca063] dark:text-gray-300 dark:hover:text-emerald-400' : 'text-gray-300 hover:text-emerald-400'
             }`}>{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a>
             <a href="#faq" className={`text-sm font-semibold transition ${
-              scrolled ? 'text-gray-650 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-303 hover:text-white'
+              scrolled ? 'text-gray-600 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
             }`}>{isEnglish ? 'FAQ' : 'Hỏi đáp'}</a>
             
             {/* Scoped subpages */}
             <div className="relative group">
               <button className={`flex items-center gap-1 text-sm font-semibold transition ${
-                scrolled ? 'text-gray-655 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
+                scrolled ? 'text-gray-600 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
               }`}>
                 {isEnglish ? 'Company' : 'Công ty'}
                 <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                 </svg>
               </button>
-              <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-[#111915] border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden text-[#1E2522] dark:text-white">
-                <button onClick={() => navigate('/about')} className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-gray-850 hover:text-[#004b38] dark:hover:text-white transition text-left">
+              <div className="absolute top-full right-0 mt-2 w-48 bg-[#FFFCF5] dark:bg-[#111915] border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden text-[#1E2522] dark:text-white">
+                <button onClick={() => navigate('/about')} className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#F3EBD8] dark:hover:bg-gray-800 hover:text-[#004b38] dark:hover:text-white transition text-left">
                   <span>👥</span> {isEnglish ? 'About us' : 'Về chúng tôi'}
                 </button>
-                <button onClick={() => navigate('/contact')} className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-gray-850 hover:text-[#004b38] dark:hover:text-white transition text-left">
+                <button onClick={() => navigate('/contact')} className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#F3EBD8] dark:hover:bg-gray-800 hover:text-[#004b38] dark:hover:text-white transition text-left">
                   <span>✉️</span> {isEnglish ? 'Contact' : 'Liên hệ'}
                 </button>
-                <button onClick={() => navigate('/privacy')} className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-gray-850 hover:text-[#004b38] dark:hover:text-white transition text-left">
+                <button onClick={() => navigate('/privacy')} className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#F3EBD8] dark:hover:bg-gray-800 hover:text-[#004b38] dark:hover:text-white transition text-left">
                   <span>🔒</span> {isEnglish ? 'Privacy Policy' : 'Chính sách bảo mật'}
                 </button>
               </div>
@@ -229,7 +229,7 @@ const Landing = () => {
               onClick={toggleTheme}
               className={`p-2 rounded-xl transition ${
                 scrolled
-                  ? 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-850'
+                  ? 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                   : 'text-gray-300 hover:text-white hover:bg-white/10'
               }`}
               title={isEnglish ? 'Toggle theme' : 'Thay đổi giao diện'}
@@ -242,7 +242,7 @@ const Landing = () => {
               onClick={() => setLanguage(language === 'en' ? 'vi' : 'en')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition border ${
                 scrolled
-                  ? 'text-gray-600 border-gray-250 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-850'
+                  ? 'text-gray-600 border-gray-200 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800'
                   : 'text-gray-300 border-gray-600 hover:text-white hover:bg-white/10'
               }`}
               title={isEnglish ? 'Switch to Vietnamese' : 'Chuyển sang Tiếng Anh'}
@@ -254,16 +254,16 @@ const Landing = () => {
             {user ? (
               <button
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 text-xs font-black uppercase tracking-wider px-5 py-2.5 bg-[#9FEF00] text-[#004b38] rounded-xl hover:bg-[#8ade00] transition"
+                className="flex items-center gap-2 text-xs font-black uppercase tracking-wider px-5 py-2.5 bg-emerald-400 text-[#004b38] rounded-xl hover:bg-emerald-500 transition"
               >
-                <FaRocket size={11} /> {isEnglish ? 'Go to Dashboard' : 'Vào Dashboard'}
+                <FaRocket size={11} /> {isEnglish ? 'Go to Overview' : 'Vào Tổng quan'}
               </button>
             ) : (
               <>
                 <button
                   onClick={() => navigate('/login')}
                   className={`text-sm font-semibold transition px-3 py-1.5 rounded-lg ${
-                    scrolled ? 'text-gray-655 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
+                    scrolled ? 'text-gray-600 hover:text-[#004b38] dark:text-gray-300 dark:hover:text-white' : 'text-gray-300 hover:text-white'
                   }`}
                 >
                   {isEnglish ? 'Login' : 'Đăng nhập'}
@@ -273,7 +273,7 @@ const Landing = () => {
                   className={`text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-xl transition ${
                     scrolled
                       ? 'bg-[#004b38] text-white hover:bg-[#003d2d]'
-                      : 'bg-[#9FEF00] text-[#004b38] hover:bg-[#8ade00]'
+                      : 'bg-emerald-400 text-[#004b38] hover:bg-emerald-500'
                   }`}
                 >
                   {isEnglish ? 'Sign up free' : 'Đăng ký miễn phí'}
@@ -292,7 +292,7 @@ const Landing = () => {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="md:hidden bg-white dark:bg-[#0c1310] border-t border-gray-100 dark:border-gray-800 text-[#1E2522] dark:text-white px-6 py-5 space-y-3 shadow-lg">
+          <div className="md:hidden bg-[#FFFCF5] dark:bg-[#0c1310] border-t border-gray-100 dark:border-gray-800 text-[#1E2522] dark:text-white px-6 py-5 space-y-3 shadow-lg">
             <a href="#features" className="block text-sm font-bold py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'Features' : 'Tính năng'}</a>
             <a href="#how" className="block text-sm font-bold py-1.5" onClick={() => setMobileOpen(false)}>{isEnglish ? 'How it works' : 'Cách dùng'}</a>
             <a href="#pricing" className="block text-sm font-bold py-1.5 text-emerald-600" onClick={() => setMobileOpen(false)}>{isEnglish ? 'VIP Packages' : 'Gói VIP'}</a>
@@ -309,13 +309,13 @@ const Landing = () => {
               <div className="flex gap-2">
                 <button
                   onClick={toggleTheme}
-                  className="p-2.5 rounded-xl border border-gray-250 dark:border-gray-700 text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-850 flex items-center justify-center"
+                  className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 bg-[#F3EBD8] dark:bg-gray-800 flex items-center justify-center"
                 >
                   {isDarkMode ? '☀️' : '🌙'}
                 </button>
                 <button
                   onClick={() => setLanguage(language === 'en' ? 'vi' : 'en')}
-                  className="px-3.5 py-2.5 rounded-xl border border-gray-255 dark:border-gray-700 text-gray-750 dark:text-gray-300 bg-gray-50 dark:bg-gray-850 font-bold text-xs flex items-center gap-1.5"
+                  className="px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 bg-[#F3EBD8] dark:bg-gray-800 font-bold text-xs flex items-center gap-1.5"
                 >
                   <span>🌐</span>
                   <span>{language === 'en' ? 'EN' : 'VI'}</span>
@@ -327,16 +327,16 @@ const Landing = () => {
               {user ? (
                 <button onClick={() => { navigate('/dashboard'); setMobileOpen(false); }}
                   className="w-full flex items-center justify-center gap-2 text-sm font-bold px-4 py-3 bg-[#004b38] text-white rounded-xl">
-                  <FaRocket size={12} /> {isEnglish ? 'Go to Dashboard' : 'Vào Dashboard'}
+                  <FaRocket size={12} /> {isEnglish ? 'Go to Overview' : 'Vào Tổng quan'}
                 </button>
               ) : (
                 <>
                   <button onClick={() => { navigate('/login'); setMobileOpen(false); }}
-                    className="w-full text-sm font-bold px-4 py-3 border border-gray-200 dark:border-gray-700 text-gray-750 dark:text-gray-300 rounded-xl hover:bg-gray-50">
+                    className="w-full text-sm font-bold px-4 py-3 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-[#F3EBD8]">
                     {isEnglish ? 'Login' : 'Đăng nhập'}
                   </button>
                   <button onClick={() => { navigate('/register'); setMobileOpen(false); }}
-                    className="w-full text-sm font-bold px-4 py-3 bg-[#9FEF00] text-[#004b38] rounded-xl text-center">
+                    className="w-full text-sm font-bold px-4 py-3 bg-emerald-400 text-[#004b38] rounded-xl text-center">
                     {isEnglish ? 'Sign up free' : 'Đăng ký miễn phí'}
                   </button>
                 </>
@@ -350,22 +350,22 @@ const Landing = () => {
       <section className="relative bg-[#004b38] text-white pt-32 pb-24 px-5 sm:px-8 overflow-hidden">
         {/* Abstract shapes matching Wise card design */}
         <div className="absolute right-0 top-0 w-[45%] h-full bg-[#003d2d] opacity-65 rounded-l-[150px] pointer-events-none" />
-        <div className="absolute -bottom-16 left-12 w-64 h-64 bg-[#9FEF00] opacity-5 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-16 left-12 w-64 h-64 bg-emerald-400 opacity-5 blur-3xl pointer-events-none" />
 
         <div className="max-w-6xl mx-auto relative z-10 grid lg:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
           
           {/* Left Column: Heading */}
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#9FEF00]/10 border border-[#9FEF00]/30 rounded-full">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#9FEF00] animate-pulse" />
-              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#9FEF00]">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-emerald-400/10 border border-emerald-400/30 rounded-full">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-emerald-400">
                 {isEnglish ? 'SMART FINANCIAL MANAGER' : 'ỨNG DỤNG LẬP KẾ HOẠCH CHI TIÊU'}
               </span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold tracking-tight leading-[1.08] wise-headline text-white">
               {isEnglish ? 'CONTROL YOUR BUDGET,' : 'KIỂM SOÁT CHI TIÊU,'}<br />
-              <span className="text-[#9FEF00]">
+              <span className="text-emerald-400">
                 {isEnglish ? 'GROW YOUR ASSETS.' : 'TÍCH LŨY THỊNH VƯỢNG.'}
               </span>
             </h1>
@@ -381,7 +381,7 @@ const Landing = () => {
               {[
                 { icon: <FaUsers size={12} />, label: isEnglish ? '10k+ Active Users' : '10,000+ Người dùng' },
                 { icon: <FaShieldAlt size={12} />, label: isEnglish ? '256-bit SSL Cryptography' : 'Mã hóa 256-bit SSL' },
-                { icon: <FaStar size={12} className="text-[#9FEF00]" />, label: isEnglish ? '4.9 App Rating' : '4.9 Đánh giá ứng dụng' },
+                { icon: <FaStar size={12} className="text-emerald-400" />, label: isEnglish ? '4.9 App Rating' : '4.9 Đánh giá ứng dụng' },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2 bg-[#003d2d] border border-emerald-900/40 rounded-full px-4 py-2 text-xs font-semibold">
                   {item.icon}
@@ -394,15 +394,15 @@ const Landing = () => {
               {user ? (
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#9FEF00] text-[#004b38] font-extrabold rounded-xl hover:bg-[#8ade00] hover:scale-[1.01] active:scale-95 transition-all text-sm uppercase tracking-wider"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-400 text-[#004b38] font-extrabold rounded-xl hover:bg-emerald-500 hover:scale-[1.01] active:scale-95 transition-all text-sm uppercase tracking-wider"
                 >
-                  {isEnglish ? 'Go to Dashboard' : 'Vào Dashboard'} <FaArrowRight size={11} />
+                  {isEnglish ? 'Go to Overview' : 'Vào Tổng quan'} <FaArrowRight size={11} />
                 </button>
               ) : (
                 <>
                   <button
                     onClick={() => navigate('/register')}
-                    className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#9FEF00] text-[#004b38] font-extrabold rounded-xl hover:bg-[#8ade00] hover:scale-[1.01] active:scale-95 transition-all text-sm uppercase tracking-wider"
+                    className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-400 text-[#004b38] font-extrabold rounded-xl hover:bg-emerald-500 hover:scale-[1.01] active:scale-95 transition-all text-sm uppercase tracking-wider"
                   >
                     {isEnglish ? 'Start For Free' : 'Bắt đầu miễn phí'} <FaArrowRight size={11} />
                   </button>
@@ -420,9 +420,9 @@ const Landing = () => {
           {/* Right Column: Interactive Budget Estimator Card */}
           <div className="relative">
             {/* Background design glow */}
-            <div className="absolute inset-2 bg-[#9FEF00]/10 rounded-[28px] blur-xl pointer-events-none" />
+            <div className="absolute inset-2 bg-emerald-400/10 rounded-[28px] blur-xl pointer-events-none" />
 
-            <div className="relative bg-white dark:bg-[#111915] rounded-3xl p-6 sm:p-7 shadow-2xl text-[#1E2522] dark:text-white border border-gray-100 dark:border-gray-800">
+            <div className="relative bg-[#FFFCF5] dark:bg-[#111915] rounded-3xl p-6 sm:p-7 shadow-2xl text-[#1E2522] dark:text-white border border-gray-100 dark:border-gray-800">
               <h3 className="text-lg font-black text-[#004b38] dark:text-white mb-2 wise-headline">
                 {isEnglish ? '50/30/20 Budget Estimator' : 'Công cụ tính ngân sách 50/30/20'}
               </h3>
@@ -435,7 +435,7 @@ const Landing = () => {
                 <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">
                   {isEnglish ? 'Monthly Income' : 'Thu nhập hàng tháng'}
                 </label>
-                <div className="flex items-center bg-[#F2F5F3] dark:bg-[#0c1310] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden focus-within:ring-2 focus-within:ring-[#004b38] transition-all">
+                <div className="flex items-center bg-[#F7F1E4] dark:bg-[#0c1310] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden focus-within:ring-2 focus-within:ring-[#004b38] transition-all">
                   <input
                     type="number"
                     value={incomeInput}
@@ -454,15 +454,15 @@ const Landing = () => {
               {/* Connecting Vertical Graph / Results */}
               <div className="space-y-4 relative pl-7 border-l-2 border-dashed border-[#004b38]/20 dark:border-emerald-800/40">
                 {/* Visual branch nodes */}
-                <div className="absolute top-3 -left-[7px] w-3 h-3 rounded-full bg-[#004b38] dark:bg-[#9FEF00]" />
-                <div className="absolute top-1/2 -translate-y-1/2 -left-[7px] w-3 h-3 rounded-full bg-[#9FEF00] border-2 border-[#004b38] dark:border-[#0c1310]" />
+                <div className="absolute top-3 -left-[7px] w-3 h-3 rounded-full bg-[#004b38] dark:bg-emerald-400" />
+                <div className="absolute top-1/2 -translate-y-1/2 -left-[7px] w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#004b38] dark:border-[#0c1310]" />
                 <div className="absolute bottom-3 -left-[7px] w-3 h-3 rounded-full bg-emerald-600" />
 
                 {/* 1. Needs (50%) */}
-                <div className="p-3 bg-gray-50 dark:bg-[#0c1310] rounded-xl hover:shadow-sm transition-shadow">
+                <div className="p-3 bg-[#F3EBD8] dark:bg-[#0c1310] rounded-xl hover:shadow-sm transition-shadow">
                   <div className="flex justify-between text-xs mb-1">
                     <span className="font-extrabold text-gray-700 dark:text-gray-300">{isEnglish ? 'Needs (50%)' : 'Thiết yếu (50%)'}</span>
-                    <span className="font-black text-[#004b38] dark:text-[#9FEF00]">{formatWidgetCurrency(incomeInput * 0.5)}</span>
+                    <span className="font-black text-[#004b38] dark:text-emerald-400">{formatWidgetCurrency(incomeInput * 0.5)}</span>
                   </div>
                   <div className="text-[10px] text-gray-500 dark:text-gray-400">
                     {isEnglish ? 'Rent, utilities, groceries, bills' : 'Nhà ở, điện nước, ăn uống, hóa đơn'}
@@ -470,7 +470,7 @@ const Landing = () => {
                 </div>
 
                 {/* 2. Wants (30%) */}
-                <div className="p-3 bg-gray-50 dark:bg-[#0c1310] rounded-xl hover:shadow-sm transition-shadow">
+                <div className="p-3 bg-[#F3EBD8] dark:bg-[#0c1310] rounded-xl hover:shadow-sm transition-shadow">
                   <div className="flex justify-between text-xs mb-1">
                     <span className="font-extrabold text-gray-700 dark:text-gray-300">{isEnglish ? 'Wants (30%)' : 'Cá nhân (30%)'}</span>
                     <span className="font-black text-emerald-600 dark:text-emerald-400">{formatWidgetCurrency(incomeInput * 0.3)}</span>
@@ -481,10 +481,10 @@ const Landing = () => {
                 </div>
 
                 {/* 3. Savings (20%) */}
-                <div className="p-3 bg-gray-50 dark:bg-[#0c1310] rounded-xl hover:shadow-sm transition-shadow">
+                <div className="p-3 bg-[#F3EBD8] dark:bg-[#0c1310] rounded-xl hover:shadow-sm transition-shadow">
                   <div className="flex justify-between text-xs mb-1">
                     <span className="font-extrabold text-gray-700 dark:text-gray-300">{isEnglish ? 'Savings & Debts (20%)' : 'Tích lũy & Trả nợ (20%)'}</span>
-                    <span className="font-black text-[#004b38] dark:text-[#9FEF00]">{formatWidgetCurrency(incomeInput * 0.2)}</span>
+                    <span className="font-black text-[#004b38] dark:text-emerald-400">{formatWidgetCurrency(incomeInput * 0.2)}</span>
                   </div>
                   <div className="text-[10px] text-gray-500 dark:text-gray-400">
                     {isEnglish ? 'Emergency fund, investments, loan payments' : 'Quỹ dự phòng, tiết kiệm, trả nợ'}
@@ -508,7 +508,7 @@ const Landing = () => {
       </section>
 
       {/* ══════════ STATS SECTION ══════════ */}
-      <section ref={statsRef} className="py-14 px-5 sm:px-8 bg-white dark:bg-[#0a0f0d] border-b border-gray-150 dark:border-gray-800">
+      <section ref={statsRef} className="py-14 px-5 sm:px-8 bg-[#FFFCF5] dark:bg-[#0a0f0d] border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
           <StatItem icon={<FaUsers size={20} />} value={10000} suffix="+" label={isEnglish ? 'Active Users' : 'Người dùng'} delay={1} started={statsStarted} />
           <StatItem icon={<FaTrophy size={20} />} value={1500} suffix="K+" label={isEnglish ? 'Transactions' : 'Giao dịch đã nhập'} delay={2} started={statsStarted} />
@@ -518,7 +518,7 @@ const Landing = () => {
       </section>
 
       {/* ══════════ VALUE PROP SECTION (Save when you spend) ══════════ */}
-      <section id="features" className="py-20 px-5 sm:px-8 bg-white dark:bg-[#0a0f0d]">
+      <section id="features" className="py-20 px-5 sm:px-8 bg-[#FFFCF5] dark:bg-[#0a0f0d]">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-14 items-center">
           
           {/* Left: Bullet list */}
@@ -542,7 +542,7 @@ const Landing = () => {
                 { title: isEnglish ? 'Dynamic Multi-Wallet Accounts' : 'Liên kết ví linh hoạt', desc: isEnglish ? 'Track assets across multiple physical cash wallets and bank accounts.' : 'Quản lý nhiều ví vật lý, tài khoản ngân hàng và chuyển tiền nội bộ.' }
               ].map((item, index) => (
                 <li key={index} className="flex gap-3">
-                  <div className="w-5 h-5 rounded-full bg-[#004b38] dark:bg-[#9FEF00] text-[#9FEF00] dark:text-[#004b38] flex items-center justify-center mt-1 flex-shrink-0">
+                  <div className="w-5 h-5 rounded-full bg-[#004b38] dark:bg-emerald-400 text-emerald-400 dark:text-[#004b38] flex items-center justify-center mt-1 flex-shrink-0">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
@@ -558,7 +558,7 @@ const Landing = () => {
 
           {/* Right: Premium CSS Mockup of Web App Dashboard */}
           <div className="relative reveal reveal-delay-2 float-card">
-            <div className="absolute inset-4 bg-[#9FEF00]/10 rounded-[32px] blur-xl" />
+            <div className="absolute inset-4 bg-emerald-400/10 rounded-[32px] blur-xl" />
             
             <div className="relative bg-[#004b38] rounded-3xl p-5 text-white shadow-2xl border border-emerald-900">
               {/* Header mockup */}
@@ -576,10 +576,10 @@ const Landing = () => {
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="bg-[#003d2d] rounded-xl p-3.5 border border-emerald-700/30">
                   <div className="text-[9px] text-gray-300 uppercase tracking-wider">{isEnglish ? 'Total Wallet Balance' : 'Tổng tài sản ví'}</div>
-                  <div className="text-lg font-black tracking-tight mt-1 text-[#9FEF00]">******</div>
+                  <div className="text-lg font-black tracking-tight mt-1 text-emerald-400">******</div>
                 </div>
                 <div className="bg-[#003d2d] rounded-xl p-3.5 border border-emerald-700/30">
-                  <div className="text-[9px] text-gray-305 uppercase tracking-wider">{isEnglish ? 'This Month Spent' : 'Đã chi tháng này'}</div>
+                  <div className="text-[9px] text-gray-300 uppercase tracking-wider">{isEnglish ? 'This Month Spent' : 'Đã chi tháng này'}</div>
                   <div className="text-lg font-black tracking-tight mt-1">******</div>
                 </div>
               </div>
@@ -588,25 +588,25 @@ const Landing = () => {
               <div className="bg-[#0f241c] rounded-xl p-4 space-y-3.5">
                 <div className="flex justify-between items-center text-[10px] font-bold">
                   <span className="text-gray-300">{isEnglish ? 'Food & Drinks Budget' : 'Ngân sách Ăn uống'}</span>
-                  <span className="text-[#9FEF00]">{isEnglish ? '72% Used' : 'Đã dùng 72%'}</span>
+                  <span className="text-emerald-400">{isEnglish ? '72% Used' : 'Đã dùng 72%'}</span>
                 </div>
                 <div className="h-2 w-full rounded-full bg-emerald-950 overflow-hidden">
-                  <div className="h-full rounded-full bg-[#9FEF00]" style={{ width: '72%' }} />
+                  <div className="h-full rounded-full bg-emerald-400" style={{ width: '72%' }} />
                 </div>
 
                 <div className="flex justify-between items-center text-[10px] font-bold">
                   <span className="text-gray-300">{isEnglish ? 'Shopping Budget' : 'Ngân sách Mua sắm'}</span>
-                  <span className="text-[#9FEF00]">{isEnglish ? '30% Used' : 'Đã dùng 30%'}</span>
+                  <span className="text-emerald-400">{isEnglish ? '30% Used' : 'Đã dùng 30%'}</span>
                 </div>
-                <div className="h-2 w-full rounded-full bg-emerald-955 overflow-hidden">
-                  <div className="h-full rounded-full bg-[#9FEF00]" style={{ width: '30%' }} />
+                <div className="h-2 w-full rounded-full bg-emerald-950 overflow-hidden">
+                  <div className="h-full rounded-full bg-emerald-400" style={{ width: '30%' }} />
                 </div>
               </div>
 
               {/* Footer row */}
               <div className="mt-4 pt-3 border-t border-emerald-800/80 flex justify-between items-center text-[9px] text-gray-300 font-bold">
                 <span>Recent transactions</span>
-                <span className="text-[#9FEF00] hover:underline cursor-pointer">View all →</span>
+                <span className="text-emerald-400 hover:underline cursor-pointer">View all →</span>
               </div>
             </div>
           </div>
@@ -615,7 +615,7 @@ const Landing = () => {
       </section>
 
       {/* ══════════ NO HIDDEN FEES SECTION (Bright Lime Green) ══════════ */}
-      <section className="py-14 px-5 sm:px-8 bg-[#9FEF00] text-[#004b38] text-center relative overflow-hidden">
+      <section className="py-14 px-5 sm:px-8 bg-emerald-400 text-[#004b38] text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 text-emerald-900/10 text-9xl font-black pointer-events-none select-none">₫</div>
         <div className="absolute bottom-0 left-0 w-32 h-32 text-emerald-900/10 text-9xl font-black pointer-events-none select-none">%</div>
 
@@ -634,7 +634,7 @@ const Landing = () => {
               className="inline-flex items-center gap-1.5 px-7 py-3 bg-[#004b38] text-white hover:bg-[#003d2d] text-xs font-black uppercase tracking-wider rounded-xl transition shadow-lg"
             >
               {user
-                ? (isEnglish ? 'Go to Dashboard' : 'Vào Dashboard')
+                ? (isEnglish ? 'Go to Overview' : 'Vào Tổng quan')
                 : (isEnglish ? 'Create Free Account' : 'Tạo tài khoản miễn phí')}
             </button>
           </div>
@@ -642,7 +642,7 @@ const Landing = () => {
       </section>
 
       {/* ══════════ DOWNLOAD / MOBILE MOCKUP SECTION ══════════ */}
-      <section id="how" className="py-20 px-5 sm:px-8 bg-[#F2F5F3] dark:bg-[#0c1310]">
+      <section id="how" className="py-20 px-5 sm:px-8 bg-[#F7F1E4] dark:bg-[#0c1310]">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-14 items-center">
           
           {/* Left: Smartphone CSS Mockup */}
@@ -669,7 +669,7 @@ const Landing = () => {
                 {/* Profile header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-6 h-6 rounded-full bg-[#9FEF00] text-[#004b38] flex items-center justify-center text-[10px] font-black">U</div>
+                    <div className="w-6 h-6 rounded-full bg-emerald-400 text-[#004b38] flex items-center justify-center text-[10px] font-black">U</div>
                     <div className="leading-none">
                       <p className="text-[7px] text-gray-400">{isEnglish ? 'Welcome back' : 'Chào mừng quay lại'}</p>
                       <p className="text-[9px] text-white font-extrabold">Alex Nguyen</p>
@@ -681,7 +681,7 @@ const Landing = () => {
                 {/* Main wallet */}
                 <div className="bg-[#2d3748] rounded-xl p-3.5 border border-gray-700/50 mb-3 text-white">
                   <span className="text-[7px] text-gray-300 uppercase tracking-widest block">{isEnglish ? 'Wallet Cash' : 'Số dư tiền mặt'}</span>
-                  <span className="text-base font-black text-[#9FEF00] block mt-0.5">******</span>
+                  <span className="text-base font-black text-emerald-400 block mt-0.5">******</span>
                 </div>
 
                 {/* Sub category progress */}
@@ -699,14 +699,14 @@ const Landing = () => {
                     <span>45%</span>
                   </div>
                   <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#9FEF00] rounded-full" style={{ width: '45%' }} />
+                    <div className="h-full bg-emerald-400 rounded-full" style={{ width: '45%' }} />
                   </div>
                 </div>
               </div>
 
               {/* Bottom navigation mockup */}
               <div className="border-t border-gray-700 bg-gray-900/60 p-2 flex justify-around items-center text-[9px] text-gray-500">
-                <span className="text-[#9FEF00] font-bold">🏠</span>
+                <span className="text-emerald-400 font-bold">🏠</span>
                 <span>📊</span>
                 <span>💳</span>
                 <span>👤</span>
@@ -735,7 +735,7 @@ const Landing = () => {
                 { step: '03', title: isEnglish ? 'Review cashflow charts' : 'Nhận báo cáo và tối ưu hóa', desc: isEnglish ? 'Analyze AI forecasts and monthly breakdowns to grow savings.' : 'Xem các dự báo chi tiêu AI và biểu đồ phân bổ để cắt giảm lãng phí.' }
               ].map((item, i) => (
                 <div key={i} className="flex gap-4 items-start">
-                  <span className="text-xs font-black bg-[#004b38] dark:bg-[#9FEF00] text-[#9FEF00] dark:text-[#004b38] w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-black bg-[#004b38] dark:bg-emerald-400 text-emerald-400 dark:text-[#004b38] w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
                     {item.step}
                   </span>
                   <div>
@@ -751,7 +751,7 @@ const Landing = () => {
       </section>
 
       {/* ══════════ CASHFLOW CHART SECTION (Wise Rate Graph Mockup) ══════════ */}
-      <section className="py-20 px-5 sm:px-8 bg-white dark:bg-[#0a0f0d] border-t border-b border-gray-150 dark:border-gray-800">
+      <section className="py-20 px-5 sm:px-8 bg-[#FFFCF5] dark:bg-[#0a0f0d] border-t border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <div className="space-y-2">
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1 rounded-full uppercase tracking-widest">
@@ -768,16 +768,16 @@ const Landing = () => {
           </div>
 
           {/* SVG line chart simulating Wise chart */}
-          <div className="relative pt-6 bg-gray-50 dark:bg-[#111915] rounded-3xl p-6 border border-gray-200/50 dark:border-gray-800/85 shadow-sm flex flex-col justify-between min-h-[300px]">
+          <div className="relative pt-6 bg-[#F3EBD8] dark:bg-[#111915] rounded-3xl p-6 border border-gray-200/50 dark:border-gray-800/85 shadow-sm flex flex-col justify-between min-h-[300px]">
             {/* Header of chart card */}
             <div className="flex justify-between items-center mb-6">
               <div className="text-left">
                 <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-black tracking-widest">{isEnglish ? 'Predictive Spending' : 'Mức dự báo chi tiêu'}</p>
-                <p className="text-xl font-black text-[#004b38] dark:text-[#9FEF00]">
+                <p className="text-xl font-black text-[#004b38] dark:text-emerald-400">
                   {isEnglish ? '$1,480.00' : '14.800.000 ₫'}
                 </p>
               </div>
-              <span className="text-[10px] font-bold bg-[#9FEF00]/20 text-[#004b38] dark:text-[#9FEF00] px-2.5 py-1 rounded-full">
+              <span className="text-[10px] font-bold bg-emerald-400/20 text-[#004b38] dark:text-emerald-400 px-2.5 py-1 rounded-full">
                 Confidence: 94%
               </span>
             </div>
@@ -800,9 +800,9 @@ const Landing = () => {
                 />
                 
                 {/* Highlight dots */}
-                <circle cx="150" cy="75" r="4.5" fill="#9FEF00" stroke="#004b38" strokeWidth="2" />
-                <circle cx="300" cy="55" r="4.5" fill="#9FEF00" stroke="#004b38" strokeWidth="2" />
-                <circle cx="490" cy="45" r="4.5" fill="#9FEF00" stroke="#004b38" strokeWidth="2" />
+                <circle cx="150" cy="75" r="4.5" fill="#34d399" stroke="#004b38" strokeWidth="2" />
+                <circle cx="300" cy="55" r="4.5" fill="#34d399" stroke="#004b38" strokeWidth="2" />
+                <circle cx="490" cy="45" r="4.5" fill="#34d399" stroke="#004b38" strokeWidth="2" />
               </svg>
             </div>
 
@@ -820,8 +820,8 @@ const Landing = () => {
       </section>
 
       {/* ══════════ VIP PLANS PRICING ══════════ */}
-      <section id="pricing" className="py-20 px-5 sm:px-8 bg-[#F2F5F3] dark:bg-[#0c1310] relative">
-        <div className="absolute top-12 left-12 w-64 h-64 bg-[#9FEF00]/5 rounded-full blur-3xl pointer-events-none" />
+      <section id="pricing" className="py-20 px-5 sm:px-8 bg-[#F7F1E4] dark:bg-[#0c1310] relative">
+        <div className="absolute top-12 left-12 w-64 h-64 bg-emerald-400/5 rounded-full blur-3xl pointer-events-none" />
         
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="text-center mb-14 reveal">
@@ -868,14 +868,14 @@ const Landing = () => {
             ].map((plan, i) => (
               <div
                 key={plan.id}
-                className={`reveal reveal-delay-${i + 1} relative rounded-3xl border p-7 flex flex-col justify-between transition-all duration-300 bg-white dark:bg-[#111915]
+                className={`reveal reveal-delay-${i + 1} relative rounded-3xl border p-7 flex flex-col justify-between transition-all duration-300 bg-[#FFFCF5] dark:bg-[#111915]
                   ${plan.isPopular
-                    ? 'border-[#004b38] dark:border-[#9FEF00] shadow-xl scale-[1.02] ring-2 ring-[#004b38] dark:ring-[#9FEF00]'
-                    : 'border-gray-200 dark:border-gray-800 hover:border-[#004b38] dark:hover:border-[#9FEF00] hover:shadow-md'
+                    ? 'border-[#004b38] dark:border-emerald-400 shadow-xl scale-[1.02] ring-2 ring-[#004b38] dark:ring-emerald-400'
+                    : 'border-gray-200 dark:border-gray-800 hover:border-[#004b38] dark:hover:border-emerald-400 hover:shadow-md'
                   }`}
               >
                 {plan.isPopular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#004b38] dark:bg-[#9FEF00] text-white dark:text-[#004b38] px-4 py-1 text-[9px] font-black uppercase tracking-widest">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#004b38] dark:bg-emerald-400 text-white dark:text-[#004b38] px-4 py-1 text-[9px] font-black uppercase tracking-widest">
                     {isEnglish ? 'RECOMMENDED' : 'KHUYÊN DÙNG'}
                   </span>
                 )}
@@ -896,12 +896,12 @@ const Landing = () => {
                   </div>
 
                   {plan.save > 0 && (
-                    <span className="inline-block rounded bg-rose-100 dark:bg-rose-950/30 text-rose-700 dark:text-rose-450 text-[10px] font-black px-2 py-0.5 mb-5">
+                    <span className="inline-block rounded bg-rose-100 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 text-[10px] font-black px-2 py-0.5 mb-5">
                       {isEnglish ? `Save ${plan.save}%` : `Tiết kiệm ${plan.save}%`}
                     </span>
                   )}
 
-                  <ul className="space-y-3 mb-8 text-xs text-gray-650 dark:text-gray-300 border-t border-gray-100 dark:border-gray-800 pt-5">
+                  <ul className="space-y-3 mb-8 text-xs text-gray-600 dark:text-gray-300 border-t border-gray-100 dark:border-gray-800 pt-5">
                     <li className="flex items-center gap-2">
                       <span className="text-amber-500 font-bold">👑</span>
                       <span>{isEnglish ? 'Unlimited wallets & budgets' : 'Không giới hạn ví & ngân sách'}</span>
@@ -929,8 +929,8 @@ const Landing = () => {
                   onClick={() => navigate(user ? '/vip' : '/register')}
                   className={`w-full rounded-xl py-3 text-xs font-black uppercase tracking-wider transition-all duration-150
                     ${plan.isPopular
-                      ? 'bg-[#004b38] hover:bg-[#003d2d] dark:bg-[#9FEF00] dark:hover:bg-[#8ade00] text-white dark:text-[#004b38] shadow-md'
-                      : 'bg-[#9FEF00] hover:bg-[#8ade00] dark:bg-gray-800 dark:hover:bg-gray-700 text-[#004b38] dark:text-white'
+                      ? 'bg-[#004b38] hover:bg-[#003d2d] dark:bg-emerald-400 dark:hover:bg-emerald-500 text-white dark:text-[#004b38] shadow-md'
+                      : 'bg-emerald-400 hover:bg-emerald-500 dark:bg-gray-800 dark:hover:bg-gray-700 text-[#004b38] dark:text-white'
                     }`}
                 >
                   {isEnglish ? 'Upgrade Now' : 'Đăng ký ngay'}
@@ -942,10 +942,10 @@ const Landing = () => {
       </section>
 
       {/* ══════════ GROWTH ROADMAP (Dark Green background) ══════════ */}
-      <section className="py-24 px-5 sm:px-8 bg-[#004b38] text-white border-t border-b border-emerald-955">
+      <section className="py-24 px-5 sm:px-8 bg-[#004b38] text-white border-t border-b border-emerald-950">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16 reveal">
-            <span className="text-xs font-bold text-[#9FEF00] bg-[#9FEF00]/10 px-3.5 py-1.5 rounded-full uppercase tracking-widest">
+            <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-3.5 py-1.5 rounded-full uppercase tracking-widest">
               {isEnglish ? 'FINANCIAL ROADMAP' : 'BẢN ĐỒ TĂNG TRƯỞNG'}
             </span>
             <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight wise-headline">
@@ -967,7 +967,7 @@ const Landing = () => {
             ].map((item, i) => (
               <div key={i} className="bg-[#003d2d] dark:bg-[#00261c] border border-emerald-900/60 dark:border-emerald-950/40 rounded-2xl p-5 hover:scale-[1.02] transition-transform duration-200">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-xs font-black text-[#9FEF00]">{isEnglish ? 'STAGE' : 'GIAI ĐOẠN'} {item.step}</span>
+                  <span className="text-xs font-black text-emerald-400">{isEnglish ? 'STAGE' : 'GIAI ĐOẠN'} {item.step}</span>
                   <span className="text-lg">⭐</span>
                 </div>
                 <h4 className="text-base font-extrabold wise-headline">{item.title}</h4>
@@ -979,7 +979,7 @@ const Landing = () => {
       </section>
 
       {/* ══════════ FAQ SECTION (Interactive Accordions) ══════════ */}
-      <section id="faq" className="py-20 px-5 sm:px-8 bg-white dark:bg-[#0a0f0d]">
+      <section id="faq" className="py-20 px-5 sm:px-8 bg-[#FFFCF5] dark:bg-[#0a0f0d]">
         <div className="max-w-3xl mx-auto space-y-12">
           
           <div className="text-center space-y-2">
@@ -997,11 +997,11 @@ const Landing = () => {
               return (
                 <div
                   key={index}
-                  className="border border-gray-155 dark:border-gray-800 rounded-2xl overflow-hidden bg-white dark:bg-[#111915] hover:border-[#004b38]/30 dark:hover:border-emerald-800 transition-colors"
+                  className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden bg-[#FFFCF5] dark:bg-[#111915] hover:border-[#004b38]/30 dark:hover:border-emerald-800 transition-colors"
                 >
                   <button
                     onClick={() => handleFaqToggle(index)}
-                    className="w-full flex justify-between items-center px-5 py-4 text-left font-bold text-sm sm:text-base text-[#004b38] dark:text-white hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors focus:outline-none"
+                    className="w-full flex justify-between items-center px-5 py-4 text-left font-bold text-sm sm:text-base text-[#004b38] dark:text-white hover:bg-[#F3EBD8]/50 dark:hover:bg-gray-800/40 transition-colors focus:outline-none"
                   >
                     <span>{faq.q}</span>
                     <span className={`text-lg font-black transform transition-transform duration-200 ${isOpen ? 'rotate-45' : ''}`}>
@@ -1009,7 +1009,7 @@ const Landing = () => {
                     </span>
                   </button>
                   {isOpen && (
-                    <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 leading-relaxed border-t border-gray-100 dark:border-gray-800 bg-gray-50/40 dark:bg-[#0a0f0d]/30">
+                    <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 leading-relaxed border-t border-gray-100 dark:border-gray-800 bg-[#F3EBD8]/40 dark:bg-[#0a0f0d]/30">
                       {faq.a}
                     </div>
                   )}
@@ -1024,7 +1024,7 @@ const Landing = () => {
       {/* ══════════ CTA BANNER ══════════ */}
       <section className="py-20 px-5 sm:px-8 bg-[#004b38] text-white text-center relative overflow-hidden">
         {/* Decorative elements */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#9FEF00]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-400/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="max-w-2xl mx-auto space-y-6 relative z-10">
           <h2 className="text-3xl sm:text-4xl font-extrabold leading-tight wise-headline">
@@ -1040,21 +1040,21 @@ const Landing = () => {
             {user ? (
               <button
                 onClick={() => navigate('/dashboard')}
-                className="px-8 py-3.5 bg-[#9FEF00] hover:bg-[#8ade00] text-[#004b38] font-extrabold rounded-xl transition text-xs uppercase tracking-wider shadow-lg"
+                className="px-8 py-3.5 bg-emerald-400 hover:bg-emerald-500 text-[#004b38] font-extrabold rounded-xl transition text-xs uppercase tracking-wider shadow-lg"
               >
-                {isEnglish ? 'Go to Dashboard' : 'Vào Dashboard'}
+                {isEnglish ? 'Go to Overview' : 'Vào Tổng quan'}
               </button>
             ) : (
               <>
                 <button
                   onClick={() => navigate('/register')}
-                  className="px-8 py-3.5 bg-[#9FEF00] hover:bg-[#8ade00] text-[#004b38] font-extrabold rounded-xl transition text-xs uppercase tracking-wider shadow-lg"
+                  className="px-8 py-3.5 bg-emerald-400 hover:bg-emerald-500 text-[#004b38] font-extrabold rounded-xl transition text-xs uppercase tracking-wider shadow-lg"
                 >
                   {isEnglish ? 'Sign up free' : 'Đăng ký miễn phí'}
                 </button>
                 <button
                   onClick={() => navigate('/login')}
-                  className="px-8 py-3.5 border border-gray-650 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition text-xs"
+                  className="px-8 py-3.5 border border-gray-600 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition text-xs"
                 >
                   {isEnglish ? 'Sign In' : 'Đăng nhập'}
                 </button>
@@ -1065,7 +1065,7 @@ const Landing = () => {
       </section>
 
       {/* ══════════ FOOTER (Dark Green theme) ══════════ */}
-      <footer className="bg-[#00261c] text-gray-400 border-t border-emerald-955/40 py-16 px-5 sm:px-8">
+      <footer className="bg-[#00261c] text-gray-400 border-t border-emerald-950/40 py-16 px-5 sm:px-8">
         <div className="max-w-6xl mx-auto">
           
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-12">
@@ -1084,7 +1084,7 @@ const Landing = () => {
                   : 'Giải pháp lập ngân sách, quét hóa đơn AI và hoạch định chi tiêu tối ưu cho bạn.'}
               </p>
               <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
-                <FaLock className="text-[#9FEF00]" />
+                <FaLock className="text-emerald-400" />
                 <span>{isEnglish ? 'Secure 256-bit SSL Data' : 'Dữ liệu bảo mật 256-bit SSL'}</span>
               </div>
             </div>
@@ -1117,7 +1117,7 @@ const Landing = () => {
                   <a
                     key={index}
                     href="#"
-                    className="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-900/60 hover:bg-[#9FEF00] hover:text-[#004b38] flex items-center justify-center text-white transition-colors"
+                    className="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-900/60 hover:bg-emerald-400 hover:text-[#004b38] flex items-center justify-center text-white transition-colors"
                   >
                     <Icon size={12} />
                   </a>
@@ -1130,7 +1130,7 @@ const Landing = () => {
 
           </div>
 
-          <div className="border-t border-emerald-955/40 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-[10px] text-gray-500">
+          <div className="border-t border-emerald-950/40 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-[10px] text-gray-500">
             <span>&copy; 2026 Finance Manager. All rights reserved.</span>
             <span>{isEnglish ? 'Made with ❤ for financial freedom' : 'Được xây dựng vì sự phát triển tài chính của bạn'}</span>
           </div>

@@ -102,8 +102,10 @@ Frontend: `client/.env` — `VITE_API_URL=/api` and `VITE_GOOGLE_CLIENT_ID`.
 - **Recurring transactions:** Background scheduler (`recurring.scheduler.js`) runs on server startup, executes due transactions daily
 - **Forecasting:** XGBoost-style ensemble in `xgboost.forecast.service.js` — combines linear trend, weighted recent average, adaptive moving average, and median forecast
 - **Full-text search:** Pluggable architecture; currently falls back to SQL `LIKE` queries. FTS engine integration point in `search.service.js` and `utils/fts.js`
-- **VIP/Payments:** PayOS payment gateway integration (`vip.service.js`), admin approval workflow
+- **VIP/Payments:** PayOS payment gateway integration (`vip.service.js` + `vip.middleware.js`), admin approval workflow (`AdminVipPayments.jsx`, `VipOrder` model)
+- **Receipt scanning:** Client-side OCR via `tesseract.js` (in `TransactionModal.jsx`) auto-fills transaction fields from a photographed receipt; the image itself is uploaded through `upload.routes.js` to Cloudinary
 - **Data import/export:** CSV/Excel import via `multer` + `csv-parse`; PDF export via `jsPDF`; Excel export via `XLSX`
+- **Visit analytics:** `UserVisit` model tracks site visits, surfaced to admins via `AdminVisits.jsx`
 
 
 ## Answer 

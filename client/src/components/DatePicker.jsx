@@ -171,7 +171,7 @@ const DatePicker = ({ value, onChange, className = '', style = {}, clearable = t
 
   return (
     <div 
-      className={`relative flex items-center justify-between px-3 py-1.5 border border-gray-300 dark:border-[#2a2a2a] rounded-lg bg-white dark:bg-[#111111] text-gray-900 dark:text-white hover:border-emerald-500 dark:hover:border-emerald-500 transition-all duration-200 ${disabled ? 'opacity-55 pointer-events-none bg-gray-50 dark:bg-gray-800/20' : ''} ${className}`}
+      className={`relative flex items-center justify-between px-3 py-1.5 border border-gray-300 dark:border-[#2a2a2a] rounded-lg bg-[#FFFCF5] dark:bg-[#111111] text-gray-900 dark:text-white hover:border-emerald-500 dark:hover:border-emerald-500 transition-all duration-200 ${disabled ? 'opacity-55 pointer-events-none bg-gray-50 dark:bg-gray-800/20' : ''} ${className}`}
       style={style}
     >
       <input

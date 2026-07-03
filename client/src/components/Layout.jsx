@@ -274,14 +274,14 @@ const Layout = ({ children }) => {
   // Giao diện của Layout
   return (
     <div
-      className="h-screen overflow-hidden flex bg-[#f3f4f6] dark:bg-[#111216]"
+      className="h-screen overflow-hidden flex bg-[#F7F1E4] dark:bg-[#111216]"
       style={{ fontFamily: "'Manrope', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}
     >
       {/* Mobile menu button nằm trong header — xem header bên dưới */}
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-[250px] h-screen lg:h-full bg-[#e9ecef] dark:bg-[#1b1e24]
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-[250px] h-screen lg:h-full bg-[#F3EBD8] dark:bg-[#1b1e24]
                     border-r border-[#d8dce2] dark:border-[#2d323c]
                     transform transition-all duration-300 ease-in-out flex flex-col flex-shrink-0
                     ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
@@ -289,7 +289,7 @@ const Layout = ({ children }) => {
         <div className="sidebar-nav-grid h-full">
           {/* Logo */}
           <div className="sidebar-brand p-4 border-b border-[#d8dce2] dark:border-[#2d323c]">
-            <div className="rounded-xl border border-[#d8dce2] bg-[#f1f3f5] p-3 dark:border-[#323844] dark:bg-[#242936]">
+            <div className="rounded-xl border border-[#d8dce2] bg-[#FFFCF5] p-3 dark:border-[#323844] dark:bg-[#242936]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-transparent flex items-center justify-center text-2xl">
                   <img
@@ -314,7 +314,7 @@ const Layout = ({ children }) => {
           <div className="sidebar-home px-3 pt-3">
             <Link
               to="/home"
-              className="flex items-center gap-2.5 rounded-xl border border-[#d7dce4] bg-white px-3 py-2.5 text-sm text-[#4f5662] transition-colors hover:bg-[#edf5f0] hover:text-[#1f5d45] dark:border-[#333844] dark:bg-[#22252d] dark:text-[#a8adb6] dark:hover:bg-[#273332] dark:hover:text-[#9fd7be] group"
+              className="flex items-center gap-2.5 rounded-xl border border-[#d7dce4] bg-[#FFFCF5] px-3 py-2.5 text-sm text-[#4f5662] transition-colors hover:bg-[#edf5f0] hover:text-[#1f5d45] dark:border-[#333844] dark:bg-[#22252d] dark:text-[#a8adb6] dark:hover:bg-[#273332] dark:hover:text-[#9fd7be] group"
             >
               <svg
                 className="w-5 h-5 group-hover:scale-110 transition-transform"
@@ -345,7 +345,7 @@ const Layout = ({ children }) => {
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group border text-sm
                       ${isActive
                         ? 'bg-[#004b38] text-white border-transparent shadow-sm dark:bg-[#004b38] dark:text-white dark:border-transparent'
-                        : 'text-[#4f5662] bg-transparent border-transparent hover:bg-[#f2f4f7] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
+                        : 'text-[#4f5662] bg-transparent border-transparent hover:bg-[#FFFCF5] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
                       }`}
                   >
                     {React.createElement(item.icon, { size: 20, className: isActive ? '' : 'group-hover:scale-110 transition-transform opacity-90' })}
@@ -364,7 +364,7 @@ const Layout = ({ children }) => {
                       className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-150 group border text-sm
                         ${hasActiveChild
                           ? 'text-[#0d3a2d] border-[#cfe2d8]/30 bg-[#e2ede7]/30 dark:text-[#b9e4d2] dark:bg-[#273332]/30 dark:border-[#335348]/20'
-                          : 'text-[#4f5662] bg-transparent border-transparent hover:bg-[#f2f4f7] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
+                          : 'text-[#4f5662] bg-transparent border-transparent hover:bg-[#FFFCF5] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
                         }`}
                     >
                       <div className="flex items-center gap-3">
@@ -397,7 +397,7 @@ const Layout = ({ children }) => {
                                   className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150 group border text-sm
                                     ${isChildActive
                                       ? 'bg-[#004b38] text-white border-transparent shadow-sm dark:bg-[#004b38] dark:text-white dark:border-transparent'
-                                      : 'text-[#5c6370] bg-transparent border-transparent hover:bg-[#f2f4f7] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#9fa5b0] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
+                                      : 'text-[#5c6370] bg-transparent border-transparent hover:bg-[#FFFCF5] hover:border-[#d1d6de] hover:text-[#303844] dark:text-[#9fa5b0] dark:hover:bg-[#2a2e37] dark:hover:border-[#3a3f4a] dark:hover:text-[#d5d9e0]'
                                     }`}
                                 >
                                   {React.createElement(child.icon, { size: 18, className: isChildActive ? '' : 'group-hover:scale-110 transition-transform opacity-90' })}
@@ -421,7 +421,7 @@ const Layout = ({ children }) => {
           </nav>
 
           <div className="sidebar-footer px-3 pb-3 pt-2 border-t border-[#d8dce2] dark:border-[#2d323c]">
-            <div className="rounded-xl bg-white dark:bg-[#20242e] border border-[#d8dce2] dark:border-[#323844] p-3 shadow-sm">
+            <div className="rounded-xl bg-[#FFFCF5] dark:bg-[#20242e] border border-[#d8dce2] dark:border-[#323844] p-3 shadow-sm">
               <div className="flex items-center gap-2.5 mb-2.5">
                 {user?.avatar ? (
                   <img
@@ -447,7 +447,7 @@ const Layout = ({ children }) => {
               <div className="grid grid-cols-2 gap-2">
                 <Link
                   to="/profile"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#d3d7df] dark:border-[#30333b] py-1.5 text-[11px] font-semibold text-[#4f5662] dark:text-[#a8adb6] hover:bg-[#eef4fb] dark:hover:bg-[#2a2e37] transition-colors"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#d3d7df] dark:border-[#30333b] py-1.5 text-[11px] font-semibold text-[#4f5662] dark:text-[#a8adb6] hover:bg-[#FFFCF5] dark:hover:bg-[#2a2e37] transition-colors"
                 >
                   <FiUser size={12} /> {isEnglish ? 'Profile' : 'Hồ sơ'}
                 </Link>
@@ -461,7 +461,7 @@ const Layout = ({ children }) => {
             </div>
 
             {user?.role === 'admin' && (
-              <div className="mt-3 overflow-hidden rounded-xl border border-[#d8dce2] bg-white shadow-sm dark:border-[#323844] dark:bg-[#20242e]">
+              <div className="mt-3 overflow-hidden rounded-xl border border-[#d8dce2] bg-[#FFFCF5] shadow-sm dark:border-[#323844] dark:bg-[#20242e]">
                 <button
                   type="button"
                   onClick={() => setShowAdminMenu((prev) => !prev)}
@@ -501,7 +501,7 @@ const Layout = ({ children }) => {
                               onClick={() => setSidebarOpen(false)}
                               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${isActive
                                 ? 'bg-[#eef6f2] text-[#1f5d45] dark:bg-[#273332] dark:text-[#b9e4d2]'
-                                : 'text-[#4f5662] hover:bg-[#f2f4f7] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:text-[#d5d9e0]'
+                                : 'text-[#4f5662] hover:bg-[#FFFCF5] hover:text-[#303844] dark:text-[#a8adb6] dark:hover:bg-[#2a2e37] dark:hover:text-[#d5d9e0]'
                                 }`}
                             >
                               <item.icon size={18} />
@@ -531,16 +531,16 @@ const Layout = ({ children }) => {
       {/* Main content wrapper */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Header */}
-        <header className="bg-[#f8fafb] dark:bg-[#191d24] border-b border-[#d8dce2] dark:border-[#2f343e] sticky top-0 z-30 flex-shrink-0">
+        <header className="bg-[#FFFCF5] dark:bg-[#191d24] border-b border-[#d8dce2] dark:border-[#2f343e] sticky top-0 z-30 flex-shrink-0">
           <div className="px-4 lg:px-6 py-3">
             <div className="flex items-center gap-3">
 
               {/* Hamburger — nằm trong header flow trên mobile */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-md bg-white dark:bg-[#1b1c20]
+                className="lg:hidden flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-md bg-[#FFFCF5] dark:bg-[#1b1c20]
                            border border-[#cfd2d8] dark:border-[#32353d] shadow-sm
-                           hover:bg-[#f5f8fc] dark:hover:bg-[#242730] transition-colors duration-200"
+                           hover:bg-[#FFFCF5] dark:hover:bg-[#242730] transition-colors duration-200"
               >
                 {sidebarOpen ? (
                   <FiX size={20} className="text-gray-700 dark:text-white" />
@@ -573,8 +573,8 @@ const Layout = ({ children }) => {
                 {/* Mobile: icon search button — bấm mở overlay */}
                 <button
                   onClick={() => setShowMobileSearch(true)}
-                  className="lg:hidden flex items-center justify-center w-9 h-9 rounded-md bg-white dark:bg-[#242730]
-                             hover:bg-[#eef4fb] dark:hover:bg-[#2b2f39]
+                  className="lg:hidden flex items-center justify-center w-9 h-9 rounded-md bg-[#FFFCF5] dark:bg-[#242730]
+                             hover:bg-[#FFFCF5] dark:hover:bg-[#2b2f39]
                              border border-[#d3d7df] dark:border-[#353943]
                              transition-colors duration-200"
                 >
@@ -590,8 +590,8 @@ const Layout = ({ children }) => {
                 <div className="relative">
                   <button
                     onClick={toggleNotifications}
-                    className="p-2 rounded-md bg-white dark:bg-[#242730] 
-                                     hover:bg-[#eef4fb] dark:hover:bg-[#2b2f39] 
+                    className="p-2 rounded-md bg-[#FFFCF5] dark:bg-[#242730] 
+                                     hover:bg-[#FFFCF5] dark:hover:bg-[#2b2f39] 
                                      border border-[#d3d7df] dark:border-[#353943]
                                      transition-colors duration-200 relative group">
                     <FiBell size={20} className="text-gray-700 dark:text-gray-300" />
@@ -612,7 +612,7 @@ const Layout = ({ children }) => {
                         className="fixed inset-0 z-40"
                         onClick={() => setShowNotifications(false)}
                       />
-                      <div className="absolute right-0 mt-2.5 w-[350px] bg-white/95 dark:bg-[#1a1f2c]/95 
+                      <div className="absolute right-0 mt-2.5 w-[350px] bg-[#FFFCF5]/95 dark:bg-[#1a1f2c]/95 
                                     backdrop-blur-md rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_15px_50px_rgba(0,0,0,0.3)]
                                     border border-gray-150 dark:border-gray-800/80
                                     z-50 animate-in fade-in slide-in-from-top-2 duration-200 max-h-96 overflow-hidden flex flex-col">
@@ -694,8 +694,8 @@ const Layout = ({ children }) => {
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center gap-3 px-2.5 py-2 rounded-xl 
-                             bg-white dark:bg-[#242730] 
-                             hover:bg-[#eef4fb] dark:hover:bg-[#2b2f39]
+                             bg-[#FFFCF5] dark:bg-[#242730] 
+                             hover:bg-[#FFFCF5] dark:hover:bg-[#2b2f39]
                              border border-[#d3d7df] dark:border-[#353943]
                              transition-colors duration-200"
                   >
@@ -732,7 +732,7 @@ const Layout = ({ children }) => {
                           setShowSettings(false);
                         }}
                       />
-                      <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#111111] 
+                      <div className="absolute right-0 mt-2 w-80 bg-[#FFFCF5] dark:bg-[#111111] 
                                     rounded-xl shadow-2xl border border-gray-200 dark:border-[#2a2a2a]
                                     z-50 animate-in fade-in slide-in-from-top-2 duration-200 max-h-[90vh] flex flex-col">
                         {/* Main Menu */}
@@ -824,7 +824,7 @@ const Layout = ({ children }) => {
                                 onClick={() => setLanguage('vi')}
                                 className={`rounded-xl border px-3 py-3 text-left transition-colors ${language === 'vi'
                                   ? 'border-[#2f8e6f] bg-[#e9f7f1] text-[#0d3a2d] dark:border-[#58c39e] dark:bg-[#1f3a32] dark:text-[#bcebd9]'
-                                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-[#2a2a2a] dark:bg-[#171717] dark:text-gray-300 dark:hover:bg-[#1f1f1f]'
+                                  : 'border-gray-200 bg-[#FFFCF5] text-gray-700 hover:bg-gray-50 dark:border-[#2a2a2a] dark:bg-[#171717] dark:text-gray-300 dark:hover:bg-[#1f1f1f]'
                                   }`}
                               >
                                 <p className="text-sm font-semibold">Tiếng Việt</p>
@@ -834,7 +834,7 @@ const Layout = ({ children }) => {
                                 onClick={() => setLanguage('en')}
                                 className={`rounded-xl border px-3 py-3 text-left transition-colors ${language === 'en'
                                   ? 'border-[#2f8e6f] bg-[#e9f7f1] text-[#0d3a2d] dark:border-[#58c39e] dark:bg-[#1f3a32] dark:text-[#bcebd9]'
-                                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-[#2a2a2a] dark:bg-[#171717] dark:text-gray-300 dark:hover:bg-[#1f1f1f]'
+                                  : 'border-gray-200 bg-[#FFFCF5] text-gray-700 hover:bg-gray-50 dark:border-[#2a2a2a] dark:bg-[#171717] dark:text-gray-300 dark:hover:bg-[#1f1f1f]'
                                   }`}
                               >
                                 <p className="text-sm font-semibold">English</p>
@@ -913,7 +913,7 @@ const Layout = ({ children }) => {
         </header>
 
         {/* Main content */}
-        <main className="flex-1 overflow-auto bg-[#f3f4f6] dark:bg-[#111216]">
+        <main className="flex-1 overflow-auto bg-[#F7F1E4] dark:bg-[#111216]">
           <div className="mx-auto w-full max-w-[1600px] px-3 py-4 lg:px-5">
             {children}
           </div>
@@ -934,7 +934,7 @@ const Layout = ({ children }) => {
             className="lg:hidden fixed inset-0 bg-black/50 z-50"
             onClick={() => setShowMobileSearch(false)}
           />
-          <div className="lg:hidden fixed top-0 left-0 right-0 z-[51] bg-[#f8fafb] dark:bg-[#191d24] border-b border-[#d8dce2] dark:border-[#2f343e] p-3 shadow-lg">
+          <div className="lg:hidden fixed top-0 left-0 right-0 z-[51] bg-[#FFFCF5] dark:bg-[#191d24] border-b border-[#d8dce2] dark:border-[#2f343e] p-3 shadow-lg">
             <div className="flex items-center gap-3">
               <div className="flex-1">
                 <GlobalSearch />

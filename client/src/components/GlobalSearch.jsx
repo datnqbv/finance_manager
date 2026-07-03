@@ -280,7 +280,7 @@ const GlobalSearch = () => {
 
       {/* Search Results Dropdown */}
       {isOpen && (searchQuery || searchHistory.length > 0) && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#111111]
+        <div className="absolute top-full left-0 right-0 mt-2 bg-[#FFFCF5] dark:bg-[#111111]
                       rounded-xl shadow-2xl border border-gray-200 dark:border-[#2a2a2a]
                       max-h-96 overflow-y-auto z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           {!searchQuery ? (
