@@ -1,7 +1,6 @@
 import { Transaction, Goal, sequelize } from '../models/sequelize/index.js';
 import { Op } from 'sequelize';
 import * as ss from 'simple-statistics';
-import { forecastNextMonth, forecastCategoryExpense } from './xgboost.forecast.service.js';
 import ErrorResponse from '../utils/errorResponse.js';
 
 export const getMonthlyStats = async (userId, query) => {
@@ -149,109 +148,6 @@ export const compareStats = async (userId, query) => {
   }
 
   return { type, periods: results, growth };
-};
-
-export const forecastSpending = async (userId, query) => {
-  const { months = 6, refYear, refMonth } = query;
-  const n = Math.max(1, parseInt(months, 10) || 6);
-  const now = (refYear && refMonth)
-    ? new Date(parseInt(refYear), parseInt(refMonth) - 1, 1)
-    : new Date();
-
-  const rangeStart = new Date(now.getFullYear(), now.getMonth() - n, 1);
-  const rangeEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-
-  const yearFn = sequelize.getDialect && sequelize.getDialect() === 'sqlite' ? sequelize.fn('strftime', '%Y', sequelize.col('date')) : sequelize.fn('YEAR', sequelize.col('date'));
-  const monthFn = sequelize.getDialect && sequelize.getDialect() === 'sqlite' ? sequelize.fn('strftime', '%m', sequelize.col('date')) : sequelize.fn('MONTH', sequelize.col('date'));
-  const [monthlyAgg, catMonthlyAgg] = await Promise.all([
-    Transaction.findAll({ where: { userId, date: { [Op.between]: [rangeStart, rangeEnd] } }, attributes: [[yearFn, 'year'], [monthFn, 'month'], 'type', [sequelize.fn('SUM', sequelize.col('amount')), 'total']], group: [yearFn, monthFn, 'type'], raw: true }),
-    Transaction.findAll({ where: { userId, type: 'expense', date: { [Op.between]: [rangeStart, rangeEnd] } }, attributes: [[yearFn, 'year'], [monthFn, 'month'], 'category', [sequelize.fn('SUM', sequelize.col('amount')), 'total']], group: [yearFn, monthFn, 'category'], raw: true })
-  ]);
-
-  monthlyAgg.forEach(r => { r.year = parseInt(r.year); r.month = parseInt(r.month); });
-  catMonthlyAgg.forEach(r => { r.year = parseInt(r.year); r.month = parseInt(r.month); });
-
-  const monthMap = {};
-  monthlyAgg.forEach(r => {
-    const key = `${r.year}-${r.month}`;
-    if (!monthMap[key]) monthMap[key] = { income: 0, expense: 0 };
-    monthMap[key][r.type] += parseFloat(r.total || 0);
-  });
-
-  const catMap = {};
-  catMonthlyAgg.forEach(r => {
-    const cat = r.category;
-    const key = `${r.year}-${r.month}`;
-    if (!catMap[cat]) catMap[cat] = {};
-    catMap[cat][key] = parseFloat(r.total || 0);
-  });
-
-  const expenseHistory = [];
-  const incomeHistory = [];
-  const labels = [];
-  const categoryHistories = {};
-
-  for (let i = n; i >= 1; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
-    expenseHistory.push(monthMap[key]?.expense ?? 0);
-    incomeHistory.push(monthMap[key]?.income ?? 0);
-    labels.push(`${d.getMonth() + 1}/${d.getFullYear()}`);
-  }
-
-  for (const [category, monthData] of Object.entries(catMap)) {
-    const catHistory = [];
-    for (let i = n; i >= 1; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
-      catHistory.push(monthData[key] ?? 0);
-    }
-    categoryHistories[category] = catHistory;
-  }
-
-  const expenseForecast = forecastNextMonth(expenseHistory, categoryHistories);
-  const incomeForecast = forecastNextMonth(incomeHistory, {});
-  
-  const categoryForecasts = {};
-  for (const [category, catHistory] of Object.entries(categoryHistories)) {
-    const catForecast = forecastCategoryExpense(catHistory);
-    categoryForecasts[category] = {
-      forecast: catForecast.forecast,
-      average: Math.round(ss.mean(catHistory)),
-      trend: catForecast.trend,
-      confidence: catForecast.confidence,
-      r2: catForecast.r2Score
-    };
-  }
-
-  const avgExpense = Math.round(ss.mean(expenseHistory));
-  const avgIncome = Math.round(ss.mean(incomeHistory));
-  const marginLow = Math.round(Math.max(0, expenseForecast.forecast * 0.9));
-  const marginHigh = Math.round(expenseForecast.forecast * 1.1);
-
-  return {
-    historicalData: expenseHistory,
-    incomeHistory,
-    labels,
-    forecast: {
-      nextMonthExpense: expenseForecast.forecast,
-      nextMonthIncome: incomeForecast.forecast,
-      nextMonthSavings: incomeForecast.forecast - expenseForecast.forecast,
-      avgExpense,
-      avgIncome,
-      expenseTrend: expenseForecast.trend,
-      incomeTrend: incomeForecast.trend,
-      confidence: expenseForecast.confidence,
-      confidencePercent: expenseForecast.confidencePercent,
-      r2Expense: expenseForecast.r2Score,
-      r2Income: incomeForecast.r2Score,
-      marginLow,
-      marginHigh,
-      modelType: 'XGBoost Gradient Boosting'
-    },
-    byCategory: categoryForecasts,
-    basedOnMonths: n
-  };
 };
 
 export const analyzeTrends = async (userId, query) => {

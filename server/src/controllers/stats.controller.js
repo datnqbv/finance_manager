@@ -33,14 +33,6 @@ export const compareStats = asyncHandler(async (req, res) => {
   res.json({ success: true, data });
 });
 
-// @desc    Forecast next month using XGBoost Machine Learning Model
-// @route   GET /api/stats/forecast
-// @access  Private
-export const forecastSpending = asyncHandler(async (req, res) => {
-  const data = await statsService.forecastSpending(req.user.id, req.query);
-  res.json({ success: true, data });
-});
-
 // @desc    Analyze spending trends
 // @route   GET /api/stats/trends
 // @access  Private

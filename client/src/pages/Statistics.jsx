@@ -6,11 +6,12 @@ import { useTransactions } from '../context/TransactionContext';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, ReferenceLine
+  ResponsiveContainer
 } from 'recharts';
 import {
-  FiBarChart2, FiTrendingUp, FiTrendingDown, FiActivity,
-  FiCalendar, FiTarget, FiMinus, FiZap, FiLock, FiAward
+  FiBarChart2, FiTrendingUp, FiActivity,
+  FiCalendar, FiTarget, FiZap, FiLock, FiAward,
+  FiAlertTriangle, FiCheckCircle, FiAlertCircle
 } from 'react-icons/fi';
 import { StatisticsPageSkeleton } from '../components/LoadingSkeleton';
 import { useLanguage } from '../context/LanguageContext';
@@ -31,24 +32,6 @@ const ChartTip = ({ active, payload, label, fmt }) => {
       ))}
     </div>
   );
-};
-
-const TrendBadge = ({ trend, isEnglish }) => {
-  if (trend === 'increasing') return <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-red-500"><FiTrendingUp size={10}/> {isEnglish ? 'Up' : 'Tăng'}</span>;
-  if (trend === 'decreasing') return <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-emerald-500"><FiTrendingDown size={10}/> {isEnglish ? 'Down' : 'Giảm'}</span>;
-  return <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-gray-400"><FiMinus size={10}/> {isEnglish ? 'Stable' : 'Ổn định'}</span>;
-};
-
-const ConfidenceBadge = ({ confidence, isEnglish }) => {
-  const map = {
-    high: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-    medium: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',
-    low: 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400',
-  };
-  const labels = isEnglish
-    ? { high: 'High confidence', medium: 'Medium', low: 'Low' }
-    : { high: 'Tin cậy cao', medium: 'Trung bình', low: 'Thấp' };
-  return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${map[confidence] || map.low}`}>{labels[confidence] || confidence}</span>;
 };
 
 const KpiCard = ({ label, value, sub, border, icon, valueColor, loading }) => (
@@ -115,7 +98,7 @@ const Statistics = () => {
   const [monthly,    setMonthly]    = useState(null);
   const [catStats,   setCatStats]   = useState([]);
   const [compare,    setCompare]    = useState([]);
-  const [forecast,   setForecast]   = useState(null);
+  const [advice,     setAdvice]     = useState(null);
   const [trends,     setTrends]     = useState(null);
   const [daily,      setDaily]      = useState([]);
   const [isMobile,   setIsMobile]   = useState(window.innerWidth < 768);
@@ -144,7 +127,7 @@ const Statistics = () => {
     setMonthly(bundle.monthly);
     setCatStats(bundle.catStats);
     setCompare(bundle.compare);
-    setForecast(bundle.forecast);
+    setAdvice(bundle.advice);
     setTrends(bundle.trends);
     setDaily(bundle.daily);
   }, []);
@@ -153,11 +136,11 @@ const Statistics = () => {
     const monthStart = new Date(year, month - 1, 1).toISOString().split('T')[0];
     const monthEnd = new Date(year, month, 0).toISOString().split('T')[0];
 
-    const [m, c, cmp, f, t, d] = await Promise.allSettled([
+    const [m, c, cmp, adv, t, d] = await Promise.allSettled([
       statsService.getMonthlyStats(year, month),
       statsService.getCategoryStats(monthStart, monthEnd),
       statsService.compareStats('month', 6, year, month),
-      statsService.forecastSpending(6, year, month),
+      statsService.getFinancialAdvice(year, month),
       statsService.analyzeTrends(12, year, month),
       statsService.getDailyStats(monthStart, monthEnd),
     ]);
@@ -166,7 +149,7 @@ const Statistics = () => {
       monthly: null,
       catStats: [],
       compare: [],
-      forecast: null,
+      advice: null,
       trends: null,
       daily: [],
     };
@@ -203,15 +186,8 @@ const Statistics = () => {
       });
     }
 
-    if (f.status === 'fulfilled') {
-      const fd = f.value?.data;
-      bundle.forecast = fd ? {
-        ...fd.forecast,
-        byCategory: fd.byCategory,
-        basedOnMonths: fd.basedOnMonths,
-        referenceYear: year,
-        referenceMonth: month,
-      } : null;
+    if (adv.status === 'fulfilled') {
+      bundle.advice = adv.value?.data || null;
     }
 
     if (t.status === 'fulfilled') {
@@ -272,7 +248,7 @@ const Statistics = () => {
       setMonthly(null);
       setCatStats([]);
       setCompare([]);
-      setForecast(null);
+      setAdvice(null);
       setTrends(null);
       setDaily([]);
     }
@@ -328,15 +304,15 @@ const Statistics = () => {
   const TABS = [
     { key: 'overview',  label: isEnglish ? 'Overview' : 'Tổng quan',   icon: <FiBarChart2 size={13}/> },
     { key: 'compare',   label: isEnglish ? 'Compare' : 'So sánh',     icon: <FiActivity size={13}/> },
-    { 
-      key: 'forecast',  
+    {
+      key: 'advisor',
       label: (
         <span className="flex items-center gap-1">
-          {isEnglish ? 'AI Forecast' : 'Dự báo AI'}
+          {isEnglish ? 'Financial Advisor' : 'Cố vấn tài chính'}
           {!isVipActive && <span className="text-amber-500 text-[10px]">👑</span>}
         </span>
-      ),   
-      icon: <FiTarget size={13}/> 
+      ),
+      icon: <FiZap size={13}/>
     },
     { 
       key: 'trends',    
@@ -664,191 +640,180 @@ const Statistics = () => {
     </div>
   );
 
-  // ── Forecast tab ─────────────────────────────────────────────────────────
-  const ForecastTab = () => {
-    const f = forecast;
-    const histData = compare.map(m => ({
-      name: `${isEnglish ? 'M' : 'T'}${m.month}/${String(m.year).slice(2)}`,
-      [isEnglish ? 'Actual expense' : 'Chi tiêu thực']: m.totalExpense || 0,
-      [isEnglish ? 'Actual income' : 'Thu nhập thực']: m.totalIncome  || 0,
-    }));
-    const nextLabel = (() => {
-      const d = new Date(selectedYear, selectedMonth, 1);
-      return `${isEnglish ? 'M' : 'T'}${d.getMonth()+1}/${String(d.getFullYear()).slice(2)}`;
-    })();
-    const forecastWindow = f?.basedOnMonths || 6;
-    const referenceLabel = `${isEnglish ? 'M' : 'T'}${selectedMonth}/${String(selectedYear).slice(2)}`;
-    const chartData = [
-      ...histData,
-      { name: nextLabel, [isEnglish ? 'Forecast expense' : 'Dự báo chi']: f?.nextMonthExpense||0, [isEnglish ? 'Forecast income' : 'Dự báo thu']: f?.nextMonthIncome||0, isDashed: true },
-    ];
+  // ── Advisor tab ──────────────────────────────────────────────────────────
+  const AdvisorTab = () => {
+    const a = advice;
+    const rule = a?.rule502030;
+    const jars = a?.sixJars;
+    const anomalies = a?.anomalies || [];
+    const budgetWarnings = a?.budgetPaceWarnings || [];
+    const goalWarnings = a?.goalPaceWarnings || [];
+    const tips = a?.tips || [];
 
-    const catForecastList = f?.byCategory ? Object.entries(f.byCategory).slice(0,8) : [];
-    const confidenceMap = {
-      high: isEnglish ? 'High confidence' : 'Tin cậy cao',
-      medium: isEnglish ? 'Medium' : 'Trung bình',
-      low: isEnglish ? 'Low' : 'Thấp',
+    const VERDICT_STYLE = {
+      on_track: { color: '#10b981', label: isEnglish ? 'On track' : 'Đạt mục tiêu', icon: <FiCheckCircle size={12}/> },
+      over:     { color: '#ef4444', label: isEnglish ? 'Over target' : 'Vượt mức',   icon: <FiAlertTriangle size={12}/> },
+      under:    { color: '#f59e0b', label: isEnglish ? 'Below target' : 'Dưới mức',  icon: <FiAlertTriangle size={12}/> },
+    };
+
+    const SEVERITY_STYLE = {
+      danger:  { color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-500/10', icon: <FiAlertTriangle size={14}/> },
+      warning: { color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-500/10', icon: <FiAlertCircle size={14}/> },
+      info:    { color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-500/10', icon: <FiAlertCircle size={14}/> },
+    };
+
+    const RuleBar = ({ label, data, colorHex }) => {
+      if (!data) return null;
+      const v = VERDICT_STYLE[data.verdict] || VERDICT_STYLE.on_track;
+      const width = Math.min(Math.max(data.percentage, 0), 100);
+      return (
+        <div className="rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#232936]">
+          <div className="flex items-center justify-between text-xs mb-1.5">
+            <span className="font-semibold text-[#1f2733] dark:text-[#e8edf4]">{label}</span>
+            <span className="inline-flex items-center gap-1 font-bold" style={{ color: v.color }}>{v.icon} {v.label}</span>
+          </div>
+          <div className="flex items-center justify-between text-[11px] text-[#6f7480] dark:text-[#a4acba] mb-1">
+            <span>{fmt(data.amount)} ({data.percentage}%)</span>
+            <span>{isEnglish ? 'Target' : 'Mục tiêu'}: {data.target}%</span>
+          </div>
+          <div className="h-1.5 bg-[#e1e7f0] dark:bg-[#2e3542] rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-700" style={{ width: `${width}%`, backgroundColor: colorHex }}/>
+          </div>
+        </div>
+      );
     };
 
     return (
       <div className="space-y-5">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Expense forecast' : 'Dự báo chi tiêu'}</p>
-            <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#df4b4b] dark:text-[#ff8f8f] truncate">{fmt(f?.nextMonthExpense)}</p>
+        {/* Tips ưu tiên */}
+        <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1 h-4 rounded-full bg-purple-500"/>
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'What to do now' : 'Việc cần làm ngay'}</h3>
           </div>
-          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Income forecast' : 'Dự báo thu nhập'}</p>
-            <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#159b63] dark:text-[#58d49f] truncate">{fmt(f?.nextMonthIncome)}</p>
+          {tips.length > 0 ? (
+            <div className="space-y-2">
+              {tips.map((tip, i) => {
+                const s = SEVERITY_STYLE[tip.severity] || SEVERITY_STYLE.info;
+                return (
+                  <div key={i} className={`flex items-start gap-2 rounded-xl p-3 text-xs font-medium ${s.bg} ${s.color}`}>
+                    <span className="mt-0.5 flex-shrink-0">{s.icon}</span>
+                    <span>{tip.message}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-[#6f7480] dark:text-[#a4acba] py-4 text-center">{isEnglish ? 'Everything looks healthy this month. Keep it up!' : 'Mọi thứ đang ổn trong tháng này. Tiếp tục phát huy nhé!'}</p>
+          )}
+        </div>
+
+        {/* Quy tắc 50/30/20 */}
+        <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1 h-4 rounded-full bg-blue-500"/>
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Budget rule 50/30/20' : 'Quy tắc ngân sách 50/30/20'}</h3>
           </div>
-          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Savings forecast' : 'Dự báo tiết kiệm'}</p>
-            <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#2e67da] dark:text-[#8eb2ff] truncate">{fmt(f?.nextMonthSavings)}</p>
-          </div>
-          <div className="rounded-xl bg-[#FFFCF5] p-3 sm:p-4 shadow-sm dark:bg-[#191d25]">
-            <p className="text-[10px] sm:text-xs uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Model confidence' : 'Độ tin cậy mô hình'}</p>
-            <p className="mt-2 text-sm sm:text-xl md:text-2xl font-black text-[#7a43db] dark:text-[#bd97ff] truncate">{f?.confidencePercent !== undefined ? `${f.confidencePercent}%` : (confidenceMap[f?.confidence] || '—')}</p>
+          <p className="text-xs text-[#6f7480] dark:text-[#a4acba] mb-3">
+            {isEnglish ? 'Needs / Wants / Savings compared to your income this period.' : 'Thiết yếu / Không thiết yếu / Tiết kiệm so với thu nhập trong kỳ.'}
+          </p>
+          <div className="space-y-2.5">
+            <RuleBar label={isEnglish ? 'Needs' : 'Thiết yếu'} data={rule?.needs} colorHex="#3b82f6"/>
+            <RuleBar label={isEnglish ? 'Wants' : 'Không thiết yếu'} data={rule?.wants} colorHex="#f59e0b"/>
+            <RuleBar label={isEnglish ? 'Savings' : 'Tiết kiệm'} data={rule?.savings} colorHex="#10b981"/>
           </div>
         </div>
 
-        {f && (
-          <div className="rounded-xl border border-[#e8edf5] bg-[#f8fbff] p-4 shadow-sm dark:border-[#263043] dark:bg-[#141821]">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-              <div className="max-w-4xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6c7890] dark:text-[#8b95a8]">
-                  {isEnglish ? 'Forecast basis' : 'Cơ sở dự báo'}
-                </p>
-                <h4 className="mt-1 text-lg font-bold text-[#18202f] dark:text-[#eef3fb]">
-                  {isEnglish ? 'This forecast is built from monthly spending history' : 'Dự báo này được xây từ dữ liệu thu/chi theo tháng'}
-                </h4>
-                <p className="mt-2 text-sm leading-6 text-[#4f5c72] dark:text-[#aab3c3]">
-                  {isEnglish
-                    ? `The model uses XGBoost-style Weighted Ensemble Gradient Boosting (6 weak learners) on the last ${forecastWindow} months of monthly totals, anchored to ${referenceLabel}. Both overall and category forecasts use the same ensemble approach with cross-validation quality scoring. Model accuracy: ${f?.confidencePercent || 0}%.`
-                    : `Mô hình dùng XGBoost-style Weighted Ensemble Gradient Boosting (6 weak learners) trên ${forecastWindow} tháng gần nhất của tổng thu/chi theo tháng, neo theo ${referenceLabel}. Cả dự báo tổng thể và theo danh mục đều dùng cùng phương pháp ensemble với cross-validation. Độ chính xác mô hình: ${f?.confidencePercent || 0}%.`}
-                </p>
-              </div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:min-w-[360px]">
-                <div className="rounded-lg bg-[#FFFCF5] px-3 py-2 shadow-sm dark:bg-[#1c2230]">
-                  <p className="text-[11px] uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Time unit' : 'Đơn vị thời gian'}</p>
-                  <p className="mt-1 text-sm font-semibold text-[#18202f] dark:text-[#eef3fb]">{isEnglish ? 'Monthly' : 'Theo tháng'}</p>
-                </div>
-                <div className="rounded-lg bg-[#FFFCF5] px-3 py-2 shadow-sm dark:bg-[#1c2230]">
-                  <p className="text-[11px] uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Window' : 'Cửa sổ dữ liệu'}</p>
-                  <p className="mt-1 text-sm font-semibold text-[#18202f] dark:text-[#eef3fb]">{forecastWindow} {isEnglish ? 'months' : 'tháng'}</p>
-                </div>
-                <div className="rounded-lg bg-[#FFFCF5] px-3 py-2 shadow-sm dark:bg-[#1c2230]">
-                  <p className="text-[11px] uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Reference month' : 'Tháng tham chiếu'}</p>
-                  <p className="mt-1 text-sm font-semibold text-[#18202f] dark:text-[#eef3fb]">{referenceLabel}</p>
-                                <div className="rounded-lg bg-[#FFFCF5] px-3 py-2 shadow-sm dark:bg-[#1c2230]">
-                                  <p className="text-[11px] uppercase tracking-wide text-[#7f8795] dark:text-[#9da6b5]">{isEnglish ? 'Model accuracy' : 'Độ chính xác mô hình'}</p>
-                                  <p className="mt-1 text-sm font-semibold text-[#084d3c] dark:text-[#5fb89d]">{f?.confidencePercent || 0}%</p>
-                                </div>
-                </div>
-              </div>
-            </div>
+        {/* 6 chiếc lọ (ước lượng) */}
+        <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-1 h-4 rounded-full bg-teal-500"/>
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? '6 Jars (estimate)' : '6 Chiếc lọ (ước lượng)'}</h3>
           </div>
-        )}
-
-        {f && (
-          <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-4 rounded-full bg-purple-500"/>
-                <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'ML Forecast Model' : 'Mô hình dự báo ML'}</h3>
-              </div>
-              <div className="flex items-center gap-2">
-                <ConfidenceBadge confidence={f.confidence} isEnglish={isEnglish}/>
-              </div>
-            </div>
-            <div className="flex gap-4 text-xs text-gray-500 dark:text-gray-400 mb-3 flex-wrap">
-              <span>{isEnglish ? 'Expense forecast' : 'Dự báo chi'}: <span className="font-semibold text-red-500">{fmt(f.nextMonthExpense)}</span></span>
-              <span>{isEnglish ? 'Confidence range' : 'Khoảng tin cậy'}: <span className="font-semibold text-gray-700 dark:text-gray-300">{fmt(f.marginLow)} – {fmt(f.marginHigh)}</span></span>
-            </div>
-            <ResponsiveContainer width="100%" height={230}>
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="gInc" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="gExp" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.15}/>
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" className="dark:stroke-[#222]"/>
-                <XAxis dataKey="name" tick={{fontSize:11}}/>
-                <YAxis tickFormatter={fmtShort} tick={{fontSize:10}} width={48}/>
-                <Tooltip content={<ChartTip fmt={fmt}/>}/>
-                <Legend wrapperStyle={{fontSize:11}}/>
-                <ReferenceLine x={nextLabel} stroke="#8b5cf6" strokeDasharray="4 2" label={{value: isEnglish ? 'Forecast' : 'Dự báo', fontSize:10, fill:'#8b5cf6'}}/>
-                <Area type="monotone" dataKey={isEnglish ? 'Actual income' : 'Thu nhập thực'} stroke="#10b981" fill="url(#gInc)" strokeWidth={2}/>
-                <Area type="monotone" dataKey={isEnglish ? 'Actual expense' : 'Chi tiêu thực'} stroke="#ef4444" fill="url(#gExp)" strokeWidth={2}/>
-                <Bar dataKey={isEnglish ? 'Forecast expense' : 'Dự báo chi'} fill="#ef444466" radius={[4,4,0,0]}/>
-                <Bar dataKey={isEnglish ? 'Forecast income' : 'Dự báo thu'} fill="#10b98166" radius={[4,4,0,0]}/>
-              </AreaChart>
-            </ResponsiveContainer>
+          <p className="text-xs text-[#6f7480] dark:text-[#a4acba] mb-3">
+            {isEnglish ? 'Approximated from the 3 groups above (Necessities / Play+Education+Give / Financial Freedom+Long-term Savings) — not a full 6-label breakdown.' : 'Ước lượng dựa trên 3 nhóm ở trên (Thiết yếu / Hưởng thụ+Giáo dục+Cho đi / Tự do tài chính+Tiết kiệm dài hạn) — không phải phân loại đầy đủ 6 nhãn riêng.'}
+          </p>
+          <div className="space-y-2.5">
+            <RuleBar label={isEnglish ? 'Necessities (NEC)' : 'Thiết yếu (NEC)'} data={jars?.necessities} colorHex="#3b82f6"/>
+            <RuleBar label={isEnglish ? 'Play + Education + Give' : 'Hưởng thụ + Giáo dục + Cho đi'} data={jars?.playEduGive} colorHex="#f59e0b"/>
+            <RuleBar label={isEnglish ? 'Financial Freedom + Long-term Savings' : 'Tự do tài chính + Tiết kiệm dài hạn'} data={jars?.freedomAndSavings} colorHex="#10b981"/>
           </div>
-        )}
+        </div>
 
-        {catForecastList.length > 0 && (
-          <div className="rounded-xl bg-[#FFFCF5] shadow-sm dark:bg-[#191d25] overflow-hidden">
-            <div className="px-4 py-3 border-b border-[#eceff4] dark:border-[#2b313d]">
-              <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Category Expense Forecast' : 'Dự báo chi tiêu theo danh mục'}</h3>
-            </div>
-            {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead className="bg-[#FFFCF5] dark:bg-[#232936]">
-                  <tr>
-                    {[(isEnglish ? 'Category' : 'Danh mục'),(isEnglish ? 'Average/month' : 'Trung bình/tháng'),(isEnglish ? 'Next month forecast' : 'Dự báo tháng tới'),(isEnglish ? 'Trend' : 'Xu hướng'),(isEnglish ? 'Confidence' : 'Độ tin cậy')].map(h => (
-                      <th key={h} className="px-4 py-2.5 text-left font-semibold text-[#7a808c] dark:text-[#9fa7b4]">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {catForecastList.map(([cat, d]) => (
-                    <tr key={cat} className="border-t border-[#eef1f6] dark:border-[#2a303b] hover:bg-[#F3EBD8] dark:hover:bg-[#202632] transition-colors">
-                      <td className="px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-200">{cat}</td>
-                      <td className="px-4 py-2.5 text-gray-600 dark:text-gray-300">{fmt(d.average)}</td>
-                      <td className="px-4 py-2.5 font-bold text-red-600 dark:text-red-400">{fmt(d.forecast)}</td>
-                      <td className="px-4 py-2.5"><TrendBadge trend={d.trend} isEnglish={isEnglish}/></td>
-                      <td className="px-4 py-2.5"><ConfidenceBadge confidence={d.r2 > 0.7 ? 'high' : d.r2 > 0.4 ? 'medium' : 'low'} isEnglish={isEnglish}/></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Card View */}
-            <div className="block md:hidden divide-y divide-[#eef1f6] dark:divide-[#2a303b]">
-              {catForecastList.map(([cat, d]) => (
-                <div key={cat} className="p-4 space-y-2 hover:bg-[#F3EBD8] dark:hover:bg-[#202632] transition-colors">
-                  <div className="flex items-center justify-between font-bold text-sm text-gray-800 dark:text-gray-200">
-                    <span>{cat}</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-950/20 text-red-600">
-                      {isEnglish ? 'Forecast' : 'Dự báo'}: {fmt(d.forecast)}
-                    </span>
+        {/* Bất thường chi tiêu */}
+        <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1 h-4 rounded-full bg-red-500"/>
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Spending anomalies' : 'Bất thường chi tiêu'}</h3>
+          </div>
+          {anomalies.length > 0 ? (
+            <div className="space-y-2">
+              {anomalies.map((an, i) => (
+                <div key={i} className="rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#232936]">
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="font-bold text-[#1f2733] dark:text-[#e8edf4]">{an.category}</span>
+                    <span className={`font-black ${an.severity === 'danger' ? 'text-red-500' : 'text-amber-500'}`}>+{an.changePct}%</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400">
-                    <div className="flex justify-between border-b border-gray-100 dark:border-gray-800/40 pb-1">
-                      <span>{isEnglish ? 'Average/month' : 'TB/tháng'}:</span>
-                      <span className="font-semibold text-gray-700 dark:text-gray-300">{fmt(d.average)}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-gray-100 dark:border-gray-800/40 pb-1">
-                      <span>{isEnglish ? 'Trend' : 'Xu hướng'}:</span>
-                      <span><TrendBadge trend={d.trend} isEnglish={isEnglish}/></span>
-                    </div>
-                    <div className="col-span-2 flex justify-between pb-0.5">
-                      <span>{isEnglish ? 'Confidence' : 'Độ tin cậy'}:</span>
-                      <span><ConfidenceBadge confidence={d.r2 > 0.7 ? 'high' : d.r2 > 0.4 ? 'medium' : 'low'} isEnglish={isEnglish}/></span>
-                    </div>
-                  </div>
+                  <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{an.message}</p>
+                  <p className="mt-1 text-[11px] text-[#8b93a3] dark:text-[#8a93a4]">{fmt(an.currentAmount)} {isEnglish ? 'vs avg' : 'so với TB'} {fmt(an.averageAmount)}</p>
                 </div>
               ))}
             </div>
+          ) : (
+            <p className="text-sm text-[#6f7480] dark:text-[#a4acba] py-4 text-center">{isEnglish ? 'No unusual spending detected.' : 'Không phát hiện chi tiêu bất thường.'}</p>
+          )}
+        </div>
+
+        {/* Cảnh báo tiến độ ngân sách */}
+        <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1 h-4 rounded-full bg-amber-500"/>
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Budget pace warnings' : 'Cảnh báo tiến độ ngân sách'}</h3>
           </div>
-        )}
+          {budgetWarnings.length > 0 ? (
+            <div className="space-y-2">
+              {budgetWarnings.map((w, i) => (
+                <div key={i} className="rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#232936]">
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="font-bold text-[#1f2733] dark:text-[#e8edf4]">{w.categoryName}</span>
+                    <span className={`font-black ${w.severity === 'danger' ? 'text-red-500' : 'text-amber-500'}`}>{w.spentPct}% {isEnglish ? 'spent' : 'đã chi'}</span>
+                  </div>
+                  <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{w.message}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-[#6f7480] dark:text-[#a4acba] py-4 text-center">{isEnglish ? 'All budgets are on a healthy pace.' : 'Các ngân sách đều đang đúng tiến độ.'}</p>
+          )}
+        </div>
+
+        {/* Cảnh báo tiến độ mục tiêu */}
+        <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25]">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1 h-4 rounded-full bg-emerald-500"/>
+            <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{isEnglish ? 'Savings goal pace' : 'Tiến độ mục tiêu tiết kiệm'}</h3>
+          </div>
+          {goalWarnings.length > 0 ? (
+            <div className="space-y-2">
+              {goalWarnings.map((w, i) => (
+                <div key={i} className="rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#232936]">
+                  <div className="flex items-center gap-2 text-xs mb-1">
+                    <FiTarget size={12} className={w.severity === 'danger' ? 'text-red-500' : 'text-amber-500'}/>
+                    <span className="font-bold text-[#1f2733] dark:text-[#e8edf4]">{w.name}</span>
+                    {w.delayMonths !== undefined && (
+                      <span className={`ml-auto font-black ${w.severity === 'danger' ? 'text-red-500' : 'text-amber-500'}`}>
+                        +{w.delayMonths} {isEnglish ? 'mo delay' : 'tháng chậm'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{w.message}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-[#6f7480] dark:text-[#a4acba] py-4 text-center">{isEnglish ? 'All active goals are on track.' : 'Các mục tiêu đang hoạt động đều đúng tiến độ.'}</p>
+          )}
+        </div>
       </div>
     );
   };
@@ -1226,8 +1191,8 @@ const Statistics = () => {
       {/* Tab content */}
       {activeTab === 'overview'  && <OverviewTab/>}
       {activeTab === 'compare'   && <CompareTab/>}
-      {activeTab === 'forecast'  && (
-        isVipActive ? <ForecastTab/> : <LockedFeaturePlaceholder featureName={isEnglish ? 'AI Spending Forecast' : 'Dự báo chi tiêu AI'} description={isEnglish ? 'Upgrade to VIP to forecast your next month spending with AI' : 'Nâng cấp tài khoản VIP để sử dụng AI dự báo và đề xuất chi tiêu tháng tiếp theo'} />
+      {activeTab === 'advisor'   && (
+        isVipActive ? <AdvisorTab/> : <LockedFeaturePlaceholder featureName={isEnglish ? 'Smart Financial Advisor' : 'Cố vấn tài chính thông minh'} description={isEnglish ? 'Upgrade to VIP to get 50/30/20 budget analysis, anomaly detection, and budget/goal pace warnings' : 'Nâng cấp tài khoản VIP để nhận phân tích ngân sách 50/30/20, phát hiện bất thường và cảnh báo tiến độ ngân sách/mục tiêu'} />
       )}
       {activeTab === 'trends'    && (
         isVipActive ? <TrendsTab/> : <LockedFeaturePlaceholder featureName={isEnglish ? 'Financial Trends Analysis' : 'Phân tích xu hướng tài chính'} description={isEnglish ? 'Upgrade to VIP to analyze long-term trends and savings rate' : 'Nâng cấp tài khoản VIP để xem phân tích xu hướng chi tiêu dài hạn'} />

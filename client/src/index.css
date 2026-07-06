@@ -359,31 +359,27 @@ button {
   }
 }
 
-/* Sidebar grid areas for navigation layout */
+/* Sidebar navigation layout - Flexbox scrollable container */
 .sidebar-nav-grid {
-  display: grid;
-  grid-template-areas:
-    'brand'
-    'home'
-    'menu'
-    'footer';
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .sidebar-brand {
-  grid-area: brand;
+  flex-shrink: 0;
 }
 
 .sidebar-home {
-  grid-area: home;
+  flex-shrink: 0;
 }
 
 .sidebar-menu {
-  grid-area: menu;
+  /* co giãn trong scroll container */
 }
 
 .sidebar-footer {
-  grid-area: footer;
+  flex-shrink: 0;
 }
 
 /* Grid-area layout for Transactions page */
@@ -792,6 +788,83 @@ button {
 
   .tx-filter-card.is-collapsed .tx-filter-expanded-content {
     display: block !important;
+  }
+}
+
+/* ========================================
+   COLLAPSIBLE APP SIDEBAR (desktop only — mobile drawer luôn hiển thị đầy đủ)
+   ======================================== */
+
+.app-sidebar {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Nhãn chữ cạnh icon: fade + thu nhỏ mượt bằng opacity/max-width thay vì display:none
+   để hiệu ứng chạy đồng bộ với transition width của sidebar */
+.sidebar-label {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 1;
+  max-width: 220px;
+  transition: opacity 0.2s ease, max-width 0.3s ease;
+}
+
+.sidebar-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.sidebar-collapse-btn:hover {
+  transform: scale(1.08);
+}
+
+/* Flyout hiện danh sách con khi rê chuột vào 1 nhóm menu lúc sidebar đang thu gọn */
+.sidebar-flyout {
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin-left: 0.5rem;
+  min-width: 208px;
+  z-index: 50;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+
+@media (min-width: 1024px) {
+  .app-sidebar.is-collapsed {
+    width: 96px;
+  }
+
+  .app-sidebar.is-expanded {
+    width: 250px;
+  }
+
+  .app-sidebar.is-collapsed .sidebar-label {
+    opacity: 0;
+    max-width: 0;
+  }
+
+  /* Ẩn khối expand inline (dùng cho chế độ đầy đủ) khi đã thu gọn, tránh tràn ra ngoài rail hẹp */
+  .app-sidebar.is-collapsed .sidebar-inline-expand {
+    display: none !important;
+  }
+
+  /* Flyout hiện khi rê chuột VÀO nhóm, hoặc khi đã bấm mở (is-open) — bấm hoạt động cả khi không hover */
+  .app-sidebar.is-collapsed .sidebar-navgroup:hover .sidebar-flyout,
+  .app-sidebar.is-collapsed .sidebar-flyout.is-open {
+    display: block;
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
   }
 }
 

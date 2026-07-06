@@ -31,7 +31,8 @@ const CategoryModal = ({ category, onClose, onSave }) => {
     icon: '📁',
     color: '#3B82F6',
     type: 'expense',
-    order: 0
+    order: 0,
+    group: 'need'
   });
   const [showIconPicker, setShowIconPicker] = useState(false);
   const [errors, setErrors] = useState({});
@@ -43,7 +44,8 @@ const CategoryModal = ({ category, onClose, onSave }) => {
         icon: category.icon || '📁',
         color: category.color || '#3B82F6',
         type: category.type || 'expense',
-        order: category.order || 0
+        order: category.order || 0,
+        group: category.group || 'need'
       });
     }
   }, [category]);
@@ -211,6 +213,28 @@ const CategoryModal = ({ category, onClose, onSave }) => {
               <option value="both">{isEnglish ? 'Both' : 'Cả hai'}</option>
             </select>
           </div>
+
+          {/* Budget group — chỉ áp dụng cho danh mục chi tiêu, dùng cho quy tắc 50/30/20 của Cố vấn tài chính */}
+          {formData.type !== 'income' && (
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
+                {isEnglish ? 'Budget group' : 'Nhóm ngân sách'}
+              </label>
+              <select
+                name="group"
+                value={formData.group}
+                onChange={handleChange}
+                className="input text-sm"
+              >
+                <option value="need">{isEnglish ? 'Needs (essential)' : 'Thiết yếu'}</option>
+                <option value="want">{isEnglish ? 'Wants (non-essential)' : 'Không thiết yếu'}</option>
+                <option value="saving">{isEnglish ? 'Savings' : 'Tiết kiệm'}</option>
+              </select>
+              <p className="mt-1 text-[11px] text-gray-400">
+                {isEnglish ? 'Used by the Financial Advisor for the 50/30/20 budget rule.' : 'Dùng cho quy tắc ngân sách 50/30/20 của Cố vấn tài chính.'}
+              </p>
+            </div>
+          )}
 
           {/* Order */}
           <div>

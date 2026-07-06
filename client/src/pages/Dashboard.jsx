@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { statsService } from '../services/stats.service';
-import { FiTrendingUp, FiDollarSign, FiActivity, FiAlertTriangle, FiTarget, FiSun, FiMoon, FiClock, FiList, FiArrowUpRight, FiArrowDownRight, FiPlus, FiPieChart, FiLock, FiAward } from 'react-icons/fi';
+import { FiTrendingUp, FiDollarSign, FiActivity, FiAlertTriangle, FiTarget, FiSun, FiMoon, FiClock, FiList, FiArrowUpRight, FiArrowDownRight, FiPlus, FiPieChart, FiLock, FiAward, FiZap, FiCheckCircle } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { useTransactions } from '../context/TransactionContext';
 import { useCategories } from '../context/CategoryContext';
@@ -31,7 +31,7 @@ const Dashboard = () => {
   const [timeFilter, setTimeFilter] = useState('month');
   const [dailyFluctuation, setDailyFluctuation] = useState([]);
   const [txFilter, setTxFilter] = useState('all');
-  const [forecastData, setForecastData] = useState(null);
+  const [adviceData, setAdviceData] = useState(null);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -106,13 +106,13 @@ const Dashboard = () => {
     setLastMonthCategoryStats([]);
     setDailyFluctuation([]);
     setGoals([]);
-    setForecastData(null);
+    setAdviceData(null);
     try {
       const { startDate, endDate } = getDateRange();
-      // gọi song song cả hai API để lấy dữ liệu dashboard và dự báo chi tiêu, sử dụng Promise.allSettled để đảm bảo rằng chúng ta có thể xử lý kết quả của từng API một cách độc lập và tránh bị lỗi toàn bộ nếu một trong hai API gặp sự cốt
-      const [dashboardResult, forecastResult] = await Promise.allSettled([
+      // gọi song song cả hai API để lấy dữ liệu dashboard và cố vấn tài chính, sử dụng Promise.allSettled để đảm bảo rằng chúng ta có thể xử lý kết quả của từng API một cách độc lập và tránh bị lỗi toàn bộ nếu một trong hai API gặp sự cố
+      const [dashboardResult, adviceResult] = await Promise.allSettled([
         statsService.getDashboard(startDate, endDate),
-        statsService.forecastSpending(6),
+        statsService.getFinancialAdvice(),
       ]);
 
       if (dashboardResult.status !== 'fulfilled') {
@@ -129,10 +129,10 @@ const Dashboard = () => {
       setDailyFluctuation(data.dailyFluctuation || []);
       setGoals(Array.isArray(data.goals) ? data.goals : []);
 
-      if (forecastResult.status === 'fulfilled') {
-        setForecastData(forecastResult.value?.data || null);
+      if (adviceResult.status === 'fulfilled') {
+        setAdviceData(adviceResult.value?.data || null);
       } else {
-        setForecastData(null);
+        setAdviceData(null);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -259,22 +259,10 @@ const Dashboard = () => {
     if (txFilter === 'expense') return tx.type === 'expense';
     return true;
   });
-  // hàm dùng để tính toán dự báo chi tiêu cho tháng tiếp theo dựa trên dữ liệu lịch sử, đồng thời xác định các danh mục chi tiêu hàng đầu và phần trăm thay đổi so với tháng hiện tại, giúp người dùng có cái nhìn về xu hướng chi tiêu sắp tới và có thể điều chỉnh kế hoạch tài chính của mình cho phù hợp trên dashboard
-  const currentExpense = filteredSummary?.expense || monthlyStats[monthlyStats.length - 1]?.totalExpense || 0;
-  const forecastExpense = forecastData?.forecast?.nextMonthExpense || 0;
-  const forecastLow = forecastData?.forecast?.marginLow ?? (forecastExpense * 0.9);
-  const forecastHigh = forecastData?.forecast?.marginHigh ?? (forecastExpense * 1.1);
-  const forecastDelta = forecastExpense - currentExpense;
-  const forecastDeltaPct = currentExpense > 0 ? (forecastDelta / currentExpense) * 100 : 0;
-  const topForecastCategories = Object.entries(forecastData?.byCategory || {})
-    .map(([name, item]) => ({
-      name,
-      amount: item?.forecast || 0,
-    }))
-    .filter((item) => item.amount > 0)
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, 3)
-  const topForecastTotal = topForecastCategories.reduce((sum, item) => sum + item.amount, 0);
+  // các gợi ý từ cố vấn tài chính (quy tắc 50/30/20, bất thường chi tiêu, cảnh báo tiến độ ngân sách/mục tiêu), sắp theo mức độ nghiêm trọng — lấy top 3 để hiển thị gọn trên dashboard
+  const advisorTips = adviceData?.tips || [];
+  const topAdvisorTips = advisorTips.slice(0, 3);
+  const advisorRule = adviceData?.rule502030;
   // điều kiện để hiển thị skeleton loading khi đang tải dữ liệu, giúp cải thiện trải nghiệm người dùng bằng cách cung cấp phản hồi trực quan trong khi chờ đợi dữ liệu được tải về và xử lý trên dashboard 
   const totalWalletBalance = wallets.reduce((sum, w) => sum + (parseFloat(w.balance) || 0), 0);
 
@@ -587,7 +575,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Spending Forecast Card */}
+            {/* Financial Advisor Card */}
             <div className="rounded-xl bg-[#FFFCF5] p-5 shadow-sm dark:bg-[#191d25] relative overflow-hidden flex-1 flex flex-col justify-between min-h-[350px]">
               {!isVipActive && (
                 <div className="absolute inset-0 bg-white/70 dark:bg-[#191d25]/75 z-10 flex flex-col items-center justify-center p-6 text-center backdrop-blur-[2px]">
@@ -595,12 +583,12 @@ const Dashboard = () => {
                     <FiLock size={20} />
                   </div>
                   <h4 className="font-bold text-gray-900 dark:text-white text-sm">
-                    {isEnglish ? 'Spending Forecast (VIP Feature)' : 'Dự báo chi tiêu (Tính năng VIP)'}
+                    {isEnglish ? 'Financial Advisor (VIP Feature)' : 'Cố vấn tài chính (Tính năng VIP)'}
                   </h4>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[200px]">
                     {isEnglish
-                      ? 'Upgrade to VIP to forecast your next month spending with AI'
-                      : 'Nâng cấp tài khoản VIP để sử dụng AI dự báo và đề xuất chi tiêu tháng tiếp theo'}
+                      ? 'Upgrade to VIP for 50/30/20 budget analysis, anomaly detection, and pace warnings'
+                      : 'Nâng cấp tài khoản VIP để nhận phân tích ngân sách 50/30/20, phát hiện bất thường và cảnh báo tiến độ'}
                   </p>
                   <button
                     onClick={() => navigate('/vip')}
@@ -612,66 +600,47 @@ const Dashboard = () => {
               )}
               <div>
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5]">{t('expenseForecast')}</h3>
-                  <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">{isEnglish ? `${t('currentExpense')} onward` : `${t('currentExpense')} tới`}</span>
+                  <h3 className="text-2xl font-bold text-[#181c24] dark:text-[#eef1f5] flex items-center gap-2"><FiZap className="text-purple-500"/> {t('financialAdvisor')}</h3>
+                  <span className="text-xs font-semibold text-[#3a4a62] dark:text-[#b9c3d0]">{t('budgetRule502030')}</span>
                 </div>
 
-                <div className="mb-3 rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#222935]">
-                  <p className="text-xs font-semibold text-[#5a6374] dark:text-[#adb5c3]">{t('forecastedExpense')}</p>
-                  <p className="mt-1 text-lg font-black text-[#1f2733] dark:text-[#e8edf4]">{formatCurrency(forecastExpense)}</p>
-                  <p className={`mt-1 text-xs font-semibold ${forecastDelta > 0 ? 'text-[#b54747] dark:text-[#f3a5a5]' : 'text-[#2f8e6f] dark:text-[#8dd5bd]'}`}>
-                    {forecastDelta > 0 ? '+' : ''}{forecastDeltaPct.toFixed(1)}% {t('monthlyComparison')}
-                  </p>
-                  <p className="mt-2 text-[11px] font-semibold text-[#667084] dark:text-[#8da3b8]">
-                    {isEnglish ? 'Confidence: ' : 'Độ tin cậy: '}<span className="text-[#084d3c] dark:text-[#5fb89d] font-black">{forecastData?.forecast?.confidencePercent || 0}%</span>
-                  </p>
-                </div>
-
-                <div className="mb-3 grid grid-cols-2 gap-2">
-                  <div className="rounded-xl bg-[#F3EBD8] p-2.5 dark:bg-[#232936]">
-                    <p className="text-[11px] font-semibold text-[#667084] dark:text-[#a8b0be]">{isEnglish ? 'Low scenario' : 'Kịch bản thấp'}</p>
-                    <p className="mt-1 text-sm font-black text-[#1f2733] dark:text-[#e8edf4]">{formatCurrency(forecastLow)}</p>
+                {advisorRule && (
+                  <div className="mb-3 grid grid-cols-3 gap-2">
+                    <div className="rounded-xl bg-[#F3EBD8] p-2.5 dark:bg-[#232936]">
+                      <p className="text-[11px] font-semibold text-[#667084] dark:text-[#a8b0be]">{isEnglish ? 'Needs' : 'Thiết yếu'}</p>
+                      <p className="mt-1 text-sm font-black text-[#1f2733] dark:text-[#e8edf4]">{advisorRule.needs.percentage}%</p>
+                    </div>
+                    <div className="rounded-xl bg-[#F3EBD8] p-2.5 dark:bg-[#232936]">
+                      <p className="text-[11px] font-semibold text-[#667084] dark:text-[#a8b0be]">{isEnglish ? 'Wants' : 'Không thiết yếu'}</p>
+                      <p className="mt-1 text-sm font-black text-[#1f2733] dark:text-[#e8edf4]">{advisorRule.wants.percentage}%</p>
+                    </div>
+                    <div className="rounded-xl bg-[#F3EBD8] p-2.5 dark:bg-[#232936]">
+                      <p className="text-[11px] font-semibold text-[#667084] dark:text-[#a8b0be]">{isEnglish ? 'Savings' : 'Tiết kiệm'}</p>
+                      <p className="mt-1 text-sm font-black text-[#1f2733] dark:text-[#e8edf4]">{advisorRule.savings.percentage}%</p>
+                    </div>
                   </div>
-                  <div className="rounded-xl bg-[#F3EBD8] p-2.5 dark:bg-[#232936]">
-                    <p className="text-[11px] font-semibold text-[#667084] dark:text-[#a8b0be]">{isEnglish ? 'High scenario' : 'Kịch bản cao'}</p>
-                    <p className="mt-1 text-sm font-black text-[#1f2733] dark:text-[#e8edf4]">{formatCurrency(forecastHigh)}</p>
-                  </div>
-                </div>
+                )}
 
-                <div className="space-y-3">
-                  {topForecastCategories.length > 0 ? topForecastCategories.map((item, idx) => (
-                    <div key={`${item.name}-${idx}`} className="rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#232936]">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="h-8 w-8 rounded-lg flex items-center justify-center font-bold bg-[#dce7f7] text-[#31557e] dark:bg-[#2a3a4f] dark:text-[#9fc4ef]">{idx + 1}</div>
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-bold text-[#1f2733] dark:text-[#e8edf4]">{item.name || (isEnglish ? 'Other expense' : 'Chi tiêu khác')}</p>
-                            <p className="text-xs text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'High-risk category' : 'Danh mục có rủi ro cao'}</p>
-                          </div>
-                        </div>
-                        <p className="text-sm font-black text-[#1a1f29] dark:text-[#eff2f6]">{formatCurrency(item.amount)}</p>
-                      </div>
-
-                      <div className="mt-2 flex items-center justify-between gap-2">
-                        <span className="rounded-full bg-[#e8effa] px-2 py-0.5 text-[11px] font-semibold text-[#365e8b] dark:bg-[#2a3f59] dark:text-[#a6caf3]">
-                          {t('topCategories')}
-                        </span>
-                        <span className="text-[11px] font-semibold text-[#667084] dark:text-[#a4acba]">
-                          {topForecastTotal > 0 ? `${Math.round((item.amount / topForecastTotal) * 100)}%` : '0%'}
-                        </span>
-                      </div>
-
-                      <div className="mt-2 h-1.5 rounded-full bg-[#dfe5ee] dark:bg-[#2e3542] overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-[#084d3c] dark:bg-[#2f8e6f]"
-                          style={{ width: `${topForecastTotal > 0 ? Math.max((item.amount / topForecastTotal) * 100, 6) : 0}%` }}
-                        />
-                      </div>
+                <div className="space-y-2.5">
+                  {topAdvisorTips.length > 0 ? topAdvisorTips.map((tip, idx) => (
+                    <div key={idx} className="flex items-start gap-2 rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#232936]">
+                      <FiAlertTriangle size={14} className={`mt-0.5 flex-shrink-0 ${tip.severity === 'danger' ? 'text-red-500' : 'text-amber-500'}`}/>
+                      <p className="text-xs font-medium text-[#1f2733] dark:text-[#e8edf4]">{tip.message}</p>
                     </div>
                   )) : (
-                    <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'Not enough data for expense forecast.' : 'Chưa đủ dữ liệu để dự báo chi tiêu.'}</p>
+                    <div className="flex items-center gap-2 rounded-xl bg-[#F3EBD8] p-3 dark:bg-[#232936]">
+                      <FiCheckCircle size={14} className="text-emerald-500 flex-shrink-0"/>
+                      <p className="text-sm text-[#6f7480] dark:text-[#a4acba]">{isEnglish ? 'Everything looks healthy this month.' : 'Mọi thứ đang ổn trong tháng này.'}</p>
+                    </div>
                   )}
                 </div>
+
+                <button
+                  onClick={() => navigate('/statistics')}
+                  className="mt-3 w-full text-center text-xs font-semibold text-[#365e8b] dark:text-[#a6caf3] hover:underline"
+                >
+                  {isEnglish ? 'See full analysis →' : 'Xem phân tích đầy đủ →'}
+                </button>
               </div>
             </div>
           </div>

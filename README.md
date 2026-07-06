@@ -13,44 +13,39 @@ Personal Finance Manager là ứng dụng web full-stack quản lý chi tiêu c�
 
 ## Tính năng nổi bật
 
-- Đăng ký, đăng nhập, đăng xuất, quên mật khẩu và xác thực bằng JWT.
-- Đăng nhập bằng Google OAuth.
-- Quản lý giao dịch thu chi, danh mục, ngân sách, khoản nợ và mục tiêu tiết kiệm.
-- Dashboard tổng quan với số liệu, biểu đồ, thống kê theo thời gian.
-- Tìm kiếm toàn cục (FTS engine) — pluggable; hiện tạm dùng truy vấn DB như fallback.
-- Import dữ liệu từ file, export báo cáo ra Excel/PDF.
-- Trang admin để quản lý người dùng, phản hồi liên hệ và dữ liệu hệ thống.
-- Thông báo, dark mode, onboarding và các tiện ích UI giúp trải nghiệm tốt hơn.
+- **Xác thực an toàn:** Đăng ký, đăng nhập, đăng xuất, quên mật khẩu qua OTP email và xác thực hai lớp bằng JWT; hỗ trợ đăng nhập nhanh bằng **Google OAuth**.
+- **Quản lý tài chính cá nhân:** Ghi chép thu chi chi tiết, quản lý danh mục phân loại, ngân sách chi tiêu định kỳ, theo dõi khoản nợ và lập mục tiêu tiết kiệm.
+- **Cố vấn tài chính thông minh (Smart Advisor):** Hệ chuyên gia phân tích sức khỏe tài chính dựa trên quy tắc 50/30/20, 6 chiếc lọ, phát hiện các giao dịch bất thường bằng phân tích thống kê lịch sử chi tiêu, và cảnh báo nguy cơ vượt ngân sách hoặc chậm mục tiêu.
+- **Đọc hóa đơn tự động (AI OCR):** Trích xuất tự động số tiền từ ảnh hóa đơn bằng công nghệ nhận dạng ký tự quang học **Tesseract.js** trực tiếp ở Client-side.
+- **Thanh toán trực tuyến PayOS:** Tích hợp cổng thanh toán PayOS để nâng cấp và gia hạn tài khoản VIP tự động.
+- **Lưu trữ đám mây:** Hỗ trợ tải lên và quản lý ảnh hóa đơn/ảnh đính kèm giao dịch thông qua **Cloudinary**.
+- **Dashboard & Báo cáo:** Trực quan hóa dữ liệu bằng hệ thống biểu đồ thông minh, hỗ trợ import dữ liệu hàng loạt từ CSV/Excel và xuất báo cáo PDF/Excel chuyên nghiệp.
+- **Trang Admin quản trị toàn diện:** Quản trị danh sách người dùng, theo dõi lượt truy cập (visits), phê duyệt giao dịch VIP và tiếp nhận ý kiến phản hồi liên hệ.
+- **Trải nghiệm người dùng cao cấp:** Dark mode mượt mà, Onboarding hướng dẫn người dùng mới, và các hiệu ứng chuyển trang/modal tương tác sinh động.
 
 ## Công nghệ sử dụng
 
 ### Frontend
 
-- React 18
-- Vite
-- React Router DOM
-- Axios
-- Tailwind CSS
-- Framer Motion và GSAP cho animation
-- Chart.js, react-chartjs-2, Recharts cho biểu đồ
-- React Toastify cho thông báo
-- @react-oauth/google cho đăng nhập Google
-- jsPDF, jspdf-autotable, XLSX để xuất báo cáo và file dữ liệu
-- Vitest, Testing Library cho kiểm thử UI
+- **Core:** React 18, Vite (Build tool), React Router DOM (Điều hướng)
+- **Styling & Animations:** Tailwind CSS (Giao diện hiện đại), Framer Motion & GSAP (Hiệu ứng micro-interaction mượt mà)
+- **Data & Charts:** Chart.js, react-chartjs-2, Recharts (Biểu đồ trực quan)
+- **AI OCR:** Tesseract.js (Nhận diện chữ viết từ ảnh hóa đơn client-side)
+- **Integrations:** Axios (Kết nối API), @react-oauth/google (Xác thực Google)
+- **Export & Reports:** jsPDF, jspdf-autotable, XLSX (Xuất báo cáo PDF/Excel)
+- **Testing:** Vitest, Testing Library (Kiểm thử UI)
 
 ### Backend
 
-- Node.js
-- Express
-- Sequelize ORM
-- SQL Server thông qua `tedious`
-- JWT cho xác thực
-- bcryptjs cho hash mật khẩu
-- Nodemailer cho gửi email
-	- Full-text search (FTS) — pluggable engine (search engine removed; DB fallback in use)
-- csv-parse và multer cho import file
-- `ml` và service dự báo xu hướng chi tiêu
-- Jest và Supertest cho kiểm thử API
+- **Core:** Node.js, Express (REST API Engine)
+- **Database & ORM:** SQL Server (Cơ sở dữ liệu chính qua `tedious`), Sequelize ORM (Quản lý Schema và Models)
+- **Integrations:**
+  - @payos/node (Tích hợp cổng thanh toán PayOS)
+  - Cloudinary SDK (Lưu trữ hình ảnh đính kèm đám mây)
+  - Nodemailer (Gửi email khôi phục mật khẩu và thông báo)
+- **Security:** JWT (Mã hóa xác thực), bcryptjs (Băm mật khẩu), express-rate-limit (Ngăn chặn tấn công spam API/Brute force), express-validator (Kiểm thực đầu vào)
+- **Data Processing & ML:** csv-parse & multer (Xử lý file upload/import), simple-statistics & ml (Tính toán thống kê sức khỏe tài chính & thuật toán dự báo xu hướng chi tiêu)
+- **Testing:** Jest, Supertest (Kiểm thử API)
 
 ### Hạ tầng dữ liệu và tích hợp
 

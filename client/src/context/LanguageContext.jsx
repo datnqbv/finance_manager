@@ -56,10 +56,8 @@ const messages = {
     noGoals: 'Bạn chưa có mục tiêu nào.',
     intelligentSuggestion: 'Gợi ý thông minh',
     defaultSuggestion: 'Bạn có thể tiết kiệm thêm nếu giữ mức chi tiêu hiện tại.',
-    expenseForecast: 'Dự báo chi tiêu',
-    currentExpense: 'Chi tiêu hiện tại',
-    forecastedExpense: 'Chi tiêu dự báo',
-    topCategories: 'Top Danh mục',
+    financialAdvisor: 'Cố vấn tài chính',
+    budgetRule502030: 'Quy tắc 50/30/20',
     categoryShare: 'Tỷ trọng',
     today: 'hôm nay',
     thisWeek: 'tuần này',
@@ -191,7 +189,6 @@ const messages = {
     statisticsLabel: 'Thống kê',
     overviewTab: 'Tổng quan',
     compareTab: 'So sánh',
-    forecastTab: 'Dự báo',
     trendsTab: 'Xu hướng',
     dailyTab: 'Theo ngày',
     totalIncome: 'Tổng thu nhập',
@@ -201,9 +198,7 @@ const messages = {
     sixMonths: '6 tháng',
     averageMonthlyIncome: 'TB thu nhập/tháng',
     averageMonthlyExpense: 'TB chi tiêu/tháng',
-    forecastExpense: 'Chi tiêu dự báo',
-    confidence: 'Độ tin cậy',
-    
+
     // Landing Page
     featuredArtwork: 'Dòng tiền thịnh vượng',
     artworkSubtitle: 'Kỷ luật tạo nên tự do tài chính',
@@ -275,10 +270,8 @@ const messages = {
     noGoals: 'You don\'t have any goals yet.',
     intelligentSuggestion: 'Intelligent suggestion',
     defaultSuggestion: 'You can save more by maintaining your current spending level.',
-    expenseForecast: 'Expense forecast',
-    currentExpense: 'Current expense',
-    forecastedExpense: 'Forecasted expense',
-    topCategories: 'Top categories',
+    financialAdvisor: 'Financial Advisor',
+    budgetRule502030: 'Budget rule 50/30/20',
     categoryShare: 'Share',
     today: 'today',
     thisWeek: 'this week',
@@ -410,7 +403,6 @@ const messages = {
     statisticsLabel: 'Statistics',
     overviewTab: 'Overview',
     compareTab: 'Compare',
-    forecastTab: 'Forecast',
     trendsTab: 'Trends',
     dailyTab: 'Daily',
     totalIncome: 'Total income',
@@ -420,9 +412,7 @@ const messages = {
     sixMonths: '6 months',
     averageMonthlyIncome: 'Avg income/month',
     averageMonthlyExpense: 'Avg expense/month',
-    forecastExpense: 'Forecasted expense',
-    confidence: 'Confidence',
-    
+
     // Landing Page
     featuredArtwork: 'Prosperous cash flow',
     artworkSubtitle: 'Discipline creates financial freedom',

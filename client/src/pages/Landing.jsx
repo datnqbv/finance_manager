@@ -120,8 +120,8 @@ const Landing = () => {
     {
       q: isEnglish ? "Do I have to pay to use this app?" : "Tôi có cần trả phí để sử dụng không?",
       a: isEnglish
-        ? "The basic personal finance tools are 100% free forever. To access advanced features like AI OCR receipt scanning, AI cashflow forecasting, and PDF/Excel exports, you can upgrade to VIP starting at very low costs."
-        : "Gói cơ bản là miễn phí mãi mãi. Nếu bạn muốn sử dụng các tính năng cao cấp như quét hóa đơn AI, dự báo chi tiêu AI và xuất báo cáo Excel/PDF, bạn có thể nâng cấp lên VIP với mức phí cực kỳ hấp dẫn."
+        ? "The basic personal finance tools are 100% free forever. To access advanced features like AI OCR receipt scanning, the Smart Financial Advisor, and PDF/Excel exports, you can upgrade to VIP starting at very low costs."
+        : "Gói cơ bản là miễn phí mãi mãi. Nếu bạn muốn sử dụng các tính năng cao cấp như quét hóa đơn AI, Cố vấn tài chính thông minh và xuất báo cáo Excel/PDF, bạn có thể nâng cấp lên VIP với mức phí cực kỳ hấp dẫn."
     }
   ];
 
@@ -732,7 +732,7 @@ const Landing = () => {
               {[
                 { step: '01', title: isEnglish ? 'Create your account' : 'Đăng ký tài khoản', desc: isEnglish ? 'Sign up free in 30 seconds. Access core dashboard immediately.' : 'Đăng ký miễn phí trong 30 giây. Sử dụng ngay trang bảng điều khiển chính.' },
                 { step: '02', title: isEnglish ? 'Add wallets & logs' : 'Tạo ví và nhập giao dịch', desc: isEnglish ? 'Import CSV, type manual spending or snap receipts with AI OCR.' : 'Quản lý ví vật lý/tài khoản ngân hàng, quét ảnh hóa đơn bằng AI nhanh chóng.' },
-                { step: '03', title: isEnglish ? 'Review cashflow charts' : 'Nhận báo cáo và tối ưu hóa', desc: isEnglish ? 'Analyze AI forecasts and monthly breakdowns to grow savings.' : 'Xem các dự báo chi tiêu AI và biểu đồ phân bổ để cắt giảm lãng phí.' }
+                { step: '03', title: isEnglish ? 'Review cashflow charts' : 'Nhận báo cáo và tối ưu hóa', desc: isEnglish ? 'Get 50/30/20 budget analysis and anomaly alerts to grow savings.' : 'Xem phân tích ngân sách 50/30/20 và cảnh báo bất thường để cắt giảm lãng phí.' }
               ].map((item, i) => (
                 <div key={i} className="flex gap-4 items-start">
                   <span className="text-xs font-black bg-[#0a5c48] dark:bg-emerald-400 text-emerald-400 dark:text-[#0a5c48] w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -755,15 +755,15 @@ const Landing = () => {
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <div className="space-y-2">
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1 rounded-full uppercase tracking-widest">
-              {isEnglish ? 'Analytics Trend' : 'Xu hướng Dòng tiền'}
+              {isEnglish ? 'Financial Advisor' : 'Cố vấn tài chính'}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0a5c48] dark:text-white wise-headline">
-              {isEnglish ? 'AI Cashflow Analytics Graph' : 'Biểu đồ Dự báo Dòng tiền AI'}
+              {isEnglish ? '50/30/20 Budget Analysis & Anomaly Detection' : 'Phân tích ngân sách 50/30/20 & Phát hiện bất thường'}
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
               {isEnglish
-                ? 'Forecast next month expenses accurately. Spot hidden risks before they occur.'
-                : 'Công cụ AI dự báo thói quen chi tiêu trong 6 tháng tiếp theo và khoanh vùng danh mục chi tiêu rủi ro cao.'}
+                ? 'A rule-based expert system checks your Needs/Wants/Savings split, flags unusual spending, and warns when budgets or goals fall behind pace.'
+                : 'Hệ chuyên gia dựa trên luật kiểm tra tỷ lệ Thiết yếu/Không thiết yếu/Tiết kiệm, phát hiện chi tiêu bất thường và cảnh báo khi ngân sách hoặc mục tiêu chậm tiến độ.'}
             </p>
           </div>
 
@@ -772,13 +772,13 @@ const Landing = () => {
             {/* Header of chart card */}
             <div className="flex justify-between items-center mb-6">
               <div className="text-left">
-                <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-black tracking-widest">{isEnglish ? 'Predictive Spending' : 'Mức dự báo chi tiêu'}</p>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-black tracking-widest">{isEnglish ? 'Savings rate this month' : 'Tỷ lệ tiết kiệm tháng này'}</p>
                 <p className="text-xl font-black text-[#0a5c48] dark:text-emerald-400">
-                  {isEnglish ? '$1,480.00' : '14.800.000 ₫'}
+                  22%
                 </p>
               </div>
               <span className="text-[10px] font-bold bg-emerald-400/20 text-[#0a5c48] dark:text-emerald-400 px-2.5 py-1 rounded-full">
-                Confidence: 94%
+                {isEnglish ? 'On track (target 20%)' : 'Đạt mục tiêu (20%)'}
               </span>
             </div>
 
@@ -808,12 +808,12 @@ const Landing = () => {
 
             {/* Chart footer labels */}
             <div className="flex justify-between items-center text-[10px] text-gray-400 dark:text-gray-500 font-bold border-t border-gray-200/80 dark:border-gray-800 pt-4 mt-2">
-              <span>Month 1</span>
-              <span>Month 2</span>
-              <span>Month 3 (Current)</span>
-              <span>Month 4 (AI Forecast)</span>
-              <span>Month 5</span>
-              <span>Month 6</span>
+              <span>{isEnglish ? 'Month 1' : 'Tháng 1'}</span>
+              <span>{isEnglish ? 'Month 2' : 'Tháng 2'}</span>
+              <span>{isEnglish ? 'Month 3' : 'Tháng 3'}</span>
+              <span>{isEnglish ? 'Month 4 (Current)' : 'Tháng 4 (Hiện tại)'}</span>
+              <span>{isEnglish ? 'Month 5' : 'Tháng 5'}</span>
+              <span>{isEnglish ? 'Month 6' : 'Tháng 6'}</span>
             </div>
           </div>
         </div>
@@ -833,8 +833,8 @@ const Landing = () => {
             </h2>
             <p className="mt-3 text-sm text-gray-500 dark:text-gray-400 max-w-lg mx-auto">
               {isEnglish
-                ? 'Unlock unlimited wallets, automated AI scanning, and advanced forecasting models.'
-                : 'Mở khóa không giới hạn tài nguyên ví, hạn mức ngân sách và trọn vẹn sức mạnh trích xuất AI.'}
+                ? 'Unlock unlimited wallets, automated AI scanning, and the Smart Financial Advisor.'
+                : 'Mở khóa không giới hạn tài nguyên ví, hạn mức ngân sách và Cố vấn tài chính thông minh.'}
             </p>
           </div>
 
@@ -916,7 +916,7 @@ const Landing = () => {
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="text-amber-500 font-bold">👑</span>
-                      <span>{isEnglish ? 'AI Cashflow Forecast & Trends' : 'Dự báo chi tiêu thông minh bằng AI'}</span>
+                      <span>{isEnglish ? 'Smart Financial Advisor & Trends' : 'Cố vấn tài chính thông minh & Xu hướng'}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="text-amber-500 font-bold">👑</span>

@@ -58,20 +58,20 @@ export const statsService = {
     return cachedGet(buildCacheKey('/stats/compare', params), '/stats/compare', params);
   },
 
-  // Dự báo chi tiêu tháng tới
-  forecastSpending: async (months = 6, refYear, refMonth) => {
-    const params = { months };
-    if (refYear)  params.refYear  = refYear;
-    if (refMonth) params.refMonth = refMonth;
-    return cachedGet(buildCacheKey('/stats/forecast', params), '/stats/forecast', params);
-  },
-
   // Phân tích xu hướng chi tiêu
   analyzeTrends: async (period = 12, refYear, refMonth) => {
     const params = { period };
     if (refYear)  params.refYear  = refYear;
     if (refMonth) params.refMonth = refMonth;
     return cachedGet(buildCacheKey('/stats/trends', params), '/stats/trends', params);
+  },
+
+  // Cố vấn tài chính thông minh: quy tắc 50/30/20, phát hiện bất thường, cảnh báo tiến độ ngân sách/mục tiêu
+  getFinancialAdvice: async (year, month) => {
+    const params = {};
+    if (year)  params.year  = year;
+    if (month) params.month = month;
+    return cachedGet(buildCacheKey('/advisor', params), '/advisor', params);
   },
 
   // Top danh mục chi tiêu

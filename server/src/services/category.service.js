@@ -41,7 +41,7 @@ export const getCategory = async (userId, id) => {
  * Create a new category
  */
 export const createCategory = async (userId, data) => {
-  const { name, icon, color, type, order } = data;
+  const { name, icon, color, type, order, group } = data;
 
   if (!name || name.trim() === '') {
     throw new ErrorResponse('Tên danh mục không được để trống', 400);
@@ -63,6 +63,7 @@ export const createCategory = async (userId, data) => {
       color: color || '#3B82F6',
       type: type || 'expense',
       order: order || 0,
+      group: (type || 'expense') === 'income' ? null : (group || 'need'),
       isDefault: false
     });
   } catch (error) {
@@ -77,7 +78,7 @@ export const createCategory = async (userId, data) => {
  * Update an existing category
  */
 export const updateCategory = async (userId, id, data) => {
-  const { name, icon, color, type, order } = data;
+  const { name, icon, color, type, order, group } = data;
   const category = await Category.findOne({ where: { id, userId } });
 
   if (!category) {
@@ -107,6 +108,7 @@ export const updateCategory = async (userId, id, data) => {
   if (color) category.color = color;
   if (type) category.type = type;
   if (order !== undefined) category.order = order;
+  if (group !== undefined) category.group = category.type === 'income' ? null : group;
 
   await category.save();
   return category;

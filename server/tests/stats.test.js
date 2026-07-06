@@ -1,6 +1,6 @@
 /**
  * tests/stats.test.js
- * Kiểm thử các endpoint thống kê (summary, monthly, categories, compare, forecast, trends)
+ * Kiểm thử các endpoint thống kê (summary, monthly, categories, compare, trends)
  */
 import request from 'supertest';
 import app from '../src/app.js';
@@ -47,7 +47,6 @@ describe('Stats endpoints — auth guard', () => {
     ['GET /api/stats/monthly',    'get',  '/api/stats/monthly'],
     ['GET /api/stats/categories', 'get',  '/api/stats/categories'],
     ['GET /api/stats/compare',    'get',  '/api/stats/compare'],
-    ['GET /api/stats/forecast',   'get',  '/api/stats/forecast'],
     ['GET /api/stats/trends',     'get',  '/api/stats/trends'],
   ])('%s không có token → 401', async (_, method, path) => {
     const res = await request(app)[method](path);
@@ -204,30 +203,8 @@ describe('GET /api/stats/compare', () => {
   });
 });
 
-// ─── GET /api/stats/forecast ─────────────────────────────────────────────────
-
-describe('GET /api/stats/forecast', () => {
-  it('Không có dữ liệu → vẫn trả về 200', async () => {
-    const res = await request(app)
-      .get('/api/stats/forecast')
-      .set('Authorization', `Bearer ${token}`);
-
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-  });
-
-  it('Có dữ liệu → trả về dự báo', async () => {
-    await seedTransactions();
-
-    const res = await request(app)
-      .get('/api/stats/forecast')
-      .set('Authorization', `Bearer ${token}`);
-
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data).toBeDefined();
-  });
-});
+// (Đã xoá bộ test cho /api/stats/forecast — tính năng dự báo AI đã được loại bỏ,
+// thay bằng /api/advisor, xem server/tests/advisor.test.js)
 
 // ─── GET /api/stats/trends ────────────────────────────────────────────────────
 

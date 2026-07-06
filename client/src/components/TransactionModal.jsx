@@ -678,7 +678,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-modal-fade">
-      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-100 dark:border-gray-800 bg-[#FFFCF5] shadow-2xl dark:bg-[#191d25] transition-all transform scale-100 animate-modal-scale">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-100 dark:border-gray-800 bg-[#FFFCF5] shadow-2xl dark:bg-[#191d25] transition-all transform scale-100 animate-modal-scale">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-[#FFFCF5] px-6 py-4 dark:border-gray-800 dark:bg-[#191d25]">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             {transaction 
@@ -693,53 +693,57 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 p-6">
-          <div className="bg-emerald-50/50 dark:bg-emerald-500/5 p-4 rounded-xl border border-emerald-100 dark:border-emerald-500/20">
-            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-400 mb-2">
-              <FiZap /> {isEnglish ? 'Quick Input (Smart Parsing)' : 'Nhập nhanh (Smart Parsing)'}
-            </label>
-            <div className="flex gap-2">
-              <input 
-                type="text"
-                value={smartText}
-                onChange={(e) => setSmartText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSmartParse();
-                  }
-                }}
-                placeholder={isEnglish ? 'e.g., 30k coffee, 2m market...' : 'VD: 30k cafe, 2tr đi chợ...'}
-                className="input w-full bg-[#FFFCF5] dark:bg-[#191d25] text-sm"
-              />
-              <button type="button" onClick={handleSmartParse} className="btn btn-primary px-4">
-                {isEnglish ? 'Parse' : 'Phân tích'}
-              </button>
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+            {/* Quick Input Section (Smart Parsing) */}
+            <div className="md:col-span-2 bg-emerald-50/50 dark:bg-emerald-500/5 p-4 rounded-xl border border-emerald-100 dark:border-emerald-500/20">
+              <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-400 mb-2">
+                <FiZap /> {isEnglish ? 'Quick Input (Smart Parsing)' : 'Nhập nhanh (Smart Parsing)'}
+              </label>
+              <div className="flex gap-2">
+                <input 
+                  type="text"
+                  value={smartText}
+                  onChange={(e) => setSmartText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSmartParse();
+                    }
+                  }}
+                  placeholder={isEnglish ? 'e.g., 30k coffee, 2m market...' : 'VD: 30k cafe, 2tr đi chợ...'}
+                  className="input w-full bg-[#FFFCF5] dark:bg-[#191d25] text-sm"
+                />
+                <button type="button" onClick={handleSmartParse} className="btn btn-primary px-4">
+                  {isEnglish ? 'Parse' : 'Phân tích'}
+                </button>
+              </div>
+              
+              <div className="mt-3 flex items-center justify-between">
+                <span className="text-[11px] text-emerald-700/80 dark:text-emerald-500/80 font-medium">
+                  {isEnglish ? 'Or automatically scan receipt (AI):' : 'Hoặc tự động đọc hóa đơn/bill (AI):'}
+                </span>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  ref={fileInputRef} 
+                  onChange={handleFileUpload} 
+                  className="hidden" 
+                />
+                <button 
+                  type="button" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={ocrLoading}
+                  className={`text-[11px] flex items-center gap-1.5 py-1.5 px-3 bg-[#FFFCF5] dark:bg-[#232936] border border-emerald-200 dark:border-emerald-850 rounded-lg text-emerald-700 dark:text-[#b9e4d2] transition ${ocrLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-emerald-50 dark:hover:bg-emerald-500/10'}`}
+                >
+                  <FiCamera /> {ocrLoading ? (isEnglish ? 'Scanning...' : 'Đang đọc...') : (isEnglish ? 'Upload receipt image' : 'Tải ảnh hóa đơn')}
+                </button>
+              </div>
             </div>
-            
-            <div className="mt-3 flex items-center justify-between">
-              <span className="text-[11px] text-emerald-700/80 dark:text-emerald-500/80 font-medium">
-                {isEnglish ? 'Or automatically scan receipt (AI):' : 'Hoặc tự động đọc hóa đơn/bill (AI):'}
-              </span>
-              <input 
-                type="file" 
-                accept="image/*" 
-                ref={fileInputRef} 
-                onChange={handleFileUpload} 
-                className="hidden" 
-              />
-              <button 
-                type="button" 
-                onClick={() => fileInputRef.current?.click()}
-                disabled={ocrLoading}
-                className={`text-[11px] flex items-center gap-1.5 py-1.5 px-3 bg-[#FFFCF5] dark:bg-[#232936] border border-emerald-200 dark:border-emerald-850 rounded-lg text-emerald-700 dark:text-[#b9e4d2] transition ${ocrLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-emerald-50 dark:hover:bg-emerald-500/10'}`}
-              >
-                <FiCamera /> {ocrLoading ? (isEnglish ? 'Scanning...' : 'Đang đọc...') : (isEnglish ? 'Upload receipt image' : 'Tải ảnh hóa đơn')}
-              </button>
-            </div>
-          </div>
 
-          <div>
+            {/* Column 1: Core Transaction Info */}
+            <div className="space-y-4">
+              <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
               {isEnglish ? 'Transaction Type' : 'Loại giao dịch'}
             </label>
@@ -1000,7 +1004,10 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
               />
             )}
           </div>
+        </div>
 
+        {/* Column 2: Additional Details */}
+        <div className="space-y-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
               {isEnglish ? 'Date' : 'Ngày'}
@@ -1145,28 +1152,31 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
               </div>
             )}
           </div>
+        </div>
 
-          <div className="flex gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn btn-secondary flex-1"
-            >
-              {isEnglish ? 'Cancel' : 'Hủy'}
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn btn-primary flex-1"
-            >
-              {loading 
-                ? (isEnglish ? 'Processing...' : 'Đang xử lý...') 
-                : transaction 
-                  ? (isEnglish ? 'Update' : 'Cập nhật') 
-                  : (isEnglish ? 'Add' : 'Thêm')}
-            </button>
-          </div>
-        </form>
+        {/* Footer Buttons */}
+        <div className="md:col-span-2 flex gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn btn-secondary flex-1"
+          >
+            {isEnglish ? 'Cancel' : 'Hủy'}
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn btn-primary flex-1"
+          >
+            {loading 
+              ? (isEnglish ? 'Processing...' : 'Đang xử lý...') 
+              : transaction 
+                ? (isEnglish ? 'Update' : 'Cập nhật') 
+                : (isEnglish ? 'Add' : 'Thêm')}
+          </button>
+        </div>
+      </div>
+    </form>
       </div>
 
       {/* Preview Lightbox on top of Transaction Modal */}

@@ -17,11 +17,14 @@ function initModels() {
   User.hasMany(Wallet, { foreignKey: 'userId', as: 'wallets' });
   Wallet.belongsTo(User, { foreignKey: 'userId', as: 'user' });
   
-  Wallet.hasMany(Transaction, { foreignKey: 'walletId', as: 'transactions' });
-  Transaction.belongsTo(Wallet, { foreignKey: 'walletId', as: 'wallet' });
-  
-  Wallet.hasMany(Transaction, { foreignKey: 'toWalletId', as: 'incomingTransfers' });
-  Transaction.belongsTo(Wallet, { foreignKey: 'toWalletId', as: 'toWallet' });
+  // onDelete: 'NO ACTION' — tránh SQL Server báo "multiple cascade paths" vì users->wallets
+  // đã CASCADE và users->transactions cũng CASCADE; wallet.service.js tự tay chuyển
+  // walletId/toWalletId sang ví dự phòng trước khi xóa ví nên không cần DB cascade ở đây.
+  Wallet.hasMany(Transaction, { foreignKey: 'walletId', as: 'transactions', onDelete: 'NO ACTION' });
+  Transaction.belongsTo(Wallet, { foreignKey: 'walletId', as: 'wallet', onDelete: 'NO ACTION' });
+
+  Wallet.hasMany(Transaction, { foreignKey: 'toWalletId', as: 'incomingTransfers', onDelete: 'NO ACTION' });
+  Transaction.belongsTo(Wallet, { foreignKey: 'toWalletId', as: 'toWallet', onDelete: 'NO ACTION' });
 
   User.hasMany(Transaction, { foreignKey: 'userId', as: 'transactions' });
   Transaction.belongsTo(User, { foreignKey: 'userId', as: 'user' });
@@ -159,6 +162,26 @@ async function syncModels({ force = false } = {}) {
       console.log('✅ Checked vip_orders table: isPaid column exists or has been added.');
     } catch (err) {
       console.warn('⚠️ Could not run vip_orders table migration for isPaid:', err.message);
+    }
+
+    try {
+      // ALTER TABLE và câu lệnh dùng cột mới phải tách riêng batch, nếu không SQL Server
+      // sẽ biên dịch UPDATE với schema cũ (chưa thấy cột) và báo "Invalid column name".
+      await sequelize.query(`
+        IF NOT EXISTS (
+          SELECT * FROM sys.columns
+          WHERE object_id = OBJECT_ID('categories') AND name = 'group'
+        )
+        BEGIN
+          ALTER TABLE categories ADD [group] NVARCHAR(20) NULL;
+        END
+      `);
+      await sequelize.query(`
+        UPDATE categories SET [group] = 'need' WHERE [group] IS NULL AND type IN ('expense','both');
+      `);
+      console.log('✅ Checked categories table: group column exists or has been added.');
+    } catch (err) {
+      console.warn('⚠️ Could not run categories table migration for group:', err.message);
     }
   }
 }

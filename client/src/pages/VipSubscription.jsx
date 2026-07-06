@@ -226,7 +226,7 @@ const VipSubscription = () => {
         </h1>
         <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto text-sm md:text-base">
           {isEnglish 
-            ? 'Unlock unlimited wallets, budgets, monthly transactions, advanced forecasts, and full custom reports.' 
+            ? 'Unlock unlimited wallets, budgets, monthly transactions, the Smart Financial Advisor, and full custom reports.'
             : 'Mở khóa giới hạn ví, ngân sách, lượt ghi chép và các công cụ thống kê nâng cao giúp quản lý tài chính hiệu quả hơn.'}
         </p>
 
