@@ -121,7 +121,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
     toast.success(isEnglish ? "✅ Smart parsing successful!" : "✅ Phân tích thông minh thành công!");
     setSmartText('');
   };
-
+  // Tiền xử lý ảnh , làm nét , tăng độ tương phản ảnh
   const preprocessImage = (file) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -223,7 +223,7 @@ const TransactionModal = ({ transaction, onClose, isOpen }) => {
     const compressed = await compressImageForUpload(file);
     setReceiptFile(compressed);
   };
-
+  // Quét và phân tích hóa đơn
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;

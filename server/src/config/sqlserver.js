@@ -5,7 +5,7 @@ const {
   SQLSERVER_HOST = 'localhost',
   SQLSERVER_PORT = 1433,
   SQLSERVER_USER = 'sa',
-  SQLSERVER_PASSWORD = '123456789',
+  SQLSERVER_PASSWORD = '',
   SQLSERVER_DATABASE = 'FinanceManager',
   SQLSERVER_ENCRYPT = 'false',
 } = process.env;
